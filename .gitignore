@@ -1,0 +1,10 @@
+.DS_Store
+.hapi/
+build/
+build-*/
+cmake-build-*/
+game/
+portable-saves/
+*.ppm
+*.decoded
+

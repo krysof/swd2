@@ -1,0 +1,4743 @@
+#include "swd2/asset_catalog.hpp"
+#include "swd2/battle_ability_database.hpp"
+#include "swd2/battle_ai.hpp"
+#include "swd2/battle_composite_effect.hpp"
+#include "swd2/battle_command_menu.hpp"
+#include "swd2/battle_database.hpp"
+#include "swd2/battle_effects.hpp"
+#include "swd2/battle_item_definition.hpp"
+#include "swd2/battle_module.hpp"
+#include "swd2/battle_party.hpp"
+#include "swd2/battle_presentation.hpp"
+#include "swd2/battle_random.hpp"
+#include "swd2/battle_rules.hpp"
+#include "swd2/battle_session.hpp"
+#include "swd2/dialogue.hpp"
+#include "swd2/demo_module.hpp"
+#include "swd2/demo_timeline.hpp"
+#include "swd2/event_program.hpp"
+#include "swd2/event_vm.hpp"
+#include "swd2/field_action_system.hpp"
+#include "swd2/inventory_system.hpp"
+#include "swd2/item_database.hpp"
+#include "swd2/launcher.hpp"
+#include "swd2/legacy_font.hpp"
+#include "swd2/meo.hpp"
+#include "swd2/map_resource.hpp"
+#include "swd2/map_database.hpp"
+#include "swd2/meo_module.hpp"
+#include "swd2/mon_database.hpp"
+#include "swd2/monster_definition.hpp"
+#include "swd2/runtime.hpp"
+#include "swd2/save_slot.hpp"
+#include "swd2/rpg_module.hpp"
+#include "swd2/rpg_entity_system.hpp"
+#include "swd2/rpg_presentation.hpp"
+#include "swd2/rix_decoder.hpp"
+#include "swd2/mz_executable.hpp"
+#include "swd2/planar_sprite_set.hpp"
+#include "swd2/rsk_decoder.hpp"
+#include "swd2/shared_state.hpp"
+#include "swd2/script_archive.hpp"
+#include "swd2/sprite_archive.hpp"
+#include "swd2/voc_decoder.hpp"
+
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <stdexcept>
+#include <vector>
+#include <fstream>
+#include <memory>
+#include <map>
+#include <optional>
+#include <set>
+
+namespace {
+
+void require(bool condition, const char* message) {
+    if (!condition) {
+        throw std::runtime_error(message);
+    }
+}
+
+void test_launcher() {
+    using swd2::Marker;
+    using swd2::Module;
+    const std::vector<Marker> outputs = {
+        Marker::menu_ready,
+        Marker::open_demo,
+        Marker::none,  // DEMO result is deliberately ignored by the launcher.
+        Marker::open_figure,
+        Marker::continue_rpg,
+        Marker::none,
+    };
+    std::size_t cursor = 0;
+    std::vector<Module> calls;
+    const auto result = swd2::Launcher().run([&](Module module, Marker) {
+        calls.push_back(module);
+        return swd2::ModuleResult{true, outputs.at(cursor++)};
+    });
+
+    const std::vector<Module> expected = {
+        Module::menu, Module::rpg, Module::demo, Module::rpg, Module::figure, Module::rpg,
+    };
+    require(calls == expected, "launcher module sequence differs from SWD2.EXE");
+    require(result.reason == swd2::StopReason::module_requested_exit, "unexpected launcher stop reason");
+    require(result.final_marker == Marker::none, "unexpected final marker");
+}
+
+void test_paths() {
+    require(swd2::normalize_dos_asset_path("C:MENU.RSK") == std::filesystem::path("MENU.RSK"),
+            "drive-relative path conversion failed");
+    require(swd2::normalize_dos_asset_path("C:\\SWD2\\BA\\BA01.RSK") ==
+                std::filesystem::path("BA/BA01.RSK"),
+            "absolute SWD2 path conversion failed");
+}
+
+void test_rpg_mode_x_event_offset() {
+    std::vector<std::uint8_t> previous(16, 0xee);
+    std::vector<std::uint8_t> rendered(16);
+    for (std::size_t i = 0; i < rendered.size(); ++i) {
+        rendered[i] = static_cast<std::uint8_t>(i);
+    }
+    const auto shifted = swd2::composite_mode_x_address_offset(
+        previous, rendered, 1, 8);
+    require(shifted == std::vector<std::uint8_t>({
+                0xee, 0xee, 0xee, 0xee, 0, 1, 2, 3,
+                4, 5, 6, 7, 8, 9, 10, 11}),
+            "RPG mode-X byte offset did not retain/carry planar pixel groups");
+
+    std::vector<std::uint8_t> screen(320U * 200U, 0xee);
+    std::vector<std::uint8_t> scene(screen.size(), 0);
+    scene[0] = 11;
+    scene[319] = 22;
+    scene[198U * 320U + 319U] = 33;
+    const auto earthquake = swd2::composite_mode_x_address_offset(
+        screen, scene, 81);
+    require(earthquake[1U * 320U + 4U] == 11 &&
+                earthquake[2U * 320U + 3U] == 22 &&
+                earthquake[0] == 0xee &&
+                std::count(earthquake.begin(), earthquake.end(), 33) == 0,
+            "RPG opcode-49 81-byte earthquake displacement was not exact");
+}
+
+void test_original_launcher(const std::filesystem::path& game_root) {
+    const auto executable = swd2::dos::MzExecutable::load(game_root / "SWD2.EXE");
+    require(executable.actual_size() == 751, "unexpected SWD2.EXE size");
+    require(executable.header_size() == 512, "unexpected SWD2.EXE header size");
+    require(executable.relocations().size() == 2, "unexpected SWD2.EXE relocation count");
+    require(executable.entry_file_offset() == 512, "unexpected SWD2.EXE entry offset");
+    require(executable.overlay_size() == 0, "unexpected SWD2.EXE overlay");
+}
+
+std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
+    const auto mz = swd2::dos::MzExecutable::load(game_root / "RPG.EXE");
+    const auto file = read_file(game_root / "RPG.EXE");
+    const auto image_start = static_cast<std::size_t>(mz.header_size());
+    const auto image_size = static_cast<std::size_t>(mz.load_image_size());
+    const auto image = std::span<const std::uint8_t>(
+        file.data() + image_start, image_size);
+    const auto entry = static_cast<std::size_t>(mz.header().initial_cs) * 16U +
+                       mz.header().initial_ip;
+    const auto prompt = swd2::extract_rpg_embedded_text(image, entry, 0x3a4a);
+    require(prompt == std::vector<std::uint8_t>({
+                0xa1, 0x40, 0xa4, 0x40, 0xa1, 0x40, 0xa4, 0x47,
+                0xa1, 0x40, 0xa4, 0x54, 0xa1, 0x40, 0xa5, 0x7c,
+                0xa1, 0x40, 0xa4, 0xad}),
+            "RPG save selector did not recover its original Big5 prompt");
+    const auto travel_labels = swd2::extract_rpg_embedded_data(
+        image, entry, 0x3ace, 34U * 8U);
+    require(travel_labels.size() == 272U && travel_labels[0] == 0xa6U &&
+                travel_labels[1] == 0x77U && travel_labels[6] == 0xa1U &&
+                travel_labels[7] == 0x40U &&
+                travel_labels[264] == 0xa5U && travel_labels[271] == 0xf0U,
+            "RPG travel selector did not recover its 34 fixed Big5 labels");
+    const auto shop_prompt = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3c32);
+    require(shop_prompt == std::vector<std::uint8_t>({
+                0xbd, 0xd0, 0xbf, 0xef, 0xbe, 0xdc, 0xa7, 0x41,
+                0xaa, 0xba, 0xbb, 0xdd, 0xad, 0x6e, 0xa1, 0x43}),
+            "RPG shop did not recover its original DATA:3c32 prompt");
+    const auto category_labels = swd2::extract_rpg_embedded_data(
+        image, entry, 0x299a, 42U * 4U);
+    const auto equipment_labels = swd2::extract_rpg_embedded_text(
+        image, entry, 0x388e);
+    const auto equipment_stats = swd2::extract_rpg_embedded_data(
+        image, entry, 0x3a60, 40U);
+    require(category_labels.size() == 168U && category_labels[0] == 0xa4U &&
+                category_labels[167] == 0xdaU &&
+                equipment_labels.size() == 86U &&
+                equipment_labels[0] == 0xc0U &&
+                equipment_labels[84] == 0xa4U && equipment_labels[85] == 0x47U &&
+                equipment_stats.size() == 40U &&
+                equipment_stats[0] == 0xbeU && equipment_stats[8] == '$' &&
+                equipment_stats[9] == '$' && equipment_stats[39] == '$',
+            "RPG inventory/equipment Big5 tables were not recovered exactly");
+
+    auto menu_data = swd2::decode_rsk_block(read_file(game_root / "MENU.RSK")).data;
+    const auto menu = swd2::SpriteArchive::parse(std::move(menu_data));
+    std::vector<std::uint8_t> surface(320U * 200U, 0x55);
+    swd2::draw_rpg_selector_panel(surface, 320, 200, menu, 4, 0, 7, 4);
+    const auto corner = menu.pixels(92);
+    const auto corner_opaque = std::find_if(
+        corner.begin(), corner.end(), [](std::uint8_t value) { return value != 0xfeU; });
+    require(surface[16] == 0x55 && corner_opaque != corner.end() &&
+                surface[static_cast<std::size_t>(corner_opaque - corner.begin()) + 16U] ==
+                    *corner_opaque &&
+                surface[4U * 320U + 16U] == menu.pixels(83)[0] &&
+                surface[12U * 320U + 48U] == menu.pixels(87)[0] &&
+                surface[76U * 320U + 272U] == menu.pixels(91)[0],
+            "RPG generic selector panel did not use exact MENU frame geometry");
+
+    std::fill(surface.begin(), surface.end(), 0x55);
+    swd2::draw_rpg_compact_panel(surface, 320, 200, menu, 4, 0, 2, 1);
+    require(surface[16] == menu.pixels(80)[0] &&
+                surface[40] == menu.pixels(81)[0] &&
+                surface[56] == menu.pixels(82)[0] &&
+                surface[8U * 320U + 16U] == menu.pixels(168)[0] &&
+                surface[24U * 320U + 16U] == menu.pixels(171)[0],
+            "RPG compact information panel did not use frames 80/168/171 exactly");
+
+    swd2::RpgSaveSlotSelector selector;
+    require(selector.input(swd2::InputAction::up) ==
+                swd2::RpgSaveSelectorResult::waiting && selector.slot() == 0 &&
+                selector.input(swd2::InputAction::left) ==
+                    swd2::RpgSaveSelectorResult::waiting && selector.slot() == 4 &&
+                selector.input(swd2::InputAction::right) ==
+                    swd2::RpgSaveSelectorResult::waiting && selector.slot() == 4 &&
+                selector.input(swd2::InputAction::confirm) ==
+                    swd2::RpgSaveSelectorResult::waiting && selector.confirming() &&
+                selector.input(swd2::InputAction::up) ==
+                    swd2::RpgSaveSelectorResult::waiting &&
+                selector.input(swd2::InputAction::right) ==
+                    swd2::RpgSaveSelectorResult::waiting &&
+                selector.confirmation_choice() == 1 &&
+                selector.input(swd2::InputAction::confirm) ==
+                    swd2::RpgSaveSelectorResult::cancelled,
+            "RPG save selector movement/No branch differs from 4e4b/46cc");
+
+    swd2::RpgSaveSlotSelector escape_confirmation;
+    static_cast<void>(escape_confirmation.input(swd2::InputAction::confirm));
+    require(escape_confirmation.input(swd2::InputAction::cancel) ==
+                swd2::RpgSaveSelectorResult::committed,
+            "RPG nested save-confirmation Escape/default-Yes quirk was lost");
+    swd2::RpgSaveSlotSelector escape_no;
+    static_cast<void>(escape_no.input(swd2::InputAction::confirm));
+    static_cast<void>(escape_no.input(swd2::InputAction::right));
+    require(escape_no.input(swd2::InputAction::cancel) ==
+                swd2::RpgSaveSelectorResult::cancelled,
+            "RPG nested save-confirmation Escape ignored the selected No choice");
+    swd2::RpgSaveSlotSelector escape_selector;
+    require(escape_selector.input(swd2::InputAction::cancel) ==
+                swd2::RpgSaveSelectorResult::cancelled,
+            "RPG top-level save selector Escape should cancel");
+
+    require(swd2::rpg_party_target_for_direction(
+                swd2::InputAction::left, 4) == 0 &&
+                swd2::rpg_party_target_for_direction(
+                    swd2::InputAction::right, 4) == 1 &&
+                swd2::rpg_party_target_for_direction(
+                    swd2::InputAction::up, 4) == 2 &&
+                swd2::rpg_party_target_for_direction(
+                    swd2::InputAction::down, 4) == 3 &&
+                !swd2::rpg_party_target_for_direction(
+                    swd2::InputAction::right, 1) &&
+                !swd2::rpg_party_target_for_direction(
+                    swd2::InputAction::confirm, 4),
+            "RPG party target keys did not map directly to diamond portraits");
+}
+
+void test_resource_decoder(const std::filesystem::path& game_root) {
+    auto compressed = swd2::decode_rsk_block(read_file(game_root / "MEO.RSK"));
+    require(compressed.compressed, "MEO.RSK should use compressed storage");
+    require(compressed.has_standard_footer, "MEO.RSK footer was not recognized");
+    require(compressed.data.size() == 64636, "unexpected MEO.RSK output size");
+    require(compressed.data[0] == 0xba && compressed.data[1] == 0x2d,
+            "unexpected MEO.RSK decoded directory");
+    const auto sprites = swd2::SpriteArchive::parse(std::move(compressed.data));
+    require(sprites.sprites().size() == 5, "unexpected MEO.RSK sprite count");
+    require(sprites.sprites()[0].width == 305 && sprites.sprites()[0].height == 171,
+            "unexpected MEO.RSK background dimensions");
+    require(sprites.has_palette(), "MEO.RSK VGA palette was not found");
+    const auto frame = swd2::render_meo_frame(sprites, 0, 0, 0);
+    require(frame.pixels[3 * 320 + 3] == sprites.pixels(0)[0],
+            "MEO background was not placed at 3,3");
+
+    swd2::MeoCopyProtection protection;
+    require(protection.input(swd2::MeoInput::confirm, 5) == swd2::MeoStatus::waiting,
+            "MEO accepted before three confirmations");
+    protection.input(swd2::MeoInput::confirm, 5);
+    require(protection.input(swd2::MeoInput::confirm, 5) == swd2::MeoStatus::accepted,
+            "patched MEO should accept any three confirmations");
+
+    const auto stored = swd2::decode_rsk_block(read_file(game_root / "ST" / "SP345.RSK"));
+    require(!stored.compressed, "SP345.RSK should use stored storage");
+    require(stored.data.size() == 15, "unexpected SP345.RSK output size");
+    require(stored.data[0] == 4 && stored.data[1] == 0, "unexpected stored RSK bytes");
+
+    auto menu_block = swd2::decode_rsk_block(read_file(game_root / "MENU.RSK"));
+    const auto menu = swd2::SpriteArchive::parse(std::move(menu_block.data));
+    require(menu.sprites().size() == 181 &&
+                menu.sprites()[0].width == 64 && menu.sprites()[0].height == 32 &&
+                menu.sprites()[1].width == 168 && menu.sprites()[1].height == 22 &&
+                menu.sprites()[83].width == 32 && menu.sprites()[83].height == 8 &&
+                menu.sprites()[94].width == 16 && menu.sprites()[94].height == 16 &&
+                menu.sprites()[178].width == 24 && menu.sprites()[178].height == 19,
+            "MENU.RSK command/selector component geometry differs from FIG");
+
+    auto battle_background_block =
+        swd2::decode_rsk_block(read_file(game_root / "BA" / "BA01.RSK"));
+    const auto battle_background =
+        swd2::SpriteArchive::parse(std::move(battle_background_block.data));
+    const auto table1 = swd2::fig_palette_translation(
+        battle_background.palette(), 1);
+    const auto table2 = swd2::fig_palette_translation(
+        battle_background.palette(), 2);
+    const auto table3 = swd2::fig_palette_translation(
+        battle_background.palette(), 3);
+    const auto table4 = swd2::fig_palette_translation(
+        battle_background.palette(), 4);
+    const std::array<std::uint8_t, 32> expected_table1 = {
+        0x00, 0xa2, 0x2f, 0xa3, 0x08, 0x08, 0x08, 0x00,
+        0x00, 0x1d, 0x19, 0xa1, 0x1b, 0x19, 0x8c, 0x5e,
+        0xbf, 0xbf, 0x19, 0x1a, 0x1a, 0x1b, 0x1c, 0x1c,
+        0x1d, 0x1e, 0x1e, 0x1e, 0x1f, 0x1f, 0x00, 0x00,
+    };
+    const std::array<std::uint8_t, 32> expected_table2 = {
+        0x00, 0x05, 0xa2, 0xa2, 0x07, 0xa3, 0x08, 0x08,
+        0x00, 0x1b, 0x17, 0xa0, 0x19, 0x09, 0x8b, 0x5f,
+        0x16, 0x17, 0x5e, 0x18, 0xbf, 0x19, 0x1a, 0x1b,
+        0x1c, 0x1c, 0x1d, 0x1d, 0x1e, 0x1e, 0x1f, 0x00,
+    };
+    const std::array<std::uint8_t, 32> expected_table3 = {
+        0x00, 0xd0, 0xa1, 0x05, 0xa2, 0x06, 0xa3, 0x08,
+        0x08, 0x1a, 0x0c, 0x01, 0x18, 0x0c, 0x8a, 0x13,
+        0x14, 0x15, 0x5f, 0x16, 0x17, 0x18, 0x19, 0x19,
+        0x1a, 0x1b, 0x1c, 0x1d, 0x1d, 0x1e, 0x1f, 0x00,
+    };
+    require(std::equal(expected_table1.begin(), expected_table1.end(),
+                       table1.begin()) &&
+                std::equal(expected_table2.begin(), expected_table2.end(),
+                           table2.begin()) &&
+                std::equal(expected_table3.begin(), expected_table3.end(),
+                           table3.begin()) &&
+                table4[0] == 86 && table4[106] == 106 &&
+                table4[255] == 52,
+            "FIG 314d/771b generated different nearest-colour tables");
+
+    std::vector<std::uint8_t> translated_surface(100U * 50U, 1);
+    swd2::apply_fig_palette_translation(
+        translated_surface, 100, 50, battle_background.palette(),
+        2, 5, 16, 32, 3);
+    require(translated_surface[5U * 100U + 8U] == 0xd0 &&
+                translated_surface[36U * 100U + 71U] == 0xd0 &&
+                translated_surface[4U * 100U + 8U] == 1 &&
+                translated_surface[5U * 100U + 7U] == 1 &&
+                translated_surface[37U * 100U + 8U] == 1 &&
+                translated_surface[5U * 100U + 72U] == 1,
+            "FIG 77ef did not transform exactly 16 Mode-X bytes by 32 lines");
+}
+
+void test_voc_decoder(const std::filesystem::path& game_root) {
+    const auto sample = swd2::decode_voc(read_file(game_root / "VC" / "SP052.VOC"));
+    require(sample.sample_rate == 7575 && sample.mono_samples.size() == 20'912 &&
+                sample.mono_samples.front() == -1280,
+            "Creative Voice time constant/unsigned PCM decoding is incorrect");
+
+    std::size_t files = 0;
+    std::size_t samples = 0;
+    for (const auto& entry :
+         std::filesystem::recursive_directory_iterator(game_root)) {
+        if (!entry.is_regular_file() || entry.path().extension() != ".VOC") continue;
+        const auto decoded = swd2::decode_voc(read_file(entry.path()));
+        require(decoded.sample_rate >= 4'000 && decoded.sample_rate <= 15'625 &&
+                    !decoded.mono_samples.empty(),
+                "original VOC asset decoded to invalid PCM metadata");
+        ++files;
+        samples += decoded.mono_samples.size();
+    }
+    require(files == 67 && samples == 834'549,
+            "not every original VOC asset passed portable PCM decoding");
+}
+
+void test_rix_decoder(const std::filesystem::path& game_root) {
+    std::size_t files = 0;
+    std::size_t frames = 0;
+    std::size_t commands = 0;
+    std::size_t timer_ticks = 0;
+    std::size_t opl_writes = 0;
+    for (const auto& entry :
+         std::filesystem::recursive_directory_iterator(game_root)) {
+        if (!entry.is_regular_file() || entry.path().extension() != ".RIX") continue;
+        const auto sequence = swd2::decode_rix(read_file(entry.path()));
+        require(!sequence.instruments.empty() && !sequence.frames.empty() &&
+                    sequence.total_timer_ticks != 0,
+                "original RIX asset decoded to an empty timeline");
+        const auto opl = swd2::translate_rix_to_opl(sequence);
+        require(opl.rhythm_mode == sequence.rhythm_mode &&
+                    opl.total_timer_ticks == sequence.total_timer_ticks &&
+                    !opl.writes.empty() &&
+                    std::all_of(opl.writes.begin(), opl.writes.end(),
+                                [&](const swd2::OplRegisterWrite& write) {
+                                    return write.timer_tick < sequence.total_timer_ticks;
+                                }),
+                "original RIX asset produced an invalid OPL register timeline");
+        ++files;
+        frames += sequence.frames.size();
+        timer_ticks += sequence.total_timer_ticks;
+        opl_writes += opl.writes.size();
+        for (const auto& frame : sequence.frames) commands += frame.commands.size();
+    }
+    require(files == 43 && frames == 9'942 && commands == 41'848 &&
+                timer_ticks == 101'716 && opl_writes == 166'187,
+            "not every original RIX command stream passed strict decoding");
+
+    const auto short_music = swd2::decode_rix(read_file(game_root / "RX" / "FI02.RIX"));
+    const auto pcm = swd2::synthesize_rix(short_music, 8'000);
+    std::uint64_t pcm_hash = 1'469'598'103'934'665'603ULL;
+    for (const auto sample : pcm.mono_samples) {
+        const auto word = static_cast<std::uint16_t>(sample);
+        pcm_hash ^= word & 0xffU;
+        pcm_hash *= 1'099'511'628'211ULL;
+        pcm_hash ^= word >> 8U;
+        pcm_hash *= 1'099'511'628'211ULL;
+    }
+    require(short_music.instruments.size() == 7 && short_music.frames.size() == 21 &&
+                short_music.total_timer_ticks == 147 &&
+                pcm.sample_rate == 8'000 && pcm.mono_samples.size() == 16'800 &&
+                pcm_hash == 0x17083cd9e61a091cULL &&
+                std::any_of(pcm.mono_samples.begin(), pcm.mono_samples.end(),
+                            [](std::int16_t sample) { return sample != 0; }),
+            "portable YM3812 core produced non-deterministic RIX PCM");
+
+    // A centered pitch command must select the driver's first generated
+    // micro-tuning table: C uses F-number 343 (0x157), and raw note 60 is
+    // transposed down by the driver's fixed 12-note input bias to octave 4.
+    swd2::RixSequence exact;
+    exact.instruments.resize(1);
+    exact.frames = {
+        {1, {}},
+        {1,
+         {{swd2::RixCommandKind::pitch, 0, 128U << 6U},
+          {swd2::RixCommandKind::note, 0, 60}}},
+    };
+    exact.total_timer_ticks = 2;
+    const auto exact_opl = swd2::translate_rix_to_opl(exact);
+    std::vector<swd2::OplRegisterWrite> command_writes;
+    std::copy_if(exact_opl.writes.begin(), exact_opl.writes.end(),
+                 std::back_inserter(command_writes),
+                 [](const auto& write) { return write.timer_tick == 1; });
+    require(command_writes.size() == 6 &&
+                command_writes[0].register_index == 0xa0 &&
+                command_writes[0].value == 0x57 &&
+                command_writes[1].register_index == 0xb0 &&
+                command_writes[1].value == 0x01 &&
+                command_writes[4].register_index == 0xa0 &&
+                command_writes[4].value == 0x57 &&
+                command_writes[5].register_index == 0xb0 &&
+                command_writes[5].value == 0x31,
+            "FIG's exact RIX pitch table/note register programming regressed");
+
+    // Independent differential oracle: DOSBox-X DROv2 capture of the original
+    // DEMO.EXE/SWORD.RIX begins at the first key-on. DRO suppresses unchanged
+    // registers and initializes its waveform cache to zero. The first 175
+    // live (register,value) pairs (through 3.94 seconds of the original) have
+    // this FNV-1a fingerprint. This checks instruments, notes, key transitions
+    // and their order against an independent execution of the DOS program.
+    const auto sword = swd2::translate_rix_to_opl(
+        swd2::decode_rix(read_file(game_root / "SWORD.RIX")));
+    const auto capture_start = std::find_if(
+        sword.writes.begin(), sword.writes.end(), [](const auto& write) {
+            return write.timer_tick == 0 && write.register_index == 0xb0 &&
+                   write.value == 0x2d;
+        });
+    require(capture_start != sword.writes.end(),
+            "SWORD RIX has no original-capture alignment key-on");
+    std::array<std::uint8_t, 256> dro_register_cache{};
+    for (auto write = sword.writes.begin(); write != capture_start; ++write) {
+        dro_register_cache[write->register_index] = write->value;
+    }
+    std::fill(dro_register_cache.begin() + 0xe0,
+              dro_register_cache.begin() + 0xf6, 0);
+    std::size_t captured_pairs = 0;
+    std::uint64_t capture_hash = 1'469'598'103'934'665'603ULL;
+    for (auto write = capture_start;
+         write != sword.writes.end() && captured_pairs < 175; ++write) {
+        auto& cached = dro_register_cache[write->register_index];
+        if (cached != write->value) {
+            capture_hash ^= write->register_index;
+            capture_hash *= 1'099'511'628'211ULL;
+            capture_hash ^= write->value;
+            capture_hash *= 1'099'511'628'211ULL;
+            ++captured_pairs;
+        }
+        cached = write->value;
+    }
+    require(captured_pairs == 175 && capture_hash == 0x2ec64712362b42bbULL,
+            "RIX OPL writes differ from original DEMO.EXE DRO capture");
+}
+
+void test_shared_state(const std::filesystem::path& game_root) {
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    require(state.area_graphics_path() == "E:\\SWD2\\T1\\AREA1.RS4",
+            "SAVE.DA1 graphics path was not decoded");
+    require(state.area_collision_path() == "E:\\SWD2\\T1\\AREA1.RRO",
+            "SAVE.DA1 collision path was not decoded");
+    require(state.music_path() == "E:\\SWD2\\RX\\MI01.RIX",
+            "SAVE.DA1 music path was not decoded");
+    require(state.viewport_columns() == 40 && state.viewport_rows() == 25,
+            "SAVE.DA1 viewport dimensions were not decoded");
+    require(state.map_width() == 180 && state.map_height() == 180,
+            "SAVE.DA1 map dimensions were not decoded");
+    require(state.viewport_x() == 106 && state.viewport_y() == 1,
+            "SAVE.DA1 viewport origin was not decoded");
+    require(state.actor_screen_x() == 0x26 && state.actor_screen_y() == 0x50,
+            "SAVE.DA1 actor screen position was not decoded");
+    require(state.actor_x_offset() == 1 && state.actor_y_offset() == -4 &&
+                state.actor_sprite_base() == 0 && state.actor_direction() == 0,
+            "SAVE.DA1 actor render fields were not decoded");
+    require(state.world_x() == 126 && state.world_y() == 13,
+            "SAVE.DA1 actor world position was not derived correctly");
+    const swd2::SharedTransfer original{swd2::Marker::open_figure, state};
+    const auto serialized = original.bytes();
+    const auto restored = swd2::SharedTransfer::from_bytes(serialized);
+    require(restored.marker == swd2::Marker::open_figure, "shared marker round trip failed");
+    require(restored.state.bytes() == state.bytes(), "shared state round trip failed");
+}
+
+void test_item_inventory(const std::filesystem::path& game_root) {
+    const auto items = swd2::ItemDatabase::load(game_root / "ITEM.EXE");
+    require(items.size() == 522, "unexpected ITEM definition count");
+
+    const auto item_texts = swd2::ItemTextDatabase::load(game_root / "ITEM2.EXE");
+    require(item_texts.size() == items.size(),
+            "ITEM2 pointer table is not parallel to ITEM");
+    require(item_texts.at(0).name == std::vector<std::uint8_t>({0xb5, 0x4c}) &&
+                item_texts.at(0).description.empty(),
+            "ITEM2 bare none-name record was not decoded");
+    require(item_texts.at(51).name ==
+                std::vector<std::uint8_t>({0xa9, 0xdb, 0xbb, 0xee, 0xba, 0x58}) &&
+                item_texts.at(51).description.size() == 58 &&
+                item_texts.at(504).empty(),
+            "ITEM2 bracketed name/description boundaries were not decoded");
+
+    std::size_t nonempty_texts = 0;
+    std::size_t name_bytes = 0;
+    std::size_t description_bytes = 0;
+    std::uint64_t text_hash = 1'469'598'103'934'665'603ULL;
+    const auto hash_byte = [&](std::uint8_t byte) {
+        text_hash ^= byte;
+        text_hash *= 1'099'511'628'211ULL;
+    };
+    for (std::size_t id = 0; id < item_texts.size(); ++id) {
+        const auto& text = item_texts.at(static_cast<std::uint16_t>(id));
+        if (!text.empty()) ++nonempty_texts;
+        name_bytes += text.name.size();
+        description_bytes += text.description.size();
+        hash_byte(static_cast<std::uint8_t>(id));
+        hash_byte(static_cast<std::uint8_t>(id >> 8U));
+        hash_byte(static_cast<std::uint8_t>(text.name.size()));
+        hash_byte(static_cast<std::uint8_t>(text.name.size() >> 8U));
+        for (const auto byte : text.name) hash_byte(byte);
+        hash_byte(static_cast<std::uint8_t>(text.description.size()));
+        hash_byte(static_cast<std::uint8_t>(text.description.size() >> 8U));
+        for (const auto byte : text.description) hash_byte(byte);
+    }
+    require(nonempty_texts == 449 && name_bytes == 2'484 &&
+                description_bytes == 22'492 &&
+                text_hash == 0x2aa57a4be3a622d9ULL,
+            "ITEM2 full text corpus differs from the original archive");
+    const auto item_font = swd2::LegacyFont::load(game_root / "CHAIN.DSK");
+    const auto rendered_item_name = swd2::render_dialogue_page(
+        item_font, item_texts.at(51).name, 0, 96, 15, 15);
+    const auto rendered_item_description = swd2::render_dialogue_page(
+        item_font, item_texts.at(51).description, 0, 112, 96, 14);
+    require(item_font.glyph_count() == 1'908 &&
+                std::count_if(rendered_item_name.pixels.begin(),
+                              rendered_item_name.pixels.end(),
+                              [](std::uint8_t pixel) { return pixel != 0; }) > 100 &&
+                std::count_if(rendered_item_description.pixels.begin(),
+                              rendered_item_description.pixels.end(),
+                              [](std::uint8_t pixel) { return pixel != 0; }) > 500,
+            "ITEM2 text did not render through the original CHAIN.DSK glyphs");
+
+    const auto& item61 = items.at(61);
+    require(item61.type == 14 && item61.id == 61 &&
+                item61.preview_sprite == 61 && item61.preview_x == 0 &&
+                item61.preview_y == 0 &&
+                item61.character_restrictions == 13 &&
+                item61.use_flags == 0x042a && !item61.field_usable() &&
+                item61.battle_usable() && !item61.consumed_on_use() &&
+                item61.discardable() &&
+                item61.equipment_category() == 4 && item61.effect_code == 107 &&
+                item61.price == 999 && item61.stat_words[0] == 70 &&
+                item61.stat_words[1] == static_cast<std::uint16_t>(-30) &&
+                item61.stat_words[2] == static_cast<std::uint16_t>(-30),
+            "ITEM common prefix fields were decoded at the wrong offsets");
+
+    auto shop_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    for (std::size_t slot = 0; slot < 50; ++slot) shop_state.set_u16(0x382 + slot * 2, 0);
+    for (std::size_t i = 0; i < 5; ++i) shop_state.set_u16(0x3e6 + i * 2, 0);
+    shop_state.set_u16(0x104, 100);
+    swd2::InventorySystem shop(shop_state, items);
+    require(shop.purchase(117) && shop.item(0) == 117 && shop_state.u16(0x104) == 75,
+            "RPG shop did not deduct ITEM +0b price and insert its object");
+    require(shop.purchase(68) && shop.purchase(68) && shop.item(1) == 68 &&
+                shop.item(2) == 0 && shop_state.u16(0x3e6) == 2 &&
+                shop_state.u16(0x104) == 55,
+            "RPG special item did not share its 44h counter");
+    shop_state.set_u16(0x3e6, 20);
+    require(!shop.purchase(68) && shop_state.u16(0x104) == 55,
+            "RPG shop exceeded the original special-item cap");
+    shop_state.set_u16(0x382, 0);
+    shop.compact();
+    require(shop.item(0) == 68 && shop.item(1) == 0,
+            "RPG inventory compaction was not stable");
+
+    shop_state.set_u16(0x104, 65'500);
+    shop_state.set_u16(0x382, 61);
+    shop_state.set_u16(0x384, 68);
+    require(shop.sale_value(0) == 750 && shop.sell(0) &&
+                shop_state.u16(0x104) == 0xffff && shop.item(0) == 68,
+            "RPG shop sale did not use three-quarter value/saturating money/compaction");
+    shop_state.set_u16(0x382, 77);  // ITEM +05 lacks the original sale bit.
+    require(!shop.sale_value(0) && !shop.sell(0) && shop_state.u16(0x104) == 0xffff,
+            "RPG shop accepted an unsellable ITEM record");
+
+    auto equip_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    equip_state.set_u16(0x382, 167);  // category three, allowed for actor zero
+    swd2::InventorySystem equipment(equip_state, items);
+    const auto actor0 = std::size_t{0x106};
+    const auto old_defense = equip_state.u16(actor0 + 0x0e);
+    const auto old_secondary = equip_state.u16(actor0 + 0x5d);
+    const auto exchange = equipment.exchange_equipment(0, 0, 1);
+    require(exchange.status == swd2::EquipmentExchangeStatus::exchanged &&
+                exchange.equipped_item == 167 && exchange.returned_item == 165 &&
+                equip_state.u16(0x382) == 165 && equip_state.u16(actor0 + 0x12) == 167 &&
+                equip_state.u16(actor0 + 0x0e) == old_defense + 22 &&
+                equip_state.u16(actor0 + 0x5d) == old_secondary - 2,
+            "RPG equipment exchange did not swap ids/apply signed stat words");
+
+    equip_state.set_u16(0x382, 166);  // restriction bit 8 forbids actor identity zero
+    require(equipment.exchange_equipment(0, 0, 1).status ==
+                swd2::EquipmentExchangeStatus::character_restricted &&
+                equipment.exchange_equipment(0, 0, 0).status ==
+                swd2::EquipmentExchangeStatus::character_restricted,
+            "RPG equipment character restriction mask was not enforced");
+    equip_state.set_u16(0x382, 167);
+    require(equipment.exchange_equipment(0, 0, 0).status ==
+                swd2::EquipmentExchangeStatus::category_mismatch,
+            "RPG equipment category/row mapping was not enforced");
+
+    // Category nine is the duplicated two-handed representation. Replacing
+    // actor zero's existing two-handed id 122 returns one copy; selecting an
+    // empty cell then removes the pair and its bonuses only once.
+    equip_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    equip_state.set_u16(0x382, 117);
+    equip_state.set_u16(0x384, 0);
+    swd2::InventorySystem hands(equip_state, items);
+    const auto equip_two_handed = hands.exchange_equipment(0, 0, 2);
+    require(equip_two_handed.status == swd2::EquipmentExchangeStatus::exchanged &&
+                equip_two_handed.returned_item == 122 &&
+                equip_state.u16(actor0 + 0x14) == 117 &&
+                equip_state.u16(actor0 + 0x16) == 117 &&
+                equip_state.u8(actor0 + 0x2c) == 1,
+            "RPG two-handed item was not mirrored into both hand slots");
+    const auto unequip_two_handed = hands.exchange_equipment(1, 0, 2);
+    require(unequip_two_handed.status == swd2::EquipmentExchangeStatus::exchanged &&
+                equip_state.u16(0x384) == 117 &&
+                equip_state.u16(actor0 + 0x14) == 0 &&
+                equip_state.u16(actor0 + 0x16) == 0 &&
+                equip_state.u8(actor0 + 0x2c) == 0,
+            "RPG empty-cell two-handed unequip contract was not reproduced");
+
+    equip_state.set_u16(actor0 + 0x14, 117);
+    equip_state.set_u16(actor0 + 0x16, 118);
+    equip_state.set_u8(actor0 + 0x2c, 0);
+    equip_state.set_u16(0x382, 117);
+    const auto conflict = hands.exchange_equipment(0, 0, 3);
+    require(conflict.status == swd2::EquipmentExchangeStatus::two_handed_conflict &&
+                equip_state.u16(0x382) == 117 && equip_state.u16(actor0 + 0x14) == 117 &&
+                equip_state.u16(actor0 + 0x16) == 118,
+            "RPG two-handed conflict mutated occupied hand slots");
+
+    const auto& item51 = items.at(51);
+    require(item51.use_flags == 0x102f && item51.field_usable() &&
+                item51.battle_usable() && item51.consumed_on_use() &&
+                item51.discardable(),
+            "ITEM +05 inventory action bits were not decoded as an unaligned word");
+}
+
+void test_field_actions(const std::filesystem::path& game_root) {
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x10, 4);
+    const auto base = std::size_t{0x106};
+    state.set_u16(base + 8, 0x0300);
+    state.set_u16(base + 0x2d, 10);
+    state.set_u16(base + 0x2f, 100);
+    state.set_u16(base + 0x35, 20);
+    state.set_u16(base + 0x37, 80);
+    state.set_u16(base + 0x45, 20);
+    state.set_u16(base + 0x55, 5);
+    state.set_u16(base + 0x57, 40);
+
+    swd2::FieldActionRuntime field_runtime;
+    swd2::FieldActionSystem actions(state, &field_runtime);
+    require(swd2::FieldActionSystem::requires_target(1) &&
+                !swd2::FieldActionSystem::requires_target(0x0c) &&
+                swd2::FieldActionSystem::affects_all_party(0x12),
+            "RPG field-action target modes differ from the 42-entry dispatcher");
+    require(actions.apply(1, 0).status == swd2::FieldActionStatus::applied &&
+                state.u16(base + 0x2d) == 40 && state.u16(base + 0x35) == 45,
+            "RPG percentage restorative did not add max percent plus +45/4");
+
+    const auto target_one = base + 0x9f;
+    state.set_u16(target_one + 8, 0);
+    state.set_u16(target_one + 0x2d, 0);
+    state.set_u16(target_one + 0x2f, 100);
+    state.set_u16(target_one + 0x35, 0);
+    state.set_u16(target_one + 0x37, 100);
+    state.set_u16(target_one + 0x45, 80);
+    require(actions.apply(1, 1).status == swd2::FieldActionStatus::applied &&
+                state.u16(target_one + 0x2d) == 30 &&
+                state.u16(target_one + 0x35) == 30,
+            "RPG percentage restorative used target +45 instead of DS:35fc owner");
+
+    state.set_u16(base + 8, 0x0300);
+    state.set_u16(base + 0x2d, 0);
+    state.set_u16(base + 0x35, 0);
+    require(actions.apply(0x10, 0).status == swd2::FieldActionStatus::applied &&
+                state.u16(base + 8) == 0 && state.u16(base + 0x2d) == 35 &&
+                state.u16(base + 0x35) == 29,
+            "RPG restorative/cure action 10h did not match 352a..3547");
+
+    state.set_u16(base + 8, 0x2000);
+    state.set_u16(base + 0x2d, 0);
+    state.set_u16(base + 0x35, 0);
+    require(actions.apply(0x1c, 0).status == swd2::FieldActionStatus::applied &&
+                state.u16(base + 8) == 0 && state.u16(base + 0x2d) == 15 &&
+                state.u16(base + 0x35) == 29 &&
+                field_runtime.primary_operand == 10 &&
+                field_runtime.secondary_operand == 30,
+            "RPG field resurrection lost its stale-secondary operand quirk");
+
+    state.set_u16(base + 8, 0);
+    state.set_u16(base + 0x2d, 10);
+    state.set_u16(base + 0x35, 20);
+    require(actions.apply(0x13, 0).status == swd2::FieldActionStatus::applied &&
+                state.u16(base + 0x2d) == 65 && state.u16(base + 0x35) == 75,
+            "RPG fixed restorative did not add secondary-pool/4 before clamping");
+
+    state.set_u16(base + 8, 0x0700);
+    require(actions.apply(0x1f, 0).status == swd2::FieldActionStatus::applied &&
+                state.u16(base + 8) == 0x0400,
+            "RPG action 1fh did not clear the paired 0100/0200 status mask");
+    const auto attack = state.u16(base + 0x0c);
+    const auto field_3d = state.u16(base + 0x3d);
+    require(actions.apply(0x24, 0).status == swd2::FieldActionStatus::applied &&
+                state.u16(base + 0x0c) == static_cast<std::uint16_t>(attack + 3) &&
+                state.u16(base + 0x3d) == static_cast<std::uint16_t>(field_3d + 3),
+            "RPG permanent action 24h did not update both linked actor words");
+
+    state.set_u16(0x408, 0x4000);
+    require(actions.apply(0x28).status == swd2::FieldActionStatus::map_restricted,
+            "RPG action 28h ignored the map 4000h restriction");
+    state.set_u16(0x408, 0x8000);
+    require(actions.apply(0x28).status == swd2::FieldActionStatus::travel_current &&
+                actions.apply(0x29).status == swd2::FieldActionStatus::travel_select,
+            "RPG field travel actions did not honor their complementary map gates");
+    for (std::size_t i = 0; i < 8; ++i) state.set_u8(0x51e + i, 0);
+    state.set_u8(0x51f, 1);
+    state.set_u8(0x521, 1);
+    state.set_u8(0x522, 0x0f);
+    require(actions.unlocked_travel_indices() == std::vector<std::uint8_t>{1, 3} &&
+                swd2::FieldActionSystem::travel_directory_offset(0) == 0x0046 &&
+                swd2::FieldActionSystem::travel_directory_offset(33) == 0x0372 &&
+                !swd2::FieldActionSystem::travel_directory_offset(34),
+            "RPG DS:3a8a travel table/SAVE+51e unlock list was not reproduced");
+}
+
+void test_map_resource(const std::filesystem::path& game_root) {
+    const auto map = swd2::MapResource::load(game_root / "T2" / "TW-2A");
+    require(map.tile_count() == 2029, "unexpected TW-2A tile count");
+    require(map.layout().width == 180 && map.layout().height == 180,
+            "unexpected TW-2A map dimensions");
+    const auto image = map.render(true);
+    require(image.width == 1440 && image.height == 1440, "unexpected rendered map dimensions");
+    require(!map.overlays().empty(), "TW-2A overlay records were not decoded");
+}
+
+void test_map_database(const std::filesystem::path& game_root) {
+    const auto immutable = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    const auto mutable_save = swd2::MapDatabase::load(game_root / "MAPZ.DA1");
+    require(immutable.has_trailing_sentinel() && !mutable_save.has_trailing_sentinel(),
+            "MAPA and MAPZ end-marker variants were not distinguished");
+    require(immutable.locations().size() == 466 && immutable.unique_area_count() == 152,
+            "unexpected MAPA world database dimensions");
+
+    const auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto& location = mutable_save.location_at_directory_offset(
+        state.map_location_directory_offset());
+    require(location.directory_offset == 8 && location.map_position == state.u16(0x40d),
+            "SAVE.DA did not select the expected MAPZ location");
+    require(location.viewport_x == state.viewport_x() &&
+                location.viewport_y == state.viewport_y() &&
+                location.actor_screen_x == state.actor_screen_x() &&
+                location.actor_screen_y == state.actor_screen_y() &&
+                location.actor_direction == state.actor_direction(),
+            "MAPZ initial placement differs from SAVE.DA");
+    require(location.area.entity_fields[0].size() == 5,
+            "MAPZ AREA1 entity arrays were not decoded");
+    const auto gate = swd2::map_entity(location.area, 1);
+    require(gate.sprite == 0x4400 && gate.cell_offset == 0x9d36 && gate.behavior == 4 &&
+                gate.render_x_offset == -2 && gate.render_y_offset == -8 &&
+                gate.event_directory_offset == 0x12c,
+            "MAPZ AREA1 entity fields were not transposed correctly");
+    require(location.area.graphics_path == "\\SWD2\\T1\\AREA1.RSK" &&
+                location.area.layout_path == "\\SWD2\\T1\\AREA1.RSK" &&
+                location.area.music_path == "\\SWD2\\RX\\MI01.RIX" &&
+                location.area.event_archive_path == "CHNA1.EXE" &&
+                location.area.event_font_path == "CHNA1.DSK",
+            "MAPZ AREA1 resource pointers were not decoded");
+}
+
+void test_rpg_entity_system(const std::filesystem::path& game_root) {
+    const auto map = swd2::MapResource::load(game_root / "T1" / "AREA1");
+    std::size_t open_x = 0;
+    std::size_t open_y = 0;
+    bool found = false;
+    for (std::size_t y = 1; y + 1 < map.layout().height && !found; ++y) {
+        for (std::size_t x = 1; x + 3 < map.layout().width; ++x) {
+            bool clear = true;
+            for (std::size_t dy = 0; dy < 2; ++dy) {
+                for (std::size_t dx = 0; dx < 3; ++dx) {
+                    clear = clear &&
+                        (map.cells()[(y + dy) * map.layout().width + x + dx] &
+                         0xf800U) == 0;
+                }
+            }
+            if (clear) {
+                open_x = x;
+                open_y = y;
+                found = true;
+                break;
+            }
+        }
+    }
+    require(found, "AREA1 has no open rectangle for entity movement test");
+
+    swd2::SharedState::Storage empty{};
+    auto state = swd2::SharedState::from_bytes(empty);
+    state.set_u16(0x40f, 8);
+    state.set_u16(0x417, map.layout().width);
+    state.set_u16(0x419, map.layout().height);
+
+    swd2::MapAreaRecord area;
+    for (auto& field : area.entity_fields) field.resize(1);
+    const auto anchor = static_cast<std::uint16_t>(
+        8U + (open_y * map.layout().width + open_x) * 2U);
+    area.entity_fields[2][0] = anchor;
+    area.entity_fields[3][0] = 0;
+    area.entity_fields[4][0] = 2;
+    area.entity_fields[7][0] = 4;
+    area.entity_fields[8][0] = 4;
+
+    const auto mz = swd2::dos::MzExecutable::load(game_root / "RPG.EXE");
+    const auto file = read_file(game_root / "RPG.EXE");
+    const auto image_start = static_cast<std::size_t>(mz.header_size());
+    const auto image_size = static_cast<std::size_t>(mz.load_image_size());
+    const auto image = std::span<const std::uint8_t>(
+        file.data() + image_start, image_size);
+    require(image.size() > 0x5f20 && image[0x4f1c] == 0xc7 &&
+                image[0x4f1d] == 0x06,
+            "RPG autonomous movement code-stream oracle changed");
+
+    swd2::RpgEntityRuntime runtime;
+    swd2::advance_rpg_entities(area, map, state, runtime, image);
+    require(area.entity_fields[2][0] ==
+                static_cast<std::uint16_t>(anchor + map.layout().width * 2U) &&
+                area.entity_fields[1][0] == 0 && area.entity_fields[10][0] == 1 &&
+                runtime.delay_remaining[0] == 2 && runtime.roam_y[0] == 1 &&
+                runtime.code_stream_offset == 2,
+            "RPG behavior-0 entity did not consume the original 4f1ch stream");
+    swd2::advance_rpg_entities(area, map, state, runtime, image);
+    require(runtime.delay_remaining[0] == 1 && runtime.code_stream_offset == 2,
+            "RPG entity delay counter did not suppress movement-stream consumption");
+
+    area.entity_fields[3][0] = 2;
+    area.entity_fields[10][0] = 3;
+    runtime.delay_remaining[0] = 0;
+    swd2::advance_rpg_entities(area, map, state, runtime, image);
+    require(area.entity_fields[10][0] == 0 && runtime.delay_remaining[0] == 2,
+            "RPG behavior-2 entity animation did not wrap at field 7");
+
+    area.entity_fields[3][0] = 0;
+    runtime.delay_remaining[0] = 0;
+    runtime.code_stream_offset = 0x1000;
+    swd2::advance_rpg_entities(area, map, state, runtime, image);
+    require(runtime.code_stream_offset == 2,
+            "RPG entity stream did not preserve its compute-before-wrap quirk");
+}
+
+void test_save_slot(const std::filesystem::path& game_root) {
+    const auto temporary = std::filesystem::temp_directory_path() /
+        ("swd2-save-slot-" + std::to_string(
+            static_cast<unsigned long long>(
+                std::filesystem::file_time_type::clock::now().time_since_epoch().count())));
+    std::filesystem::create_directories(temporary);
+    try {
+        auto slot = swd2::SaveSlot::open(game_root, temporary, 4);
+        require(slot.slot() == 4 &&
+                    slot.state_path().filename() == "SAVE.DA4" &&
+                    slot.map_path().filename() == "MAPZ.DA4" &&
+                    std::filesystem::file_size(slot.state_path()) ==
+                        swd2::SharedState::byte_size,
+                "portable save slot did not seed the selected SAVE/MAPZ pair");
+
+        auto state = slot.state();
+        state.set_u16(0x104, 4321);
+        const auto location_offset = std::uint16_t{14};
+        const auto field = std::uint16_t{3};
+        const auto byte_offset = std::int16_t{76};
+        auto map = slot.map_database();
+        const auto before =
+            map->location_at_directory_offset(location_offset).area.entity_fields[3][38];
+        map->mutate_area_word(location_offset, field, byte_offset, 1, true);
+        slot.save(state);
+
+        auto reopened = swd2::SaveSlot::open(game_root, temporary, 4);
+        require(reopened.state().u16(0x104) == 4321 &&
+                    reopened.map_database()
+                            ->location_at_directory_offset(location_offset)
+                            .area.entity_fields[3][38] ==
+                        static_cast<std::uint16_t>(before + 1U),
+                "portable save slot did not persist both SAVE and MAPZ mutations");
+
+        state.set_u16(0x104, 9876);
+        swd2::SaveSlot::save_as(temporary, 5, state, *map);
+        auto copied = swd2::SaveSlot::open(game_root, temporary, 5);
+        require(copied.state().u16(0x104) == 9876 &&
+                    copied.map_database()
+                            ->location_at_directory_offset(location_offset)
+                            .area.entity_fields[3][38] ==
+                        static_cast<std::uint16_t>(before + 1U),
+                "RPG save-item callback could not atomically write a chosen SAVE/MAPZ pair");
+
+        bool rejected = false;
+        try {
+            static_cast<void>(swd2::SaveSlot::open(game_root, temporary, 0));
+        } catch (const std::out_of_range&) {
+            rejected = true;
+        }
+        require(rejected, "portable save slot accepted a number outside 1..5");
+    } catch (...) {
+        std::filesystem::remove_all(temporary);
+        throw;
+    }
+    std::filesystem::remove_all(temporary);
+}
+
+void test_planar_sprite_set(const std::filesystem::path& game_root) {
+    const auto animation = swd2::PlanarSpriteSet::load(game_root / "DE" / "DE001");
+    require(animation.frame_count() == 32, "unexpected DE001 frame count");
+    const auto& frame = animation.frame(0);
+    require(frame.width == 320 && frame.height == 200 &&
+                frame.pixels.size() == 64'000,
+            "DE001 planar frame dimensions were not decoded");
+    require(std::count(frame.pixels.begin(), frame.pixels.end(), 0xfe) == 202 * 64,
+            "DE001 transparent pixel lookup was not decoded");
+    std::uint64_t frame_hash = 1469598103934665603ULL;
+    for (const auto pixel : frame.pixels) {
+        frame_hash ^= pixel;
+        frame_hash *= 1099511628211ULL;
+    }
+    require(frame_hash == 12960686047150932659ULL,
+            "DE001 8x8 four-plane tile expansion differs from the DOS layout");
+    const auto shared_dictionary = swd2::PlanarSpriteSet::load(
+        game_root / "DE" / "DE001", game_root / "DE" / "DE002");
+    require(shared_dictionary.frame_count() != 0,
+            "RAP-only DE002 did not reuse the preceding DE001 dictionary");
+}
+
+void test_battle_database(const std::filesystem::path& game_root) {
+    const auto battles = swd2::BattleDatabase::load(game_root / "ORC.EXE");
+    require(battles.directory_entry_count() == 626 &&
+                battles.occupied_directory_entry_count() == 610 &&
+                battles.encounter_count() == 550,
+            "unexpected ORC.EXE directory dimensions");
+    require(battles.growth_tables()[0][0].fields[0] == 21 &&
+                battles.growth_tables()[3][59].fields[0] == 1125 &&
+                battles.growth_tables()[3][59].fields[8] == 0,
+            "ORC.EXE 60-row party growth tables were not decoded");
+    const auto encounter = battles.encounter_at_directory_offset(392);
+    require(encounter && encounter->get().background_path == "C:\\SWD2\\BA\\BA14.RSK" &&
+                encounter->get().monster_definition_ids[0] == 500 &&
+                encounter->get().definition_slots == std::vector<std::uint16_t>{0} &&
+                encounter->get().horizontal_positions == std::vector<std::uint16_t>{33},
+            "ORC.EXE scripted encounter 392 was not decoded");
+    require(!battles.encounter_at_directory_offset(68),
+            "ORC.EXE empty directory slot was treated as an encounter");
+    require(std::count_if(
+                battles.encounters().begin(), battles.encounters().end(),
+                [](const swd2::BattleEncounter& encounter) {
+                    return encounter.prompt_order ==
+                           swd2::BattlePromptOrder::yes_no;
+                }) == 13 &&
+                std::count_if(
+                    battles.encounters().begin(), battles.encounters().end(),
+                    [](const swd2::BattleEncounter& encounter) {
+                        return encounter.prompt_order ==
+                               swd2::BattlePromptOrder::no_yes;
+                    }) == 7,
+            "ORC.EXE trailing YN/NY pre-battle prompt controls were not decoded");
+    require(swd2::select_random_encounter(0xe00a, 106, 1, 0) == 100 &&
+                swd2::select_random_encounter(0x000a, 10, 100, 7) == 178,
+            "FIG random-encounter region lookup was not reconstructed");
+
+    const auto items = swd2::ScriptArchive::load(game_root / "ITEM.EXE");
+    const auto monster = swd2::MonsterDefinition::parse(500, items.entry(502));
+    require(monster.sprite_number == 500 && monster.vertical_position == 69 &&
+                monster.resistance_flags == std::array<std::uint8_t, 5>{0, 0, 0, 1, 1} &&
+                monster.ai_type == 0 && monster.hit_points == 120 && monster.level == 22 &&
+                monster.status_strength == 1 && monster.primary_ability_chance == 1 &&
+                monster.generic_ability == 10 && monster.initiative_range == 4 &&
+                monster.physical_attack == 90 && monster.speed == 3 &&
+                monster.ability_points == 55 &&
+                monster.experience_reward == 132 && monster.money_reward == 20 &&
+                monster.evasion == 1 && monster.physical_defense == 55,
+            "ITEM.EXE monster combat fields differ from FIG 1000:3396");
+    const auto battle_item = swd2::BattleItemDefinition::parse(51, items.entry(53));
+    require(battle_item.type == 0x0e && battle_item.use_flags == 0x2f &&
+                battle_item.target_flags == 0x10 && battle_item.effect_code == 0x1c &&
+                battle_item.consumed_on_use() && !battle_item.targets_monster(),
+            "ITEM.EXE unaligned FIG battle-item fields were not decoded");
+
+    const auto abilities = swd2::BattleAbilityDatabase::load(game_root / "FIG.EXE");
+    require(abilities.item_category_label(0) ==
+                std::array<std::uint8_t, 4>{0xa4, 0xa3, 0xa9, 0xfa} &&
+                abilities.item_category_label(41) ==
+                std::array<std::uint8_t, 4>{0xc0, 0x73, 0xb1, 0xda},
+            "FIG embedded 42-entry item-category table changed");
+    std::uint64_t notice_hash = 1469598103934665603ULL;
+    std::array<std::size_t, 6> notice_sizes{};
+    for (std::size_t index = 0; index < notice_sizes.size(); ++index) {
+        const auto text = abilities.notice_text(
+            static_cast<swd2::BattleCommandNotice>(index + 1U));
+        notice_sizes[index] = text.size();
+        for (const auto byte : text) {
+            notice_hash ^= byte;
+            notice_hash *= 1099511628211ULL;
+        }
+    }
+    require(notice_sizes == std::array<std::size_t, 6>{24, 14, 14, 24, 24, 20} &&
+                notice_hash == 5687326376259025163ULL &&
+                abilities.notice_text(swd2::BattleCommandNotice::none).empty(),
+            "FIG 184f/4043 modal Big5 notice strings changed");
+    std::uint64_t player_status_hash = 1469598103934665603ULL;
+    for (const auto effect : {0x63U, 0x66U, 0x67U, 0x68U, 0x69U}) {
+        const auto text = abilities.player_status_text(effect);
+        require(text.size() == 8U,
+                "FIG 57d6 player-status label has the wrong length");
+        for (const auto byte : text) {
+            player_status_hash ^= byte;
+            player_status_hash *= 1099511628211ULL;
+        }
+    }
+    require(player_status_hash == 1336891300955925920ULL &&
+                abilities.player_status_text(0x62).empty(),
+            "FIG DATA:2d8d..2db5 player-status labels changed");
+    std::uint64_t player_removed_hash = 1469598103934665603ULL;
+    for (std::size_t slot = 0; slot < 6U; ++slot) {
+        const auto text = abilities.player_removed_buff_text(slot);
+        require(text.size() == 8U,
+                "FIG 292c removed-player-buff label has the wrong length");
+        for (const auto byte : text) {
+            player_removed_hash ^= byte;
+            player_removed_hash *= 1099511628211ULL;
+        }
+    }
+    std::uint64_t monster_removed_hash = 1469598103934665603ULL;
+    for (std::size_t slot = 0; slot < 3U; ++slot) {
+        const auto text = abilities.monster_removed_buff_text(slot);
+        require(text.size() == 8U,
+                "FIG 55e4 removed-monster-buff label has the wrong length");
+        for (const auto byte : text) {
+            monster_removed_hash ^= byte;
+            monster_removed_hash *= 1099511628211ULL;
+        }
+    }
+    require(player_removed_hash == 9876306540757890984ULL &&
+                monster_removed_hash == 11430098229595941862ULL &&
+                abilities.player_removed_buff_text(6).empty() &&
+                abilities.monster_removed_buff_text(3).empty(),
+            "FIG 292c/55e4 dispel feedback strings changed");
+    const std::array<std::uint8_t, 6> ward_text = {
+        0xc5, 0x40, 0xa1, 0x40, 0xc5, 0x5d};
+    const std::array<std::uint8_t, 6> immunity_text = {
+        0xa5, 0xa2, 0xa1, 0x40, 0xae, 0xc4};
+    require(abilities.magic_ward_text().size() == ward_text.size() &&
+                std::equal(abilities.magic_ward_text().begin(),
+                           abilities.magic_ward_text().end(), ward_text.begin()) &&
+                abilities.monster_immunity_text().size() == immunity_text.size() &&
+                std::equal(abilities.monster_immunity_text().begin(),
+                           abilities.monster_immunity_text().end(),
+                           immunity_text.begin()),
+            "FIG 2332/59a1 ward/immunity feedback strings changed");
+    std::uint64_t recovered_status_hash = 1469598103934665603ULL;
+    for (std::size_t slot = 0; slot < 4U; ++slot) {
+        const auto text = abilities.recovered_player_status_text(slot);
+        require(text.size() == 8U,
+                "FIG 0da7 recovered-player-status label has the wrong length");
+        for (const auto byte : text) {
+            recovered_status_hash ^= byte;
+            recovered_status_hash *= 1099511628211ULL;
+        }
+    }
+    require(recovered_status_hash == 4834106636869358567ULL &&
+                abilities.recovered_player_status_text(4).empty(),
+            "FIG DATA:2dbf..2ddd recovered-status labels changed");
+    const std::array<std::uint8_t, 6> death_reaction_text = {
+        0xa5, 0x69, 0xb4, 0x63, 0xa1, 0x49};
+    require(abilities.death_reaction_text().size() == death_reaction_text.size() &&
+                std::equal(abilities.death_reaction_text().begin(),
+                           abilities.death_reaction_text().end(),
+                           death_reaction_text.begin()),
+            "FIG DATA:2d73 death-reaction label changed");
+    const std::array<std::uint8_t, 8> monster_escape_failed_text = {
+        0xb0, 0x6b, 0xa8, 0xab, 0xa5, 0xa2, 0xb1, 0xd1};
+    const std::array<std::uint8_t, 8> monster_escape_text = {
+        0xb0, 0x6b, 0xa1, 0x40, 0xa1, 0x40, 0xa8, 0xab};
+    require(abilities.monster_escape_text(false).size() ==
+                    monster_escape_failed_text.size() &&
+                std::equal(abilities.monster_escape_text(false).begin(),
+                           abilities.monster_escape_text(false).end(),
+                           monster_escape_failed_text.begin()) &&
+                abilities.monster_escape_text(true).size() ==
+                    monster_escape_text.size() &&
+                std::equal(abilities.monster_escape_text(true).begin(),
+                           abilities.monster_escape_text(true).end(),
+                           monster_escape_text.begin()),
+            "FIG 212a/214c monster-escape labels changed");
+    const std::array<std::uint8_t, 6> monster_attack_text = {
+        0xa7, 0xf0, 0xa1, 0x40, 0xc0, 0xbb};
+    const std::array<std::uint8_t, 6> physical_failure_text = {
+        0xa5, 0xa2, 0xa1, 0x40, 0xb1, 0xd1};
+    const std::array<std::uint8_t, 6> evasion_text = {
+        0xb0, 0x7b, 0xa1, 0x40, 0xb8, 0xfa};
+    require(abilities.monster_attack_text().size() == monster_attack_text.size() &&
+                std::equal(abilities.monster_attack_text().begin(),
+                           abilities.monster_attack_text().end(),
+                           monster_attack_text.begin()) &&
+                abilities.physical_failure_text().size() ==
+                    physical_failure_text.size() &&
+                std::equal(abilities.physical_failure_text().begin(),
+                           abilities.physical_failure_text().end(),
+                           physical_failure_text.begin()) &&
+                abilities.evasion_text().size() == evasion_text.size() &&
+                std::equal(abilities.evasion_text().begin(),
+                           abilities.evasion_text().end(), evasion_text.begin()),
+            "FIG 296a physical action/failure/evasion labels changed");
+    const std::array<std::uint8_t, 6> summoned_flee_text = {
+        0xb0, 0x6b, 0xa1, 0x40, 0xa8, 0xab};
+    const std::array<std::uint8_t, 6> summoned_ability_text = {
+        0xa9, 0x5f, 0xa1, 0x40, 0xb3, 0x4e};
+    const std::array<std::uint8_t, 6> capture_action_text = {
+        0xb7, 0xd2, 0xa7, 0xaf, 0xb3, 0xfd};
+    const std::array<std::uint8_t, 22> missing_medium_text = {
+        0xa8, 0x53, 0xa6, 0xb3, 0xb4, 0x43, 0xa4, 0xb6,
+        0xa1, 0x49, 0xb5, 0x4c, 0xaa, 0x6b, 0xa5, 0xce,
+        0xa6, 0xb9, 0xb3, 0x4e, 0xa1, 0x49,
+    };
+    const std::array<std::uint8_t, 14> summon_replacement_text = {
+        0xad, 0x6e, 0xb4, 0xc0, 0xb4, 0xab, 0xa8,
+        0xba, 0xa4, 0x40, 0xb0, 0xa6, 0xa1, 0x48,
+    };
+    require(abilities.summoned_ally_flee_text().size() ==
+                    summoned_flee_text.size() &&
+                std::equal(abilities.summoned_ally_flee_text().begin(),
+                           abilities.summoned_ally_flee_text().end(),
+                           summoned_flee_text.begin()) &&
+                abilities.summoned_ally_ability_text().size() ==
+                    summoned_ability_text.size() &&
+                std::equal(abilities.summoned_ally_ability_text().begin(),
+                           abilities.summoned_ally_ability_text().end(),
+                           summoned_ability_text.begin()) &&
+                abilities.capture_action_text().size() ==
+                    capture_action_text.size() &&
+                std::equal(abilities.capture_action_text().begin(),
+                           abilities.capture_action_text().end(),
+                           capture_action_text.begin()) &&
+                abilities.missing_medium_text().size() ==
+                    missing_medium_text.size() &&
+                std::equal(abilities.missing_medium_text().begin(),
+                           abilities.missing_medium_text().end(),
+                           missing_medium_text.begin()) &&
+                abilities.summon_replacement_text().size() ==
+                    summon_replacement_text.size() &&
+                std::equal(abilities.summon_replacement_text().begin(),
+                           abilities.summon_replacement_text().end(),
+                           summon_replacement_text.begin()),
+            "FIG 10fc/58fa/5d24 summoned/capture/mediator labels changed");
+    const std::array<std::span<const std::uint8_t>, 5> settlement_texts = {
+        abilities.victory_text(), abilities.level_up_title_text(),
+        abilities.defeat_text(), abilities.encounter_capture_text(),
+        abilities.level_up_stats_text(),
+    };
+    std::array<std::size_t, 5> settlement_sizes{};
+    std::uint64_t settlement_hash = 1469598103934665603ULL;
+    for (std::size_t index = 0; index < settlement_texts.size(); ++index) {
+        settlement_sizes[index] = settlement_texts[index].size();
+        for (const auto byte : settlement_texts[index]) {
+            settlement_hash ^= byte;
+            settlement_hash *= 1099511628211ULL;
+        }
+    }
+    require(settlement_sizes ==
+                    std::array<std::size_t, 5>{34, 14, 10, 16, 112} &&
+                settlement_hash == 9341449023210361313ULL,
+            "FIG 04bf/0553/0643/07d2 settlement labels changed");
+    const auto composite_eighty =
+        swd2::BattleCompositeEffect::parse(80, items);
+    const auto composite_ninety =
+        swd2::BattleCompositeEffect::parse(90, items);
+    require(composite_eighty.first_effect == 0x60 &&
+                composite_eighty.second_effect == 0x46 &&
+                composite_ninety.first_effect == 0x38 &&
+                composite_ninety.second_effect == 0x3a,
+            "FIG effect-6b ITEM indirection was not decoded");
+    require(abilities.abilities().size() == 151 &&
+                abilities.ability(1).target_flags == 0xa100 &&
+                abilities.ability(1).effect_code == 0x4e &&
+                abilities.ability(1).cost == 30 &&
+                abilities.ability(1).base_power == 90 &&
+                abilities.ability(36).target_flags == 0xa482 &&
+                abilities.ability(36).effect_code == 0x36 &&
+                abilities.ability(114).effect_code == 0x5e &&
+                abilities.ability(128).effect_code == 0x48 &&
+                abilities.ability(148).effect_code == 0x65 &&
+                abilities.ability(150).base_power == 2000 &&
+                abilities.item_name(51) ==
+                    std::array<std::uint8_t, 12>{
+                        0xa9, 0xdb, 0xbb, 0xee, 0xba, 0x58,
+                        0xa1, 0x40, 0xa1, 0x40, 0xa1, 0x40} &&
+                abilities.item_name(500) ==
+                    std::array<std::uint8_t, 12>{
+                        0xa5, 0xdb, 0xb7, 0xe0, 0xba, 0xeb,
+                        0xa1, 0x40, 0xa1, 0x40, 0xa1, 0x40},
+            "FIG.EXE ability/item-name tables were not decoded");
+    require(swd2::fig_primary_effect_resource(0x32) == 43 &&
+                swd2::fig_primary_effect_resource(0x38) == 34 &&
+                swd2::fig_primary_effect_resource(0x42) == 220 &&
+                swd2::fig_primary_effect_resource(0x56) == 300 &&
+                swd2::fig_primary_effect_resource(0x65) == 345 &&
+                !swd2::fig_primary_effect_resource(0x47) &&
+                !swd2::fig_primary_effect_resource(0x69),
+            "FIG DS:2bbd visual dispatcher did not select exact SP/ST roots");
+    const auto effect_32 = swd2::fig_effect_resource_sequence(0x32);
+    const auto effect_33 = swd2::fig_effect_resource_sequence(0x33);
+    const auto effect_35 = swd2::fig_effect_resource_sequence(0x35);
+    const auto effect_65 = swd2::fig_effect_resource_sequence(0x65);
+    require(effect_32.size() == 40 && effect_32.front() == 43 &&
+                effect_32[7] == 50 && effect_32[8] == 43 &&
+                effect_32.back() == 50 &&
+                effect_33.size() == 2 && effect_33[0] == 51 &&
+                effect_33[1] == 551 &&
+                effect_35.size() == 48 && effect_35.front() == 0 &&
+                effect_35[23] == 23 && effect_35[24] == 0 &&
+                effect_35.back() == 23 &&
+                effect_65.size() == 64 && effect_65.front() == 345 &&
+                effect_65.back() == 408,
+            "FIG effect handlers did not preserve their full archive load order");
+    require(swd2::fig_effect_voice_resource(0x00) == 1 &&
+                swd2::fig_effect_voice_resource(0x31) == 49 &&
+                swd2::fig_effect_voice_resource(0x3b) == 49 &&
+                swd2::fig_effect_voice_resource(0x3d) == 61 &&
+                swd2::fig_effect_voice_resource(0x47) == 0x47 &&
+                swd2::fig_effect_voice_resource(0x63) == 72 &&
+                swd2::fig_effect_voice_resource(0x65) == 101 &&
+                !swd2::fig_effect_voice_resource(0x6a),
+            "FIG 5b37 SP###.VOC dispatcher mapping was not reconstructed");
+    require(!swd2::fig_monster_ability_voice_resource(0x33, 0x32) &&
+                !swd2::fig_monster_ability_voice_resource(0x53, 0x65) &&
+                swd2::fig_monster_ability_voice_resource(0x56, 0x40) == 0x48 &&
+                swd2::fig_monster_ability_voice_resource(10, 0x20) == 1 &&
+                swd2::fig_monster_ability_voice_resource(10, 0x48) == 0x48,
+            "FIG 262f enemy ability voice exceptions changed");
+
+    swd2::BattleSessionEvent composite_first;
+    composite_first.kind = swd2::BattleEventKind::player_ability;
+    composite_first.source = 1;
+    composite_first.ability_id = 90;
+    composite_first.effect_code = 0x38;
+    auto composite_same_target = composite_first;
+    composite_same_target.target = 1;
+    auto composite_second = composite_first;
+    composite_second.effect_code = 0x3a;
+    swd2::BattleSessionEvent composite_missing;
+    composite_missing.kind = swd2::BattleEventKind::missing_medium;
+    composite_missing.source = 1;
+    composite_missing.ability_id = 90;
+    composite_missing.effect_code = 0x40;
+    require(swd2::fig_same_presented_action(
+                composite_first, composite_same_target) &&
+                swd2::fig_same_effect_phase(
+                    composite_first, composite_same_target) &&
+                swd2::fig_same_presented_action(
+                    composite_first, composite_second) &&
+                !swd2::fig_same_effect_phase(
+                    composite_first, composite_second) &&
+                swd2::fig_same_presented_action(
+                    composite_second, composite_missing) &&
+                !swd2::fig_same_effect_phase(
+                    composite_second, composite_missing),
+            "FIG 6b composite grouping repeated actor setup or lost a nested effect phase");
+
+    swd2::BattleSessionEvent physical;
+    physical.kind = swd2::BattleEventKind::player_attack;
+    physical.damage = 12;
+    physical.critical = true;
+    physical.defeated = true;
+    physical.target_is_monster = true;
+    require(swd2::fig_non_effect_voice_cues(physical, 24) ==
+                std::vector<swd2::FigVoiceCue>({
+                    {swd2::FigVoiceFile::sp, 7,
+                     swd2::FigVoiceTiming::after_first_pose},
+                    {swd2::FigVoiceFile::sp, 4,
+                     swd2::FigVoiceTiming::after_pose},
+                }),
+            "FIG player physical/critical voice sequence invented a monster-death SP015");
+    physical.damage = 0;
+    physical.defeated = false;
+    require(swd2::fig_non_effect_voice_cues(physical, 24) ==
+                std::vector<swd2::FigVoiceCue>({
+                    {swd2::FigVoiceFile::sp, 7,
+                     swd2::FigVoiceTiming::after_first_pose},
+                    {swd2::FigVoiceFile::sp, 4,
+                     swd2::FigVoiceTiming::after_pose},
+                    {swd2::FigVoiceFile::k1, 0,
+                     swd2::FigVoiceTiming::after_action},
+                }),
+            "FIG failed player physical attack voice ordering differs from 13e8/12d5");
+    physical.evaded = true;
+    require(swd2::fig_non_effect_voice_cues(physical, 24) ==
+                std::vector<swd2::FigVoiceCue>({
+                    {swd2::FigVoiceFile::sp, 7,
+                     swd2::FigVoiceTiming::after_first_pose},
+                    {swd2::FigVoiceFile::sp, 4,
+                     swd2::FigVoiceTiming::after_pose},
+                }),
+            "FIG evaded player attack incorrectly selected K1.VOC");
+    swd2::BattleSessionEvent monster_hit;
+    monster_hit.kind = swd2::BattleEventKind::monster_attack;
+    monster_hit.damage = 4;
+    monster_hit.defeated = true;
+    require(swd2::fig_non_effect_voice_cues(monster_hit) ==
+                std::vector<swd2::FigVoiceCue>({
+                    {swd2::FigVoiceFile::sp, 106,
+                     swd2::FigVoiceTiming::before_action},
+                    {swd2::FigVoiceFile::sp, 15,
+                     swd2::FigVoiceTiming::after_action},
+                }),
+            "FIG monster physical/death voices did not select SP106/SP015");
+    swd2::BattleSessionEvent fled;
+    fled.kind = swd2::BattleEventKind::monster_fled;
+    require(swd2::fig_non_effect_voice_cues(fled) ==
+                std::vector<swd2::FigVoiceCue>({
+                    {swd2::FigVoiceFile::sv3, 0,
+                     swd2::FigVoiceTiming::before_action},
+                }),
+            "FIG flee event did not select SV3.VOC");
+    swd2::BattleSessionEvent player_escape;
+    player_escape.kind = swd2::BattleEventKind::player_escaped;
+    require(swd2::fig_player_escape_poses() ==
+                    std::array<std::size_t, 2>{0, 5} &&
+                swd2::fig_player_ability_poses() ==
+                    std::array<std::size_t, 2>{0, 4} &&
+                swd2::fig_player_attack_pose_ticks() ==
+                    std::array<std::uint16_t, 3>{3, 1, 1} &&
+                swd2::fig_player_ability_pose_ticks() ==
+                    std::array<std::uint16_t, 2>{3, 3} &&
+                swd2::fig_player_attack_result_hold_ticks() == 5 &&
+                swd2::fig_player_escape_failure_placement() ==
+                    swd2::FigPlayerEscapeFailurePlacement{
+                        0x1a, 0x4b, 4, 0x1c, 0x54} &&
+                swd2::fig_non_effect_voice_cues(player_escape) ==
+                    std::vector<swd2::FigVoiceCue>({
+                        {swd2::FigVoiceFile::sv3, 0,
+                         swd2::FigVoiceTiming::after_pose},
+                    }),
+            "FIG 09b8 normal escape poses/card/SV3 ordering differs");
+    require(
+        swd2::fig_support_presentation(0x01) ==
+                swd2::FigSupportPresentation::single_target &&
+            swd2::fig_support_presentation(0x0c) ==
+                swd2::FigSupportPresentation::all_targets &&
+            swd2::fig_support_presentation(0x12) ==
+                swd2::FigSupportPresentation::all_targets &&
+            swd2::fig_support_presentation(0x22) ==
+                swd2::FigSupportPresentation::commit_without_redraw &&
+            swd2::fig_support_presentation(0x27) ==
+                swd2::FigSupportPresentation::commit_without_redraw &&
+            swd2::fig_support_presentation(0x28) ==
+                swd2::FigSupportPresentation::none &&
+            swd2::fig_support_presentation(0x29) ==
+                swd2::FigSupportPresentation::none &&
+            swd2::fig_selector_is_immediate_return(0x00) &&
+            swd2::fig_selector_is_immediate_return(0x28) &&
+            swd2::fig_selector_is_immediate_return(0x29) &&
+            !swd2::fig_selector_is_immediate_return(0x27) &&
+            !swd2::fig_selector_is_immediate_return(0x2a) &&
+            swd2::fig_effect_tail_hold_ticks(0x62) == 4 &&
+            swd2::fig_monster_status_damage_tail_hold_ticks() == 4 &&
+            swd2::fig_monster_ability_flash_color(0) == 0x8d &&
+            swd2::fig_monster_ability_flash_color(1) == 0x5c &&
+            swd2::fig_monster_ability_flash_color(2) == 0x81 &&
+            swd2::fig_monster_ability_flash_color(3) == 0xaa &&
+            swd2::fig_monster_ability_flash_color(4) == 0x7c &&
+            swd2::fig_monster_ability_flash_color(5) == 0x81 &&
+            swd2::fig_monster_ability_flash_steps() == 8 &&
+            swd2::fig_monster_attack_shake_steps() == 8 &&
+            swd2::fig_monster_attack_shake_scanlines() == 3 &&
+            swd2::fig_monster_turn_tail_ticks() ==
+                std::array<std::uint16_t, 2>{5, 3} &&
+            swd2::fig_all_target_slot_span(0, std::size_t{2}, 4) == 2 &&
+            swd2::fig_all_target_slot_span(2, std::nullopt, 4) == 2 &&
+            swd2::fig_all_target_slot_span(0, std::nullopt, 1) == 1 &&
+            swd2::fig_effect_tail_hold_ticks(0x61) == 0 &&
+            swd2::fig_effect_leaves_player_status_card(0x63) &&
+            swd2::fig_effect_leaves_player_status_card(0x66) &&
+            swd2::fig_effect_leaves_player_status_card(0x69) &&
+            !swd2::fig_effect_leaves_player_status_card(0x62) &&
+            !swd2::fig_effect_leaves_player_status_card(0x65) &&
+            swd2::fig_support_presentation(0x2a) ==
+                swd2::FigSupportPresentation::single_target &&
+            swd2::fig_support_pre_commit_ticks(
+                swd2::FigSupportPresentation::single_target) == 3 &&
+            swd2::fig_support_pre_commit_ticks(
+                swd2::FigSupportPresentation::all_targets) == 9 &&
+            swd2::fig_support_post_commit_ticks(
+                swd2::FigSupportPresentation::single_target) == 9 &&
+            swd2::fig_support_post_commit_ticks(
+                swd2::FigSupportPresentation::commit_without_redraw) == 0,
+        "FIG 5841/58a9 support presentation classes or waits differ");
+    player_escape.ability_id = 7;
+    require(swd2::fig_non_effect_voice_cues(player_escape).empty(),
+            "FIG effect-47 escape invented the normal command's SV3 sample");
+    swd2::BattleSessionEvent captured;
+    captured.kind = swd2::BattleEventKind::monster_captured;
+    captured.defeated = true;
+    require(swd2::fig_non_effect_voice_cues(captured) ==
+                std::vector<swd2::FigVoiceCue>({
+                    {swd2::FigVoiceFile::sp, 16,
+                     swd2::FigVoiceTiming::before_action},
+                    {swd2::FigVoiceFile::sp, 15,
+                     swd2::FigVoiceTiming::after_action},
+                }),
+            "FIG capture did not preserve SP016 then SP015 ordering");
+    captured.kind = swd2::BattleEventKind::capture_failed;
+    captured.defeated = false;
+    require(swd2::fig_non_effect_voice_cues(captured) ==
+                std::vector<swd2::FigVoiceCue>({
+                    {swd2::FigVoiceFile::sp, 16,
+                     swd2::FigVoiceTiming::before_action},
+                }),
+            "FIG failed capture did not preserve its SP016 cue");
+}
+
+void test_mon_database(const std::filesystem::path& game_root) {
+    const auto mon = swd2::MonDatabase::load(game_root / "MON.EXE");
+    require(mon.interaction(0, 0) == 38 && mon.interaction(0, 16) == 36 &&
+                mon.interaction(4, 7) == mon.interaction(7, 4),
+            "MON.EXE 17x17 interaction matrix was not decoded");
+    require(mon.value_tables().size() == 15 && mon.value_entry_count() == 161 &&
+                mon.value_tables()[0].front().definition_id == 318 &&
+                mon.value_tables()[14].back().definition_id == 481,
+            "MON.EXE terminated value tables were not decoded");
+}
+
+void test_battle_rules() {
+    const auto sequence = [](std::vector<std::uint16_t> values) {
+        return [values = std::move(values), cursor = std::size_t{}]
+               (std::uint16_t modulus) mutable {
+            if (cursor >= values.size() || values[cursor] >= modulus) {
+                throw std::runtime_error("invalid deterministic battle-random sequence");
+            }
+            return values[cursor++];
+        };
+    };
+
+    const std::array<swd2::InitiativeStats, 4> actors = {
+        swd2::InitiativeStats{5, 10}, swd2::InitiativeStats{5, 20},
+        swd2::InitiativeStats{5, 15}, swd2::InitiativeStats{5, 1},
+    };
+    const std::array<swd2::InitiativeStats, 2> enemies = {
+        swd2::InitiativeStats{5, 25}, swd2::InitiativeStats{5, 0},
+    };
+    const auto turns = swd2::roll_turn_order(
+        actors, enemies, sequence({0, 0, 0, 0, 0, 4}));
+    require(turns.size() == 6 && turns[0].monster && turns[0].index == 0 &&
+                !turns[1].monster && turns[1].index == 1 &&
+                !turns[2].monster && turns[2].index == 2 &&
+                !turns[3].monster && turns[3].index == 0 &&
+                turns[4].monster && turns[4].index == 1 &&
+                !turns[5].monster && turns[5].index == 3,
+            "FIG initiative sorting/order was not reproduced");
+
+    const std::array<swd2::InitiativeStats, 4> crowded_actors = {
+        swd2::InitiativeStats{1, 10}, swd2::InitiativeStats{1, 20},
+        swd2::InitiativeStats{1, 30}, swd2::InitiativeStats{1, 40},
+    };
+    const std::array<swd2::InitiativeStats, 7> crowded_runtime = {
+        swd2::InitiativeStats{1, 50}, swd2::InitiativeStats{1, 60},
+        swd2::InitiativeStats{1, 70}, swd2::InitiativeStats{1, 80},
+        swd2::InitiativeStats{1, 90}, swd2::InitiativeStats{1, 100},
+        swd2::InitiativeStats{1, 110},
+    };
+    const auto crowded_turns = swd2::roll_turn_order(
+        crowded_actors, crowded_runtime,
+        sequence(std::vector<std::uint16_t>(11, 0)));
+    require(crowded_turns.size() == 11 &&
+                std::none_of(crowded_turns.begin(), crowded_turns.end(),
+                             [](const swd2::BattleTurn& turn) {
+                                 return turn.monster && turn.index == 6;
+                             }) &&
+                std::count_if(crowded_turns.begin(), crowded_turns.end(),
+                              [](const swd2::BattleTurn& turn) {
+                                  return !turn.monster && turn.index == 0;
+                              }) == 2,
+            "FIG ten-slot initiative selector quirk was not preserved");
+
+    swd2::MonsterTargetState monster{100, 30, 1, false, true};
+    std::uint16_t critical_countdown = 5;
+    const auto player_result = swd2::player_basic_attack(
+        {10, 40}, monster, critical_countdown, sequence({3, 0, 1}));
+    require(player_result.hit && player_result.critical && player_result.damage == 26 &&
+                !player_result.defeated && monster.hit_points == 74 &&
+                critical_countdown == 20,
+            "FIG player physical attack/critical formula was not reproduced");
+
+    swd2::MonsterTargetState dodger{100, 10, 2, false, true};
+    critical_countdown = 7;
+    const auto evaded = swd2::player_basic_attack(
+        {8, 30}, dodger, critical_countdown, sequence({1, 1, 0}));
+    require(!evaded.hit && evaded.evaded && dodger.hit_points == 100 &&
+                critical_countdown == 6,
+            "FIG monster evasion path was not reproduced");
+
+    swd2::PlayerTargetState actor{59, 30, 1, 0, false, false, true};
+    const auto enemy_result = swd2::monster_basic_attack(
+        {22, 90, 4}, actor, sequence({2, 1, 4}));
+    require(enemy_result.hit && enemy_result.damage == 62 && enemy_result.defeated &&
+                enemy_result.inflicted_status && actor.hit_points == 0 &&
+                (actor.status_bits & 0x2200U) == 0x2200U,
+            "FIG enemy physical attack/death/status formula was not reproduced");
+
+    swd2::MonsterTargetState ally_target{100, 30, 9, true, true};
+    const auto ally_attack = swd2::summoned_ally_basic_attack(
+        77, ally_target, sequence({1}));
+    require(ally_attack.hit && !ally_attack.evaded &&
+                ally_attack.damage == 47 && ally_target.hit_points == 53,
+            "FIG captured-ally fixed attack/evasion formula was not reproduced");
+
+    swd2::PlayerTargetState armored{10, 30, 0, 0, false, false, false};
+    const auto retry = swd2::monster_basic_attack(
+        {2, 10, 1}, armored, sequence({0, 2}));
+    require(retry.hit && retry.damage == 2 && armored.hit_points == 8,
+            "FIG enemy low-attack retry formula was not reproduced");
+}
+
+void test_battle_random(const std::filesystem::path& game_root) {
+    auto random = swd2::FigBattleRandom::load(game_root / "FIG.EXE", 0x1000);
+    require(random.draw(6) == 4 && random.draw(20) == 16 &&
+                random.draw(11) == 7 && random.draw(10) == 3 &&
+                random.draw(4) == 2 && random.draw(3) == 0 &&
+                random.cursor() == 0x100c,
+            "FIG code-window random sequence differs from 1000:2b41");
+
+    auto wrapping = swd2::FigBattleRandom::load(game_root / "FIG.EXE", 0x1ffe);
+    static_cast<void>(wrapping.draw(7));
+    require(wrapping.cursor() == 0x1000 && wrapping.draw(6) == 4 &&
+                wrapping.cursor() == 0x1002,
+            "FIG random cursor did not wrap from 1ffe to 1000");
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    wrapping.store(state);
+    require(state.u16(0x49c) == 0x1002,
+            "FIG random cursor did not persist in shared state +49c");
+}
+
+void test_battle_party(const std::filesystem::path& game_root) {
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    auto member = swd2::BattlePartyMember::load(state, 0);
+    require(member.party_index == 0 && member.identity == 0 &&
+                member.status_bits == 0 && member.physical_attack == 39 &&
+                member.physical_defense == 30 && member.hit_points == 59 &&
+                member.maximum_hit_points == 59 && member.level == 9 &&
+                member.initiative_range == 14 && member.secondary_points == 52 &&
+                member.maximum_secondary_points == 52 && member.field_3d == 30 &&
+                member.field_45 == 60 && member.field_4f == 22 &&
+                member.ability_points == 36 &&
+                member.maximum_ability_points == 36 && member.speed == 26 &&
+                member.evasion == 1 && member.abilities[0] == 76 &&
+                member.abilities[1] == 70 && member.abilities[2] == 0 &&
+                member.right_hand_item == 122 &&
+                member.left_hand_item == 122 &&
+                member.single_weapon_animation,
+            "SAVE actor zero was not decoded as a typed FIG battle record");
+    require(swd2::fig_fighter_base_frame(0, 0, 24) == 0 &&
+                swd2::fig_fighter_base_frame(12, 1, 24) == 6 &&
+                swd2::fig_fighter_base_frame(24, 2, 24) == 12 &&
+                swd2::fig_fighter_base_frame(36, 3, 24) == 18 &&
+                swd2::fig_fighter_base_frame(0xffff, 2, 24) == 12,
+            "FIG FMAN identity>>1 six-frame grouping was not reproduced");
+    const auto normal_pose = swd2::fig_fighter_placement(12, 1, 2, 24);
+    const auto critical_pose = swd2::fig_fighter_placement(36, 3, 3, 24);
+    require(normal_pose.frame == 8 && normal_pose.left == 108 &&
+                normal_pose.top == 157 && critical_pose.frame == 21 &&
+                critical_pose.left == 256 && critical_pose.top == 154,
+            "FIG 137a FMAN pose offset tables/Mode-X conversion differ");
+    require(swd2::fig_weapon_animations(member) ==
+                    std::vector<swd2::FigWeaponAnimation>{{122, false}} &&
+                swd2::fig_weapon_placement(160, 80) ==
+                    swd2::FigWeaponPlacement{144, 30},
+            "FIG +2c single-weapon 14b1 path/anchor differs");
+    require(swd2::fig_page_wipe_scanline_ends() ==
+                std::array<int, 4>{50, 100, 150, 200},
+            "FIG 3c44 weapon wipe no longer copies four 50-line chunks");
+    auto dual_weapon = member;
+    dual_weapon.single_weapon_animation = false;
+    require(swd2::fig_weapon_animations(dual_weapon) ==
+                    std::vector<swd2::FigWeaponAnimation>{
+                        {122, false}, {122, true}},
+            "FIG 152a/155c dual-weapon order/mirroring differs");
+    dual_weapon.right_hand_item = 0;
+    dual_weapon.left_hand_item = 125;
+    require(swd2::fig_weapon_animations(dual_weapon) ==
+                    std::vector<swd2::FigWeaponAnimation>{{125, true}},
+            "FIG left-only weapon did not select mirrored 155c");
+    dual_weapon.left_hand_item = 0;
+    require(swd2::fig_weapon_animations(dual_weapon) ==
+                    std::vector<swd2::FigWeaponAnimation>{{0, false}},
+            "FIG unarmed attack omitted the shipped SW000 animation");
+    require(member.living() && member.initiative().random_range == 14 &&
+                member.initiative().base == 26 &&
+                member.attack_stats().physical_attack == 39 &&
+                member.physical_target().hit_points == 59 &&
+                member.ability_target().maximum_hit_points == 59,
+            "typed FIG actor conversions differ from battle rule structures");
+
+    member.hit_points = 10;
+    member.status_bits = 0x0200;
+    member.physical_attack = 99;
+    member.ability_points = 7;
+    member.maximum_secondary_points = 44;
+    member.field_3d = 45;
+    member.field_45 = 46;
+    member.field_4f = 47;
+    member.speed = 8;
+    member.evasion = 9;
+    member.abilities[2] = 5;
+    member.store(state);
+    constexpr std::size_t base = 0x106;
+    require(state.u16(base + 0x2d) == 10 && state.u16(base + 8) == 0x0200 &&
+                state.u16(base + 0x0c) == 99 && state.u16(base + 0x55) == 7 &&
+                state.u16(base + 0x37) == 44 && state.u16(base + 0x3d) == 45 &&
+                state.u16(base + 0x45) == 46 && state.u16(base + 0x4f) == 47 &&
+                state.u16(base + 0x5d) == 8 && state.u16(base + 0x65) == 9 &&
+                state.u8(base + 0x6f) == 5,
+            "typed FIG actor changes were not stored at exact shared-state offsets");
+}
+
+void test_fig_effect_timeline(const std::filesystem::path& game_root) {
+    require(swd2::fig_summoned_action_card_placement(0) ==
+                    swd2::FigSummonedActionCardPlacement{8, 15, 16, 24} &&
+                swd2::fig_summoned_action_card_placement(1) ==
+                    swd2::FigSummonedActionCardPlacement{88, 15, 96, 24},
+            "FIG 10fc summoned action-card Mode-X placement differs");
+    require(swd2::fig_summoned_name_card_placement(0) ==
+                    swd2::FigSummonedNameCardPlacement{0, 0, 4, 1, 8, 9} &&
+                swd2::fig_summoned_name_card_placement(1) ==
+                    swd2::FigSummonedNameCardPlacement{0x14, 0, 4, 1, 88, 9},
+            "FIG 2f1f summoned name-card Mode-X placement differs");
+    require(swd2::fig_monster_status_icon_frame(0) == 0xa1 &&
+                swd2::fig_monster_status_icon_frame(1) == 0xa4 &&
+                swd2::fig_monster_status_icon_frame(2) == 0x9e &&
+                swd2::fig_monster_status_icon_frame(3) == 0xa5 &&
+                swd2::fig_monster_status_icon_frame(4) == 0x9f &&
+                swd2::fig_monster_status_icon_frame(5) == 0 &&
+                swd2::fig_monster_status_icon_placement(30, 0) ==
+                    swd2::FigMonsterStatusIconPlacement{136, 0, 152, 4} &&
+                swd2::fig_monster_status_icon_placement(30, 3) ==
+                    swd2::FigMonsterStatusIconPlacement{136, 0, 152, 28},
+            "FIG 2deb persistent monster-status stack differs");
+    swd2::BattleSessionEvent monster_reaction;
+    monster_reaction.target_is_monster = true;
+    monster_reaction.kind = swd2::BattleEventKind::player_attack;
+    monster_reaction.damage = 1;
+    require(swd2::fig_monster_reaction_phase(monster_reaction) ==
+                swd2::FigMonsterReactionPhase::weapon_frame,
+            "FIG physical hit did not select the one-shot weapon reaction");
+    monster_reaction.kind = swd2::BattleEventKind::player_ability;
+    require(swd2::fig_monster_reaction_phase(monster_reaction) ==
+                swd2::FigMonsterReactionPhase::first_result_frame,
+            "FIG magic hit did not select the first 144e reaction frame");
+    monster_reaction.damage = 0;
+    require(swd2::fig_monster_reaction_phase(monster_reaction) ==
+                swd2::FigMonsterReactionPhase::none,
+            "FIG zero-damage ability incorrectly selected a hit reaction");
+    monster_reaction.kind = swd2::BattleEventKind::status_damage;
+    require(swd2::fig_monster_reaction_phase(monster_reaction) ==
+                swd2::FigMonsterReactionPhase::first_result_frame,
+            "FIG zero periodic roll omitted its literal 144e reaction frame");
+    monster_reaction.target_is_monster = false;
+    require(swd2::fig_monster_reaction_phase(monster_reaction) ==
+                swd2::FigMonsterReactionPhase::none,
+            "FIG party target incorrectly selected a monster reaction frame");
+    require(swd2::fig_player_status_bit(0x5e) == 0x0020 &&
+                swd2::fig_player_status_bit(0x64) == 0x0002 &&
+                swd2::fig_player_status_bit(0x5f) == 0x0004 &&
+                swd2::fig_player_status_bit(0x65) == 0x0080 &&
+                !swd2::fig_player_status_bit(0x63),
+            "FIG monster-special effect/status-bit mapping differs");
+    require(swd2::fig_required_medium(0x32) == 0 &&
+                swd2::fig_required_medium(0x34) == 0 &&
+                swd2::fig_required_medium(0x35) == 0 &&
+                swd2::fig_required_medium(0x36) == 0 &&
+                swd2::fig_required_medium(0x40) == 0 &&
+                swd2::fig_required_medium(0x37) == 1 &&
+                swd2::fig_required_medium(0x43) == 1 &&
+                swd2::fig_required_medium(0x45) == 2 &&
+                swd2::fig_required_medium(0x48) == 2 &&
+                !swd2::fig_required_medium(0x33) &&
+                swd2::fig_medium_from_target_flags(0x00e0) == 0 &&
+                swd2::fig_medium_from_target_flags(0x0060) == 1 &&
+                swd2::fig_medium_from_target_flags(0x0020) == 2 &&
+                !swd2::fig_medium_from_target_flags(0x0010) &&
+                swd2::fig_dismissed_medium(0x35) == 0 &&
+                swd2::fig_dismissed_medium(0x43) == 1 &&
+                swd2::fig_dismissed_medium(0x53) == 2 &&
+                !swd2::fig_dismissed_medium(0x52) &&
+                swd2::fig_medium_placement(0) ==
+                    swd2::FigEffectPlacement{0x4a * 4, 1} &&
+                swd2::fig_medium_placement(1) ==
+                    swd2::FigEffectPlacement{0x44 * 4, 1} &&
+                swd2::fig_medium_placement(2) ==
+                    swd2::FigEffectPlacement{0x3e * 4, 1},
+            "FIG 23b1/2731/58fa persistent mediator mapping differs");
+    const auto effect_32 = swd2::fig_effect_timeline(0x32);
+    require(effect_32.size() == 20 && effect_32.front().layers.size() == 2 &&
+                effect_32.front().layers[0].resource == 43 &&
+                effect_32.front().layers[1].resource == 44 &&
+                effect_32.front().layers[1].vertical == 100 &&
+                effect_32[4].layers[0].resource == 43,
+            "FIG effect 32 paired/reloaded 48da timeline differs from 48a2");
+
+    const auto effect_33 = swd2::fig_effect_timeline(0x33);
+    require(effect_33.size() == 13 &&
+                effect_33.front().layers[0].resource == 51 &&
+                effect_33.front().layers[0].horizontal == -5 &&
+                effect_33.front().layers[0].vertical == 110 &&
+                effect_33[4].layers[0].horizontal == -7 &&
+                effect_33[4].layers[0].vertical == 100 &&
+                effect_33[5].layers[0].resource == 551 &&
+                effect_33.back().layers[0].horizontal == 1 &&
+                effect_33.back().layers[0].vertical == 9,
+            "FIG effect 33 cumulative dual-archive flight path differs from 490c");
+
+    const auto effect_35 = swd2::fig_effect_timeline(0x35);
+    require(effect_35.size() == 24 && effect_35.front().layers.size() == 2 &&
+                effect_35.front().layers[0].resource == 0 &&
+                effect_35.front().layers[1].resource == 1 &&
+                effect_35[12].layers[0].resource == 0,
+            "FIG effect 35 full-screen paired compositor differs from 49d6");
+
+    const auto effect_42 = swd2::fig_effect_timeline(0x42);
+    require(effect_42.size() == 16 && effect_42[0].layers[0].resource == 220 &&
+                effect_42[0].layers[0].horizontal == 16 &&
+                effect_42[11].layers[0].resource == 225 &&
+                effect_42[12].layers.size() == 2 &&
+                effect_42[12].layers[0].resource == 228 &&
+                effect_42[12].layers[1].sprite_frame == 1 &&
+                effect_42.back().layers[0].resource == 231,
+            "FIG effect 42 travelling/composite chain differs from 4bd8");
+
+    const auto effect_44 = swd2::fig_effect_timeline(0x44);
+    require(effect_44.size() == 10 && effect_44[0].layers[0].vertical == 2 &&
+                effect_44[4].layers[0].vertical == 54 &&
+                effect_44[4].layers[0].sprite_frame == 0 &&
+                effect_44[5].layers[0].sprite_frame == 1 &&
+                effect_44[8].layers[0].resource == 247 &&
+                effect_44[9].layers[0].sprite_frame == 1,
+            "FIG effect 44 held/released frame path differs from 4e15");
+
+    const auto effect_46 = swd2::fig_effect_timeline(0x46);
+    require(effect_46.size() == 20 &&
+                effect_46.front().layers[0].sprite_frame == 0 &&
+                effect_46[9].layers[0].sprite_frame == 9 &&
+                effect_46[10].layers[0].sprite_frame == 0,
+            "FIG effect 46 archive frame reset differs from 4eb0");
+
+    const auto effect_4d = swd2::fig_effect_timeline(0x4d);
+    require(effect_4d.size() == 6 && effect_4d[0].layers.size() == 1 &&
+                effect_4d[0].layers[0].resource == 283 &&
+                effect_4d[0].layers[0].sprite_frame == 0 &&
+                effect_4d[3].layers[0].sprite_frame == 0 &&
+                swd2::resolve_fig_effect_placement(
+                    effect_4d[0].layers[0], 43, 91) ==
+                    swd2::FigEffectPlacement{160, 71},
+            "FIG effect 4d frame reset/target placement differs from 5035");
+
+    const auto effect_5a = swd2::fig_effect_timeline(0x5a);
+    require(effect_5a.size() == 8 &&
+                swd2::resolve_fig_effect_placement(
+                    effect_5a[0].layers[0], 43, 91) ==
+                    swd2::FigEffectPlacement{140, 75} &&
+                effect_5a[3].layers[0].resource == 313 &&
+                swd2::resolve_fig_effect_placement(
+                    effect_5a[3].layers[0], 43, 91) ==
+                    swd2::FigEffectPlacement{156, 0},
+            "FIG effect 5a two-stage placement differs from 5364");
+
+    const auto effect_5b = swd2::fig_effect_timeline(0x5b);
+    const std::array<swd2::FigEffectPlacement, 5> path = {{
+        {152, 0}, {140, 14}, {124, 56}, {92, 92}, {-4, 94},
+    }};
+    require(effect_5b.size() == path.size(),
+            "FIG effect 5b did not preserve all five path frames");
+    for (std::size_t index = 0; index < path.size(); ++index) {
+        require(effect_5b[index].layers[0].sprite_frame == index &&
+                    swd2::resolve_fig_effect_placement(
+                        effect_5b[index].layers[0], 43, 91) == path[index],
+                "FIG effect 5b cumulative DS:30bc/30c6 path differs");
+    }
+
+    const auto effect_5d = swd2::fig_effect_timeline(0x5d);
+    require(effect_5d.size() == 13 && effect_5d[0].layers.size() == 3 &&
+                effect_5d[0].layers[0].resource == 319 &&
+                effect_5d[0].layers[0].sprite_frame == 0 &&
+                effect_5d[0].layers[1].sprite_frame == 1 &&
+                effect_5d[0].layers[2].sprite_frame == 2 &&
+                effect_5d[0].layers[0].vertical == 4 &&
+                effect_5d[0].layers[1].vertical == 94 &&
+                effect_5d[0].layers[2].vertical == 139 &&
+                effect_5d.back().layers[0].resource == 331,
+            "FIG effect 5d simultaneous SP319 layers differ from 5437");
+
+    const auto effect_65 = swd2::fig_effect_timeline(0x65);
+    require(effect_65.size() == 32 && effect_65.front().layers.size() == 2 &&
+                effect_65.front().layers[0].resource == 345 &&
+                effect_65.front().layers[1].resource == 346 &&
+                effect_65.front().layers[1].vertical == 100 &&
+                effect_65.back().layers[0].resource == 407 &&
+                effect_65.back().layers[1].resource == 408 &&
+                swd2::resolve_fig_effect_placement(
+                    effect_65.front().layers[0], 43, 91) ==
+                    swd2::FigEffectPlacement{32, 0},
+            "FIG effect 65 paired 48da compositor differs from 56fb");
+
+    const auto one_digit = swd2::fig_monster_number_timeline(40, 100, 7);
+    const auto two_digits = swd2::fig_monster_number_timeline(40, 100, 42);
+    const auto five_digits = swd2::fig_monster_number_timeline(40, 100, 65535);
+    require(one_digit.front() == swd2::FigNumberPlacement{40, 95} &&
+                one_digit.back() == swd2::FigNumberPlacement{40, 59} &&
+                two_digits.front() == swd2::FigNumberPlacement{38, 95} &&
+                five_digits.front() == swd2::FigNumberPlacement{32, 95},
+            "FIG monster result digits differ from 144e/3d6c right alignment");
+    const auto party_digits = swd2::fig_party_number_timeline(2);
+    require(party_digits.front() == swd2::FigNumberPlacement{48, 160} &&
+                party_digits.back() == swd2::FigNumberPlacement{48, 142},
+            "FIG party result digits differ from the 2ac7 ten-frame rise");
+
+    // Every hard-coded frame index is checked against the shipped archive.
+    // This catches off-by-one mistakes in reconstructed 49c1 loops even when
+    // the runtime renderer would safely skip a malformed layer.
+    std::map<std::uint16_t, std::size_t> maximum_frames;
+    for (std::uint16_t effect = 0x32; effect <= 0x65; ++effect) {
+        for (const auto& step : swd2::fig_effect_timeline(effect)) {
+            for (const auto& layer : step.layers) {
+                auto& maximum = maximum_frames[layer.resource];
+                maximum = std::max(maximum, layer.sprite_frame);
+            }
+        }
+    }
+    for (const auto& [resource, maximum_frame] : maximum_frames) {
+        auto number = std::to_string(resource);
+        number.insert(number.begin(), 3U - number.size(), '0');
+        const auto path = game_root / (resource < 300 ? "SP" : "ST") /
+                          ("SP" + number + ".RSK");
+        require(std::filesystem::exists(path),
+                "FIG effect timeline references a missing SP/ST archive");
+        auto decoded = swd2::decode_rsk_block(read_file(path));
+        const auto archive = swd2::SpriteArchive::parse(std::move(decoded.data));
+        require(maximum_frame < archive.sprites().size(),
+                "FIG effect timeline references a missing archive frame");
+    }
+}
+
+void test_battle_effects(const std::filesystem::path& game_root) {
+    const auto sequence = [](std::vector<std::uint16_t> values) {
+        return [values = std::move(values), cursor = std::size_t{}]
+               (std::uint16_t modulus) mutable {
+            if (cursor >= values.size() || values[cursor] >= modulus) {
+                throw std::runtime_error("invalid deterministic ability-random sequence");
+            }
+            return values[cursor++];
+        };
+    };
+    const auto abilities = swd2::BattleAbilityDatabase::load(game_root / "FIG.EXE");
+
+    std::array<swd2::PlayerSupportState, 2> support = {
+        swd2::PlayerSupportState{59, 59, 52, 52, 36, 36, 0, 39, 30, 60, 22, 26},
+        swd2::PlayerSupportState{10, 100, 20, 80, 5, 40, 0x0200, 20, 5, 8, 9, 10},
+    };
+    const auto quarter_heal = swd2::apply_player_support_effect(1, 0, 1, support);
+    require(quarter_heal.supported && !quarter_heal.all_targets &&
+                quarter_heal.targets.size() == 1 &&
+                quarter_heal.targets[0].healing == 40 &&
+                quarter_heal.targets[0].resulting_player_support_state &&
+                quarter_heal.targets[0].resulting_player_support_state->hit_points == 50 &&
+                quarter_heal.targets[0].resulting_player_support_state->secondary_points == 55 &&
+                quarter_heal.targets[0].resulting_player_support_state->status_bits == 0x0200 &&
+                support[1].hit_points == 50 && support[1].secondary_points == 55 &&
+                support[1].status_bits == 0x0200,
+            "FIG 25-percent support formula and caster +45 quarter bonus differ");
+    const auto heal_and_clear = swd2::apply_player_support_effect(0x10, 0, 1, support);
+    require(heal_and_clear.supported && support[1].hit_points == 95 &&
+                support[1].secondary_points == 80 && support[1].status_bits == 0,
+            "FIG support healing/status-clear effect 10 was not reproduced");
+    const auto temporary_buff = swd2::apply_player_support_effect(0x24, 0, 1, support);
+    require(temporary_buff.supported && support[1].field_3d == 8 &&
+                support[1].physical_attack == 23,
+            "FIG paired +3 support buff effect 24 was not reproduced");
+    support[1].status_bits = 0x22fe;
+    const auto resurrect = swd2::apply_player_support_effect(0x1c, 0, 1, support);
+    require(resurrect.supported && support[1].status_bits == 0 &&
+                support[1].hit_points == 100,
+            "FIG resurrection support effect did not clear death/recover state");
+
+    // FIG 46f4/46fa contains a shipped typo: both stores target DS:2bb9,
+    // leaving the secondary percentage in DS:2bbb from the previous support
+    // handler.  Prime it with selector 1 (25/25), then prove selector 1c uses
+    // 10% HP but the stale 25% secondary value, each plus caster +45/4.
+    std::array<swd2::PlayerSupportState, 2> resurrection_quirk{};
+    resurrection_quirk[0].hit_points = 1;
+    resurrection_quirk[0].maximum_hit_points = 1;
+    resurrection_quirk[0].field_45 = 40;
+    resurrection_quirk[1].hit_points = 1;
+    resurrection_quirk[1].maximum_hit_points = 100;
+    resurrection_quirk[1].secondary_points = 1;
+    resurrection_quirk[1].maximum_secondary_points = 100;
+    swd2::PlayerSupportRuntime support_runtime;
+    swd2::apply_player_support_effect(
+        1, 0, 1, resurrection_quirk, &support_runtime);
+    resurrection_quirk[1].hit_points = 0;
+    resurrection_quirk[1].secondary_points = 0;
+    resurrection_quirk[1].status_bits = 0x2000;
+    swd2::apply_player_support_effect(
+        0x1c, 0, 1, resurrection_quirk, &support_runtime);
+    require(resurrection_quirk[1].hit_points == 20 &&
+                resurrection_quirk[1].secondary_points == 35 &&
+                resurrection_quirk[1].status_bits == 0 &&
+                support_runtime.primary_operand == 10 &&
+                support_runtime.secondary_operand == 25,
+            "FIG resurrection did not retain the real DS:2bbb stale-operand quirk");
+
+    swd2::MonsterBattleState timed_monster;
+    timed_monster.hit_points = timed_monster.maximum_hit_points = 100;
+    timed_monster.physical_attack = 90;
+    timed_monster.evasion = 9;
+    timed_monster.status_turns = {2, 0, 1, 0, 1};
+    timed_monster.special_status_turns = 1;
+    timed_monster.attack_buff_turns = 1;
+    timed_monster.evasion_buff_turns = 1;
+    const auto timed = swd2::advance_monster_turn_status(
+        timed_monster, 50, 2, 5, sequence({7}));
+    require(timed.skipped && !timed.defeated && timed.periodic_triggered &&
+                timed.periodic_damage == 7 &&
+                timed.expired_buff_mask == 0x01U &&
+                timed.expired_status_mask == 0x10U &&
+                timed_monster.hit_points == 93 && timed_monster.status_turns[0] == 1 &&
+                timed_monster.status_turns[2] == 1 && timed_monster.status_turns[4] == 0 &&
+                timed_monster.special_status_turns == 0 &&
+                timed_monster.attack_buff_turns == 1 &&
+                timed_monster.physical_attack == 90 &&
+                timed_monster.evasion_buff_turns == 1 && timed_monster.evasion == 9,
+            "FIG monster status/buff start-of-turn ordering was not reproduced");
+    const auto still_skipped = swd2::advance_monster_turn_status(
+        timed_monster, 50, 2, 5, sequence({3}));
+    const auto active_again = swd2::advance_monster_turn_status(
+        timed_monster, 50, 2, 5, sequence({2}));
+    require(still_skipped.skipped &&
+                still_skipped.expired_buff_mask == 0x04U &&
+                still_skipped.expired_status_mask == 0x01U &&
+                timed_monster.status_turns[0] == 0 &&
+                !active_again.skipped &&
+                active_again.expired_buff_mask == 0x02U &&
+                active_again.expired_status_mask == 0 &&
+                timed_monster.attack_buff_turns == 0 &&
+                timed_monster.physical_attack == 50 &&
+                timed_monster.evasion_buff_turns == 0 &&
+                timed_monster.evasion == 2 && timed_monster.hit_points == 88,
+            "FIG persistent slot-two damage / action-skip counters differ");
+    swd2::MonsterBattleState zero_periodic;
+    zero_periodic.hit_points = zero_periodic.maximum_hit_points = 20;
+    zero_periodic.status_turns[2] = 1;
+    const auto zero_periodic_result = swd2::advance_monster_turn_status(
+        zero_periodic, 0, 0, 5, sequence({0}));
+    require(zero_periodic_result.periodic_triggered &&
+                zero_periodic_result.periodic_damage == 0 &&
+                !zero_periodic_result.skipped && zero_periodic.hit_points == 20,
+            "FIG slot-two zero roll was incorrectly treated as no status tick");
+
+    swd2::PlayerBattleState timed_player{100, 100, 0x00a6, {0, 0, 0}};
+    timed_player.special_status_turns = {1, 1, 1, 1};
+    timed_player.buff_turns = {1, 1, 1, 1, 1, 2};
+    timed_player.physical_attack = 90;
+    timed_player.physical_defense = 80;
+    timed_player.speed = 70;
+    timed_player.evasion = 9;
+    timed_player.base_physical_attack = 40;
+    timed_player.base_physical_defense = 30;
+    timed_player.base_speed = 20;
+    timed_player.base_evasion = 1;
+    const auto player_expiry = swd2::advance_player_turn_status(timed_player);
+    require(player_expiry.expired_buff_mask == 0x1fU &&
+                player_expiry.recovered_status_mask == 0x0fU &&
+                timed_player.status_bits == 0 &&
+                timed_player.buff_turns ==
+                    std::array<std::uint16_t, 6>{0, 0, 0, 0, 0, 2} &&
+                timed_player.physical_attack == 40 &&
+                timed_player.physical_defense == 30 && timed_player.speed == 20 &&
+                timed_player.evasion == 1,
+            "FIG post-player-turn status expiry/stat restoration differs");
+
+    std::array<swd2::PlayerBattleState, 1> tactical_players = {
+        swd2::PlayerBattleState{100, 100, 0, {0, 0, 0}},
+    };
+    tactical_players[0].base_speed = 20;
+    tactical_players[0].base_physical_defense = 30;
+    tactical_players[0].base_physical_attack = 40;
+    const auto speed_buff = swd2::apply_player_tactical_effect(
+        0x63, 10, 0, 0, tactical_players, nullptr, 0, 0,
+        abilities, sequence({3, 2}));
+    require(speed_buff.supported && speed_buff.canonical_ability_id == 86 &&
+                tactical_players[0].speed == 53 &&
+                tactical_players[0].buff_turns[0] == 6,
+            "FIG player speed-buff power/duration rolls were not reproduced");
+    const auto defense_buff = swd2::apply_player_tactical_effect(
+        0x66, 10, 0, 0, tactical_players, nullptr, 0, 0,
+        abilities, sequence({2, 1}));
+    const auto attack_buff = swd2::apply_player_tactical_effect(
+        0x67, 10, 0, 0, tactical_players, nullptr, 0, 0,
+        abilities, sequence({1, 3}));
+    require(defense_buff.supported && tactical_players[0].physical_defense == 62 &&
+                tactical_players[0].buff_turns[1] == 5 &&
+                attack_buff.supported && tactical_players[0].physical_attack == 71 &&
+                tactical_players[0].buff_turns[2] == 7,
+            "FIG player defense/attack buffs differ from the dispatcher");
+    const auto evasion_player_buff = swd2::apply_player_tactical_effect(
+        0x68, 10, 0, 0, tactical_players, nullptr, 0, 0,
+        abilities, sequence({2, 4}));
+    const auto ward_buff = swd2::apply_player_tactical_effect(
+        0x69, 10, 0, 0, tactical_players, nullptr, 0, 0,
+        abilities, sequence({5}));
+    require(evasion_player_buff.supported && tactical_players[0].evasion == 9 &&
+                tactical_players[0].buff_turns[3] == 8 &&
+                ward_buff.supported && tactical_players[0].buff_turns[4] == 7,
+            "FIG player evasion/ward timers differ from the dispatcher");
+    const auto shield_one = swd2::apply_player_tactical_effect(
+        0x62, 10, 0, 0, tactical_players, nullptr, 0, 0,
+        abilities, sequence({}));
+    const auto shield_two = swd2::apply_player_tactical_effect(
+        0x62, 10, 0, 0, tactical_players, nullptr, 0, 0,
+        abilities, sequence({}));
+    require(shield_one.supported && shield_two.supported &&
+                tactical_players[0].buff_turns[5] == 2,
+            "FIG player magic-shield charge increment was not reproduced");
+    swd2::MonsterBattleState dispelled_monster;
+    dispelled_monster.special_status_turns = 3;
+    dispelled_monster.attack_buff_turns = 4;
+    dispelled_monster.evasion_buff_turns = 5;
+    dispelled_monster.physical_attack = 99;
+    dispelled_monster.evasion = 9;
+    const auto dispel = swd2::apply_player_tactical_effect(
+        0x61, 10, 0, 0, tactical_players, &dispelled_monster, 45, 2,
+        abilities, sequence({}));
+    require(dispel.supported && dispel.target_is_monster &&
+                dispel.removed_monster_buff_mask == 0x07U &&
+                dispelled_monster.special_status_turns == 0 &&
+                dispelled_monster.attack_buff_turns == 0 &&
+                dispelled_monster.evasion_buff_turns == 0 &&
+                dispelled_monster.physical_attack == 45 &&
+                dispelled_monster.evasion == 2,
+            "FIG player dispel did not clear/restore enemy temporary buffs");
+    std::array<swd2::MonsterBattleState, 4> monsters{};
+    for (auto& monster : monsters) {
+        monster.hit_points = 100;
+        monster.maximum_hit_points = 100;
+    }
+    monsters[1].hit_points = monsters[1].maximum_hit_points = 200;
+    monsters[1].resistances[2] = 2;
+    monsters[2].resistances[2] = 3;
+    monsters[3].resistances[2] = 1;
+    const auto damage = swd2::apply_player_ability_effect(
+        0x32, 10, 0, monsters, abilities, sequence({3, 3, 3}));
+    require(damage.supported && damage.all_targets && damage.canonical_ability_id == 54 &&
+                damage.targets.size() == 4 && monsters[0].hit_points == 57 &&
+                monsters[1].hit_points == 114 && monsters[2].hit_points == 143 &&
+                monsters[3].hit_points == 100 && damage.targets[1].damage == 86 &&
+                damage.targets[2].absorbed && damage.targets[3].resisted,
+            "FIG spell damage/double/absorb/immunity semantics were not reproduced");
+
+    const auto status = swd2::apply_player_ability_effect(
+        0x5e, 10, 0, monsters, abilities, sequence({4}));
+    require(status.supported && status.targets.size() == 1 &&
+                status.targets[0].status_duration == 6 && monsters[0].status_turns[0] == 6,
+            "FIG monster status-duration formula was not reproduced");
+    monsters[3].resistances[4] = 1;
+    const auto resisted = swd2::apply_player_ability_effect(
+        0x5e, 10, 3, monsters, abilities, sequence({}));
+    require(resisted.targets.size() == 1 && resisted.targets[0].resisted &&
+                resisted.targets[0].block_reason ==
+                    swd2::AbilityBlockReason::resistance &&
+                monsters[3].status_turns[0] == 0,
+            "FIG status immunity was not reproduced");
+    const auto visual_only = swd2::apply_player_ability_effect(
+        0x31, 10, 0, monsters, abilities, sequence({}));
+    require(visual_only.supported && visual_only.canonical_ability_id == 51 &&
+                visual_only.targets.empty(),
+            "FIG visual-only/reposition effect was treated as an invalid spell");
+
+    std::array<swd2::PlayerBattleState, 4> players = {
+        swd2::PlayerBattleState{100, 100, 0, {0, 0, 0}},
+        swd2::PlayerBattleState{80, 80, 0, {0, 2, 0}},
+        swd2::PlayerBattleState{50, 70, 0, {0, 3, 0}},
+        swd2::PlayerBattleState{100, 100, 0, {0, 1, 0}},
+    };
+    std::uint16_t ability_points = 100;
+    const auto enemy_spell = swd2::apply_monster_ability(
+        54, 22, ability_points, 0, players, abilities, sequence({2}));
+    require(enemy_spell.cast && enemy_spell.all_targets && enemy_spell.cost == 9 &&
+                enemy_spell.power == 42 && ability_points == 91 &&
+                players[0].hit_points == 58 && players[1].hit_points == 0 &&
+                (players[1].status_bits & 0x2000U) != 0 &&
+                players[2].hit_points == 70 && players[3].hit_points == 100 &&
+                enemy_spell.targets[1].damage == 84 &&
+                enemy_spell.targets[2].absorbed && enemy_spell.targets[2].healing == 20 &&
+                enemy_spell.targets[3].resisted,
+            "FIG enemy ability cost/power/resistance semantics were not reproduced");
+    ability_points = 29;
+    const auto unaffordable = swd2::apply_monster_ability(
+        1, 22, ability_points, 0, players, abilities, sequence({}));
+    require(!unaffordable.cast && ability_points == 29,
+            "FIG enemy ability affordability check was not reproduced");
+
+    std::array<swd2::PlayerBattleState, 1> prepaid_players = {
+        swd2::PlayerBattleState{100, 100, 0, {0, 0, 0}},
+    };
+    const auto prepaid = swd2::apply_prepaid_monster_ability(
+        54, 42, 0, prepaid_players, abilities);
+    require(prepaid.cast && prepaid.cost == 9 && prepaid.power == 42 &&
+                prepaid.targets.size() == 1 && prepaid.targets[0].damage == 42 &&
+                prepaid_players[0].hit_points == 58,
+            "prepaid FIG enemy ability state handler rerolled or misapplied power");
+    prepaid_players[0].hit_points = 100;
+    prepaid_players[0].status_bits = 0;
+    prepaid_players[0].buff_turns[5] = 2;
+    const auto shielded = swd2::apply_prepaid_monster_ability(
+        54, 42, 0, prepaid_players, abilities);
+    require(shielded.targets.size() == 1 && shielded.targets[0].resisted &&
+                shielded.targets[0].block_reason ==
+                    swd2::AbilityBlockReason::magic_shield &&
+                prepaid_players[0].hit_points == 100 &&
+                prepaid_players[0].buff_turns[5] == 1,
+            "FIG +3164 magic shield did not consume one charge/block damage");
+    prepaid_players[0].buff_turns[4] = 3;
+    const auto warded = swd2::apply_prepaid_monster_ability(
+        54, 42, 0, prepaid_players, abilities);
+    require(warded.targets.size() == 1 && warded.targets[0].resisted &&
+                warded.targets[0].block_reason ==
+                    swd2::AbilityBlockReason::magic_ward &&
+                prepaid_players[0].hit_points == 100 &&
+                prepaid_players[0].buff_turns[4] == 3 &&
+                prepaid_players[0].buff_turns[5] == 1,
+            "FIG +315c magic ward did not precede/preserve +3164 shield charges");
+
+    std::array<swd2::PlayerBattleState, 1> special_player = {
+        swd2::PlayerBattleState{100, 100, 0, {0, 0, 1}},
+    };
+    swd2::MonsterBattleState special_monster;
+    special_monster.hit_points = special_monster.maximum_hit_points = 100;
+    special_monster.physical_attack = 20;
+    special_monster.evasion = 1;
+    std::uint16_t special_points = 50;  // already paid by the AI chooser
+    const auto immune_status = swd2::apply_prepaid_monster_special(
+        114, 6, special_points, 0, special_player, special_monster,
+        abilities, sequence({}));
+    require(immune_status.resolution == swd2::MonsterSpecialResolution::applied &&
+                immune_status.targets.size() == 1 &&
+                immune_status.targets[0].resisted && special_player[0].status_bits == 0,
+            "FIG enemy effect 5e did not honor actor +2b immunity");
+    const auto unresisted_status = swd2::apply_prepaid_monster_special(
+        58, 6, special_points, 0, special_player, special_monster,
+        abilities, sequence({4}));
+    require(unresisted_status.resolution == swd2::MonsterSpecialResolution::applied &&
+                special_player[0].special_status_turns[3] == 6 &&
+                (special_player[0].status_bits & 0x0080U) != 0,
+            "FIG enemy effect 65 status bit/duration was not reproduced");
+
+    const auto evasion_buff = swd2::apply_prepaid_monster_special(
+        33, 9, special_points, 0, special_player, special_monster,
+        abilities, sequence({3, 2}));
+    require(evasion_buff.resolution == swd2::MonsterSpecialResolution::applied &&
+                special_monster.evasion_buff_turns == 7 &&
+                special_monster.evasion == 9,
+            "FIG enemy effect 68 duration/evasion rolls were not reproduced");
+    special_points = 30;  // cost 20 has just been paid for a duplicate cast
+    const auto duplicate_buff = swd2::apply_prepaid_monster_special(
+        33, 9, special_points, 0, special_player, special_monster,
+        abilities, sequence({}));
+    require(duplicate_buff.resolution ==
+                swd2::MonsterSpecialResolution::fallback_basic_attack &&
+                special_points == 50,
+            "FIG duplicate enemy buff did not refund cost/fall back to attack");
+    const auto cinematic_only = swd2::apply_prepaid_monster_special(
+        53, 1, special_points, 0, special_player, special_monster,
+        abilities, sequence({}));
+    require(cinematic_only.resolution ==
+                swd2::MonsterSpecialResolution::applied &&
+                cinematic_only.targets.empty(),
+            "FIG enemy presentation-only ability was treated as unsupported");
+    special_player[0].buff_turns = {1, 0, 2, 0, 3, 4};
+    const auto cleanse = swd2::apply_prepaid_monster_special(
+        71, 1, special_points, 0, special_player, special_monster,
+        abilities, sequence({}));
+    require(cleanse.resolution == swd2::MonsterSpecialResolution::applied &&
+                cleanse.removed_player_buff_mask == 0x35U &&
+                cleanse.targets.size() == 1 &&
+                special_player[0].buff_turns ==
+                    std::array<std::uint16_t, 6>{0, 0, 0, 0, 0, 0},
+            "FIG enemy effect 61 did not preserve/report its six cleared buffs");
+}
+
+void test_battle_session(const std::filesystem::path& game_root) {
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto database = swd2::BattleDatabase::load(game_root / "ORC.EXE");
+    const auto selected = database.encounter_at_directory_offset(392);
+    require(selected.has_value(), "test formation 392 is absent from ORC.EXE");
+    const auto items = swd2::ScriptArchive::load(game_root / "ITEM.EXE");
+    const auto abilities = swd2::BattleAbilityDatabase::load(game_root / "FIG.EXE");
+    auto session = swd2::BattleSession::create(state, selected->get(), items);
+    require(session.party_count() == 3 && session.monsters().size() == 1 &&
+                session.monster_definitions()[0].id == 500 &&
+                session.monsters()[0].hit_points == 120 &&
+                session.outcome() == swd2::BattleOutcome::ongoing,
+            "portable battle session did not compose SAVE/ORC/ITEM state");
+
+    swd2::BattleCommandMenu menu(session, abilities, items);
+    require(menu.page() == swd2::BattleCommandMenuPage::commands &&
+                menu.actor() == 0 && menu.cursor() == 2 &&
+                menu.entries().size() == 4 &&
+                menu.entries()[0].kind == swd2::PlayerCommandKind::ability &&
+                menu.entries()[1].kind == swd2::PlayerCommandKind::item &&
+                menu.entries()[2].kind == swd2::PlayerCommandKind::basic_attack &&
+                menu.entries()[3].kind == swd2::PlayerCommandKind::skip,
+            "FIG four-way command menu did not expose the exact tile order");
+
+    auto insufficient_state = state;
+    insufficient_state.set_u16(0x106 + 0x55, 0);
+    auto insufficient_session = swd2::BattleSession::create(
+        insufficient_state, selected->get(), items);
+    swd2::BattleCommandMenu insufficient_menu(
+        insufficient_session, abilities, items);
+    insufficient_menu.input(swd2::InputAction::left);
+    insufficient_menu.input(swd2::InputAction::confirm);
+    insufficient_menu.input(swd2::InputAction::confirm);
+    require(insufficient_menu.notice() ==
+                swd2::BattleCommandNotice::insufficient_resource &&
+                insufficient_menu.page() ==
+                    swd2::BattleCommandMenuPage::abilities,
+            "FIG insufficient ability resource did not enter DATA:2cb7 modal");
+    insufficient_menu.input(swd2::InputAction::down);
+    require(insufficient_menu.notice() == swd2::BattleCommandNotice::none &&
+                insufficient_menu.cursor() == 0,
+            "FIG 3e19 closing key leaked into the underlying ability selector");
+
+    auto element_state = state;
+    element_state.set_u8(0x106 + 0x6d, 41);
+    for (std::size_t slot = 0; slot < 5; ++slot) {
+        element_state.set_u16(0x3e6 + slot * 2U, 0);
+    }
+    auto element_session = swd2::BattleSession::create(
+        element_state, selected->get(), items);
+    swd2::BattleCommandMenu element_menu(element_session, abilities, items);
+    element_menu.input(swd2::InputAction::left);
+    element_menu.input(swd2::InputAction::confirm);
+    element_menu.input(swd2::InputAction::confirm);
+    require(element_menu.notice() ==
+                swd2::BattleCommandNotice::missing_elements,
+            "FIG missing five-element counters did not enter DATA:2d05 modal");
+
+    const auto disabled_ability = std::find_if(
+        abilities.abilities().begin() + 1, abilities.abilities().end(),
+        [](const swd2::BattleAbility& ability) {
+            return ability.effect_code != 0 &&
+                   (ability.target_flags & 0x4000U) != 0;
+        });
+    require(disabled_ability != abilities.abilities().end(),
+            "FIG ability table has no intrinsic-disable regression record");
+    auto unavailable_state = state;
+    unavailable_state.set_u8(
+        0x106 + 0x6d,
+        static_cast<std::uint8_t>(disabled_ability - abilities.abilities().begin()));
+    auto unavailable_session = swd2::BattleSession::create(
+        unavailable_state, selected->get(), items);
+    swd2::BattleCommandMenu unavailable_menu(
+        unavailable_session, abilities, items);
+    unavailable_menu.input(swd2::InputAction::left);
+    unavailable_menu.input(swd2::InputAction::confirm);
+    unavailable_menu.input(swd2::InputAction::confirm);
+    require(unavailable_menu.notice() ==
+                swd2::BattleCommandNotice::ability_unavailable,
+            "FIG record +0d bit 40 did not enter DATA:2cf5 modal");
+
+    auto summon_menu_state = state;
+    summon_menu_state.set_u16(0x382, 319);
+    summon_menu_state.set_u16(0x106 + 0x35, 52);
+    auto summon_menu_session = swd2::BattleSession::create(
+        summon_menu_state, selected->get(), items);
+    swd2::BattleCommandMenu summon_resource_menu(
+        summon_menu_session, abilities, items);
+    summon_resource_menu.input(swd2::InputAction::right);
+    summon_resource_menu.input(swd2::InputAction::confirm);
+    summon_resource_menu.input(swd2::InputAction::confirm);
+    require(summon_resource_menu.notice() ==
+                swd2::BattleCommandNotice::insufficient_summon_resource,
+            "FIG summon resource equality did not enter DATA:2e65 modal");
+
+    std::optional<std::uint16_t> unusable_item_id;
+    for (std::size_t id = 1; id < 0x13aU && id + 2U < items.entry_count(); ++id) {
+        const auto record = items.entry(id + 2U);
+        if (record.size() >= 9U && (record[5] & 2U) == 0) {
+            unusable_item_id = static_cast<std::uint16_t>(id);
+            break;
+        }
+    }
+    require(unusable_item_id.has_value(),
+            "ITEM has no battle-unusable modal regression record");
+    auto unusable_item_state = state;
+    unusable_item_state.set_u16(0x382, *unusable_item_id);
+    auto unusable_item_session = swd2::BattleSession::create(
+        unusable_item_state, selected->get(), items);
+    swd2::BattleCommandMenu unusable_item_menu(
+        unusable_item_session, abilities, items);
+    unusable_item_menu.input(swd2::InputAction::right);
+    unusable_item_menu.input(swd2::InputAction::confirm);
+    unusable_item_menu.input(swd2::InputAction::confirm);
+    require(unusable_item_menu.notice() ==
+                swd2::BattleCommandNotice::item_unusable,
+            "FIG ITEM +5 battle-use failure did not enter DATA:2cd1 modal");
+    menu.input(swd2::InputAction::confirm);
+    require(menu.page() == swd2::BattleCommandMenuPage::attack_modes &&
+                menu.entries().size() == 2,
+            "FIG Attack command did not enter its two-way mode submenu");
+    menu.input(swd2::InputAction::confirm);
+    require(menu.complete() &&
+                menu.commands()[0].kind == swd2::PlayerCommandKind::basic_attack &&
+                menu.commands()[1].kind == swd2::PlayerCommandKind::basic_attack &&
+                menu.commands()[2].kind == swd2::PlayerCommandKind::basic_attack &&
+                menu.commands()[0].target == 0 && menu.commands()[1].target == 0 &&
+                menu.commands()[2].target == 0,
+            "FIG group attack did not fill every commandable party slot");
+
+    const auto multi_encounter = std::find_if(
+        database.encounters().begin(), database.encounters().end(),
+        [](const swd2::BattleEncounter& encounter) {
+            return encounter.definition_slots.size() > 1;
+        });
+    require(multi_encounter != database.encounters().end(),
+            "ORC has no multi-monster selector test formation");
+    auto multi_session = swd2::BattleSession::create(
+        state, *multi_encounter, items);
+    swd2::BattleCommandMenu multi_menu(multi_session, abilities, items);
+    multi_menu.input(swd2::InputAction::confirm);
+    multi_menu.input(swd2::InputAction::confirm);
+    require(multi_menu.page() == swd2::BattleCommandMenuPage::monster_target &&
+                multi_menu.entries().size() ==
+                    multi_encounter->definition_slots.size(),
+            "FIG multi-monster attack omitted its living-target name selector");
+    multi_menu.input(swd2::InputAction::up);
+    require(multi_menu.cursor() == 0,
+            "FIG target selector wrapped above its first entry");
+    multi_menu.input(swd2::InputAction::down);
+    multi_menu.input(swd2::InputAction::confirm);
+    require(multi_menu.complete() && multi_menu.commands()[0].target == 1,
+            "FIG multi-monster selector did not commit the highlighted target");
+
+    swd2::BattleCommandMenu target_return_menu(
+        multi_session, abilities, items);
+    target_return_menu.input(swd2::InputAction::confirm);
+    target_return_menu.input(swd2::InputAction::right);
+    target_return_menu.input(swd2::InputAction::confirm);
+    require(target_return_menu.page() ==
+                swd2::BattleCommandMenuPage::monster_target &&
+                target_return_menu.target_return_page() ==
+                    swd2::BattleCommandMenuPage::attack_modes &&
+                target_return_menu.target_return_cursor() == 1 &&
+                target_return_menu.target_return_entries().size() == 2,
+            "FIG target selector did not retain its underlying attack page");
+    target_return_menu.input(swd2::InputAction::cancel);
+    require(target_return_menu.page() ==
+                swd2::BattleCommandMenuPage::attack_modes &&
+                target_return_menu.cursor() == 1,
+            "FIG target cancel did not restore the previous submenu cursor");
+
+    swd2::BattleCommandMenu ability_menu(session, abilities, items);
+    ability_menu.input(swd2::InputAction::left);
+    ability_menu.input(swd2::InputAction::confirm);
+    require(ability_menu.page() == swd2::BattleCommandMenuPage::abilities &&
+                ability_menu.entries().size() == 50 &&
+                ability_menu.entries()[0].value == 76 &&
+                ability_menu.entries()[1].value == 70 &&
+                !ability_menu.entries()[2].enabled,
+            "FIG command menu did not preserve all 50 learned-ability slots");
+    ability_menu.input(swd2::InputAction::cancel);
+    require(ability_menu.page() == swd2::BattleCommandMenuPage::commands,
+            "FIG ability menu cancel did not return to commands");
+
+    swd2::BattleCommandMenu item_menu(session, abilities, items);
+    item_menu.input(swd2::InputAction::right);
+    item_menu.input(swd2::InputAction::confirm);
+    require(item_menu.page() == swd2::BattleCommandMenuPage::items &&
+                item_menu.entries().size() == 50 &&
+                item_menu.entries()[0].value == 0 &&
+                item_menu.entries()[49].value == 49,
+            "FIG inventory menu did not preserve its exact 50 physical slots");
+    for (int move = 0; move < 60; ++move) {
+        item_menu.input(swd2::InputAction::down);
+    }
+    require(item_menu.cursor() == 49,
+            "FIG 50-slot selector wrapped instead of clamping at slot 49");
+
+    std::optional<std::uint16_t> item_flag_mismatch;
+    bool mismatch_battle_usable = false;
+    for (std::size_t id = 1;
+         id < 0x13a && id + 2U < items.entry_count(); ++id) {
+        const auto record = items.entry(id + 2U);
+        if (record.size() < 9) continue;
+        const auto definition = swd2::BattleItemDefinition::parse(
+            static_cast<std::uint16_t>(id), record);
+        const auto type_bit = (definition.type & 2U) != 0;
+        const auto use_bit = (definition.use_flags & 2U) != 0;
+        if (type_bit != use_bit) {
+            item_flag_mismatch = static_cast<std::uint16_t>(id);
+            mismatch_battle_usable = use_bit;
+            break;
+        }
+    }
+    require(item_flag_mismatch.has_value(),
+            "ITEM has no +0/+5 bit-1 discriminator regression record");
+    auto item_flag_state = state;
+    item_flag_state.set_u16(0x382, *item_flag_mismatch);
+    auto item_flag_session = swd2::BattleSession::create(
+        item_flag_state, selected->get(), items);
+    swd2::BattleCommandMenu item_flag_menu(
+        item_flag_session, abilities, items);
+    item_flag_menu.input(swd2::InputAction::right);
+    item_flag_menu.input(swd2::InputAction::confirm);
+    require(item_flag_menu.entries()[0].enabled == mismatch_battle_usable,
+            "FIG item menu tested type +0 instead of battle-use flags +5");
+
+    auto reservation_state = state;
+    reservation_state.set_u16(0x382, 51);
+    auto reservation_session = swd2::BattleSession::create(
+        reservation_state, selected->get(), items);
+    swd2::BattleCommandMenu reservation_menu(
+        reservation_session, abilities, items);
+    reservation_menu.input(swd2::InputAction::right);
+    reservation_menu.input(swd2::InputAction::confirm);
+    require(reservation_menu.entries()[0].enabled,
+            "FIG first actor could not reserve an available battle item");
+    reservation_menu.input(swd2::InputAction::confirm);
+    require(reservation_menu.page() == swd2::BattleCommandMenuPage::party_target,
+            "FIG party-target item skipped its target selector");
+    reservation_menu.input(swd2::InputAction::confirm);
+    reservation_menu.input(swd2::InputAction::right);
+    reservation_menu.input(swd2::InputAction::confirm);
+    require(!reservation_menu.entries()[0].enabled &&
+                reservation_menu.item_reserved(0),
+            "FIG item reservation did not prevent a second actor reusing the slot");
+    reservation_menu.input(swd2::InputAction::cancel);
+    reservation_menu.input(swd2::InputAction::cancel);
+    reservation_menu.input(swd2::InputAction::right);
+    reservation_menu.input(swd2::InputAction::confirm);
+    require(reservation_menu.entries()[0].enabled,
+            "FIG command rewind did not clear the actor's item reservation bit");
+
+    swd2::BattleCommandMenu automatic_menu(session, abilities, items);
+    automatic_menu.input(swd2::InputAction::confirm);
+    automatic_menu.input(swd2::InputAction::right);
+    automatic_menu.input(swd2::InputAction::confirm);
+    require(automatic_menu.complete() && automatic_menu.automatic_requested() &&
+                automatic_menu.commands()[0].kind ==
+                    swd2::PlayerCommandKind::basic_attack &&
+                automatic_menu.commands()[1].kind ==
+                    swd2::PlayerCommandKind::basic_attack &&
+                automatic_menu.commands()[2].kind ==
+                    swd2::PlayerCommandKind::basic_attack &&
+                automatic_menu.commands()[0].target == 0 &&
+                automatic_menu.commands()[1].target == 0 &&
+                automatic_menu.commands()[2].target == 0,
+            "FIG 1588 automatic mode did not fill all commandable party slots");
+
+    swd2::BattleCommandMenu escape_menu(session, abilities, items);
+    escape_menu.input(swd2::InputAction::down);
+    escape_menu.input(swd2::InputAction::confirm);
+    require(escape_menu.page() == swd2::BattleCommandMenuPage::tactics &&
+                escape_menu.entries().size() == 2,
+            "FIG fixed-battle tactics submenu exposed the wrong tiles");
+    escape_menu.input(swd2::InputAction::right);
+    escape_menu.input(swd2::InputAction::confirm);
+    require(escape_menu.complete() &&
+                escape_menu.commands()[0].kind == swd2::PlayerCommandKind::escape &&
+                escape_menu.commands()[1].kind == swd2::PlayerCommandKind::escape &&
+                escape_menu.commands()[2].kind == swd2::PlayerCommandKind::escape,
+            "FIG flee tile did not override every commandable party slot");
+
+    auto blocked_capture_session = swd2::BattleSession::create(
+        state, selected->get(), items, true);
+    swd2::BattleCommandMenu blocked_capture_menu(
+        blocked_capture_session, abilities, items);
+    blocked_capture_menu.input(swd2::InputAction::down);
+    blocked_capture_menu.input(swd2::InputAction::confirm);
+    require(blocked_capture_menu.entries().size() == 2,
+            "FIG +3f0 bit 0100 did not suppress the random-battle capture tile");
+
+    auto capture_menu_state = state;
+    capture_menu_state.set_u8(0x3f1, 0);
+    auto random_menu_session = swd2::BattleSession::create(
+        capture_menu_state, selected->get(), items, true);
+    swd2::BattleCommandMenu capture_menu(random_menu_session, abilities, items);
+    capture_menu.input(swd2::InputAction::down);
+    capture_menu.input(swd2::InputAction::confirm);
+    require(capture_menu.page() == swd2::BattleCommandMenuPage::tactics &&
+                capture_menu.entries().size() == 3 &&
+                capture_menu.entries()[2].kind == swd2::PlayerCommandKind::capture,
+            "FIG random-battle actor-zero tactics submenu omitted capture");
+    capture_menu.input(swd2::InputAction::up);
+    capture_menu.input(swd2::InputAction::confirm);
+    require(capture_menu.page() == swd2::BattleCommandMenuPage::commands &&
+                capture_menu.actor() == 1 &&
+                capture_menu.commands()[0].kind ==
+                    swd2::PlayerCommandKind::capture,
+            "FIG one-monster capture did not bypass target selection");
+
+    std::array<swd2::PlayerBattleCommand, 4> commands{};
+    commands[0] = {swd2::PlayerCommandKind::ability, 76, 0};
+    commands[1] = {swd2::PlayerCommandKind::basic_attack, 0, 0};
+    commands[2] = {swd2::PlayerCommandKind::basic_attack, 0, 0};
+    commands[3] = {swd2::PlayerCommandKind::skip, 0, 0};
+    const auto stable_random = [](std::uint16_t modulus) {
+        if (modulus == 0) throw std::runtime_error("zero deterministic modulus");
+        return static_cast<std::uint16_t>(std::min<std::uint16_t>(2, modulus - 1));
+    };
+
+    const auto first = session.play_round(commands, abilities, stable_random);
+    const auto ability_event = std::find_if(
+        first.events.begin(), first.events.end(),
+        [](const swd2::BattleSessionEvent& event) {
+            return event.kind == swd2::BattleEventKind::player_ability &&
+                   event.ability_id == 76;
+        });
+    require(first.outcome == swd2::BattleOutcome::ongoing &&
+                ability_event != first.events.end() &&
+                ability_event->effect_code == 0x38 &&
+                session.monsters()[0].hit_points == 78 &&
+                session.party()[2].hit_points == 3 &&
+                session.party()[0].ability_points == 31,
+            "portable battle round did not apply player magic and normal enemy AI");
+    const auto second = session.play_round(commands, abilities, stable_random);
+    require(second.outcome == swd2::BattleOutcome::ongoing &&
+                session.monsters()[0].hit_points == 36 &&
+                !session.party()[2].living() &&
+                (session.party()[2].status_bits & 0x2000U) != 0 &&
+                session.critical_countdown() == 1 &&
+                std::none_of(second.events.begin(), second.events.end(),
+                             [](const swd2::BattleSessionEvent& event) {
+                                 return event.kind ==
+                                        swd2::BattleEventKind::death_reaction;
+                             }),
+            "portable battle round did not persist death/remaining monster HP");
+    const auto third = session.play_round(commands, abilities, stable_random);
+    require(third.outcome == swd2::BattleOutcome::victory &&
+                session.monsters()[0].hit_points == 0 &&
+                session.party()[0].ability_points == 21 &&
+                session.critical_countdown() == 20,
+            "portable battle session did not reach a rule-driven victory");
+
+    session.store(state);
+    require(state.u16(0x106 + 0x55) == 21 &&
+                state.u16(0x106 + 2 * 0x9f + 0x2d) == 0 &&
+                (state.u16(0x106 + 2 * 0x9f + 8) & 0x2000U) != 0 &&
+                state.u16(0x49e) == 20,
+            "portable battle session did not commit exact shared-state fields");
+
+    auto item_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    item_state.set_u16(0x382, 0x8000U | 51U);  // reservation bit + item id
+    const auto actor_two = 0x106 + 2 * 0x9f;
+    item_state.set_u16(actor_two + 0x2d, 0);
+    item_state.set_u16(actor_two + 8, 0x2000);
+    auto item_session = swd2::BattleSession::create(item_state, selected->get(), items);
+    std::array<swd2::PlayerBattleCommand, 4> item_commands{};
+    for (auto& command : item_commands) {
+        command = {swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+    item_commands[1] = {swd2::PlayerCommandKind::item, 0, 2, 0};
+    const auto zero_random = [](std::uint16_t modulus) {
+        if (modulus == 0) throw std::runtime_error("zero item-test modulus");
+        return std::uint16_t{};
+    };
+    require(session.try_grant_encounter_capture(83, zero_random) &&
+                session.inventory().back() == 83 &&
+                !session.try_grant_encounter_capture(84, zero_random),
+            "FIG ORC ## one-in-three capture reward was not reproduced");
+    const auto item_round =
+        item_session.play_round(item_commands, abilities, zero_random);
+    const auto item_event = std::find_if(
+        item_round.events.begin(), item_round.events.end(),
+        [](const swd2::BattleSessionEvent& event) {
+            return event.kind == swd2::BattleEventKind::player_ability &&
+                   event.ability_id == 51;
+        });
+    require(item_session.inventory()[0] == 0 &&
+                item_event != item_round.events.end() &&
+                item_event->effect_code == 0x1c &&
+                item_event->resulting_player_support_state &&
+                item_event->resulting_player_support_state->hit_points == 26 &&
+                item_event->resulting_player_support_state->status_bits == 0 &&
+                item_session.party()[2].living() &&
+                item_session.party()[2].hit_points == 26,
+            "FIG consumable item did not dispatch support effect/clear its slot");
+    item_session.store(item_state);
+    require(item_state.u16(0x382) == 0 && item_state.u16(actor_two + 0x2d) == 26,
+            "FIG battle-item/session changes did not persist to shared state");
+
+    std::optional<std::uint16_t> resource_item_id;
+    std::uint16_t resource_item_cost = 0;
+    for (std::uint16_t id = 0x8c; id < 0x13a; ++id) {
+        if (static_cast<std::size_t>(id) + 2U >= items.entry_count()) break;
+        const auto record = items.entry(static_cast<std::size_t>(id) + 2U);
+        if (record.size() < 9) continue;
+        const auto item = swd2::BattleItemDefinition::parse(id, record);
+        const auto ability_id = static_cast<std::size_t>(id - 0x8cU);
+        if (item.type != 0x10 || (item.use_flags & 2U) == 0 ||
+            ability_id >= abilities.abilities().size() ||
+            abilities.ability(ability_id).cost == 0 || item.effect_code == 0x47) {
+            continue;
+        }
+        resource_item_id = id;
+        resource_item_cost = abilities.ability(ability_id).cost;
+        break;
+    }
+    require(resource_item_id.has_value(),
+            "ITEM has no type-10 FIG resource-cost regression item");
+    auto resource_item_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    resource_item_state.set_u16(0x382, *resource_item_id);
+    resource_item_state.set_u16(0x106 + 0x55, 1000);
+    resource_item_state.set_u16(0x106 + 0x57, 1000);
+    resource_item_state.set_u16(0x106 + 0x5d, 1000);
+    auto resource_item_session = swd2::BattleSession::create(
+        resource_item_state, selected->get(), items);
+    std::array<swd2::PlayerBattleCommand, 4> resource_item_commands{};
+    for (auto& command : resource_item_commands) {
+        command = {swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+    resource_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto resource_item_round = resource_item_session.play_round(
+        resource_item_commands, abilities, zero_random);
+    require(resource_item_session.party()[0].ability_points ==
+                static_cast<std::uint16_t>(1000U - resource_item_cost) &&
+                std::any_of(resource_item_round.events.begin(),
+                            resource_item_round.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                       swd2::BattleEventKind::player_ability;
+                            }),
+            "FIG type-10 battle item did not charge its embedded ability cost");
+    auto poor_item_state = resource_item_state;
+    poor_item_state.set_u16(
+        0x106 + 0x55,
+        static_cast<std::uint16_t>(resource_item_cost - 1U));
+    auto poor_item_session = swd2::BattleSession::create(
+        poor_item_state, selected->get(), items);
+    swd2::BattleCommandMenu poor_item_menu(
+        poor_item_session, abilities, items);
+    poor_item_menu.input(swd2::InputAction::right);
+    poor_item_menu.input(swd2::InputAction::confirm);
+    require(!poor_item_menu.entries()[0].enabled,
+            "FIG type-10 item menu ignored the embedded ability affordability check");
+
+    // FIG resource class five treats the ability "cost" as a mask over the
+    // five shared counters at +3e6 rather than subtracting a numeric pool.
+    auto class_five_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    class_five_state.set_u16(0x10, 4);
+    const auto actor_three = 0x106 + 3 * 0x9f;
+    class_five_state.set_u16(actor_three + 8, 0);
+    class_five_state.set_u16(actor_three + 0x2d, 100);
+    class_five_state.set_u16(actor_three + 0x2f, 100);
+    class_five_state.set_u8(actor_three + 0x6d, 48);
+    for (std::size_t slot = 1; slot <= 3; ++slot) {
+        class_five_state.set_u16(0x3e6 + slot * 2, 1);
+    }
+    const swd2::BattleEncounter* class_five_encounter = nullptr;
+    for (const auto& candidate : database.encounters()) {
+        if (candidate.definition_slots.size() != 1) continue;
+        const auto definition_id =
+            candidate.monster_definition_ids[candidate.definition_slots[0]];
+        const auto definition = swd2::MonsterDefinition::parse(
+            definition_id, items.entry(static_cast<std::size_t>(definition_id) + 2));
+        if (definition.resistance_flags[3] != 1) {
+            class_five_encounter = &candidate;
+            break;
+        }
+    }
+    require(class_five_encounter != nullptr,
+            "ORC data has no single-monster class-five status test formation");
+    auto class_five_session = swd2::BattleSession::create(
+        class_five_state, *class_five_encounter, items);
+    std::array<swd2::PlayerBattleCommand, 4> class_five_commands{};
+    for (auto& command : class_five_commands) {
+        command = {swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+    class_five_commands[3] = {swd2::PlayerCommandKind::ability, 48, 0, 0};
+    class_five_session.play_round(class_five_commands, abilities, zero_random);
+    require(class_five_session.monsters()[0].status_turns[2] == 2 &&
+                class_five_session.special_item_counts()[1] == 0 &&
+                class_five_session.special_item_counts()[2] == 0 &&
+                class_five_session.special_item_counts()[3] == 0 &&
+                class_five_session.party()[3].abilities[0] == 0,
+            "FIG class-five masked consumable counters were not reproduced");
+    class_five_session.store(class_five_state);
+    require(class_five_state.u16(0x3e8) == 0 &&
+                class_five_state.u16(0x3ea) == 0 &&
+                class_five_state.u16(0x3ec) == 0 &&
+                class_five_state.u8(actor_three + 0x6d) == 0,
+            "FIG class-five counters/learned-slot exhaustion did not persist");
+
+    auto escape_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto actor_zero = 0x106U;
+    escape_state.set_u8(actor_zero + 0x6d, 7);
+    escape_state.set_u16(actor_zero + 0x35, 200);
+    escape_state.set_u16(actor_zero + 0x5d, 1000);
+    auto escape_session = swd2::BattleSession::create(
+        escape_state, selected->get(), items, true);
+    std::array<swd2::PlayerBattleCommand, 4> escape_commands{};
+    for (auto& command : escape_commands) {
+        command = {swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+    escape_commands[0] = {swd2::PlayerCommandKind::ability, 7, 0, 0};
+    const auto escaped = escape_session.play_round(
+        escape_commands, abilities, zero_random);
+    require(escaped.outcome == swd2::BattleOutcome::escaped &&
+                escape_session.party()[0].secondary_points == 200 &&
+                std::any_of(escaped.events.begin(), escaped.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                           swd2::BattleEventKind::player_escaped &&
+                                       event.effect_code == 0x47;
+                            }),
+            "FIG effect 47 did not escape a random battle without charging MP");
+
+    auto fixed_escape_session = swd2::BattleSession::create(
+        escape_state, selected->get(), items, false);
+    const auto fixed_escape = fixed_escape_session.play_round(
+        escape_commands, abilities, zero_random);
+    require(fixed_escape.outcome != swd2::BattleOutcome::escaped &&
+                fixed_escape_session.party()[0].secondary_points == 200 &&
+                std::any_of(fixed_escape.events.begin(), fixed_escape.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                           swd2::BattleEventKind::escape_failed &&
+                                       event.effect_code == 0x47;
+                            }),
+            "FIG effect 47 did not reject fixed-battle escape without charging MP");
+
+    auto escape_item_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    escape_item_state.set_u16(0x382, 237);  // type-10 effect 47 wrapper
+    escape_item_state.set_u16(actor_zero + 0x55, 1000);
+    escape_item_state.set_u16(actor_zero + 0x57, 1000);
+    escape_item_state.set_u16(actor_zero + 0x5d, 1000);
+    auto escape_item_session = swd2::BattleSession::create(
+        escape_item_state, selected->get(), items, true);
+    auto escape_item_commands = escape_commands;
+    escape_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto escaped_by_item = escape_item_session.play_round(
+        escape_item_commands, abilities, zero_random);
+    require(escaped_by_item.outcome == swd2::BattleOutcome::escaped &&
+                escape_item_session.inventory()[0] == 237 &&
+                escape_item_session.party()[0].ability_points == 1000,
+            "FIG item 237 effect-47 stack exit consumed AP/item or failed to escape");
+
+    auto fixed_escape_item_session = swd2::BattleSession::create(
+        escape_item_state, selected->get(), items, false);
+    const auto fixed_escape_item = fixed_escape_item_session.play_round(
+        escape_item_commands, abilities, zero_random);
+    require(fixed_escape_item.outcome != swd2::BattleOutcome::escaped &&
+                fixed_escape_item_session.inventory()[0] == 237 &&
+                fixed_escape_item_session.party()[0].ability_points == 1000 &&
+                std::any_of(fixed_escape_item.events.begin(),
+                            fixed_escape_item.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                       swd2::BattleEventKind::escape_failed;
+                            }),
+            "FIG item 237 did not reject fixed-battle escape without consumption");
+
+    // The ordinary flee tile is global: it replaces every commandable
+    // party slot, then each actor attempts escape in sorted initiative order.
+    auto flee_rules_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    for (std::size_t index = 0; index < 3; ++index) {
+        const auto base = actor_zero + index * 0x9f;
+        flee_rules_state.set_u16(base + 8, 0);
+        flee_rules_state.set_u16(base + 0x0e, 1000);
+        flee_rules_state.set_u16(base + 0x2d, 1000);
+        flee_rules_state.set_u16(base + 0x2f, 1000);
+        flee_rules_state.set_u16(base + 0x31, 1);
+        flee_rules_state.set_u16(base + 0x5d, 1000);
+    }
+    std::array<swd2::PlayerBattleCommand, 4> flee_commands{};
+    for (std::size_t index = 0; index < flee_commands.size(); ++index) {
+        flee_commands[index] = index < 3
+                                   ? swd2::PlayerBattleCommand{
+                                         swd2::PlayerCommandKind::escape, 0, index, 0}
+                                   : swd2::PlayerBattleCommand{
+                                         swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+
+    auto low_card_state = flee_rules_state;
+    low_card_state.set_u16(actor_zero + 8, 0);
+    low_card_state.set_u16(actor_zero + 0x2d, 250);
+    low_card_state.set_u16(actor_zero + 0x2f, 1000);
+    auto low_card_session = swd2::BattleSession::create(
+        low_card_state, selected->get(), items, false);
+    std::array<swd2::PlayerBattleCommand, 4> skip_commands{};
+    for (auto& command : skip_commands) {
+        command = {swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+    static_cast<void>(low_card_session.play_round(
+        skip_commands, abilities, zero_random));
+    require((low_card_session.party()[0].status_bits & 0x1000U) != 0,
+            "FIG 2bd9 did not set its gameplay low-HP bit at one quarter");
+
+    auto healthy_card_state = flee_rules_state;
+    healthy_card_state.set_u16(actor_zero + 8, 0x1000);
+    auto healthy_card_session = swd2::BattleSession::create(
+        healthy_card_state, selected->get(), items, false);
+    static_cast<void>(healthy_card_session.play_round(
+        skip_commands, abilities, zero_random));
+    require((healthy_card_session.party()[0].status_bits & 0x1000U) == 0,
+            "FIG 2bd9 did not clear a stale low-HP bit above one quarter");
+
+    auto fixed_flee_session = swd2::BattleSession::create(
+        flee_rules_state, selected->get(), items, false);
+    const auto fixed_flee = fixed_flee_session.play_round(
+        flee_commands, abilities, zero_random);
+    require(fixed_flee.outcome != swd2::BattleOutcome::escaped &&
+                std::count_if(fixed_flee.events.begin(), fixed_flee.events.end(),
+                              [](const swd2::BattleSessionEvent& event) {
+                                  return event.kind ==
+                                         swd2::BattleEventKind::escape_failed;
+                              }) == 3,
+            "FIG ordinary flee did not fail once per actor in a fixed battle");
+
+    auto high_level_flee_state = flee_rules_state;
+    high_level_flee_state.set_u16(
+        actor_zero + 0x31,
+        static_cast<std::uint16_t>(session.monster_definitions()[0].level + 4U));
+    auto high_level_flee_session = swd2::BattleSession::create(
+        high_level_flee_state, selected->get(), items, true);
+    const auto high_level_flee = high_level_flee_session.play_round(
+        flee_commands, abilities,
+        [](std::uint16_t modulus) {
+            if (modulus == 0) throw std::runtime_error("zero flee-test modulus");
+            return static_cast<std::uint16_t>(modulus - 1U);
+        });
+    require(high_level_flee.outcome == swd2::BattleOutcome::escaped,
+            "FIG ordinary flee did not grant the four-level advantage shortcut");
+
+    auto countdown_flee_session = swd2::BattleSession::create(
+        flee_rules_state, selected->get(), items, true);
+    const auto fail_random = [](std::uint16_t modulus) {
+        if (modulus == 0) throw std::runtime_error("zero flee-test modulus");
+        return static_cast<std::uint16_t>(modulus - 1U);
+    };
+    const auto countdown_first = countdown_flee_session.play_round(
+        flee_commands, abilities, fail_random);
+    const auto countdown_second = countdown_flee_session.play_round(
+        flee_commands, abilities, fail_random);
+    require(countdown_first.outcome == swd2::BattleOutcome::ongoing &&
+                countdown_second.outcome == swd2::BattleOutcome::escaped &&
+                std::any_of(countdown_second.events.begin(),
+                            countdown_second.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                       swd2::BattleEventKind::player_escaped;
+                            }),
+            "FIG failed-flee party_count*2 countdown did not guarantee escape");
+
+    auto composite_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    composite_state.set_u8(actor_zero + 0x6d, 90);
+    composite_state.set_u16(actor_zero + 0x55, 100);
+    composite_state.set_u16(actor_zero + 0x5d, 1000);
+    auto composite_session = swd2::BattleSession::create(
+        composite_state, selected->get(), items);
+    auto composite_commands = escape_commands;
+    composite_commands[0] = {
+        swd2::PlayerCommandKind::ability, 90, 0, 0,
+    };
+    const auto composite_round = composite_session.play_round(
+        composite_commands, abilities, zero_random);
+    std::vector<std::uint16_t> nested_damage;
+    for (const auto& event : composite_round.events) {
+        if (event.kind == swd2::BattleEventKind::player_ability &&
+            event.source == 0 && event.ability_id == 90) {
+            nested_damage.push_back(event.damage);
+        }
+    }
+    require(composite_session.monsters()[0].hit_points == 20 &&
+                composite_session.party()[0].ability_points == 60 &&
+                nested_damage == std::vector<std::uint16_t>{40, 60},
+            "FIG learned composite ability did not dispatch/pay its two effects");
+
+    // FIG item 230 is the type-10 wrapper around the same ability-90
+    // composite.  1138 derives 90 from 230-0x8c before entering 57f2, but the
+    // presentation/consumption namespace remains ITEM id 230.
+    auto composite_item_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    composite_item_state.set_u16(0x382, 230);
+    composite_item_state.set_u16(actor_zero + 0x55, 100);
+    composite_item_state.set_u16(actor_zero + 0x57, 100);
+    composite_item_state.set_u16(actor_zero + 0x5d, 1000);
+    auto composite_item_session = swd2::BattleSession::create(
+        composite_item_state, selected->get(), items);
+    auto composite_item_commands = escape_commands;
+    composite_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto composite_item_round = composite_item_session.play_round(
+        composite_item_commands, abilities, zero_random);
+    std::vector<std::pair<std::uint16_t, std::uint16_t>> item_nested_damage;
+    for (const auto& event : composite_item_round.events) {
+        if (event.kind == swd2::BattleEventKind::player_ability &&
+            event.source == 0 && event.ability_id == 230) {
+            item_nested_damage.emplace_back(event.effect_code, event.damage);
+        }
+    }
+    require(composite_item_session.monsters()[0].hit_points == 20 &&
+                composite_item_session.party()[0].ability_points == 60 &&
+                composite_item_session.inventory()[0] == 0 &&
+                item_nested_damage ==
+                    std::vector<std::pair<std::uint16_t, std::uint16_t>>{
+                        {0x38, 40}, {0x3a, 60}},
+            "FIG type-10 composite item did not derive/dispatch/pay/consume exactly");
+
+    // The item target bits, not the derived ability's flags, suppress target
+    // selection for item 219.  Its nested 66/69 handlers still apply both
+    // tactical self buffs and must retain item id 219 in presentation events.
+    auto tactical_item_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    tactical_item_state.set_u16(0x382, 219);
+    tactical_item_state.set_u16(actor_zero + 0x55, 100);
+    tactical_item_state.set_u16(actor_zero + 0x57, 100);
+    tactical_item_state.set_u16(actor_zero + 0x5d, 1000);
+    auto tactical_item_session = swd2::BattleSession::create(
+        tactical_item_state, selected->get(), items);
+    const auto tactical_defense_before =
+        tactical_item_session.party()[0].physical_defense;
+    auto tactical_item_commands = escape_commands;
+    tactical_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto tactical_item_round = tactical_item_session.play_round(
+        tactical_item_commands, abilities, zero_random);
+    std::vector<std::uint16_t> tactical_nested;
+    for (const auto& event : tactical_item_round.events) {
+        if (event.kind == swd2::BattleEventKind::player_ability &&
+            event.source == 0 && event.ability_id == 219) {
+            require(!event.target_is_monster,
+                    "FIG composite self-buff event was marked as an enemy hit");
+            tactical_nested.push_back(event.effect_code);
+        }
+    }
+    require(tactical_item_session.party()[0].physical_defense >
+                tactical_defense_before &&
+                tactical_item_session.inventory()[0] == 0 &&
+                tactical_nested == std::vector<std::uint16_t>{0x66, 0x69},
+            "FIG targetless composite item did not dispatch both tactical effects");
+
+    // 58fa skips a medium-dependent effect body but returns to the ordinary
+    // payment/consumption path. The monster is untouched and the exact failed
+    // selector remains available to every presentation frontend.
+    auto missing_medium_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    missing_medium_state.set_u16(0x10, 1);
+    missing_medium_state.set_u8(actor_zero + 0x6d, 54); // effect 32 / MENU AE
+    missing_medium_state.set_u16(actor_zero + 0x55, 100);
+    missing_medium_state.set_u16(actor_zero + 0x57, 100);
+    missing_medium_state.set_u16(actor_zero + 0x2d, 5000);
+    missing_medium_state.set_u16(actor_zero + 0x2f, 5000);
+    missing_medium_state.set_u16(actor_zero + 0x5d, 1000);
+    auto missing_medium_session = swd2::BattleSession::create(
+        missing_medium_state, selected->get(), items);
+    auto missing_medium_commands = escape_commands;
+    missing_medium_commands[0] = {
+        swd2::PlayerCommandKind::ability, 54, 0, 0,
+    };
+    const auto missing_medium_round = missing_medium_session.play_round(
+        missing_medium_commands, abilities, zero_random);
+    require(missing_medium_session.monsters()[0].hit_points == 120 &&
+                missing_medium_session.party()[0].ability_points == 91 &&
+                std::any_of(
+                    missing_medium_round.events.begin(),
+                    missing_medium_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::missing_medium &&
+                               event.source == 0 && event.ability_id == 54 &&
+                               event.effect_code == 0x32;
+                    }),
+            "FIG 58fa learned ability did not fail/pay without mediator AE");
+
+    auto missing_medium_item_state = missing_medium_state;
+    missing_medium_item_state.set_u16(0x382, 194); // type-10 effect 32
+    auto missing_medium_item_session = swd2::BattleSession::create(
+        missing_medium_item_state, selected->get(), items);
+    auto missing_medium_item_commands = escape_commands;
+    missing_medium_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto missing_medium_item_round =
+        missing_medium_item_session.play_round(
+            missing_medium_item_commands, abilities, zero_random);
+    require(missing_medium_item_session.monsters()[0].hit_points == 120 &&
+                missing_medium_item_session.party()[0].ability_points == 91 &&
+                missing_medium_item_session.inventory()[0] == 0 &&
+                std::any_of(
+                    missing_medium_item_round.events.begin(),
+                    missing_medium_item_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::missing_medium &&
+                               event.ability_id == 194 &&
+                               event.effect_code == 0x32;
+                    }),
+            "FIG 1138 type-10 medium failure did not pay/consume the item");
+
+    auto missing_composite_state = missing_medium_state;
+    missing_composite_state.set_u8(actor_zero + 0x6d, 85);
+    missing_composite_state.set_u16(actor_zero + 0x55, 200);
+    auto missing_composite_session = swd2::BattleSession::create(
+        missing_composite_state, selected->get(), items);
+    auto missing_composite_commands = escape_commands;
+    missing_composite_commands[0] = {
+        swd2::PlayerCommandKind::ability, 85, 0, 0,
+    };
+    const auto missing_composite_round = missing_composite_session.play_round(
+        missing_composite_commands, abilities, zero_random);
+    std::vector<std::uint16_t> missing_nested_effects;
+    for (const auto& event : missing_composite_round.events) {
+        if (event.kind == swd2::BattleEventKind::missing_medium &&
+            event.source == 0 && event.ability_id == 85) {
+            missing_nested_effects.push_back(event.effect_code);
+        }
+    }
+    require(missing_composite_session.monsters()[0].hit_points == 120 &&
+                missing_composite_session.party()[0].ability_points == 100 &&
+                missing_nested_effects ==
+                    std::vector<std::uint16_t>{0x43, 0x36},
+            "FIG 57f2 did not continue/pay two failed nested medium effects");
+
+    // Encounter data offset 1252 contains monster 338, whose generic ability
+    // 127 requests medium AE and has exactly three 50-AP casts in its 150 pool.
+    // 23b1 refunds the first prepaid cast when it summons the missing medium.
+    const auto medium_encounter = std::find_if(
+        database.encounters().begin(), database.encounters().end(),
+        [](const swd2::BattleEncounter& encounter) {
+            return encounter.data_offset == 1252;
+        });
+    require(medium_encounter != database.encounters().end(),
+            "ORC medium-summon regression encounter 1252 is absent");
+    auto medium_monster_state = missing_medium_state;
+    medium_monster_state.set_u8(actor_zero + 0x6d, 0);
+    medium_monster_state.set_u16(actor_zero + 0x2d, 60000);
+    medium_monster_state.set_u16(actor_zero + 0x2f, 60000);
+    medium_monster_state.set_u16(actor_zero + 0x0e, 1000);
+    auto medium_monster_session = swd2::BattleSession::create(
+        medium_monster_state, *medium_encounter, items);
+    const auto medium_summon_round = medium_monster_session.play_round(
+        skip_commands, abilities, zero_random);
+    require(medium_monster_session.battle_media() ==
+                    std::array<bool, 3>{true, false, false} &&
+                std::any_of(
+                    medium_summon_round.events.begin(),
+                    medium_summon_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_summoned &&
+                               event.source_is_monster && event.source == 0 &&
+                               event.target == 0 && event.ability_id == 127 &&
+                               event.effect_code == 0x32;
+                    }),
+            "FIG 23b1 did not summon persistent MENU AE for generic ability 127");
+    std::size_t paid_medium_casts = 0;
+    bool paid_medium_casts_use_generic_path = true;
+    for (std::size_t round = 0; round < 4; ++round) {
+        const auto resolved = medium_monster_session.play_round(
+            skip_commands, abilities, zero_random);
+        paid_medium_casts += static_cast<std::size_t>(std::count_if(
+            resolved.events.begin(), resolved.events.end(),
+            [](const swd2::BattleSessionEvent& event) {
+                return event.kind == swd2::BattleEventKind::monster_ability &&
+                       event.source == 0 && event.ability_id == 127;
+            }));
+        paid_medium_casts_use_generic_path =
+            paid_medium_casts_use_generic_path &&
+            std::all_of(
+                resolved.events.begin(), resolved.events.end(),
+                [](const swd2::BattleSessionEvent& event) {
+                    return event.kind !=
+                               swd2::BattleEventKind::monster_ability ||
+                           event.source != 0 || event.ability_id != 127 ||
+                           event.monster_generic_path;
+                });
+    }
+    require(paid_medium_casts == 3 && paid_medium_casts_use_generic_path &&
+                medium_monster_session.battle_media()[0],
+            "FIG 23b1 generic-path marker/refunded prepaid casts differ");
+
+    auto medium_success_state = medium_monster_state;
+    medium_success_state.set_u8(actor_zero + 0x6d, 54);
+    medium_success_state.set_u16(actor_zero + 0x55, 100);
+    medium_success_state.set_u16(actor_zero + 0x5d, 1000);
+    auto medium_success_session = swd2::BattleSession::create(
+        medium_success_state, *medium_encounter, items);
+    static_cast<void>(medium_success_session.play_round(
+        skip_commands, abilities, zero_random));
+    auto medium_success_commands = skip_commands;
+    medium_success_commands[0] = {
+        swd2::PlayerCommandKind::ability, 54, 0, 0,
+    };
+    const auto medium_success_round = medium_success_session.play_round(
+        medium_success_commands, abilities, zero_random);
+    require(medium_success_session.party()[0].ability_points == 91 &&
+                std::any_of(
+                    medium_success_round.events.begin(),
+                    medium_success_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::player_ability &&
+                               event.source == 0 && event.ability_id == 54 &&
+                               event.effect_code == 0x32;
+                    }) &&
+                std::none_of(
+                    medium_success_round.events.begin(),
+                    medium_success_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::missing_medium &&
+                               event.source == 0;
+                    }),
+            "FIG 58fa rejected effect 32 after monster-installed medium AE");
+
+    // Effect 5e writes DS:33fd only after its archive animation. Preserve the
+    // rolled duration in the event so 2deb can add the icon on the following
+    // clean composition, then silently remove it when 0af5 reaches zero.
+    auto status_icon_state = missing_medium_state;
+    status_icon_state.set_u8(actor_zero + 0x6d, 6);
+    status_icon_state.set_u16(actor_zero + 0x55, 100);
+    status_icon_state.set_u16(actor_zero + 0x5d, 0xffff);
+    auto status_icon_session = swd2::BattleSession::create(
+        status_icon_state, *medium_encounter, items);
+    auto status_icon_commands = skip_commands;
+    status_icon_commands[0] = {
+        swd2::PlayerCommandKind::ability, 6, 0, 0,
+    };
+    const auto status_icon_round = status_icon_session.play_round(
+        status_icon_commands, abilities, zero_random);
+    require(std::any_of(
+                status_icon_round.events.begin(), status_icon_round.events.end(),
+                [](const swd2::BattleSessionEvent& event) {
+                    return event.kind ==
+                               swd2::BattleEventKind::player_ability &&
+                           event.ability_id == 6 &&
+                           event.effect_code == 0x5e &&
+                           event.status_duration == 2;
+                }) &&
+                status_icon_session.monsters()[0].status_turns[0] == 1,
+            "FIG 5a91 status duration was not retained for 2deb presentation");
+    const auto status_icon_expiry = status_icon_session.play_round(
+        skip_commands, abilities, zero_random);
+    require(std::any_of(
+                status_icon_expiry.events.begin(),
+                status_icon_expiry.events.end(),
+                [](const swd2::BattleSessionEvent& event) {
+                    return event.kind == swd2::BattleEventKind::status_expired &&
+                           event.target_is_monster &&
+                           event.expired_monster_status_mask == 0x01U;
+                }) &&
+                status_icon_session.monsters()[0].status_turns[0] == 0,
+            "FIG 0af5 status expiry did not remove the persistent 2deb icon");
+
+    auto periodic_zero_state = status_icon_state;
+    periodic_zero_state.set_u8(actor_zero + 0x6d, 48); // effect 60 / slot two
+    for (std::size_t slot = 0; slot < 5; ++slot) {
+        periodic_zero_state.set_u16(0x3e6 + slot * 2U, 1);
+    }
+    const auto periodic_encounter = std::find_if(
+        database.encounters().begin(), database.encounters().end(),
+        [](const swd2::BattleEncounter& encounter) {
+            return encounter.data_offset == 1328;
+        });
+    require(periodic_encounter != database.encounters().end(),
+            "ORC periodic-status regression encounter 1328 is absent");
+    auto periodic_zero_session = swd2::BattleSession::create(
+        periodic_zero_state, *periodic_encounter, items);
+    auto periodic_zero_commands = skip_commands;
+    periodic_zero_commands[0] = {
+        swd2::PlayerCommandKind::ability, 48, 0, 0,
+    };
+    const auto periodic_zero_round = periodic_zero_session.play_round(
+        periodic_zero_commands, abilities, zero_random);
+    require(std::any_of(
+                periodic_zero_round.events.begin(),
+                periodic_zero_round.events.end(),
+                [](const swd2::BattleSessionEvent& event) {
+                    return event.kind == swd2::BattleEventKind::status_damage &&
+                           event.target_is_monster && event.damage == 0;
+                }),
+            "FIG 0b7b zero periodic roll did not emit its literal 144e event");
+
+    auto disabled_state = composite_state;
+    disabled_state.set_u16(actor_zero + 8, 0x0002);
+    auto disabled_session = swd2::BattleSession::create(
+        disabled_state, selected->get(), items);
+    const auto disabled_round = disabled_session.play_round(
+        composite_commands, abilities, zero_random);
+    require(disabled_session.monsters()[0].hit_points == 120 &&
+                disabled_session.party()[0].ability_points == 100 &&
+                std::any_of(disabled_round.events.begin(),
+                            disabled_round.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return !event.source_is_monster &&
+                                       event.source == 0 &&
+                                       event.kind == swd2::BattleEventKind::skipped;
+                            }),
+            "FIG player incapacitation mask 0x2c7e did not suppress the action");
+
+    auto capture_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    capture_state.set_u16(actor_zero + 0x31, 30);
+    capture_state.set_u16(actor_zero + 0x5d, 1000);
+    capture_state.set_u16(0x3e4, 0);
+    auto capture_session = swd2::BattleSession::create(
+        capture_state, selected->get(), items, true);
+    auto capture_commands = escape_commands;
+    capture_commands[0] = {
+        swd2::PlayerCommandKind::capture, 0, 0, 0,
+    };
+    const auto capture_round = capture_session.play_round(
+        capture_commands, abilities, zero_random);
+    require(capture_round.outcome == swd2::BattleOutcome::victory &&
+                capture_session.inventory().back() == 500 &&
+                capture_session.monsters()[0].hit_points == 0 &&
+                std::any_of(capture_round.events.begin(),
+                            capture_round.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                           swd2::BattleEventKind::monster_captured &&
+                                       event.defeated;
+                            }),
+            "FIG random-battle capture level/empty-slot rules were not reproduced");
+    auto occupied_capture_state = swd2::SharedState::load(
+        game_root / "SAVE.DA1");
+    occupied_capture_state.set_u16(actor_zero + 0x31, 30);
+    occupied_capture_state.set_u16(actor_zero + 0x35, 53);
+    occupied_capture_state.set_u16(actor_zero + 0x5d, 1000);
+    occupied_capture_state.set_u16(0x382, 319);
+    occupied_capture_state.set_u16(0x3e4, 0);
+    auto occupied_capture_session = swd2::BattleSession::create(
+        occupied_capture_state, selected->get(), items, true);
+    const auto occupied_capture_random = [](std::uint16_t modulus) {
+        if (modulus == 0) {
+            throw std::runtime_error("zero occupied-capture-test modulus");
+        }
+        return static_cast<std::uint16_t>(modulus == 1 ? 0 : 1);
+    };
+    auto summon_before_capture = escape_commands;
+    summon_before_capture[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    static_cast<void>(occupied_capture_session.play_round(
+        summon_before_capture, abilities, occupied_capture_random));
+    require(!occupied_capture_session.summoned_allies().empty(),
+            "FIG capture regression setup failed to summon the first ally");
+    const auto occupied_capture_round = occupied_capture_session.play_round(
+        capture_commands, abilities, occupied_capture_random);
+    require(occupied_capture_session.inventory().back() == 0 &&
+                std::any_of(occupied_capture_round.events.begin(),
+                            occupied_capture_round.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                       swd2::BattleEventKind::capture_failed;
+                            }),
+            "FIG 0e10 capture did not reject a nonzero summoned-ally slot");
+    capture_session.store(capture_state);
+    require(capture_state.u16(0x3e4) == 500,
+            "FIG captured monster definition did not persist in inventory slot 49");
+
+    // ITEM ids >=314 are captured-monster summons rather than ordinary battle
+    // items. The ally is pending for the current initiative roll, joins the
+    // next round, spends its own AP, and is returned after battle.
+    auto summon_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    summon_state.set_u16(0x382, 319);
+    summon_state.set_u16(actor_zero + 0x35, 53);
+    summon_state.set_u16(actor_zero + 0x5d, 1000);
+    for (std::size_t index = 0; index < 3; ++index) {
+        const auto base = actor_zero + index * 0x9f;
+        summon_state.set_u16(base + 0x2d, 1000);
+        summon_state.set_u16(base + 0x2f, 1000);
+    }
+    auto summon_commands = escape_commands;
+    summon_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto one_random = [](std::uint16_t modulus) {
+        if (modulus == 0) throw std::runtime_error("zero summon-test modulus");
+        return static_cast<std::uint16_t>(modulus == 1 ? 0 : 1);
+    };
+    auto summon_boundary_state = summon_state;
+    summon_boundary_state.set_u16(actor_zero + 0x35, 52);
+    auto summon_boundary_session = swd2::BattleSession::create(
+        summon_boundary_state, selected->get(), items);
+    const auto summon_boundary_round = summon_boundary_session.play_round(
+        summon_commands, abilities, one_random);
+    require(summon_boundary_session.summoned_allies().empty() &&
+                summon_boundary_session.inventory()[0] == 319 &&
+                std::any_of(summon_boundary_round.events.begin(),
+                            summon_boundary_round.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                       swd2::BattleEventKind::invalid_command;
+                            }),
+            "FIG summon selector accepted actor +35 equal to level*2 despite JBE");
+    auto summon_session = swd2::BattleSession::create(
+        summon_state, selected->get(), items);
+    const auto summon_round = summon_session.play_round(
+        summon_commands, abilities, one_random);
+    require(summon_session.summoned_allies().size() == 1 &&
+                summon_session.summoned_allies()[0].item_id == 319 &&
+                summon_session.inventory()[0] == 0 &&
+                summon_session.party()[0].secondary_points == 1 &&
+                std::any_of(summon_round.events.begin(), summon_round.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                       swd2::BattleEventKind::ally_summoned;
+                            }),
+            "FIG captured-monster item did not create/pay for a pending ally");
+    std::array<swd2::PlayerBattleCommand, 4> summon_wait{};
+    for (auto& command : summon_wait) {
+        command = {swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+    const auto ally_round = summon_session.play_round(
+        summon_wait, abilities, one_random);
+    require(summon_session.monsters()[0].hit_points == 59 &&
+                summon_session.summoned_allies()[0].ai.ability_points == 138 &&
+                std::any_of(ally_round.events.begin(), ally_round.events.end(),
+                            [](const swd2::BattleSessionEvent& event) {
+                                return event.kind ==
+                                           swd2::BattleEventKind::ally_ability &&
+                                       event.ability_id == 77 && event.damage == 61;
+                            }),
+            "FIG summoned ally did not join next-round initiative/use its ability");
+    summon_session.store(summon_state);
+    require(summon_state.u16(0x382) == 319,
+            "FIG surviving summoned ally was not returned to inventory");
+
+    // FIG 5d24 does not disable captured-monster items when both packed ally
+    // slots are occupied. It asks which slot to replace, installs the newcomer
+    // in that slot, and writes the displaced item back into the inventory slot
+    // from which the newcomer came.
+    auto replace_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    replace_state.set_u16(0x10, 1);
+    replace_state.set_u16(0x382 + 0U * 2U, 319);
+    replace_state.set_u16(0x382 + 1U * 2U, 320);
+    replace_state.set_u16(0x382 + 2U * 2U, 321);
+    replace_state.set_u16(actor_zero + 0x35, 2000);
+    replace_state.set_u16(actor_zero + 0x2d, 60000);
+    replace_state.set_u16(actor_zero + 0x2f, 60000);
+    replace_state.set_u16(actor_zero + 0x5d, 1000);
+    auto replace_session = swd2::BattleSession::create(
+        replace_state, *medium_encounter, items);
+    auto replace_commands = skip_commands;
+    replace_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    static_cast<void>(replace_session.play_round(
+        replace_commands, abilities, one_random));
+    replace_commands[0].item_slot = 1;
+    static_cast<void>(replace_session.play_round(
+        replace_commands, abilities, one_random));
+    require(replace_session.summoned_allies().size() == 2 &&
+                replace_session.summoned_allies()[0].item_id == 319 &&
+                replace_session.summoned_allies()[1].item_id == 320 &&
+                replace_session.inventory()[0] == 0 &&
+                replace_session.inventory()[1] == 0 &&
+                replace_session.inventory()[2] == 321,
+            "FIG full-slot summon regression setup did not pack two allies");
+
+    swd2::BattleCommandMenu replace_cancel_menu(
+        replace_session, abilities, items);
+    replace_cancel_menu.input(swd2::InputAction::right);
+    replace_cancel_menu.input(swd2::InputAction::confirm);
+    replace_cancel_menu.input(swd2::InputAction::down);
+    replace_cancel_menu.input(swd2::InputAction::down);
+    replace_cancel_menu.input(swd2::InputAction::confirm);
+    require(replace_cancel_menu.page() ==
+                swd2::BattleCommandMenuPage::summon_replace &&
+                replace_cancel_menu.entries().size() == 2,
+            "FIG 5d24 full-slot summon did not enter the two-slot selector");
+    replace_cancel_menu.input(swd2::InputAction::cancel);
+    require(replace_cancel_menu.page() == swd2::BattleCommandMenuPage::items &&
+                replace_cancel_menu.cursor() == 2,
+            "FIG 5d24 cancel did not restore the selected inventory cursor");
+
+    swd2::BattleCommandMenu replace_menu(replace_session, abilities, items);
+    replace_menu.input(swd2::InputAction::right);
+    replace_menu.input(swd2::InputAction::confirm);
+    replace_menu.input(swd2::InputAction::down);
+    replace_menu.input(swd2::InputAction::down);
+    replace_menu.input(swd2::InputAction::confirm);
+    replace_menu.input(swd2::InputAction::right);
+    replace_menu.input(swd2::InputAction::confirm);
+    require(replace_menu.complete() &&
+                replace_menu.commands()[0].kind ==
+                    swd2::PlayerCommandKind::item &&
+                replace_menu.commands()[0].item_slot == 2 &&
+                replace_menu.commands()[0].target == 1,
+            "FIG 5d24 replacement choice was not retained in the command");
+    const auto resource_before_replace =
+        replace_session.party()[0].secondary_points;
+    const auto replace_round = replace_session.play_round(
+        replace_menu.commands(), abilities, one_random);
+    require(replace_session.summoned_allies().size() == 2 &&
+                replace_session.summoned_allies()[0].item_id == 319 &&
+                replace_session.summoned_allies()[1].item_id == 321 &&
+                replace_session.inventory()[2] == 320 &&
+                replace_session.party()[0].secondary_points ==
+                    resource_before_replace - 72 &&
+                std::any_of(
+                    replace_round.events.begin(), replace_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::ally_summoned &&
+                               event.target == 1 && event.ability_id == 321;
+                    }),
+            "FIG 5d24 did not replace slot one/return the displaced ally item");
+}
+
+void test_battle_ai(const std::filesystem::path& game_root) {
+    const auto sequence = [](std::vector<std::uint16_t> values) {
+        return [values = std::move(values), cursor = std::size_t{}]
+               (std::uint16_t modulus) mutable {
+            if (cursor >= values.size() || values[cursor] >= modulus) {
+                throw std::runtime_error("invalid deterministic AI-random sequence");
+            }
+            return values[cursor++];
+        };
+    };
+    const auto abilities = swd2::BattleAbilityDatabase::load(game_root / "FIG.EXE");
+    const std::array<bool, 3> living = {true, false, true};
+
+    swd2::MonsterAiState generic;
+    generic.hit_points = generic.maximum_hit_points = 120;
+    generic.level = 22;
+    generic.primary_chance = 1;
+    generic.generic_ability = 10;
+    generic.secondary_chance = 0;
+    generic.ability_points = 55;
+    const auto generic_decision = swd2::choose_monster_action(
+        generic, living, abilities, sequence({1, 2, 0, 1, 4}));
+    require(generic_decision.action == swd2::MonsterAiAction::generic_ability &&
+                generic_decision.target == 2 && generic_decision.ability_id == 10 &&
+                generic_decision.power == 105 && generic.ability_points == 0,
+            "FIG enemy target retry/generic-ability selection was not reproduced");
+
+    swd2::MonsterAiState special;
+    special.hit_points = special.maximum_hit_points = 120;
+    special.level = 22;
+    special.primary_chance = 9;
+    special.secondary_chance = 9;
+    special.special_ability_a = 54;
+    special.ability_points = 100;
+    const auto special_decision = swd2::choose_monster_action(
+        special, living, abilities, sequence({0, 0, 0, 1, 2}));
+    require(special_decision.action == swd2::MonsterAiAction::special_ability &&
+                special_decision.ability_id == 54 && special_decision.power == 42 &&
+                special.ability_points == 91,
+            "FIG enemy special-ability selection was not reproduced");
+
+    swd2::MonsterAiState healer;
+    healer.hit_points = 20;
+    healer.maximum_hit_points = 100;
+    healer.level = 22;
+    healer.healing_ability = 6;
+    healer.ability_points = 100;
+    const auto heal = swd2::choose_monster_action(
+        healer, living, abilities, sequence({3}));
+    require(heal.action == swd2::MonsterAiAction::heal_self && heal.power == 9 &&
+                healer.hit_points == 29 && healer.ability_points == 55,
+            "FIG enemy quarter-HP self-heal was not reproduced");
+
+    swd2::MonsterAiState basic;
+    basic.hit_points = basic.maximum_hit_points = 100;
+    basic.level = 10;
+    basic.primary_chance = 1;
+    const auto attack = swd2::choose_monster_action(
+        basic, living, abilities, sequence({0, 9}));
+    require(attack.action == swd2::MonsterAiAction::basic_attack && attack.target == 0,
+            "FIG enemy basic-attack fallback was not reproduced");
+
+    swd2::MonsterAiState forced_flee;
+    forced_flee.hit_points = forced_flee.maximum_hit_points = 100;
+    forced_flee.level = 10;
+    forced_flee.ai_type = 2;
+    const auto type_two = swd2::choose_monster_action(
+        forced_flee, living, abilities, sequence({}), true, 10);
+    require(type_two.action == swd2::MonsterAiAction::flee,
+            "FIG random-encounter AI type two did not flee immediately");
+
+    swd2::MonsterAiState intimidated;
+    intimidated.hit_points = intimidated.maximum_hit_points = 100;
+    intimidated.level = 10;
+    const auto intimidation = swd2::choose_monster_action(
+        intimidated, living, abilities, sequence({2}), true, 17);
+    require(intimidation.action == swd2::MonsterAiAction::flee,
+            "FIG seven-level random-encounter intimidation roll was not reproduced");
+    auto intimidated_failure = intimidated;
+    const auto intimidation_failure = swd2::choose_monster_action(
+        intimidated_failure, living, abilities, sequence({1}), true, 17);
+    require(intimidation_failure.action ==
+                swd2::MonsterAiAction::flee_failed,
+            "FIG intimidation escape-failure branch was collapsed into skip");
+
+    swd2::MonsterAiState desperate;
+    desperate.hit_points = 20;
+    desperate.maximum_hit_points = 100;
+    desperate.level = 10;
+    desperate.ai_type = 1;
+    const auto desperation = swd2::choose_monster_action(
+        desperate, living, abilities, sequence({0}), true, 10);
+    require(desperation.action == swd2::MonsterAiAction::flee,
+            "FIG quarter-HP AI type-one desperation flee was not reproduced");
+    auto desperate_failure = desperate;
+    const auto desperation_failure = swd2::choose_monster_action(
+        desperate_failure, living, abilities, sequence({2}), true, 10);
+    require(desperation_failure.action ==
+                swd2::MonsterAiAction::flee_failed,
+            "FIG quarter-HP escape-failure branch was collapsed into skip");
+
+    swd2::MonsterAiState ally;
+    ally.hit_points = ally.maximum_hit_points = 420;
+    ally.level = 26;
+    ally.primary_chance = 5;
+    ally.secondary_chance = 0;
+    ally.generic_ability = 77;
+    ally.ability_points = 160;
+    const auto ally_spell = swd2::choose_summoned_ally_action(
+        ally, living, abilities, sequence({0, 2, 5, 1, 3}), true);
+    require(ally_spell.action == swd2::MonsterAiAction::generic_ability &&
+                ally_spell.target == 2 && ally_spell.ability_id == 77 &&
+                ally_spell.power == 63 && ally.ability_points == 138,
+            "FIG captured-ally target/ability/AP decision tree was not reproduced");
+
+    const auto ally_flee = swd2::choose_summoned_ally_action(
+        ally, living, abilities, sequence({7}), true);
+    require(ally_flee.action == swd2::MonsterAiAction::flee,
+            "FIG captured ally random-seven leave branch was not reproduced");
+}
+
+void test_legacy_event_resources(const std::filesystem::path& game_root) {
+    const auto archive = swd2::ScriptArchive::load(game_root / "CHNA1.EXE");
+    require(archive.entry_count() == 231, "unexpected CHNA1 script directory size");
+    require(archive.sentinel_offset() == 0x8c4a, "unexpected CHNA1 script sentinel");
+    const auto name = archive.entry(1);
+    require(std::string(name.begin(), name.end()) == std::string("CHNA1.DSK\0", 10),
+            "CHNA1 script did not reference its glyph font");
+    const auto first_dialogue = swd2::decode_event_record(archive.entry(10));
+    require(first_dialogue.commands.size() == 1 && first_dialogue.commands[0].opcode == 0,
+            "CHNA1 first event was not decoded as dialogue");
+    require(first_dialogue.commands[0].text.size() == 12,
+            "CHNA1 first dialogue byte count is unexpected");
+    const auto first_page = swd2::render_dialogue_page(
+        swd2::LegacyFont::load(game_root / "CHNA1.DSK"), first_dialogue.commands[0].text);
+    require(std::count_if(first_page.pixels.begin(), first_page.pixels.end(),
+                          [](std::uint8_t pixel) { return pixel != 0; }) > 100,
+            "CHNA1 dialogue did not render through its embedded font");
+    require(first_dialogue.consumed_bytes == archive.entry(10).size(),
+            "CHNA1 first event was not consumed exactly");
+    const auto scripted_dialogue = swd2::decode_event_record(archive.entry(15));
+    require(scripted_dialogue.commands.size() == 4 &&
+                scripted_dialogue.commands[0].opcode == 0 &&
+                scripted_dialogue.commands[1].opcode == 1 &&
+                scripted_dialogue.commands[2].opcode == 3 &&
+                scripted_dialogue.commands[3].opcode == 34,
+            "CHNA1 mixed dialogue/event command stream was not decoded");
+    require(!swd2::ScriptArchive::probe(game_root / "RPG.EXE"),
+            "native RPG code was misclassified as a script archive");
+
+    const auto font = swd2::LegacyFont::load(game_root / "CHNA1.DSK");
+    require(font.glyph_count() == 1510, "unexpected CHNA1 DSK glyph count");
+    require(font.codes().front() == 0xa140 && font.contains(0xbaf2),
+            "CHNA1 DSK Big5 code table was not decoded");
+    const auto glyph = font.rasterize(0xbaf2);  // Big5 緊
+    require(std::count(glyph.begin(), glyph.end(), 1) > 20,
+            "CHNA1 DSK glyph bitmap was not decoded");
+
+    const auto entity_dialogue = swd2::decode_event_record(archive.entry(0x12c / 2));
+    const auto name_font = swd2::LegacyFont::load(game_root / "NAME.DSK");
+    const auto named_page = swd2::render_dialogue_page(
+        font, entity_dialogue.commands[0].text, 0, 288, 64, 15,
+        &name_font);
+    require(std::count(named_page.pixels.begin(), named_page.pixels.end(), 15) > 100,
+            "NAME.DSK substitution glyphs were not used by dialogue rendering");
+}
+
+class TestEventHost final : public swd2::EventVmHost {
+public:
+    void show_dialogue(std::uint16_t opcode,
+                       std::span<const std::uint8_t> text) override {
+        last_text_opcode = opcode;
+        dialogue_bytes += text.size();
+        ++dialogues;
+    }
+    void delay(std::uint16_t ticks) override { delayed_ticks += ticks; }
+    bool present_event_command(std::uint16_t,
+                               std::span<const std::uint16_t>) override {
+        ++presentations;
+        return accept_presentations;
+    }
+    bool show_positioned_text(std::uint16_t x, std::uint16_t y,
+                              std::span<const std::uint8_t> text) override {
+        positioned_x = x;
+        positioned_y = y;
+        positioned_text.assign(text.begin(), text.end());
+        ++positioned_calls;
+        return accept_presentations;
+    }
+    bool run_shop(std::span<const std::uint16_t> items,
+                  swd2::SharedState&) override {
+        shop_items.assign(items.begin(), items.end());
+        ++shops;
+        return accept_shops;
+    }
+    std::optional<swd2::InventoryUiResult> run_inventory(swd2::SharedState&) override {
+        ++inventories;
+        return inventory_result;
+    }
+
+    std::size_t dialogues{};
+    std::size_t dialogue_bytes{};
+    std::uint16_t last_text_opcode{};
+    std::uint64_t delayed_ticks{};
+    std::size_t presentations{};
+    std::size_t positioned_calls{};
+    std::uint16_t positioned_x{};
+    std::uint16_t positioned_y{};
+    std::vector<std::uint8_t> positioned_text;
+    bool accept_presentations{true};
+    std::vector<std::uint16_t> shop_items;
+    std::size_t shops{};
+    bool accept_shops{true};
+    std::size_t inventories{};
+    std::optional<swd2::InventoryUiResult> inventory_result{
+        swd2::InventoryUiResult::cancelled};
+};
+
+std::vector<std::uint8_t> event_words(std::initializer_list<std::uint16_t> words) {
+    std::vector<std::uint8_t> bytes;
+    bytes.reserve(words.size() * 2);
+    for (const auto word : words) {
+        bytes.push_back(static_cast<std::uint8_t>(word));
+        bytes.push_back(static_cast<std::uint8_t>(word >> 8U));
+    }
+    return bytes;
+}
+
+void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
+    // The first generated record exercises the state-only handlers in their
+    // native word-stream representation. Record two is the missing-item
+    // branch target of opcode 40.
+    const std::vector<std::vector<std::uint8_t>> records = {
+        event_words({10, 0x2d, 10,
+                     40, 123, 4, 257,
+                     51, 6,
+                     42, 1,
+                     47, 2,
+                     58, 222,
+                     0xffff}),
+        event_words({61, 0xffff}),
+    };
+    const auto archive = swd2::ScriptArchive::from_records(records);
+    TestEventHost host;
+
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x106 + 0x2d, 95);
+    state.set_u16(0x106 + 0x2f, 100);
+    for (std::size_t i = 0; i < 50; ++i) state.set_u16(0x382 + i * 2, 0);
+    state.set_u16(0x382, 123);
+    state.set_u16(0x384, 400);
+    const auto result = swd2::execute_event(archive, 2, state, nullptr, 0, host);
+    require(result.status == swd2::EventVmStatus::completed &&
+                result.requested_marker == swd2::Marker::open_figure &&
+                state.u16(0x4a0) == 222,
+            "event opcode 58 did not request the FIG module");
+    require(state.u16(0x106 + 0x2d) == 100,
+            "event opcode 10 did not saturate at the adjacent maximum");
+    require(state.u16(0x382) == 257 && state.u16(0x384) == 0 && state.u8(0x3f1) == 1,
+            "event opcodes 40/42 did not update and filter the inventory");
+    require(state.u16(0x10) == 2 && state.u16(0x106 + 2 * 0x9f + 8) == 0x2000 &&
+                state.u16(0x106 + 3 * 0x9f + 8) == 0x2000,
+            "event opcode 47 did not mark inactive party records");
+    for (std::size_t i = 0; i < 12; ++i) {
+        require(state.u16(0xa2 + i * 2) == 6,
+                "event opcode 51 did not set every actor direction");
+    }
+
+    // A full inventory makes opcode 40 branch to record two instead of
+    // executing the following commands in record one.
+    auto missing = swd2::SharedState::load(game_root / "SAVE.DA1");
+    for (std::size_t i = 0; i < 50; ++i) missing.set_u16(0x382 + i * 2, 1);
+    missing.set_u8(0x112, 0x10);
+    missing.set_u8(0x163, 0xf8);
+    missing.set_u8(0x114, 0xfe);
+    const auto branch = swd2::execute_event(archive, 2, missing, nullptr, 0, host);
+    require(branch.status == swd2::EventVmStatus::completed &&
+                branch.requested_marker == swd2::Marker::none &&
+                missing.u8(0x11a) == 0xa4 && missing.u8(0x11c) == 0xa4 &&
+                missing.u8(0x132) == 1 && missing.u8(0x112) == 0xb5 &&
+                missing.u8(0x163) == 7 && missing.u8(0x114) == 13,
+            "event opcodes 40/61 did not take and execute the missing-item branch");
+
+    for (const auto opcode : {std::uint16_t{59}, std::uint16_t{60}}) {
+        const std::vector<std::vector<std::uint8_t>> battle_records = {
+            event_words({opcode, 7, 444, 0xffff}),
+        };
+        const auto battle_archive = swd2::ScriptArchive::from_records(battle_records);
+        auto battle_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+        const auto battle =
+            swd2::execute_event(battle_archive, 2, battle_state, nullptr, 0, host);
+        require(battle.requested_marker == swd2::Marker::open_figure &&
+                    battle_state.u16(0x51c) == 7 && battle_state.u16(0x4a0) == 444,
+                "event opcode 59/60 did not preserve the FIG launch fields");
+    }
+
+    const std::vector<std::vector<std::uint8_t>> movement_records = {
+        event_words({5, 22, 30, 2, 31, 1, 32, 3, 33, 1, 45, 0xffff}),
+    };
+    const auto movement_archive = swd2::ScriptArchive::from_records(movement_records);
+    auto moving = swd2::SharedState::load(game_root / "SAVE.DA1");
+    moving.set_actor_screen_x(0x26);
+    moving.set_actor_screen_y(0x50);
+    moving.set_viewport_x(5);
+    moving.set_viewport_y(6);
+    moving.set_u16(0x413, 40);
+    moving.set_u16(0x415, 25);
+    moving.set_u16(0x417, 100);
+    moving.set_u16(0x419, 100);
+    moving.set_u16(0x40d, 1000);
+    const auto before_presentations = host.presentations;
+    const auto movement =
+        swd2::execute_event(movement_archive, 2, moving, nullptr, 0, host);
+    require(movement.status == swd2::EventVmStatus::completed &&
+                moving.actor_screen_x() == 0x26 && moving.actor_screen_y() == 0x50 &&
+                moving.viewport_x() == 3 && moving.viewport_y() == 5 &&
+                moving.u16(0x40d) == 796 && moving.actor_direction() == 9 &&
+                host.presentations - before_presentations == 10,
+            "event presentation and scripted movement opcodes did not execute");
+
+    auto positioned_record = event_words({53, 7, 9});
+    positioned_record.insert(positioned_record.end(),
+                             {0xa4, 0x40, ' ', 0xa4, 0x41, '$', '$', 0xff, 0xff});
+    const std::vector<std::vector<std::uint8_t>> positioned_records = {
+        positioned_record,
+    };
+    const auto positioned_archive =
+        swd2::ScriptArchive::from_records(positioned_records);
+    const auto decoded_positioned =
+        swd2::decode_event_record(positioned_archive.entry(1));
+    require(decoded_positioned.commands.size() == 1 &&
+                decoded_positioned.commands[0].opcode == 53 &&
+                decoded_positioned.commands[0].arguments ==
+                    std::vector<std::uint16_t>({7, 9}) &&
+                decoded_positioned.commands[0].text ==
+                    std::vector<std::uint8_t>({0xa4, 0x40, ' ', 0xa4, 0x41}),
+            "event opcode 53 did not decode its coordinate-prefixed inline text");
+    auto positioned_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto positioned = swd2::execute_event(
+        positioned_archive, 2, positioned_state, nullptr, 0, host);
+    require(positioned.status == swd2::EventVmStatus::completed &&
+                host.positioned_calls == 1 && host.positioned_x == 7 &&
+                host.positioned_y == 9 &&
+                host.positioned_text ==
+                    std::vector<std::uint8_t>({0xa4, 0x40, ' ', 0xa4, 0x41}),
+            "event opcode 53 did not route its inline text to the RPG host");
+
+    const std::vector<std::vector<std::uint8_t>> shop_records = {
+        event_words({19, 3, 117, 118, 120, 0xffff}),
+    };
+    const auto shop_archive = swd2::ScriptArchive::from_records(shop_records);
+    auto shop_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto shop = swd2::execute_event(shop_archive, 2, shop_state, nullptr, 0, host);
+    require(shop.status == swd2::EventVmStatus::completed && host.shops == 1 &&
+                host.shop_items == std::vector<std::uint16_t>({117, 118, 120}),
+            "event opcode 19 did not pass its variable ITEM list to the shop host");
+
+    const std::vector<std::vector<std::uint8_t>> inventory_records = {
+        event_words({13, 4, 58, 111, 0xffff}),
+        event_words({58, 222, 0xffff}),
+    };
+    const auto inventory_archive =
+        swd2::ScriptArchive::from_records(inventory_records);
+    auto inventory_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    host.inventory_result = swd2::InventoryUiResult::empty_slot;
+    const auto inventory =
+        swd2::execute_event(inventory_archive, 2, inventory_state, nullptr, 0, host);
+    require(inventory.requested_marker == swd2::Marker::open_figure &&
+                inventory_state.u16(0x4a0) == 222 && host.inventories == 1,
+            "event opcode 13 did not take the empty-inventory branch");
+
+    const std::vector<std::vector<std::uint8_t>> combined_shop_records = {
+        event_words({17, 2, 117, 118, 0xffff}),
+        event_words({58, 333, 0xffff}),
+    };
+    const auto combined_shop_archive =
+        swd2::ScriptArchive::from_records(combined_shop_records);
+    swd2::MapAreaRecord shop_area;
+    for (auto& field : shop_area.entity_fields) field.resize(1);
+    shop_area.entity_fields[9][0] = 4;
+    auto combined_shop_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto combined_shop = swd2::execute_event(
+        combined_shop_archive, 2, combined_shop_state, &shop_area, 0, host);
+    require(combined_shop.requested_marker == swd2::Marker::open_figure &&
+                combined_shop_state.u16(0x4a0) == 333 && host.shops == 2 &&
+                host.shop_items == std::vector<std::uint16_t>({117, 118}),
+            "event opcode 17 did not run its shop list and reload the entity event");
+}
+
+void test_event_vm(const std::filesystem::path& game_root) {
+    const auto archive = swd2::ScriptArchive::load(game_root / "CHNA1.EXE");
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    auto world = swd2::MapDatabase::load(game_root / "MAPZ.DA1");
+    auto& area = world.location_at_directory_offset(8).area;
+    TestEventHost host;
+    const auto dialogue = swd2::execute_event(archive, 0x12c, state, &area, 1, host);
+    require(dialogue.status == swd2::EventVmStatus::completed &&
+                dialogue.commands_executed == 1 && host.dialogues == 1 &&
+                host.dialogue_bytes == 88,
+            "CHNA1 map-entity dialogue did not execute in the event VM");
+
+    // Event 204 ends in opcode 28, the one-argument battle transition.
+    const auto battle = swd2::execute_event(archive, 204 * 2, state, &area, 1, host);
+    require(battle.status == swd2::EventVmStatus::completed &&
+                battle.requested_marker == swd2::Marker::open_figure &&
+                battle.last_opcode == 28 && state.u16(0x4a0) == 392,
+            "event opcode 28 did not request the in-process FIG module");
+
+    // Opcode 48 carries both the auxiliary battle field and encounter id.
+    const auto chapter_five = swd2::ScriptArchive::load(game_root / "CHNA5.EXE");
+    const auto special_battle =
+        swd2::execute_event(chapter_five, 189 * 2, state, &area, 1, host);
+    require(special_battle.requested_marker == swd2::Marker::open_figure &&
+                special_battle.last_opcode == 48 && state.u16(0x51c) == 36 &&
+                state.u16(0x4a0) == 68,
+            "event opcode 48 did not preserve both FIG launch arguments");
+
+    const auto mixed = swd2::execute_event(archive, 15 * 2, state, &area, 1, host);
+    require(mixed.status == swd2::EventVmStatus::unsupported_opcode &&
+                mixed.last_opcode == 34 && area.entity_fields[3][1] == 3,
+            "event VM did not preserve effects before an unsupported opcode");
+
+    // The same real record becomes fully executable when the VM is given the
+    // MAPZ database. Its opcode 34 writes location-directory slot 14,
+    // field 3, entity byte offset 76.
+    const auto map_mutation = swd2::execute_event(
+        archive, 15 * 2, state, &area, 1, host, 10'000, &world);
+    require(map_mutation.status == swd2::EventVmStatus::completed &&
+                world.location_at_directory_offset(14).area.entity_fields[3][38] == 3,
+            "event opcode 34 did not apply the real CHNA1 MAPZ mutation");
+    const auto shared_area_offset = world.location_at_directory_offset(14).area_offset;
+    for (const auto& location : world.locations()) {
+        if (location.area_offset == shared_area_offset) {
+            require(location.area.entity_fields[3][38] == 3,
+                    "MAPZ mutation was not propagated across a shared area pointer");
+        }
+    }
+
+    const std::vector<std::vector<std::uint8_t>> relocation_records = {
+        event_words({37, 10, 0xffff}),
+    };
+    const auto relocation_archive =
+        swd2::ScriptArchive::from_records(relocation_records);
+    const auto& destination = world.location_at_directory_offset(10);
+    const auto relocation = swd2::execute_event(
+        relocation_archive, 2, state, &area, 1, host, 10'000, &world);
+    require(relocation.status == swd2::EventVmStatus::completed &&
+                relocation.requested_map_reload && state.u16(0x424) == 10 &&
+                state.u16(0x40d) == destination.map_position &&
+                state.viewport_x() == destination.viewport_x &&
+                state.viewport_y() == destination.viewport_y &&
+                state.actor_screen_x() == destination.actor_screen_x &&
+                state.actor_screen_y() == destination.actor_screen_y &&
+                state.area_graphics_path() == destination.area.graphics_path &&
+                state.area_collision_path() == destination.area.layout_path &&
+                state.music_path() == destination.area.music_path &&
+                state.event_executable_path() == destination.area.event_archive_path &&
+                state.event_data_path() == destination.area.event_font_path,
+            "event opcode 37 did not install the destination MAPZ location");
+    for (std::size_t i = 0; i < 12; ++i) {
+        require(state.u16(0xa2 + i * 2) == destination.actor_direction,
+                "event opcode 37 did not synchronize actor directions");
+    }
+}
+
+class ScriptedPlatform final : public swd2::PlatformBackend {
+public:
+    void present(const swd2::IndexedSurfaceView& surface) override {
+        require(surface.width == 320 && surface.height == 200, "unexpected MEO surface size");
+        std::uint64_t frame_hash = 1469598103934665603ULL;
+        for (const auto pixel : surface.pixels) {
+            frame_hash ^= pixel;
+            frame_hash *= 1099511628211ULL;
+        }
+        frame_hashes.push_back(frame_hash);
+        std::uint64_t compact_hash = 1469598103934665603ULL;
+        for (std::size_t y = 8; y < 40; ++y) {
+            for (std::size_t x = 216; x < 296; ++x) {
+                compact_hash ^= surface.pixels[y * 320 + x];
+                compact_hash *= 1099511628211ULL;
+            }
+        }
+        compact_hashes.push_back(compact_hash);
+        std::uint64_t bottom_hash = 1469598103934665603ULL;
+        for (std::size_t y = 128; y < 192; ++y) {
+            for (std::size_t x = 0; x < 320; ++x) {
+                bottom_hash ^= surface.pixels[y * 320 + x];
+                bottom_hash *= 1099511628211ULL;
+            }
+        }
+        bottom_hashes.push_back(bottom_hash);
+        std::uint64_t palette_hash = 1469598103934665603ULL;
+        for (const auto component : surface.palette) {
+            palette_hash ^= component;
+            palette_hash *= 1099511628211ULL;
+        }
+        palette_hashes.push_back(palette_hash);
+        ++presented;
+    }
+    swd2::InputAction wait_for_input() override {
+        if (cursor < actions.size()) {
+            return actions[cursor++];
+        }
+        return swd2::InputAction::quit;
+    }
+    swd2::InputAction poll_input() override {
+        if (cursor < actions.size()) return actions[cursor++];
+        return swd2::InputAction::none;
+    }
+    swd2::ClockTime clock_time() const override { return {0, 0}; }
+    void play_music(std::span<const std::uint8_t>, bool) override { ++music_calls; }
+    void play_voice(std::span<const std::uint8_t> data) override {
+        ++voice_calls;
+        voice_bytes += data.size();
+        std::uint64_t hash = 1469598103934665603ULL;
+        for (const auto byte : data) {
+            hash ^= byte;
+            hash *= 1099511628211ULL;
+        }
+        voice_hashes.push_back(hash);
+    }
+    void stop_audio() override { ++stop_calls; }
+    std::size_t presented{};
+    std::size_t music_calls{};
+    std::size_t voice_calls{};
+    std::size_t voice_bytes{};
+    std::size_t stop_calls{};
+    std::vector<std::uint64_t> frame_hashes;
+    std::vector<std::uint64_t> compact_hashes;
+    std::vector<std::uint64_t> bottom_hashes;
+    std::vector<std::uint64_t> palette_hashes;
+    std::vector<std::uint64_t> voice_hashes;
+    std::vector<swd2::InputAction> actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+    };
+    std::size_t cursor{};
+};
+
+void test_monolithic_runtime(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    swd2::GameContext context{game_root, swd2::SharedState::load(game_root / "SAVE.DA1"), platform};
+    swd2::ModuleRegistry modules;
+    modules.add(std::make_unique<swd2::MeoModule>());
+    modules.add(std::make_unique<swd2::RpgModule>());
+    modules.add(std::make_unique<swd2::BattleModule>());
+    modules.add(std::make_unique<swd2::DemoModule>());
+    const auto result = swd2::MonolithicRuntime(std::move(modules)).run(context);
+    require(result.transitions.size() == 2, "monolithic runtime did not call MEO then RPG");
+    require(result.transitions[0].module == swd2::Module::menu,
+            "monolithic runtime did not begin with MEO");
+    require(result.transitions[1].module == swd2::Module::rpg,
+            "monolithic runtime did not continue in-process to RPG");
+    require(platform.presented == 4 && platform.music_calls == 1 &&
+                platform.stop_calls == 1,
+            "MEO and RPG did not render/play map music in one process");
+}
+
+void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::confirm,  // interact with DE068 entity
+        swd2::InputAction::confirm,  // close its CHNA1 dialogue
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    // MAPZ entity 1 is anchored at world (139,111). Put the player immediately
+    // to its left while preserving RPG.EXE's screen-position convention.
+    state.set_viewport_x(118);
+    state.set_viewport_y(99);
+    state.set_actor_direction(9);
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG entity-dialogue run did not terminate normally");
+    require(platform.presented == 3 && platform.music_calls == 1 &&
+                platform.stop_calls == 1,
+            "RPG did not present dialogue and manage map music in-process");
+}
+
+void test_rpg_entity_collision(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::right,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    // The same DE068 entity occupies three consecutive RAP cells beginning at
+    // world (139,111). Its automatic-event flag is clear, so walking right
+    // must turn the actor without moving or opening the dialogue.
+    state.set_viewport_x(118);
+    state.set_viewport_y(99);
+    state.set_actor_direction(0);
+    const auto original_x = state.world_x();
+    const auto original_y = state.world_y();
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG entity-collision run did not terminate normally");
+    require(context.shared_state.world_x() == original_x &&
+                context.shared_state.world_y() == original_y &&
+                context.shared_state.actor_direction() == 9,
+            "RPG did not reproduce the three-cell entity collision footprint");
+    require(platform.presented == 2 && platform.music_calls == 1 &&
+                platform.stop_calls == 1,
+            "blocked RPG movement unexpectedly opened an entity event");
+    require(platform.bottom_hashes.size() == 2 &&
+                platform.bottom_hashes[0] == platform.bottom_hashes[1],
+            "ordinary entity collision unexpectedly drew a dialogue panel");
+}
+
+void test_rpg_corner_slide(const std::filesystem::path& game_root) {
+    const auto map = swd2::MapResource::load(game_root / "T1" / "AREA1");
+    std::size_t center_x = 0;
+    std::size_t center_y = 0;
+    const auto clear = [&](std::size_t x, std::size_t y) {
+        return (map.cells()[y * map.layout().width + x] & 0x8000U) == 0;
+    };
+    bool found = false;
+    for (std::size_t y = 12; y + 2 < map.layout().height && !found; ++y) {
+        for (std::size_t x = 20; x + 2 < map.layout().width; ++x) {
+            const auto leading = map.cells()[y * map.layout().width + x + 2];
+            const auto current_clear = clear(x - 1, y) && clear(x, y) && clear(x + 1, y);
+            const auto south_footprint =
+                clear(x - 1, y + 1) && clear(x, y + 1) && clear(x + 1, y + 1);
+            const auto original_corner_probe =
+                clear(x + 1, y + 1) &&
+                (clear(x + 2, y + 1) || clear(x + 2, y + 2));
+            if ((leading & 0x8000U) != 0 && (leading & 0x0800U) == 0 &&
+                current_clear && south_footprint && original_corner_probe) {
+                center_x = x;
+                center_y = y;
+                found = true;
+                break;
+            }
+        }
+    }
+    require(found, "AREA1 has no right-wall corner-slide oracle");
+
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(8);
+    for (auto& behavior : location.area.entity_fields[3]) behavior = 3;
+
+    ScriptedPlatform platform;
+    platform.actions = {swd2::InputAction::right, swd2::InputAction::quit};
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_viewport_x(static_cast<std::uint16_t>(center_x - 20));
+    state.set_viewport_y(static_cast<std::uint16_t>(center_y - 12));
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_actor_direction(3);
+    state.set_u16(0x40f, 8);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + ((center_y - 12) * map.layout().width + center_x - 20) * 2U));
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG corner-slide run did not terminate normally");
+    require(context.shared_state.world_x() == center_x &&
+                context.shared_state.world_y() == center_y + 1 &&
+                context.shared_state.actor_direction() == 0,
+            "RPG right-wall collision did not take its south-first corner slide");
+}
+
+void test_rpg_automatic_entity_event(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(12);
+    const auto entity = swd2::map_entity(location.area, 5);
+    require(entity.cell_offset == 25008 && entity.event_directory_offset == 220 &&
+                (entity.flags & 0x8000U) != 0,
+            "automatic SBOUT entity oracle changed");
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::right,
+        // This quit must be consumed by the collision-triggered dialogue, not
+        // by a later ordinary map iteration.
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x424, 12);
+    state.set_u16(0x40f, 8);
+    state.set_viewport_x(59);
+    state.set_viewport_y(57);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_actor_direction(0);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 59U) * 2U));
+    state.set_dos_string(0x42d, 22, location.area.graphics_path);
+    state.set_dos_string(0x443, 22, location.area.layout_path);
+    state.set_dos_string(0x459, 22, location.area.music_path);
+    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+    state.set_dos_string(0x485, 24, location.area.event_font_path);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG automatic entity-event run did not terminate normally");
+    require(context.shared_state.world_x() == 79 &&
+                context.shared_state.world_y() == 69 &&
+                context.shared_state.actor_direction() == 9,
+            "automatic entity event moved the blocked player");
+    require(platform.presented == 2 && platform.bottom_hashes.size() == 2 &&
+                platform.bottom_hashes[0] != platform.bottom_hashes[1] &&
+                platform.music_calls == 1 && platform.stop_calls == 1,
+            "field-8 8000h collision did not open the entity dialogue immediately");
+}
+
+void test_rpg_event_voice(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(12);
+    // CHNA1 directory 298 is dialogue, opcode-57 voice 53, then dialogue.
+    location.area.entity_fields[9][5] = 298;
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x424, 12);
+    state.set_u16(0x40f, 8);
+    state.set_viewport_x(59);
+    state.set_viewport_y(57);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 59U) * 2U));
+    state.set_dos_string(0x42d, 22, location.area.graphics_path);
+    state.set_dos_string(0x443, 22, location.area.layout_path);
+    state.set_dos_string(0x459, 22, location.area.music_path);
+    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+    state.set_dos_string(0x485, 24, location.area.event_font_path);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG voiced event did not terminate normally");
+    require(platform.voice_calls == 1 &&
+                platform.voice_bytes == std::filesystem::file_size(
+                    game_root / "VC" / "SP053.VOC"),
+            "RPG opcode 57 did not route the original VOC through PlatformBackend");
+}
+
+void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(12);
+    // CHNA1 directory word 198 (entry 99) starts with opcode 14, conditionally
+    // spends 50 coins, and otherwise opens a dialogue. Zero money keeps the
+    // execution on that record and makes its exact one-digit rendering stable.
+    location.area.entity_fields[9][5] = 198;
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x104, 0);
+    state.set_u16(0x424, 12);
+    state.set_u16(0x40f, 8);
+    state.set_viewport_x(59);
+    state.set_viewport_y(57);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 59U) * 2U));
+    state.set_dos_string(0x42d, 22, location.area.graphics_path);
+    state.set_dos_string(0x443, 22, location.area.layout_path);
+    state.set_dos_string(0x459, 22, location.area.music_path);
+    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+    state.set_dos_string(0x485, 24, location.area.event_font_path);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none,
+            "RPG compact money-overlay event did not terminate normally");
+    require(platform.presented == 5 && platform.compact_hashes.size() == 5 &&
+                platform.compact_hashes[1] == 6584855232119388833ULL &&
+                platform.compact_hashes[1] == platform.compact_hashes[2] &&
+                platform.compact_hashes[1] != platform.compact_hashes[0] &&
+                platform.compact_hashes[3] == platform.compact_hashes[4] &&
+                platform.compact_hashes[3] != platform.compact_hashes[1],
+            "RPG opcode 14 did not persist its overlay through dialogue and clear afterward");
+}
+
+void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(12);
+    // CHNA1 directory 32 exercises DE001/2/3, RI000/001 event music,
+    // palette fades, frame delay, and opcode-36 animation.
+    location.area.entity_fields[9][5] = 32;
+
+    ScriptedPlatform platform;
+    platform.actions = {swd2::InputAction::right, swd2::InputAction::quit};
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x424, 12);
+    state.set_u16(0x40f, 8);
+    state.set_viewport_x(59);
+    state.set_viewport_y(57);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 59U) * 2U));
+    state.set_dos_string(0x42d, 22, location.area.graphics_path);
+    state.set_dos_string(0x443, 22, location.area.layout_path);
+    state.set_dos_string(0x459, 22, location.area.music_path);
+    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+    state.set_dos_string(0x485, 24, location.area.event_font_path);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG cutscene event did not terminate normally");
+    const std::set<std::uint64_t> palettes(platform.palette_hashes.begin(),
+                                           platform.palette_hashes.end());
+    const std::set<std::uint64_t> frames(platform.bottom_hashes.begin(),
+                                         platform.bottom_hashes.end());
+    require(platform.presented >= 80 && platform.music_calls >= 3 &&
+                palettes.size() > 10 && frames.size() > 2,
+            "RPG cutscene opcodes did not render DE frames, RI music, and palette ramps");
+}
+
+void test_demo_module(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {swd2::InputAction::confirm};
+    swd2::GameContext context{game_root, swd2::SharedState::load(game_root / "SAVE.DA1"),
+                              platform};
+    require(swd2::DemoModule().run(context, swd2::Marker::open_demo) == swd2::Marker::none,
+            "in-process DEMO module returned an invalid marker");
+    require(platform.presented == 1 && platform.music_calls == 0 && platform.stop_calls == 1,
+            "DEMO module did not render and manage audio through PlatformBackend");
+
+    ScriptedPlatform full_platform;
+    full_platform.actions.assign(3'000, swd2::InputAction::none);
+    swd2::GameContext full_context{
+        game_root, swd2::SharedState::load(game_root / "SAVE.DA1"), full_platform};
+    require(swd2::DemoModule().run(full_context, swd2::Marker::open_demo) ==
+                swd2::Marker::none &&
+                full_platform.presented > 2'400 &&
+                full_platform.music_calls == 1 && full_platform.stop_calls == 1 &&
+                full_platform.cursor == full_platform.presented,
+            "DEMO full 960-frame timeline/epilogue did not start SWORD.RIX exactly once");
+}
+
+void test_demo_timeline(const std::filesystem::path& game_root) {
+    auto sword6 = swd2::decode_demo_rle(
+        swd2::decode_rsk_block(read_file(game_root / "SWORD6.RSK")).data);
+    auto sword7 = swd2::decode_demo_rle(
+        swd2::decode_rsk_block(read_file(game_root / "SWORD7.RSK")).data);
+    require(sword6.size() == 54'233 && sword7.size() == 31'400,
+            "DEMO nested run decoder produced unexpected sizes");
+    const auto expanded6 = swd2::SpriteArchive::parse(std::move(sword6));
+    const auto expanded7 = swd2::SpriteArchive::parse(std::move(sword7));
+    require(expanded6.sprites().size() == 15 &&
+                expanded6.sprites()[0].width == 204 &&
+                expanded6.sprites()[0].height == 190 &&
+                expanded7.sprites().size() == 2 &&
+                expanded7.sprites()[0].width == 200 &&
+                expanded7.sprites()[0].height == 25,
+            "DEMO nested archives were not reconstructed");
+
+    swd2::DemoTimeline timeline;
+    std::size_t music_starts = 0;
+    for (std::size_t tick = 0; tick < swd2::DemoTimeline::frame_count; ++tick) {
+        const auto frame = timeline.next();
+        require(frame && frame->tick == tick, "DEMO timeline ended early");
+        music_starts += frame->start_music ? 1U : 0U;
+        if (tick == 0) {
+            require(frame->draws.size() == 11 &&
+                        frame->draws[0] == swd2::DemoDrawCommand{
+                            swd2::DemoSpriteSource::sword1, 0, 320, 53, false} &&
+                        frame->draws[3] == swd2::DemoDrawCommand{
+                            swd2::DemoSpriteSource::sword2, 1, 1045, 41, false},
+                    "DEMO initial road positions/blitter modes differ from EXE data");
+        }
+        if (tick == 200) {
+            require(frame->start_music, "DEMO did not start SWORD.RIX at CX=02f8");
+        }
+        if (tick == 540) {
+            require(timeline.procession_state() == 1,
+                    "DEMO SWORD5 animation did not start at x=100");
+        }
+        if (tick == 699) {
+            require(timeline.final_group_started() && timeline.procession_state() == 8 &&
+                        timeline.actor_state() == 10 &&
+                        std::find(frame->draws.begin(), frame->draws.end(),
+                                  swd2::DemoDrawCommand{
+                                      swd2::DemoSpriteSource::sword6_expanded,
+                                      0, 119, 112, true}) != frame->draws.end(),
+                    "DEMO late archive replacement started on the wrong frame");
+        }
+        if (tick == 727) {
+            require(timeline.final_group_started() &&
+                        timeline.procession_state() == 8 &&
+                        std::find(frame->draws.begin(), frame->draws.end(),
+                                  swd2::DemoDrawCommand{
+                                      swd2::DemoSpriteSource::sword7_expanded,
+                                      1, 29, 18, true}) != frame->draws.end(),
+                    "DEMO final SWORD7 composition did not reach state 29");
+        }
+    }
+    require(!timeline.next() && timeline.tick() == 960 && timeline.first_x() == -640 &&
+                timeline.actor_x() == -720 && timeline.procession_x() == -740 &&
+                music_starts == 1,
+            "DEMO 03c0-frame state machine did not terminate at original values");
+
+    std::array<std::uint8_t, swd2::DemoByteMaskReveal::mask_size> full_mask{};
+    full_mask.fill(0xff);
+    swd2::DemoByteMaskReveal reveal(full_mask);
+    std::vector<std::uint8_t> source(320 * 200, 1);
+    std::vector<std::uint8_t> destination(320 * 200, 0);
+    require(reveal.step(source, destination) && reveal.frame() == 1 &&
+                reveal.selector() == 3 &&
+                std::count(destination.begin(), destination.end(), 1) == 10'667 &&
+                std::all_of(destination.begin(),
+                            destination.begin() +
+                                static_cast<std::ptrdiff_t>(
+                                    swd2::DemoByteMaskReveal::region_offset),
+                            [](std::uint8_t value) { return value == 0; }),
+            "DEMO VGA reveal did not copy every third matching low-memory bit");
+    for (std::size_t frame = 1; frame < swd2::DemoByteMaskReveal::frame_count; ++frame) {
+        require(reveal.step(source, destination), "DEMO VGA reveal ended before 20 IRQs");
+    }
+    require(!reveal.step(source, destination) && reveal.selector() == 0xff &&
+                swd2::portable_demo_reveal_mask() == swd2::portable_demo_reveal_mask(),
+            "DEMO VGA reveal selector/twentieth-frame contract differs from 1000:0278");
+}
+
+void test_battle_module(const std::filesystem::path& game_root) {
+    ScriptedPlatform immediate_battle_platform;
+    immediate_battle_platform.actions = {swd2::InputAction::quit};
+    auto immediate_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    immediate_state.set_u16(0x4a0, 392);  // introduction is literal empty/!!
+    swd2::GameContext immediate_context{
+        game_root, immediate_state, immediate_battle_platform};
+    require(swd2::BattleModule().run(
+                immediate_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                immediate_battle_platform.cursor == 1 &&
+                immediate_battle_platform.presented == 2 &&
+                immediate_context.shared_state.u16(0x4a0) == 0,
+            "FIG empty ORC introduction still consumed a false confirmation gate");
+
+    ScriptedPlatform story_setup_platform;
+    story_setup_platform.actions = {swd2::InputAction::quit};
+    auto story_setup_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    story_setup_state.set_u16(0x4a0, 0x30);
+    swd2::GameContext story_setup_context{
+        game_root, story_setup_state, story_setup_platform};
+    require(swd2::BattleModule().run(
+                story_setup_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                story_setup_platform.cursor == 1 &&
+                story_setup_platform.presented == 8 &&
+                story_setup_context.shared_state.u16(0x4a0) == 0,
+            "FIG directory-30 CD348/CD521/CD352 six-frame setup was not replayed");
+
+    ScriptedPlatform story_boss_platform;
+    story_boss_platform.actions = {swd2::InputAction::quit};
+    auto story_boss_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    story_boss_state.set_u16(0x4a0, 0x42);
+    swd2::GameContext story_boss_context{
+        game_root, story_boss_state, story_boss_platform};
+    require(swd2::BattleModule().run(
+                story_boss_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                story_boss_platform.cursor == 1 &&
+                story_boss_platform.presented == 2 &&
+                story_boss_context.shared_state.u16(0x4a0) == 0,
+            "FIG directory-42 did not preload its CD523 boss-action archive");
+
+    ScriptedPlatform notice_platform;
+    notice_platform.actions = {
+        swd2::InputAction::left,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // insufficient ability resource
+        swd2::InputAction::quit,
+    };
+    auto notice_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    notice_state.set_u16(0x4a0, 392);
+    notice_state.set_u16(0x106 + 0x55, 0);
+    swd2::GameContext notice_context{game_root, notice_state, notice_platform};
+    require(swd2::BattleModule().run(
+                notice_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none && notice_platform.presented == 5 &&
+                notice_platform.frame_hashes.back() ==
+                    13742626491697678824ULL,
+            "FIG 3e19 modal battle notice did not consume its closing key");
+
+    ScriptedPlatform ability_card_platform;
+    ability_card_platform.actions = {
+        swd2::InputAction::left,     // ability tile
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,
+    };
+    auto ability_card_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    ability_card_state.set_u16(0x4a0, 392);
+    ability_card_state.set_u8(0x106 + 0x6d, 41);  // class-five, cost mask 1fh
+    for (std::size_t slot = 0; slot < 5; ++slot) {
+        ability_card_state.set_u16(0x3e6 + slot * 2U, 1);
+    }
+    swd2::GameContext ability_card_context{
+        game_root, ability_card_state, ability_card_platform};
+    require(swd2::BattleModule().run(
+                ability_card_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none && ability_card_platform.presented == 4 &&
+                ability_card_platform.frame_hashes.back() ==
+                    14316022569089146005ULL,
+            "FIG 41a1 class-five ability-cost card did not render");
+
+    ScriptedPlatform item_card_platform;
+    item_card_platform.actions = {
+        swd2::InputAction::right,    // item tile
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,
+    };
+    auto item_card_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    item_card_state.set_u16(0x4a0, 392);
+    item_card_state.set_u16(0x382, 51);
+    swd2::GameContext item_card_context{
+        game_root, item_card_state, item_card_platform};
+    require(swd2::BattleModule().run(
+                item_card_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none && item_card_platform.presented == 4 &&
+                item_card_platform.frame_hashes.back() ==
+                    15441783918533631957ULL,
+            "FIG 1ac2 item-category card did not render");
+
+    ScriptedPlatform status_card_platform;
+    status_card_platform.actions = {
+        swd2::InputAction::left,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // ability 86 / effect 63
+        swd2::InputAction::quit,
+    };
+    auto status_card_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    status_card_state.set_u16(0x4a0, 392);
+    status_card_state.set_u16(0x10, 1);
+    status_card_state.set_u8(0x106 + 0x6d, 86);
+    status_card_state.set_u16(0x106 + 0x55, 1000);
+    status_card_state.set_u16(0x106 + 0x57, 1000);
+    status_card_state.set_u16(0x106 + 0x2d, 1000);
+    status_card_state.set_u16(0x106 + 0x2f, 1000);
+    status_card_state.set_u16(0x106 + 0x5d, 1000);
+    swd2::GameContext status_card_context{
+        game_root, status_card_state, status_card_platform};
+    require(swd2::BattleModule().run(
+                status_card_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                status_card_platform.frame_hashes.size() > 14U &&
+                status_card_platform.frame_hashes[14] ==
+                    15416479133193729915ULL,
+            "FIG 57d6 player-status information card run failed");
+
+    ScriptedPlatform target_overlay_platform;
+    target_overlay_platform.actions = {
+        swd2::InputAction::confirm,  // attack tile
+        swd2::InputAction::confirm,  // normal/group attack
+        swd2::InputAction::quit,     // stop on the multi-monster list
+    };
+    auto target_overlay_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    target_overlay_state.set_u16(0x4a0, 12);  // empty intro, two monsters
+    swd2::GameContext target_overlay_context{
+        game_root, target_overlay_state, target_overlay_platform};
+    require(swd2::BattleModule().run(
+                target_overlay_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                target_overlay_platform.presented == 4 &&
+                target_overlay_platform.frame_hashes.back() ==
+                    10910838393047765823ULL,
+            "FIG 178c target list did not preserve its dimmed attack menus");
+
+    ScriptedPlatform platform;
+    // Empty introductions enter immediately; pairs of confirmations choose
+    // Attack and the highlighted target for each commandable actor.
+    platform.actions.assign(10'000, swd2::InputAction::confirm);
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto money_before = state.u16(0x104);
+    const auto experience_before = state.u16(0x106 + 0x39);
+    const auto experience_one_before = state.u16(0x106 + 0x9f + 0x39);
+    const auto experience_two_before = state.u16(0x106 + 2 * 0x9f + 0x39);
+    state.set_u16(0x4a0, 392);
+    state.set_u16(0x106 + 0x0c, 1234);
+    // Exercise FIG's end-of-battle status mask without setting any bit in the
+    // exact 0x2c7e incapacitation mask (which would correctly skip actor zero).
+    state.set_u16(0x106 + 8, 0x0381);
+    state.set_u16(0x382, 5);
+    state.set_u16(0x384, 0);
+    state.set_u16(0x386, 6);
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::BattleModule().run(context, swd2::Marker::open_figure) ==
+                swd2::Marker::continue_rpg,
+            "in-process FIG module did not return the OC marker");
+    require(platform.presented > 1 && platform.music_calls == 2 && platform.stop_calls == 1,
+            "FIG module did not present interactive battle frames and manage audio");
+    require(context.shared_state.u16(0x4a0) == 0 &&
+                context.shared_state.u16(0x106 + 0x41) == 1234 &&
+                context.shared_state.u16(0x106 + 0x0c) == 1234 &&
+                context.shared_state.u16(0x106 + 8) == 0x0200 &&
+                context.shared_state.u16(0x382) == 5 &&
+                context.shared_state.u16(0x384) == 6 &&
+                context.shared_state.u16(0x386) == 0,
+            "FIG module did not apply its exact shared-state return contract");
+    require(context.shared_state.u16(0x104) == money_before + 20 &&
+                context.shared_state.u16(0x106 + 0x39) == experience_before + 44 &&
+                context.shared_state.u16(0x106 + 0x9f + 0x39) ==
+                    experience_one_before + 44 &&
+                context.shared_state.u16(0x106 + 2 * 0x9f + 0x39) ==
+                    experience_two_before + 44,
+            "FIG victory did not distribute ITEM reward fields like the original");
+
+    ScriptedPlatform level_up_platform;
+    level_up_platform.actions.assign(10'000, swd2::InputAction::confirm);
+    auto level_up_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    level_up_state.set_u16(0x4a0, 392);
+    const auto old_level = level_up_state.u16(0x106 + 0x31);
+    const auto next_threshold = level_up_state.u16(0x106 + 0x3b);
+    require(next_threshold >= 44,
+            "FIG level-up regression threshold is smaller than reward share");
+    level_up_state.set_u16(0x106 + 0x39,
+                           static_cast<std::uint16_t>(next_threshold - 44U));
+    for (std::size_t actor = 0; actor < 3; ++actor) {
+        const auto base = 0x106 + actor * 0x9f;
+        level_up_state.set_u16(base + 0x0c, 1234);
+        level_up_state.set_u16(base + 0x2d, 1000);
+        level_up_state.set_u16(base + 0x2f, 1000);
+        level_up_state.set_u16(base + 0x5d, 1000);
+    }
+    swd2::GameContext level_up_context{
+        game_root, level_up_state, level_up_platform};
+    require(swd2::BattleModule().run(
+                level_up_context, swd2::Marker::open_figure) ==
+                swd2::Marker::continue_rpg &&
+                level_up_context.shared_state.u16(0x106 + 0x31) ==
+                    old_level + 1U &&
+                level_up_context.shared_state.u16(0x106 + 0x39) == 0 &&
+                level_up_platform.music_calls == 3,
+            "FIG 07d2 growth step/WI02 level-up presentation did not run");
+
+    ScriptedPlatform automatic_platform;
+    automatic_platform.actions = {
+        swd2::InputAction::confirm,  // attack tile
+        swd2::InputAction::right,    // automatic mode
+        swd2::InputAction::confirm,
+    };
+    auto automatic_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    automatic_state.set_u16(0x4a0, 392);
+    for (std::size_t actor = 0; actor < 3; ++actor) {
+        const auto base = 0x106 + actor * 0x9f;
+        automatic_state.set_u16(base + 0x0c, 25);
+        automatic_state.set_u16(base + 0x0e, 1000);
+        automatic_state.set_u16(base + 0x2d, 1000);
+        automatic_state.set_u16(base + 0x2f, 1000);
+        automatic_state.set_u16(base + 0x5d, 1000);
+    }
+    swd2::GameContext automatic_context{
+        game_root, automatic_state, automatic_platform};
+    require(swd2::BattleModule().run(
+                automatic_context, swd2::Marker::open_figure) ==
+                swd2::Marker::continue_rpg &&
+                automatic_platform.cursor == automatic_platform.actions.size(),
+            "FIG automatic mode did not persist without reopening later-round menus");
+
+    ScriptedPlatform interrupted_automatic_platform;
+    interrupted_automatic_platform.actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::cancel,  // timer-polled automatic interruption
+    };
+    swd2::GameContext interrupted_automatic_context{
+        game_root, automatic_state, interrupted_automatic_platform};
+    require(swd2::BattleModule().run(
+                interrupted_automatic_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                interrupted_automatic_platform.cursor ==
+                    interrupted_automatic_platform.actions.size(),
+            "FIG automatic mode did not consume a key and reopen command collection");
+
+    ScriptedPlatform effect_voice_platform;
+    effect_voice_platform.actions.clear();
+    for (std::size_t actor = 0; actor < 3; ++actor) {
+        effect_voice_platform.actions.insert(
+            effect_voice_platform.actions.end(),
+            {swd2::InputAction::left, swd2::InputAction::confirm,
+             swd2::InputAction::confirm});
+    }
+    effect_voice_platform.actions.push_back(swd2::InputAction::quit);
+    auto effect_voice_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    effect_voice_state.set_u16(0x4a0, 392);
+    for (std::size_t actor = 0; actor < 3; ++actor) {
+        const auto base = 0x106 + actor * 0x9f;
+        effect_voice_state.set_u16(base + 0x55, 0xffff);
+        effect_voice_state.set_u16(base + 0x57, 0xffff);
+        for (std::size_t slot = 0; slot < 50; ++slot) {
+            effect_voice_state.set_u8(base + 0x6d + slot, 0);
+        }
+        effect_voice_state.set_u8(base + 0x6d, 1);  // effect 4e / SP078.VOC
+    }
+    swd2::GameContext effect_voice_context{
+        game_root, effect_voice_state, effect_voice_platform};
+    const auto effect_voice_result = swd2::BattleModule().run(
+        effect_voice_context, swd2::Marker::open_figure);
+    const auto expected_voice = read_file(game_root / "VC" / "SP078.VOC");
+    std::uint64_t expected_voice_hash = 1469598103934665603ULL;
+    for (const auto byte : expected_voice) {
+        expected_voice_hash ^= byte;
+        expected_voice_hash *= 1099511628211ULL;
+    }
+    require((effect_voice_result == swd2::Marker::continue_rpg ||
+             effect_voice_result == swd2::Marker::none) &&
+                effect_voice_platform.voice_calls != 0 &&
+                std::find(effect_voice_platform.voice_hashes.begin(),
+                          effect_voice_platform.voice_hashes.end(),
+                          expected_voice_hash) !=
+                    effect_voice_platform.voice_hashes.end(),
+            "FIG effect 4e did not stream the original SP078.VOC payload");
+
+    ScriptedPlatform prompt_platform;
+    prompt_platform.actions = {swd2::InputAction::confirm};
+    auto prompt_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto prompt_money = prompt_state.u16(0x104);
+    prompt_state.set_u16(0x4a0, 150);  // ORC trailing "NY": default No
+    swd2::GameContext prompt_context{game_root, prompt_state, prompt_platform};
+    require(swd2::BattleModule().run(prompt_context, swd2::Marker::open_figure) ==
+                swd2::Marker::continue_rpg &&
+                prompt_platform.presented == 2 &&
+                prompt_platform.frame_hashes.size() == 2 &&
+                prompt_platform.frame_hashes[1] == 9622397641277919182ULL &&
+                prompt_context.shared_state.u16(0x4a0) == 0 &&
+                prompt_context.shared_state.u16(0x104) == prompt_money,
+            "FIG ORC NY prompt differs from exact 3de8/5c98 composition/default No");
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+    try {
+        require(argc == 2, "test requires the game directory argument");
+        test_launcher();
+        test_paths();
+        test_rpg_mode_x_event_offset();
+        test_rpg_save_slot_selector(argv[1]);
+        test_original_launcher(argv[1]);
+        test_resource_decoder(argv[1]);
+        test_voc_decoder(argv[1]);
+        test_rix_decoder(argv[1]);
+        test_shared_state(argv[1]);
+        test_item_inventory(argv[1]);
+        test_field_actions(argv[1]);
+        test_map_resource(argv[1]);
+        test_map_database(argv[1]);
+        test_rpg_entity_system(argv[1]);
+        test_save_slot(argv[1]);
+        test_planar_sprite_set(argv[1]);
+        test_battle_database(argv[1]);
+        test_mon_database(argv[1]);
+        test_battle_rules();
+        test_battle_random(argv[1]);
+        test_battle_party(argv[1]);
+        test_fig_effect_timeline(argv[1]);
+        test_battle_effects(argv[1]);
+        test_battle_session(argv[1]);
+        test_battle_ai(argv[1]);
+        test_legacy_event_resources(argv[1]);
+        test_event_vm(argv[1]);
+        test_stateful_event_opcodes(argv[1]);
+        test_monolithic_runtime(argv[1]);
+        test_rpg_entity_dialogue(argv[1]);
+        test_rpg_entity_collision(argv[1]);
+        test_rpg_corner_slide(argv[1]);
+        test_rpg_automatic_entity_event(argv[1]);
+        test_rpg_event_voice(argv[1]);
+        test_rpg_compact_money_overlay(argv[1]);
+        test_rpg_cutscene_presentation(argv[1]);
+        test_demo_module(argv[1]);
+        test_demo_timeline(argv[1]);
+        test_battle_module(argv[1]);
+        std::cout << "all tests passed\n";
+        return EXIT_SUCCESS;
+    } catch (const std::exception& error) {
+        std::cerr << "test failure: " << error.what() << '\n';
+        return EXIT_FAILURE;
+    }
+}

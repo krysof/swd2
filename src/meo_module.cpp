@@ -1,0 +1,67 @@
+#include "swd2/meo_module.hpp"
+
+#include "swd2/meo.hpp"
+#include "swd2/rsk_decoder.hpp"
+#include "swd2/sprite_archive.hpp"
+
+#include <fstream>
+#include <iterator>
+#include <stdexcept>
+#include <vector>
+
+namespace swd2 {
+
+namespace {
+
+std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        throw std::runtime_error("MEO module cannot open " + path.string());
+    }
+    return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+}  // namespace
+
+Marker MeoModule::run(GameContext& context, Marker) {
+    auto decoded = decode_rsk_block(read_file(context.game_root / "MEO.RSK"));
+    const auto archive = SpriteArchive::parse(std::move(decoded.data));
+    MeoCopyProtection protection(true);
+
+    while (true) {
+        const auto time = context.platform.clock_time();
+        const auto frame = render_meo_frame(archive, protection.choice(), time.minute, time.second);
+        context.platform.present({IndexedFrame::width, IndexedFrame::height, frame.pixels,
+                                  std::span<const std::uint8_t, 768>(frame.palette)});
+        const auto action = context.platform.wait_for_input();
+        if (action == InputAction::quit || action == InputAction::cancel) {
+            return Marker::none;
+        }
+
+        MeoInput meo_input;
+        if (action == InputAction::up) {
+            meo_input = MeoInput::up;
+        } else if (action == InputAction::down) {
+            meo_input = MeoInput::down;
+        } else if (action == InputAction::confirm) {
+            meo_input = MeoInput::confirm;
+        } else {
+            continue;
+        }
+
+        const auto expected = meo_expected_color(frame, time.minute, time.second);
+        const auto status = protection.input(meo_input, expected);
+        if (status == MeoStatus::accepted) {
+            return Marker::menu_ready;
+        }
+        if (status == MeoStatus::rejected) {
+            const auto rejected = render_meo_frame(archive, protection.choice(), time.minute,
+                                                   time.second, true);
+            context.platform.present({IndexedFrame::width, IndexedFrame::height, rejected.pixels,
+                                      std::span<const std::uint8_t, 768>(rejected.palette)});
+            return static_cast<Marker>(1);
+        }
+    }
+}
+
+}  // namespace swd2

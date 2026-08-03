@@ -1,0 +1,35 @@
+#pragma once
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
+#include <span>
+#include <vector>
+
+namespace swd2 {
+
+// DSK files used by the game are compact per-module Big5 glyph subsets.
+// Each 16x15 monochrome glyph occupies 30 bytes, stored after the code table.
+class LegacyFont {
+public:
+    static constexpr std::size_t glyph_width = 16;
+    static constexpr std::size_t glyph_height = 15;
+    static constexpr std::size_t glyph_bytes = 30;
+
+    static LegacyFont load(const std::filesystem::path& path);
+
+    [[nodiscard]] std::size_t glyph_count() const noexcept { return codes_.size(); }
+    [[nodiscard]] const std::vector<std::uint16_t>& codes() const noexcept { return codes_; }
+    [[nodiscard]] bool contains(std::uint16_t big5_code) const noexcept;
+    [[nodiscard]] std::span<const std::uint8_t, glyph_bytes>
+    glyph(std::uint16_t big5_code) const;
+    [[nodiscard]] std::array<std::uint8_t, glyph_width * glyph_height>
+    rasterize(std::uint16_t big5_code) const;
+
+private:
+    std::vector<std::uint16_t> codes_;
+    std::vector<std::array<std::uint8_t, glyph_bytes>> glyphs_;
+};
+
+}  // namespace swd2
