@@ -31,8 +31,19 @@ if gh api "repos/$repository/pages" >/dev/null 2>&1; then
   gh api --method PUT "repos/$repository/pages" \
     -f "source[branch]=gh-pages" -f "source[path]=/" >/dev/null
 else
-  gh api --method POST "repos/$repository/pages" \
-    -f "source[branch]=gh-pages" -f "source[path]=/" >/dev/null
+  # A newly pushed gh-pages branch may be auto-enabled between the GET and
+  # POST. Treat that race's "already enabled" response as success.
+  pages_error="$(mktemp)"
+  if ! gh api --method POST "repos/$repository/pages" \
+      -f "source[branch]=gh-pages" -f "source[path]=/" \
+      >/dev/null 2>"$pages_error"; then
+    if ! grep -q "already enabled" "$pages_error"; then
+      cat "$pages_error" >&2
+      rm -f "$pages_error"
+      exit 1
+    fi
+  fi
+  rm -f "$pages_error"
 fi
 
 echo "Published: https://${repository%%/*}.github.io/${repository#*/}/"
