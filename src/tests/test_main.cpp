@@ -7411,10 +7411,15 @@ void test_rpg_dialogue_then_money_overlay(
     require(result == swd2::Marker::open_figure &&
                 platform.cursor == platform.actions.size(),
             "RPG dialogue-to-money event did not terminate normally");
-    require(platform.frame_hashes.size() >= 4U &&
-                platform.bottom_hashes[2] == platform.bottom_hashes[3] &&
+    require(platform.frame_hashes.size() == 7U &&
+                platform.frame_hashes[2] == 14975520895473487793ULL &&
+                platform.frame_hashes[3] == 9227892872998872915ULL &&
+                platform.frame_hashes[4] == 14733256452010803915ULL &&
+                platform.frame_hashes[5] == platform.frame_hashes[3] &&
+                platform.frame_hashes[6] == 16679286118639561275ULL &&
+                platform.bottom_hashes[2] == platform.bottom_hashes[5] &&
                 platform.compact_hashes[2] != platform.compact_hashes[3],
-            "RPG opcode 14 rebuilt the map instead of modifying the dialogue page");
+            "RPG opcode 13/14 did not preserve and restore the dialogue VGA page");
 }
 
 void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {

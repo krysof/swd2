@@ -1074,10 +1074,18 @@ public:
                 quit_requested_ = true;
                 return false;
             }
-            if (action == InputAction::cancel) return false;
+            if (action == InputAction::cancel) {
+                // 555a finishes with dd6/6e14, exposing the source page again
+                // before EVENT_OP_13 continues the current event record.
+                present(source);
+                return false;
+            }
             if (action == InputAction::left) choice = 0;
             else if (action == InputAction::right) choice = 1;
-            else if (action == InputAction::confirm) return choice == 0U;
+            else if (action == InputAction::confirm) {
+                present(source);
+                return choice == 0U;
+            }
         }
     }
 
