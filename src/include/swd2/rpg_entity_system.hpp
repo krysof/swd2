@@ -29,4 +29,15 @@ void advance_rpg_entities(MapAreaRecord& area, const MapResource& map,
                           const SharedState& state, RpgEntityRuntime& runtime,
                           std::span<const std::uint8_t> rpg_load_image);
 
+// RPG:1f42 shifts the twelve formation slots after every successful leader
+// step.  Slots 0/3/6/9 are the four rendered party members; the intervening
+// slots retain two direction/position delays so the party follows corners.
+void advance_rpg_party_formation(SharedState& state,
+                                 std::int16_t viewport_screen_dx = 0,
+                                 std::int16_t viewport_screen_dy = 0);
+
+// RPG:1e63 advances all three formation slots belonging to each active party
+// member whenever a direction key is handled, including a blocked step.
+void advance_rpg_party_animation(SharedState& state);
+
 }  // namespace swd2

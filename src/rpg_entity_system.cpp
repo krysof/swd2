@@ -159,4 +159,44 @@ void advance_rpg_entities(MapAreaRecord& area, const MapResource& map,
     }
 }
 
+void advance_rpg_party_formation(SharedState& state,
+                                 std::int16_t viewport_screen_dx,
+                                 std::int16_t viewport_screen_dy) {
+    state.set_u16(0xba, state.actor_direction());
+    for (std::size_t slot = 11; slot != 0; --slot) {
+        const auto old_direction = state.u16(0xba + slot * 2U);
+        state.set_u16(0xba + slot * 2U,
+                      state.u16(0xba + (slot - 1U) * 2U));
+        auto x = static_cast<std::uint16_t>(
+            state.u16(0x12 + slot * 2U) + viewport_screen_dx);
+        auto y = static_cast<std::uint16_t>(
+            state.u16(0x2a + slot * 2U) + viewport_screen_dy);
+        if (old_direction == 0U) {
+            y = static_cast<std::uint16_t>(y + 8U);
+        } else if (old_direction == 9U) {
+            x = static_cast<std::uint16_t>(x + 2U);
+        } else if (old_direction == 6U) {
+            x = static_cast<std::uint16_t>(x - 2U);
+        } else if (old_direction == 3U) {
+            y = static_cast<std::uint16_t>(y - 8U);
+        }
+        state.set_u16(0x12 + slot * 2U, x);
+        state.set_u16(0x2a + slot * 2U, y);
+        if (old_direction == 0U || old_direction == 9U ||
+            old_direction == 6U || old_direction == 3U) {
+            state.set_u16(0xa2 + slot * 2U, old_direction);
+        }
+    }
+}
+
+void advance_rpg_party_animation(SharedState& state) {
+    const auto slots = std::min<std::size_t>(
+        12U, static_cast<std::size_t>(state.u16(0x10) + state.u16(0x102)) * 3U);
+    for (std::size_t slot = 0; slot < slots; ++slot) {
+        state.set_u16(0x8a + slot * 2U,
+                      static_cast<std::uint16_t>(
+                          (state.u16(0x8a + slot * 2U) + 1U) & 3U));
+    }
+}
+
 }  // namespace swd2

@@ -1,6 +1,7 @@
 #include "swd2/event_vm.hpp"
 
 #include "swd2/event_program.hpp"
+#include "swd2/rpg_entity_system.hpp"
 
 #include <algorithm>
 #include <array>
@@ -70,6 +71,8 @@ void move_scripted_actor(SharedState& state, std::uint16_t opcode,
         auto screen_y = state.actor_screen_y();
         auto viewport_x = state.viewport_x();
         auto viewport_y = state.viewport_y();
+        const auto previous_viewport_x = viewport_x;
+        const auto previous_viewport_y = viewport_y;
         auto viewport_cell = state.u16(0x40d);
         if (opcode == 30) {  // north
             if (screen_y == 0x50 && viewport_y != 0) {
@@ -109,8 +112,15 @@ void move_scripted_actor(SharedState& state, std::uint16_t opcode,
         state.set_viewport_x(viewport_x);
         state.set_viewport_y(viewport_y);
         state.set_u16(0x40d, viewport_cell);
-        state.set_actor_animation(
-            static_cast<std::uint16_t>((state.actor_animation() + 1U) & 3U));
+        advance_rpg_party_animation(state);
+        advance_rpg_party_formation(
+            state,
+            static_cast<std::int16_t>(
+                (static_cast<int>(previous_viewport_x) -
+                 static_cast<int>(viewport_x)) * 2),
+            static_cast<std::int16_t>(
+                (static_cast<int>(previous_viewport_y) -
+                 static_cast<int>(viewport_y)) * 8));
     }
 }
 

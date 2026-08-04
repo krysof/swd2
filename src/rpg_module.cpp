@@ -149,14 +149,21 @@ Viewport crop_map(const IndexedMapImage& map, std::uint16_t viewport_x,
     return result;
 }
 
-void draw_actor(Viewport& viewport, const SpriteArchive& actors, const SharedState& state) {
-    const auto sprite_index = static_cast<std::size_t>(state.actor_sprite_base() +
-                                                       state.actor_direction() +
-                                                       (state.actor_animation() & 1U));
-    const auto& sprite = actors.sprites().at(sprite_index);
+void draw_party_actor(Viewport& viewport, const SpriteArchive& actors,
+                      const SharedState& state, std::size_t actor) {
+    const auto slot = actor * 3U;
+    const auto animation = state.u16(0x8a + slot * 2U);
+    const auto animation_frame = (animation & 1U) != 0U ? 1U : animation;
+    const auto sprite_index = static_cast<std::size_t>(
+        state.u16(0x72 + slot * 2U) + state.u16(0xa2 + slot * 2U) +
+        animation_frame);
+    if (sprite_index >= actors.sprites().size()) return;
+    const auto& sprite = actors.sprites()[sprite_index];
     const auto pixels = actors.pixels(sprite_index);
-    const auto left = static_cast<int>(state.actor_screen_x() + state.actor_x_offset()) * 4;
-    const auto top = static_cast<int>(state.actor_screen_y()) + state.actor_y_offset();
+    const auto left = static_cast<int>(
+        state.u16(0x12 + slot * 2U) + state.i16(0x42 + slot * 2U)) * 4;
+    const auto top = static_cast<int>(state.u16(0x2a + slot * 2U)) +
+                     state.i16(0x5a + slot * 2U);
     for (std::size_t row = 0; row < sprite.height; ++row) {
         for (std::size_t column = 0; column < sprite.width; ++column) {
             const auto x = left + static_cast<int>(column);
@@ -506,46 +513,74 @@ PlanarSpriteSet load_de_sprite(const std::filesystem::path& game_root,
     return PlanarSpriteSet::load(dictionary, layout);
 }
 
-void draw_entities(Viewport& viewport, const MapAreaRecord& area,
-                   const SharedState& state, const std::filesystem::path& game_root,
-                   const SpriteArchive& actors,
-                   std::map<std::uint16_t, PlanarSpriteSet>& animation_sets) {
+void draw_world_characters(
+    Viewport& viewport, const MapAreaRecord& area, const SharedState& state,
+    const std::filesystem::path& game_root, const SpriteArchive& actors,
+    std::map<std::uint16_t, PlanarSpriteSet>& animation_sets) {
     const auto cell_base = state.u16(0x40f);
     const auto map_width = state.map_width();
-    for (std::size_t index = 0; index < area.entity_count(); ++index) {
-        const auto entity = map_entity(area, index);
-        if (entity.behavior == 3 || entity.cell_offset < cell_base ||
-            ((entity.cell_offset - cell_base) & 1U) != 0) {
-            continue;
-        }
-        const auto cell = static_cast<std::size_t>((entity.cell_offset - cell_base) / 2);
-        const auto world_x = cell % map_width;
-        const auto world_y = cell / map_width;
-        const auto left = (static_cast<int>(world_x) - state.viewport_x()) * 8 +
-                          static_cast<int>(entity.render_x_offset) * 4;
-        const auto top = (static_cast<int>(world_y) - state.viewport_y()) * 8 - 16 +
-                         entity.render_y_offset;
-        if (left >= 320 || top >= 200 || left < -160 || top < -200) continue;
+    const auto party_count = std::min<std::size_t>(
+        4U, static_cast<std::size_t>(state.u16(0x10) + state.u16(0x102)));
 
-        auto frame_index = static_cast<std::size_t>(entity.sprite & 0xffU) +
-                           (entity.animation_frame & 1U);
-        if (entity.behavior != 4 && entity.behavior != 5 && entity.behavior != 6) {
-            frame_index += entity.direction;
-        }
-        const auto resource = static_cast<std::uint16_t>(entity.sprite >> 8U);
-        if (resource == 0) {
-            if (frame_index >= actors.sprites().size()) continue;
-            const auto& sprite = actors.sprites()[frame_index];
-            blit(viewport, actors.pixels(frame_index), sprite.width, sprite.height, left, top);
-        } else {
-            auto found = animation_sets.find(resource);
-            if (found == animation_sets.end()) {
-                found = animation_sets.emplace(
-                    resource, load_de_sprite(game_root, resource)).first;
+    // RPG:dd6 scans 31 exact eight-pixel baselines from -32 through 208.
+    // At each baseline 4f1c draws entities in record order first, followed by
+    // active party members in reverse order (slots 9, 6, 3, 0).  Preserving
+    // that scan is significant when sprites overlap at the same map depth.
+    for (int depth = -32; depth <= 208; depth += 8) {
+        for (std::size_t index = 0; index < area.entity_count(); ++index) {
+            const auto entity = map_entity(area, index);
+            if (entity.behavior == 3 || entity.behavior == 7 ||
+                entity.cell_offset < cell_base ||
+                ((entity.cell_offset - cell_base) & 1U) != 0) {
+                continue;
             }
-            if (frame_index >= found->second.frame_count()) continue;
-            const auto& frame = found->second.frame(frame_index);
-            blit(viewport, frame.pixels, frame.width, frame.height, left, top);
+            const auto cell = static_cast<std::size_t>(
+                (entity.cell_offset - cell_base) / 2U);
+            const auto world_x = cell % map_width;
+            const auto world_y = cell / map_width;
+            const auto entity_depth =
+                (static_cast<int>(world_y) - state.viewport_y()) * 8 - 16;
+            if (entity_depth != depth) continue;
+            const auto left_byte =
+                (static_cast<int>(world_x) - state.viewport_x()) * 2 +
+                static_cast<int>(entity.render_x_offset);
+            // 4f52 accepts mode-X byte columns -19..80 inclusive.
+            if (left_byte < -19 || left_byte > 80) continue;
+            const auto left = left_byte * 4;
+            const auto top = entity_depth + entity.render_y_offset;
+
+            const auto animation_frame = (entity.animation_frame & 1U) != 0U
+                ? 1U : entity.animation_frame;
+            auto frame_index = static_cast<std::size_t>(entity.sprite & 0xffU) +
+                               animation_frame;
+            if (entity.behavior != 4 && entity.behavior != 5 &&
+                entity.behavior != 6) {
+                frame_index += entity.direction;
+            }
+            const auto resource = static_cast<std::uint16_t>(entity.sprite >> 8U);
+            if (resource == 0) {
+                if (frame_index >= actors.sprites().size()) continue;
+                const auto& sprite = actors.sprites()[frame_index];
+                blit(viewport, actors.pixels(frame_index), sprite.width,
+                     sprite.height, left, top);
+            } else {
+                auto found = animation_sets.find(resource);
+                if (found == animation_sets.end()) {
+                    found = animation_sets.emplace(
+                        resource, load_de_sprite(game_root, resource)).first;
+                }
+                if (frame_index >= found->second.frame_count()) continue;
+                const auto& frame = found->second.frame(frame_index);
+                blit(viewport, frame.pixels, frame.width, frame.height, left, top);
+            }
+        }
+        for (std::size_t actor = party_count; actor != 0; --actor) {
+            const auto logical_actor = actor - 1U;
+            const auto slot = logical_actor * 3U;
+            if (static_cast<std::int16_t>(state.u16(0x2a + slot * 2U)) ==
+                depth) {
+                draw_party_actor(viewport, actors, state, logical_actor);
+            }
         }
     }
 }
@@ -3148,9 +3183,8 @@ private:
             auto viewport = crop_map(relocated_map_->render(true),
                                      state_.viewport_x(), state_.viewport_y());
             viewport.palette = relocated_palette_;
-            draw_entities(viewport, *relocated_area_, state_, game_root_,
-                          *relocated_actors_, relocated_animation_sets_);
-            draw_actor(viewport, *relocated_actors_, state_);
+            draw_world_characters(viewport, *relocated_area_, state_, game_root_,
+                                  *relocated_actors_, relocated_animation_sets_);
             return viewport;
         }();
         if (cutscene_) {
@@ -3619,9 +3653,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
         auto viewport = crop_map(rendered, context.shared_state.viewport_x(),
                                  context.shared_state.viewport_y());
         viewport.palette = map_palette;
-        draw_entities(viewport, location.area, context.shared_state, context.game_root, actors,
-                      animation_sets);
-        draw_actor(viewport, actors, context.shared_state);
+        draw_world_characters(viewport, location.area, context.shared_state,
+                              context.game_root, actors, animation_sets);
         return viewport;
     };
     struct EntityEventOutcome {
@@ -3879,6 +3912,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
         auto screen_y = context.shared_state.actor_screen_y();
         auto viewport_x = context.shared_state.viewport_x();
         auto viewport_y = context.shared_state.viewport_y();
+        const auto previous_viewport_x = viewport_x;
+        const auto previous_viewport_y = viewport_y;
 
         const auto movement_target = [&](InputAction direction) {
             auto target_x = static_cast<int>(context.shared_state.world_x());
@@ -3903,6 +3938,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
             else context.shared_state.set_actor_direction(0);
         };
         face(action);
+        advance_rpg_party_animation(context.shared_state);
         auto [target_x, target_y] = movement_target(action);
 
         if (movement_blocked(location, context.shared_state, map,
@@ -3979,8 +4015,14 @@ Marker RpgModule::run(GameContext& context, Marker) {
             0x40d, static_cast<std::uint16_t>(context.shared_state.u16(0x40f) +
                 (static_cast<std::size_t>(viewport_y) * map.layout().width +
                  viewport_x) * 2U));
-        context.shared_state.set_actor_animation(
-            static_cast<std::uint16_t>((context.shared_state.actor_animation() + 1U) & 3U));
+        advance_rpg_party_formation(
+            context.shared_state,
+            static_cast<std::int16_t>(
+                (static_cast<int>(previous_viewport_x) -
+                 static_cast<int>(viewport_x)) * 2),
+            static_cast<std::int16_t>(
+                (static_cast<int>(previous_viewport_y) -
+                 static_cast<int>(viewport_y)) * 8));
         advance_rpg_entities(location.area, map, context.shared_state,
                              entity_runtime, rpg_load_image);
     }

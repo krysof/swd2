@@ -1472,6 +1472,55 @@ void test_rpg_entity_system(const std::filesystem::path& game_root) {
     swd2::advance_rpg_entities(area, map, state, runtime, image);
     require(runtime.code_stream_offset == 2,
             "RPG entity stream did not preserve its compute-before-wrap quirk");
+
+    swd2::SharedState::Storage formation_bytes{};
+    auto formation = swd2::SharedState::from_bytes(formation_bytes);
+    formation.set_u16(0x10, 3);
+    formation.set_u16(0x102, 0);
+    static constexpr std::array<std::uint16_t, 12> trail = {
+        3, 0, 9, 6, 3, 7, 0, 9, 6, 3, 7, 0};
+    for (std::size_t slot = 0; slot < trail.size(); ++slot) {
+        formation.set_u16(0x12 + slot * 2U,
+                          static_cast<std::uint16_t>(100U + slot * 10U));
+        formation.set_u16(0x2a + slot * 2U,
+                          static_cast<std::uint16_t>(200U + slot * 10U));
+        formation.set_u16(0x8a + slot * 2U,
+                          static_cast<std::uint16_t>(slot & 3U));
+        formation.set_u16(0xa2 + slot * 2U, 0x55U);
+        formation.set_u16(0xba + slot * 2U, trail[slot]);
+    }
+    formation.set_actor_direction(9);
+    swd2::advance_rpg_party_formation(formation, -2, 8);
+    require(formation.u16(0xba) == 9U &&
+                formation.u16(0x12) == 100U &&
+                formation.u16(0x2a) == 200U,
+            "RPG 1f42 changed the leader slot or lost its current direction");
+    for (std::size_t slot = 1; slot < trail.size(); ++slot) {
+        auto expected_x = static_cast<std::uint16_t>(100U + slot * 10U - 2U);
+        auto expected_y = static_cast<std::uint16_t>(200U + slot * 10U + 8U);
+        if (trail[slot] == 0U) expected_y = static_cast<std::uint16_t>(expected_y + 8U);
+        if (trail[slot] == 9U) expected_x = static_cast<std::uint16_t>(expected_x + 2U);
+        if (trail[slot] == 6U) expected_x = static_cast<std::uint16_t>(expected_x - 2U);
+        if (trail[slot] == 3U) expected_y = static_cast<std::uint16_t>(expected_y - 8U);
+        const auto valid_direction = trail[slot] == 0U || trail[slot] == 9U ||
+                                     trail[slot] == 6U || trail[slot] == 3U;
+        require(formation.u16(0x12 + slot * 2U) == expected_x &&
+                    formation.u16(0x2a + slot * 2U) == expected_y &&
+                    formation.u16(0xba + slot * 2U) ==
+                        (slot == 1U ? 9U : trail[slot - 1U]) &&
+                    formation.u16(0xa2 + slot * 2U) ==
+                        (valid_direction ? trail[slot] : 0x55U),
+                "RPG 1f42 formation trail does not match the descending slot shift");
+    }
+    swd2::advance_rpg_party_animation(formation);
+    for (std::size_t slot = 0; slot < trail.size(); ++slot) {
+        const auto initial = static_cast<std::uint16_t>(slot & 3U);
+        const auto expected = slot < 9U
+            ? static_cast<std::uint16_t>((initial + 1U) & 3U)
+            : initial;
+        require(formation.u16(0x8a + slot * 2U) == expected,
+                "RPG 1e63 did not animate exactly three slots per active party member");
+    }
 }
 
 void test_save_slot(const std::filesystem::path& game_root) {
@@ -5397,7 +5446,7 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
             "RPG entity-dialogue run did not terminate normally");
     require(platform.presented == 3 && platform.music_calls == 1 &&
                 platform.stop_calls == 1 && platform.frame_hashes.size() == 3 &&
-                platform.frame_hashes[1] == 5520302039675693235ULL,
+                platform.frame_hashes[1] == 1574579943213790046ULL,
             "RPG did not present dialogue and manage map music in-process");
 }
 
@@ -5448,7 +5497,7 @@ void test_rpg_map_portal(const std::filesystem::path& game_root) {
     require(portal_marker == swd2::Marker::none &&
                 platform.presented == 2U && platform.poll_calls == 1U &&
                 platform.music_calls == 2U && platform.stop_calls == 1U &&
-                platform.frame_hashes[1] == 3552891096873288051ULL &&
+                platform.frame_hashes[1] == 4745470555474590200ULL &&
                 context.shared_state.map_location_directory_offset() == 12U &&
                 context.shared_state.u16(0x40a) == 1U &&
                 context.shared_state.u8(0x51f) == 1U &&
@@ -5538,8 +5587,8 @@ void test_rpg_map_actor_variant(const std::filesystem::path& game_root) {
         context, swd2::Marker::menu_ready);
     require(variant_marker == swd2::Marker::none &&
                 platform.presented == 2U && platform.poll_calls == 2U &&
-                platform.frame_hashes[0] == 15695675713870866150ULL &&
-                platform.frame_hashes[1] == 4319706213072156823ULL &&
+                platform.frame_hashes[0] == 18269611041676858647ULL &&
+                platform.frame_hashes[1] == 1788231128183820982ULL &&
                 context.shared_state.map_location_directory_offset() == 188U,
             "RPG f19 action 7 did not replace BMAN1 with BMAN3");
 }
@@ -5588,7 +5637,7 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
                 swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 platform.frame_hashes.size() == 11 &&
-                platform.frame_hashes[9] == 6572942975181326235ULL,
+                platform.frame_hashes[9] == 5264084512101039870ULL,
             "RPG opcode-46 top-dialogue run did not terminate normally");
 }
 
