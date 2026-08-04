@@ -2754,6 +2754,51 @@ void test_battle_effects(const std::filesystem::path& game_root) {
                 special_player[0].buff_turns ==
                     std::array<std::uint16_t, 6>{0, 0, 0, 0, 0, 0},
             "FIG enemy effect 61 did not preserve/report its six cleared buffs");
+
+    const auto item_records =
+        swd2::ScriptArchive::load(game_root / "ITEM.EXE");
+    std::set<std::uint16_t> shipped_special_abilities;
+    for (std::uint16_t item_id = 0x13aU;
+         static_cast<std::size_t>(item_id) + 2U < item_records.entry_count();
+         ++item_id) {
+        const auto record = item_records.entry(
+            static_cast<std::size_t>(item_id) + 2U);
+        if (record.size() < 0x50U) continue;
+        const auto monster = swd2::MonsterDefinition::parse(item_id, record);
+        if (monster.special_ability_a != 0) {
+            shipped_special_abilities.insert(monster.special_ability_a);
+        }
+        if (monster.special_ability_b != 0) {
+            shipped_special_abilities.insert(monster.special_ability_b);
+        }
+    }
+    std::vector<std::uint16_t> unsupported_shipped_specials;
+    for (const auto ability_id : shipped_special_abilities) {
+        std::array<swd2::PlayerBattleState, 1> players = {
+            swd2::PlayerBattleState{100, 100, 0, {0, 0, 0}},
+        };
+        players[0].buff_turns.fill(1);
+        swd2::MonsterBattleState monster;
+        monster.hit_points = monster.maximum_hit_points = 100;
+        monster.physical_attack = 20;
+        monster.evasion = 1;
+        std::uint16_t points = 60000;
+        const auto applied = swd2::apply_prepaid_monster_special(
+            ability_id, 10, points, 0, players, monster, abilities,
+            [](std::uint16_t modulus) {
+                if (modulus == 0) {
+                    throw std::runtime_error("zero exhaustive-special modulus");
+                }
+                return std::uint16_t{};
+            });
+        if (applied.resolution ==
+            swd2::MonsterSpecialResolution::unsupported) {
+            unsupported_shipped_specials.push_back(ability_id);
+        }
+    }
+    require(shipped_special_abilities.size() == 19 &&
+                unsupported_shipped_specials.empty(),
+            "FIG shipped monster special-ability domain remains unsupported");
 }
 
 void test_battle_session(const std::filesystem::path& game_root) {
@@ -3679,6 +3724,79 @@ void test_battle_session(const std::filesystem::path& game_root) {
     require(shipped_battle_item_count == 124 &&
                 invalid_shipped_battle_items.empty(),
             "FIG shipped +5-bit1 battle-item domain still contains an invalid dispatch");
+
+    // Do the same for every player ability reachable from the shipped SAVE
+    // slots or ORC growth tables. Some lower-table ids are enemy/captured-ally
+    // data (for example 105) despite having no 4000h bit, so treating the
+    // entire numeric 1..114 interval as learnable invents an invalid route.
+    std::set<std::uint16_t> reachable_player_abilities;
+    for (const auto& table : database.growth_tables()) {
+        for (const auto& row : table) {
+            if (row.fields[8] != 0) {
+                reachable_player_abilities.insert(row.fields[8]);
+            }
+        }
+    }
+    for (std::size_t party_index = 0; party_index < 4; ++party_index) {
+        for (std::size_t slot = 0; slot < 50; ++slot) {
+            const auto ability_id = state.u8(
+                actor_zero + party_index * 0x9fU + 0x6dU + slot);
+            if (ability_id != 0) reachable_player_abilities.insert(ability_id);
+        }
+    }
+    std::size_t shipped_player_ability_count = 0;
+    std::vector<std::uint16_t> invalid_shipped_player_abilities;
+    for (const auto ability_id : reachable_player_abilities) {
+        const auto& ability = abilities.ability(ability_id);
+        const auto resource_class =
+            static_cast<std::uint8_t>((ability.target_flags >> 8U) & 0x0fU);
+        if (ability.effect_code == 0 ||
+            (ability.target_flags & 0x4000U) != 0 ||
+            resource_class < 1U || resource_class > 5U) {
+            continue;
+        }
+        ++shipped_player_ability_count;
+
+        auto exhaustive_state =
+            swd2::SharedState::load(game_root / "SAVE.DA1");
+        exhaustive_state.set_u16(0x10, 1);
+        exhaustive_state.set_u16(actor_zero + 8, 0);
+        exhaustive_state.set_u16(actor_zero + 0x2d, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x2f, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x35, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x37, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x55, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x57, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x5d, 1000);
+        for (std::size_t slot = 0; slot < 50; ++slot) {
+            exhaustive_state.set_u8(actor_zero + 0x6d + slot, 0);
+        }
+        exhaustive_state.set_u8(
+            actor_zero + 0x6d, static_cast<std::uint8_t>(ability_id));
+        for (std::size_t material = 0; material < 5; ++material) {
+            exhaustive_state.set_u16(0x3e6 + material * 2U, 20);
+        }
+        auto exhaustive_session = swd2::BattleSession::create(
+            exhaustive_state, selected->get(), items, false);
+        auto exhaustive_commands = skip_commands;
+        exhaustive_commands[0] = {
+            swd2::PlayerCommandKind::ability, ability_id, 0, 0,
+        };
+        const auto exhaustive_round = exhaustive_session.play_round(
+            exhaustive_commands, abilities, zero_random);
+        if (std::any_of(
+                exhaustive_round.events.begin(), exhaustive_round.events.end(),
+                [](const swd2::BattleSessionEvent& event) {
+                    return event.kind ==
+                           swd2::BattleEventKind::invalid_command;
+                })) {
+            invalid_shipped_player_abilities.push_back(ability_id);
+        }
+    }
+    require(reachable_player_abilities.size() == 75 &&
+                shipped_player_ability_count == 71 &&
+                invalid_shipped_player_abilities.empty(),
+            "FIG reachable shipped player-ability domain contains an invalid dispatch");
 
     // 58fa skips a medium-dependent effect body but returns to the ordinary
     // payment/consumption path. The monster is untouched and the exact failed
