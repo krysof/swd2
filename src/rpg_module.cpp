@@ -1846,6 +1846,9 @@ public:
     }
 
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
+    [[nodiscard]] bool abort_requested() const override {
+        return quit_requested_;
+    }
 
 private:
     void draw_alchemy_stats(Viewport& frame,

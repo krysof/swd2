@@ -962,6 +962,9 @@ SWORD8 标题尾声：装入/淡入调色板、揭示三个人物、等待五秒
   热插拔事件；此前虽然翻译了手柄按键，却从未 `SDL_GameControllerOpen`，桌面和
   WASM 浏览器实际收不到这些事件。方向、确认/取消和四个翻页动作仍统一映射到核心
   `InputAction`，不会把 SDL device id 泄漏进 RPG/FIG 代码。
+- CHNA host 现在还显式暴露同步事件流的 frontend-abort 状态。窗口关闭若发生在逐字
+  对话或等待光标中，VM 会以 `host_abort` 立即停止，后续金钱、物品、MAPZ 或战斗
+  opcode 不再在玩家已经退出后继续执行；这与 unsupported opcode 分开记录。
 
 硬编码路径同时存在 `C:MENU.RSK`、`C:\\SWD2\\...` 和开发机遗留的 `C:\\RPG\\RIX\\...`。新代码必须通过资源定位层处理，不能继续依赖当前驱动器和 DOS 工作目录。
 

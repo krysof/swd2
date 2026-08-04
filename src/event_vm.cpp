@@ -593,6 +593,10 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 result.status = EventVmStatus::unsupported_opcode;
                 return result;
             }
+            if (host.abort_requested()) {
+                result.status = EventVmStatus::host_abort;
+                return result;
+            }
             if (branched) break;
         }
         if (!branched) return result;

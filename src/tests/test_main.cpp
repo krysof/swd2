@@ -4994,7 +4994,9 @@ public:
         last_text_opcode = opcode;
         dialogue_bytes += text.size();
         ++dialogues;
+        if (abort_after_dialogue) abort = true;
     }
+    bool abort_requested() const override { return abort; }
     void delay(std::uint16_t ticks) override { delayed_ticks += ticks; }
     bool present_event_command(std::uint16_t,
                                std::span<const std::uint16_t>) override {
@@ -5043,6 +5045,8 @@ public:
     std::size_t inventories{};
     std::size_t map_relocations{};
     std::size_t relocated_entity_count{};
+    bool abort_after_dialogue{};
+    bool abort{};
     const swd2::SharedState* observed_state{};
     std::vector<std::uint16_t> observed_layout_frames;
     std::optional<swd2::InventoryUiResult> inventory_result{
@@ -5060,6 +5064,28 @@ std::vector<std::uint8_t> event_words(std::initializer_list<std::uint16_t> words
 }
 
 void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
+    auto aborted_record = event_words({0});
+    aborted_record.insert(aborted_record.end(),
+                          {0xba, 0xf2, '$', '$'});
+    const auto aborted_tail = event_words({41, 500, 0xffff});
+    aborted_record.insert(aborted_record.end(),
+                          aborted_tail.begin(), aborted_tail.end());
+    const std::vector<std::vector<std::uint8_t>> aborted_records = {
+        aborted_record,
+    };
+    const auto aborted_archive = swd2::ScriptArchive::from_records(
+        aborted_records);
+    TestEventHost aborting_host;
+    aborting_host.abort_after_dialogue = true;
+    auto aborted_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto aborted_money = aborted_state.u16(0x104);
+    const auto aborted = swd2::execute_event(
+        aborted_archive, 2, aborted_state, nullptr, 0, aborting_host);
+    require(aborted.status == swd2::EventVmStatus::host_abort &&
+                aborted.commands_executed == 1U &&
+                aborted_state.u16(0x104) == aborted_money,
+            "event VM continued mutating state after a frontend text abort");
+
     // The first generated record exercises the state-only handlers in their
     // native word-stream representation. Record two is the missing-item
     // branch target of opcode 40.
@@ -6984,8 +7010,9 @@ void test_rpg_event_voice(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::right,
-        swd2::InputAction::confirm,
-        swd2::InputAction::quit,
+        swd2::InputAction::confirm,  // interact with the entity
+        swd2::InputAction::confirm,  // close dialogue before opcode 57
+        swd2::InputAction::quit,     // abort in the dialogue after the voice
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     state.set_u16(0x424, 12);

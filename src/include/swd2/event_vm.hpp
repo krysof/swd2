@@ -27,6 +27,10 @@ enum class InventoryUiMode {
 class EventVmHost {
 public:
     virtual ~EventVmHost() = default;
+    // Frontends can abort a synchronous CHNA stream (for example, a window
+    // close consumed during typewriter rendering) without misreporting the
+    // next otherwise-supported command as an unknown opcode.
+    virtual bool abort_requested() const { return false; }
     virtual void show_dialogue(std::uint16_t opcode,
                                std::span<const std::uint8_t> big5_text) = 0;
     virtual void delay(std::uint16_t ticks) = 0;
@@ -64,6 +68,7 @@ public:
 
 enum class EventVmStatus {
     completed,
+    host_abort,
     unsupported_opcode,
     instruction_limit,
 };
