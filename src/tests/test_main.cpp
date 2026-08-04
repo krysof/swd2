@@ -6011,6 +6011,78 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
                 use_context.shared_state.u16(0x382) == 0U &&
                 use_context.shared_state.u16(0x106 + 0x35) == 50U,
             "RPG item Use action did not target/apply/consume from 2d0f");
+
+    // Type-10 field talismans are ability_id+8ch. RPG:3857 charges the
+    // selected target's +55 resource from the original ability record before
+    // dispatch, even though the ITEM itself is also consumed by +05 bit 04h.
+    const auto item_definitions = swd2::ItemDatabase::load(
+        game_root / "ITEM.EXE");
+    require(item_definitions.at(190).type == 0x10U &&
+                item_definitions.at(190).effect_code == 1U &&
+                item_definitions.at(190).consumed_on_use(),
+            "fixture no longer maps field talisman 190 to ability 50");
+    ScriptedPlatform talisman_platform;
+    talisman_platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // Use
+        swd2::InputAction::confirm,  // target actor zero
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto talisman_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    talisman_state.set_u16(0x382U, 190U);
+    talisman_state.set_u16(0x106U + 8U, 0U);
+    talisman_state.set_u16(0x106U + 0x2dU, 0U);
+    talisman_state.set_u16(0x106U + 0x2fU, 100U);
+    talisman_state.set_u16(0x106U + 0x55U, 10U);
+    swd2::GameContext talisman_context{
+        game_root, talisman_state, talisman_platform};
+    require(swd2::RpgModule().run(
+                talisman_context, swd2::Marker::menu_ready) ==
+                    swd2::Marker::none &&
+                talisman_platform.cursor == talisman_platform.actions.size() &&
+                talisman_context.shared_state.u16(0x382U) == 0U &&
+                talisman_context.shared_state.u16(0x106U + 0x55U) == 3U &&
+                talisman_context.shared_state.u16(0x106U + 0x2dU) != 0U,
+            "RPG type-10 field talisman did not charge, apply and consume");
+
+    ScriptedPlatform talisman_error_platform;
+    talisman_error_platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // target actor zero
+        swd2::InputAction::confirm,  // dismiss DATA:3630
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto talisman_error_state = swd2::SharedState::load(
+        game_root / "SAVE.DA1");
+    talisman_error_state.set_u16(0x382U, 190U);
+    talisman_error_state.set_u16(0x106U + 8U, 0U);
+    talisman_error_state.set_u16(0x106U + 0x2dU, 0U);
+    talisman_error_state.set_u16(0x106U + 0x2fU, 100U);
+    talisman_error_state.set_u16(0x106U + 0x55U, 6U);
+    swd2::GameContext talisman_error_context{
+        game_root, talisman_error_state, talisman_error_platform};
+    require(swd2::RpgModule().run(
+                talisman_error_context, swd2::Marker::menu_ready) ==
+                    swd2::Marker::none &&
+                talisman_error_platform.cursor ==
+                    talisman_error_platform.actions.size() &&
+                talisman_error_context.shared_state.u16(0x382U) == 190U &&
+                talisman_error_context.shared_state.u16(0x106U + 0x55U) == 6U &&
+                talisman_error_context.shared_state.u16(0x106U + 0x2dU) == 0U &&
+                talisman_error_platform.bottom_hashes[6] !=
+                    talisman_error_platform.bottom_hashes[5],
+            "RPG insufficient talisman resource did not preserve item/target state");
 }
 
 void test_rpg_inventory_alchemy(const std::filesystem::path& game_root) {

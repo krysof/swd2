@@ -1568,6 +1568,7 @@ public:
 
                     FieldActionSystem field_actions(state, &field_action_runtime_);
                     std::optional<std::size_t> actor;
+                    std::optional<Viewport> confirmed_target_frame;
                     if (FieldActionSystem::requires_target(definition.effect_code)) {
                         actor = 0;
                         const auto party_count = std::max<std::size_t>(
@@ -1595,10 +1596,49 @@ public:
                                         target_action, party_count)) {
                                 *actor = *directional_target;
                             } else if (target_action == InputAction::confirm) {
+                                confirmed_target_frame = std::move(target_frame);
                                 break;
                             }
                         }
                         if (target_cancelled) continue;
+                    }
+
+                    // ITEM type 10h is the field talisman produced by 333d.
+                    // 3857 derives its original ability id from item-8ch and,
+                    // after the target has been chosen, charges that target's
+                    // +55 resource using DATA:1dce +10h. This cost is in
+                    // addition to the ordinary ITEM +05 consumption flag.
+                    if (definition.type == 0x10U && actor) {
+                        if (selected_item < 0x8cU) {
+                            throw std::runtime_error(
+                                "RPG field talisman id precedes ability mapping");
+                        }
+                        const auto ability_id = static_cast<std::size_t>(
+                            selected_item - 0x8cU);
+                        const auto record_offset = ability_id * 20U;
+                        if (record_offset + 18U > field_ability_records_.size()) {
+                            throw std::runtime_error(
+                                "RPG field talisman ability record is missing");
+                        }
+                        const auto cost = static_cast<std::uint16_t>(
+                            field_ability_records_[record_offset + 16U] |
+                            (static_cast<std::uint16_t>(
+                                 field_ability_records_[record_offset + 17U])
+                             << 8U));
+                        const auto resource_offset =
+                            0x106U + *actor * 0x9fU + 0x55U;
+                        if (state.u16(resource_offset) < cost) {
+                            if (!show_bottom_message(
+                                    confirmed_target_frame
+                                        ? std::move(*confirmed_target_frame)
+                                        : action_frame,
+                                    ability_value_error_)) {
+                                return InventoryUiResult::cancelled;
+                            }
+                            continue;
+                        }
+                        state.set_u16(resource_offset, static_cast<std::uint16_t>(
+                            state.u16(resource_offset) - cost));
                     }
 
                     const auto field_result = field_actions.apply(definition.effect_code, actor);
