@@ -4803,6 +4803,9 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
     require(std::count_if(first_page.pixels.begin(), first_page.pixels.end(),
                           [](std::uint8_t pixel) { return pixel != 0; }) > 100,
             "CHNA1 dialogue did not render through its embedded font");
+    require(first_page.cursor_x == 96U && first_page.cursor_y == 0U &&
+                !first_page.page_break && !first_page.has_more,
+            "CHNA1 dialogue did not retain its final 49d0 cursor");
     require(first_dialogue.consumed_bytes == archive.entry(10).size(),
             "CHNA1 first event was not consumed exactly");
     const auto scripted_dialogue = swd2::decode_event_record(archive.entry(15));
@@ -5550,7 +5553,7 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
             "RPG entity-dialogue run did not terminate normally");
     require(platform.presented == 4 && platform.music_calls == 1 &&
                 platform.stop_calls == 1 && platform.frame_hashes.size() == 4 &&
-                platform.frame_hashes[2] == 11090360449926961838ULL,
+                platform.frame_hashes[2] == 13428659426982474716ULL,
             "RPG did not present dialogue and manage map music in-process");
 }
 
@@ -5650,8 +5653,8 @@ void test_rpg_map_special_event(const std::filesystem::path& game_root) {
     const auto marker = swd2::RpgModule().run(
         context, swd2::Marker::menu_ready);
     require(marker == swd2::Marker::none &&
-                platform.presented == 6U && platform.wait_calls == 1U &&
-                platform.poll_calls == 1U &&
+                platform.presented == 6U && platform.wait_calls == 0U &&
+                platform.poll_calls == 2U &&
                 context.shared_state.map_location_directory_offset() == 8U &&
                 context.shared_state.world_y() == original_y + 3U &&
                 database->location_at_directory_offset(8)
@@ -5741,7 +5744,7 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
                 swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 platform.frame_hashes.size() == 12 &&
-                platform.frame_hashes[10] == 10500058587234137480ULL,
+                platform.frame_hashes[10] == 2403026594211277006ULL,
             "RPG opcode-46 top-dialogue run did not terminate normally");
 }
 
@@ -6646,7 +6649,7 @@ void test_rpg_interaction_rays(const std::filesystem::path& game_root) {
         context, swd2::Marker::menu_ready);
     require(ray_result == swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
-                platform.poll_calls == 1U && platform.wait_calls == 1U &&
+                platform.poll_calls == 2U && platform.wait_calls == 0U &&
                 platform.presented == 3U,
             "RPG 523d/52fd did not find an entity on the fourth forward probe");
 }
@@ -6774,7 +6777,7 @@ void test_rpg_overworld_poison(const std::filesystem::path& game_root) {
         solid_hash *= 1099511628211ULL;
     }
     require(platform.cursor == platform.actions.size() &&
-                platform.wait_calls == 1U && platform.poll_calls == 11U &&
+                platform.wait_calls == 0U && platform.poll_calls == 12U &&
                 platform.presented == 14U && platform.frame_hashes[11] == solid_hash &&
                 platform.frame_hashes[12] == platform.frame_hashes[13],
             "RPG poison dialogue/6b flash did not preserve the 1ffb/200f sequence");

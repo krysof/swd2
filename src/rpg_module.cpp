@@ -685,6 +685,7 @@ public:
 
     void show_dialogue(std::uint16_t opcode,
                        std::span<const std::uint8_t> text) override {
+        if (quit_requested_) return;
         std::size_t offset = 0;
         do {
             // 2cce installs the 7x4 MENU panel at byte column four. Mode 2
@@ -714,22 +715,63 @@ public:
                     }
                 }
             }
-            platform_.present({320, 200, frame.pixels,
-                               std::span<const std::uint8_t, 768>(frame.palette)});
             // Opcode 18 enters 5788 with DS:359b=1. The dialogue renderer
             // still pauses at an explicit %% page break, but 4a94 skips the
             // final MENU 149..152 acknowledgement when it reaches $$.
-            if (page.has_more || opcode != 18) {
-                InputAction action;
-                do {
-                    action = platform_.wait_for_input();
-                } while (action != InputAction::confirm &&
-                         action != InputAction::cancel &&
-                         action != InputAction::quit);
-                if (action == InputAction::quit) {
-                    quit_requested_ = true;
-                    return;
+            if (page.page_break) {
+                // 4a6b leaves the stream cursor after the last glyph and
+                // copies MENU frame 91h there while waiting for the explicit
+                // page continuation. Unlike the final marker it is static.
+                while (true) {
+                    auto shown = frame;
+                    if (menu_sprites_.sprites().size() > 0x91U) {
+                        const auto& info = menu_sprites_.sprites()[0x91U];
+                        blit(shown, menu_sprites_.pixels(0x91U),
+                             info.width, info.height,
+                             text_left + static_cast<int>(page.cursor_x),
+                             text_top + static_cast<int>(page.cursor_y));
+                    }
+                    platform_.present({
+                        320, 200, shown.pixels,
+                        std::span<const std::uint8_t, 768>(shown.palette)});
+                    const auto action = platform_.poll_input();
+                    if (action == InputAction::quit) {
+                        quit_requested_ = true;
+                        return;
+                    }
+                    if (action != InputAction::none) break;
+                    platform_.delay_for(std::chrono::milliseconds(20));
                 }
+            } else if (opcode != 18) {
+                // At $$, 4a94 cycles MENU 149..152 at the same cursor until
+                // any action arrives. Opcode 18 deliberately bypasses it.
+                auto indicator = std::size_t{149};
+                while (true) {
+                    auto shown = frame;
+                    if (indicator < menu_sprites_.sprites().size()) {
+                        const auto& info = menu_sprites_.sprites()[indicator];
+                        blit(shown, menu_sprites_.pixels(indicator),
+                             info.width, info.height,
+                             text_left + static_cast<int>(page.cursor_x),
+                             text_top + static_cast<int>(page.cursor_y));
+                    }
+                    platform_.present({
+                        320, 200, shown.pixels,
+                        std::span<const std::uint8_t, 768>(shown.palette)});
+                    const auto action = platform_.poll_input();
+                    if (action == InputAction::quit) {
+                        quit_requested_ = true;
+                        return;
+                    }
+                    if (action != InputAction::none) break;
+                    platform_.delay_for(std::chrono::milliseconds(20));
+                    ++indicator;
+                    if (indicator == 153U) indicator = 149U;
+                }
+            } else {
+                platform_.present({
+                    320, 200, frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette)});
             }
             offset = page.next_offset;
             if (!page.has_more) return;

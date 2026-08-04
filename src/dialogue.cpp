@@ -9,14 +9,20 @@ DialoguePage render_dialogue_page(const LegacyFont& font, std::span<const std::u
                                   std::size_t height, std::uint8_t color,
                                   const LegacyFont* name_font) {
     if (start_offset > text.size()) throw std::out_of_range("dialogue offset is out of bounds");
-    DialoguePage result{width, height, std::vector<std::uint8_t>(width * height, 0),
-                        start_offset, false};
+    DialoguePage result;
+    result.width = width;
+    result.height = height;
+    result.pixels.assign(width * height, 0);
+    result.next_offset = start_offset;
     std::size_t x = 0;
     std::size_t y = 0;
     auto cursor = start_offset;
     while (cursor < text.size()) {
         if (cursor + 1 < text.size() && text[cursor] == '%' && text[cursor + 1] == '%') {
             result.next_offset = cursor + 2;
+            result.cursor_x = x;
+            result.cursor_y = y;
+            result.page_break = true;
             result.has_more = result.next_offset < text.size();
             return result;
         }
@@ -54,6 +60,8 @@ DialoguePage render_dialogue_page(const LegacyFont& font, std::span<const std::u
         cursor += 2;
     }
     result.next_offset = cursor;
+    result.cursor_x = x;
+    result.cursor_y = y;
     return result;
 }
 
