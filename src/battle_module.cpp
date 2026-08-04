@@ -1948,7 +1948,7 @@ void present_round_events(
         // branches of their own.  Multi-target events receive this epilogue
         // only after the last event in the presented action.
         const auto captured_ally_dispatch =
-            event.kind == BattleEventKind::ally_attack ||
+            (event.kind == BattleEventKind::ally_attack && !event.evaded) ||
             event.kind == BattleEventKind::ally_ability ||
             (event.kind == BattleEventKind::missing_medium &&
              event.source_is_summoned_ally);
@@ -2286,6 +2286,23 @@ void present_round_events(
                 menu_sprites, font, fallback, visual, event, std::nullopt,
                 {}, std::nullopt, encounter_directory_offset);
             context.platform.delay_for(monster_action_card_delay);
+            continue;
+        }
+        if (event.kind == BattleEventKind::ally_attack && event.evaded) {
+            // After 0fce's unconditional SP106, the successful evasion roll
+            // tail-jumps to 2a28. That routine leaves the two-column colour-6b
+            // “閃躲” card visible for eight ticks and RETs from the entire
+            // ally action, bypassing 1039's clean/five-tick epilogue.
+            for (const auto& cue : fig_non_effect_voice_cues(event)) {
+                if (cue.timing == FigVoiceTiming::before_action) {
+                    play_voice_cue(context, cue);
+                }
+            }
+            present_monster_compact_card(
+                context, base_surface, encounter, items, menu_sprites,
+                font, fallback, visual, event, abilities.evasion_text(),
+                encounter_directory_offset, 2, 0x6b, 8);
+            context.platform.delay_for(immunity_card_delay);
             continue;
         }
         const auto monster_named_action = action_first &&
