@@ -9,6 +9,7 @@
 namespace swd2 {
 
 struct BattleSessionEvent;
+class SpriteArchive;
 
 // Consecutive per-target/per-selector events can belong to one original FIG
 // command. The actor setup is shared across a 6b composite, while each nested
@@ -150,6 +151,32 @@ struct FigPlayerEscapeFailurePlacement {
 [[nodiscard]] std::array<std::uint8_t, 256> fig_palette_translation(
     std::span<const std::uint8_t, 768> palette,
     std::uint8_t table_index);
+
+// Core of FIG 1000:771b.  The caller supplies the palette entry to blend
+// towards and the 0..64 interpolation numerator.  FIG also uses this routine
+// dynamically for MENU frame 154: every non-transparent source colour gets a
+// private 35/64 table which is then applied to the portrait below it.
+[[nodiscard]] std::array<std::uint8_t, 256>
+fig_palette_blend_translation(
+    std::span<const std::uint8_t, 768> palette,
+    std::uint8_t target_color, std::uint8_t blend);
+
+// Shared FIG/RPG 798b/78c9 special compositor. FE is transparent, mask_color
+// shades the destination through table 1 (40/64 towards palette entry zero),
+// and all other source pixels copy directly.
+void composite_legacy_masked_sprite(
+    std::span<std::uint8_t> destination, int width, int height,
+    std::span<const std::uint8_t, 768> palette,
+    const SpriteArchive& archive, std::size_t sprite_index,
+    int left, int top, std::uint8_t mask_color);
+
+// Shared FIG/RPG 799b/78d9 normal palette compositor after 7900/783e has
+// assigned every non-FE source colour a private 35/64 771b/7659 table.
+void composite_legacy_translucent_sprite(
+    std::span<std::uint8_t> destination, int width, int height,
+    std::span<const std::uint8_t, 768> palette,
+    const SpriteArchive& archive, std::size_t sprite_index,
+    int left, int top);
 
 // Literal linear-framebuffer equivalent of FIG 1000:77ef.  The DOS renderer
 // transforms a 16-byte-wide Mode-X rectangle (64 physical pixels) for the

@@ -313,6 +313,63 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 !swd2::rpg_party_target_for_direction(
                     swd2::InputAction::confirm, 4),
             "RPG party target keys did not map directly to diamond portraits");
+
+    auto ba_data = swd2::decode_rsk_block(
+        read_file(game_root / "BA" / "BA01.RSK")).data;
+    const auto ba = swd2::SpriteArchive::parse(std::move(ba_data));
+    std::vector<std::uint8_t> target_page(320U * 200U, 1);
+    swd2::apply_rpg_party_target_highlight(
+        target_page, 320, 200, ba.palette(), 2, 4);
+    const auto dimmed = swd2::fig_palette_translation(ba.palette(), 3)[1];
+    require(target_page[104U * 320U + 64U] == dimmed &&
+                target_page[104U * 320U + 160U] == dimmed &&
+                target_page[80U * 320U + 112U] == 1 &&
+                target_page[131U * 320U + 112U] == dimmed &&
+                target_page[104U * 320U + 63U] == 1 &&
+                target_page[155U * 320U + 64U] == 1,
+            "RPG 2634 target page did not dim only the three unselected cards");
+
+    std::vector<std::uint8_t> binary_page(320U * 200U, 1);
+    swd2::apply_rpg_binary_choice_highlight(
+        binary_page, 320, 200, ba.palette(), 44, 62, 90, 1);
+    require(binary_page[90U * 320U + 176U] == dimmed &&
+                binary_page[90U * 320U + 248U] == 1 &&
+                binary_page[90U * 320U + 175U] == 1 &&
+                binary_page[122U * 320U + 176U] == 1,
+            "RPG 46cc/54d5 Yes-No page did not dim only the unselected card");
+
+    const std::array<std::uint8_t, 12> target_highlight_entry = {
+        0xe8, 0x23, 0x00, 0x2e, 0xc7, 0x06,
+        0x3f, 0x76, 0x0c, 0x00, 0x2e, 0xc7,
+    };
+    require(image.size() > 0x2fa5U + 17U &&
+                std::equal(target_highlight_entry.begin(),
+                           target_highlight_entry.end(),
+                           image.begin() + 0x2634U) &&
+                image[0x2fa5U] == 0x8bU && image[0x2fa6U] == 0x0eU &&
+                image[0x2fa7U] == 0x10U && image[0x2fa8U] == 0x00U &&
+                image[0x2fa9U] == 0xb0U && image[0x2faaU] == 0x0fU &&
+                image[0x2fabU] == 0xd2U && image[0x2facU] == 0xe8U,
+            "RPG 2634/2fa5 target highlight/input handlers changed");
+    require(image[0x4719U] == 0x2eU && image[0x471aU] == 0xc7U &&
+                image[0x471dU] == 0x76U && image[0x471eU] == 0x10U &&
+                image[0x4720U] == 0x2eU && image[0x4725U] == 0x20U &&
+                image[0x4733U] == 0xb9U && image[0x4734U] == 0x02U &&
+                image[0x4736U] == 0xe8U &&
+                image[0x5538U] == 0x2eU && image[0x5539U] == 0xc7U &&
+                image[0x553dU] == 0x10U && image[0x5544U] == 0x20U &&
+                image[0x5553U] == 0xb9U && image[0x5554U] == 0x02U &&
+                image[0x5556U] == 0xe8U,
+            "RPG save/sale binary-choice palette highlight handlers changed");
+    require(image[0x25a8U] == 0x8bU && image[0x25a9U] == 0x44U &&
+                image[0x25aaU] == 0x08U && image[0x25abU] == 0xa9U &&
+                image[0x25acU] == 0x00U && image[0x25adU] == 0x20U &&
+                image[0x25b0U] == 0xc7U && image[0x25b5U] == 0x00U &&
+                image[0x25b6U] == 0xe8U &&
+                image[0x25d0U] == 0xc7U && image[0x25d5U] == 0x00U &&
+                image[0x25e0U] == 0xe8U &&
+                image[0x25edU] == 0xc7U && image[0x25f2U] == 0x00U,
+            "RPG 24b8 death/low-health/status overlay path changed");
 }
 
 void test_resource_decoder(const std::filesystem::path& game_root) {
@@ -365,6 +422,9 @@ void test_resource_decoder(const std::filesystem::path& game_root) {
         battle_background.palette(), 3);
     const auto table4 = swd2::fig_palette_translation(
         battle_background.palette(), 4);
+    std::set<std::uint8_t> low_colors(menu.pixels(154).begin(), menu.pixels(154).end());
+    const auto low_health_blend = swd2::fig_palette_blend_translation(
+        battle_background.palette(), 106, 35);
     const std::array<std::uint8_t, 32> expected_table1 = {
         0x00, 0xa2, 0x2f, 0xa3, 0x08, 0x08, 0x08, 0x00,
         0x00, 0x1d, 0x19, 0xa1, 0x1b, 0x19, 0x8c, 0x5e,
@@ -390,8 +450,55 @@ void test_resource_decoder(const std::filesystem::path& game_root) {
                 std::equal(expected_table3.begin(), expected_table3.end(),
                            table3.begin()) &&
                 table4[0] == 86 && table4[106] == 106 &&
-                table4[255] == 52,
+                table4[255] == 52 &&
+                low_colors == std::set<std::uint8_t>{106, 0xfe} &&
+                low_health_blend == table4,
             "FIG 314d/771b generated different nearest-colour tables");
+
+    const auto death_source = menu.pixels(153);
+    const auto death_zero = std::find(death_source.begin(), death_source.end(), 0);
+    const auto death_copy = std::find_if(
+        death_source.begin(), death_source.end(),
+        [](std::uint8_t color) { return color != 0 && color != 0xfe; });
+    std::vector<std::uint8_t> death_composite(320U * 200U, 1);
+    swd2::composite_legacy_masked_sprite(
+        death_composite, 320, 200, battle_background.palette(),
+        menu, 153, 0, 0, 0);
+    const auto death_destination = [&](auto iterator) {
+        const auto offset = static_cast<std::size_t>(iterator - death_source.begin());
+        return (offset / menu.sprites()[153].width) * 320U +
+               offset % menu.sprites()[153].width;
+    };
+    require(death_zero != death_source.end() &&
+                death_copy != death_source.end() &&
+                death_composite[death_destination(death_zero)] == table1[1] &&
+                death_composite[death_destination(death_copy)] == *death_copy,
+            "FIG/RPG masked overlay did not shade/copy its two present pixel classes");
+
+    const auto low_source = menu.pixels(154);
+    const auto low_tint = std::find(low_source.begin(), low_source.end(), 106);
+    const auto low_transparent =
+        std::find(low_source.begin(), low_source.end(), 0xfe);
+    std::vector<std::uint8_t> masked_skip_composite(320U * 200U, 1);
+    swd2::composite_legacy_masked_sprite(
+        masked_skip_composite, 320, 200, battle_background.palette(),
+        menu, 154, 0, 0, 0);
+    std::vector<std::uint8_t> low_composite(320U * 200U, 1);
+    swd2::composite_legacy_translucent_sprite(
+        low_composite, 320, 200, battle_background.palette(),
+        menu, 154, 0, 0);
+    const auto low_destination = [&](auto iterator) {
+        const auto offset = static_cast<std::size_t>(iterator - low_source.begin());
+        return (offset / menu.sprites()[154].width) * 320U +
+               offset % menu.sprites()[154].width;
+    };
+    require(low_tint != low_source.end() &&
+                low_transparent != low_source.end() &&
+                masked_skip_composite[low_destination(low_tint)] == 106 &&
+                masked_skip_composite[low_destination(low_transparent)] == 1 &&
+                low_composite[low_destination(low_tint)] == table4[1] &&
+                low_composite[low_destination(low_transparent)] == 1,
+            "FIG/RPG low-health overlay did not apply its dynamic 35/64 table");
 
     std::vector<std::uint8_t> translated_surface(100U * 50U, 1);
     swd2::apply_fig_palette_translation(
@@ -404,6 +511,32 @@ void test_resource_decoder(const std::filesystem::path& game_root) {
                 translated_surface[37U * 100U + 8U] == 1 &&
                 translated_surface[5U * 100U + 72U] == 1,
             "FIG 77ef did not transform exactly 16 Mode-X bytes by 32 lines");
+
+    const auto fig_mz = swd2::dos::MzExecutable::load(game_root / "FIG.EXE");
+    const auto fig_file = read_file(game_root / "FIG.EXE");
+    const auto fig_image = std::span<const std::uint8_t>(fig_file).subspan(
+        fig_mz.header_size(), fig_mz.load_image_size());
+    const std::array<std::uint8_t, 16> masked_entry = {
+        0x2e, 0xc6, 0x06, 0xf3, 0x76, 0x01, 0xe8,
+        0x07, 0x00, 0x2e, 0xc6, 0x06, 0xf3, 0x76, 0x00, 0xc3,
+    };
+    require(fig_image.size() > 0x798bU + masked_entry.size() &&
+                std::equal(masked_entry.begin(), masked_entry.end(),
+                           fig_image.begin() + 0x798bU) &&
+                fig_image[0x2cd7U] == 0xe8U &&
+                fig_image[0x2cd8U] == 0xb1U &&
+                fig_image[0x2cd9U] == 0x4cU &&
+                fig_image[0x2d01U] == 0xe8U &&
+                fig_image[0x2d02U] == 0x97U &&
+                fig_image[0x2d03U] == 0x4cU &&
+                fig_image[0x2debU] == 0x2eU &&
+                fig_image[0x2decU] == 0xc6U &&
+                fig_image[0x2defU] == 0x76U &&
+                fig_image[0x2df0U] == 0xefU &&
+                fig_image[0x2eacU] == 0x2eU &&
+                fig_image[0x2eb0U] == 0x76U &&
+                fig_image[0x2eb1U] == 0x00U,
+            "FIG 2bd9/2deb/798b palette-compositor paths changed");
 }
 
 void test_voc_decoder(const std::filesystem::path& game_root) {
@@ -4513,6 +4646,32 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 immediate_context.shared_state.u16(0x4a0) == 0,
             "FIG empty ORC introduction still consumed a false confirmation gate");
 
+    struct FigPartyOverlayCase {
+        std::uint16_t hit_points;
+        std::uint16_t status_bits;
+        std::uint64_t expected_bottom_hash;
+    };
+    for (const auto& overlay_case :
+         std::array<FigPartyOverlayCase, 2>{
+             FigPartyOverlayCase{1, 0, 8017911571611297859ULL},
+             FigPartyOverlayCase{0, 0x2000, 7538110103735948165ULL}}) {
+        ScriptedPlatform overlay_platform;
+        overlay_platform.actions = {swd2::InputAction::quit};
+        auto overlay_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+        overlay_state.set_u16(0x4a0, 392);
+        overlay_state.set_u16(0x106 + 0x2d, overlay_case.hit_points);
+        overlay_state.set_u16(0x106 + 8, overlay_case.status_bits);
+        swd2::GameContext overlay_context{
+            game_root, overlay_state, overlay_platform};
+        require(swd2::BattleModule().run(
+                    overlay_context, swd2::Marker::open_figure) ==
+                    swd2::Marker::none &&
+                    overlay_platform.bottom_hashes.size() == 2 &&
+                    overlay_platform.bottom_hashes.back() ==
+                        overlay_case.expected_bottom_hash,
+                "FIG low-HP/death overlay regression run failed");
+    }
+
     ScriptedPlatform story_setup_platform;
     story_setup_platform.actions = {swd2::InputAction::quit};
     auto story_setup_state = swd2::SharedState::load(game_root / "SAVE.DA1");
@@ -4621,7 +4780,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 swd2::Marker::none &&
                 status_card_platform.frame_hashes.size() > 14U &&
                 status_card_platform.frame_hashes[14] ==
-                    15416479133193729915ULL,
+                    12944436973162848075ULL,
             "FIG 57d6 player-status information card run failed");
 
     ScriptedPlatform target_overlay_platform;
@@ -4639,7 +4798,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 swd2::Marker::none &&
                 target_overlay_platform.presented == 4 &&
                 target_overlay_platform.frame_hashes.back() ==
-                    10910838393047765823ULL,
+                    9077867568305503402ULL,
             "FIG 178c target list did not preserve its dimmed attack menus");
 
     ScriptedPlatform platform;

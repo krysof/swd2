@@ -1,10 +1,12 @@
 #include "swd2/battle_presentation.hpp"
 
 #include "swd2/battle_session.hpp"
+#include "swd2/sprite_archive.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstdlib>
+#include <list>
 #include <stdexcept>
 
 namespace swd2 {
@@ -161,7 +163,18 @@ std::array<std::uint8_t, 256> fig_palette_translation(
         throw std::invalid_argument("FIG palette translation table must be 1..4");
     }
     const auto configuration = configurations[table_index];
-    const auto target_offset = static_cast<std::size_t>(configuration.target) * 3U;
+    return fig_palette_blend_translation(
+        palette, configuration.target,
+        static_cast<std::uint8_t>(configuration.blend));
+}
+
+std::array<std::uint8_t, 256> fig_palette_blend_translation(
+    std::span<const std::uint8_t, 768> palette,
+    std::uint8_t target_color, std::uint8_t blend) {
+    if (blend > 64U) {
+        throw std::invalid_argument("FIG palette blend must be 0..64");
+    }
+    const auto target_offset = static_cast<std::size_t>(target_color) * 3U;
 
     const auto arithmetic_shift_six = [](int value) {
         // 8086 SAR rounds negative values towards minus infinity, whereas
@@ -176,7 +189,7 @@ std::array<std::uint8_t, 256> fig_palette_translation(
             const auto original = static_cast<int>(palette[source * 3U + component]);
             const auto target = static_cast<int>(palette[target_offset + component]);
             blended[component] = original + arithmetic_shift_six(
-                (target - original) * configuration.blend);
+                (target - original) * static_cast<int>(blend));
         }
 
         auto closest = std::uint8_t{};
@@ -198,6 +211,109 @@ std::array<std::uint8_t, 256> fig_palette_translation(
         result[source] = closest;
     }
     return result;
+}
+
+namespace {
+
+const std::array<std::uint8_t, 256>& cached_palette_blend(
+    std::span<const std::uint8_t, 768> palette,
+    std::uint8_t target_color, std::uint8_t blend) {
+    struct Entry {
+        std::array<std::uint8_t, 768> palette;
+        std::uint8_t target_color{};
+        std::uint8_t blend{};
+        std::array<std::uint8_t, 256> translation;
+    };
+    // Battle/map palettes are immutable while their UI is active. A
+    // thread-local cache avoids rebuilding the original 256x256 nearest-
+    // colour search on every page recomposition.
+    static thread_local std::list<Entry> cache;
+    const auto found = std::find_if(
+        cache.begin(), cache.end(), [&](const Entry& entry) {
+            return entry.target_color == target_color &&
+                   entry.blend == blend &&
+                   std::equal(entry.palette.begin(), entry.palette.end(),
+                              palette.begin());
+        });
+    if (found != cache.end()) return found->translation;
+    Entry entry;
+    std::copy(palette.begin(), palette.end(), entry.palette.begin());
+    entry.target_color = target_color;
+    entry.blend = blend;
+    entry.translation = fig_palette_blend_translation(
+        palette, target_color, blend);
+    cache.push_back(std::move(entry));
+    return cache.back().translation;
+}
+
+void validate_compositor_surface(std::span<std::uint8_t> destination,
+                                 int width, int height) {
+    if (width <= 0 || height <= 0 ||
+        destination.size() != static_cast<std::size_t>(width) *
+                                  static_cast<std::size_t>(height)) {
+        throw std::invalid_argument("legacy palette compositor surface is invalid");
+    }
+}
+
+}  // namespace
+
+void composite_legacy_masked_sprite(
+    std::span<std::uint8_t> destination, int width, int height,
+    std::span<const std::uint8_t, 768> palette,
+    const SpriteArchive& archive, std::size_t sprite_index,
+    int left, int top, std::uint8_t mask_color) {
+    validate_compositor_surface(destination, width, height);
+    const auto& sprite = archive.sprites().at(sprite_index);
+    const auto source_pixels = archive.pixels(sprite_index);
+    const auto& shade = cached_palette_blend(palette, 0, 40);
+    for (std::size_t y = 0; y < sprite.height; ++y) {
+        for (std::size_t x = 0; x < sprite.width; ++x) {
+            const auto destination_x = left + static_cast<int>(x);
+            const auto destination_y = top + static_cast<int>(y);
+            if (destination_x < 0 || destination_x >= width ||
+                destination_y < 0 || destination_y >= height) {
+                continue;
+            }
+            const auto source = source_pixels[y * sprite.width + x];
+            if (source == 0xfeU) continue;
+            auto& pixel =
+                destination[static_cast<std::size_t>(destination_y) *
+                                static_cast<std::size_t>(width) +
+                            static_cast<std::size_t>(destination_x)];
+            pixel = source == mask_color ? shade[pixel] : source;
+        }
+    }
+}
+
+void composite_legacy_translucent_sprite(
+    std::span<std::uint8_t> destination, int width, int height,
+    std::span<const std::uint8_t, 768> palette,
+    const SpriteArchive& archive, std::size_t sprite_index,
+    int left, int top) {
+    validate_compositor_surface(destination, width, height);
+    const auto& sprite = archive.sprites().at(sprite_index);
+    const auto source_pixels = archive.pixels(sprite_index);
+    std::array<const std::array<std::uint8_t, 256>*, 256> tables{};
+    for (std::size_t y = 0; y < sprite.height; ++y) {
+        for (std::size_t x = 0; x < sprite.width; ++x) {
+            const auto destination_x = left + static_cast<int>(x);
+            const auto destination_y = top + static_cast<int>(y);
+            if (destination_x < 0 || destination_x >= width ||
+                destination_y < 0 || destination_y >= height) {
+                continue;
+            }
+            const auto source = source_pixels[y * sprite.width + x];
+            if (source == 0xfeU) continue;
+            if (tables[source] == nullptr) {
+                tables[source] = &cached_palette_blend(palette, source, 35);
+            }
+            auto& pixel =
+                destination[static_cast<std::size_t>(destination_y) *
+                                static_cast<std::size_t>(width) +
+                            static_cast<std::size_t>(destination_x)];
+            pixel = (*tables[source])[pixel];
+        }
+    }
 }
 
 void apply_fig_palette_translation(

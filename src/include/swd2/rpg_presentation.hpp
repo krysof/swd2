@@ -104,4 +104,24 @@ std::optional<std::size_t> rpg_party_target_for_direction(
     InputAction action,
     std::size_t party_count) noexcept;
 
+// RPG.EXE:2634 calls the shared 21de/772d palette translator after drawing
+// the diamond portrait page.  Every non-selected 12-byte x 51-line card is
+// mapped through table 3; the selected card remains at its original palette.
+// This is the only visual cursor on the target/recipient page.
+void apply_rpg_party_target_highlight(
+    std::span<std::uint8_t> pixels,
+    int width, int height,
+    std::span<const std::uint8_t, 768> palette,
+    std::size_t selected_actor, std::size_t party_count);
+
+// RPG.EXE:46cc and 54d5 use the same 21de/772d operation for their Yes/No
+// cards.  Each option occupies 16 Mode-X bytes by 32 scanlines; the selected
+// option stays bright while the other is translated through table 3.
+void apply_rpg_binary_choice_highlight(
+    std::span<std::uint8_t> pixels,
+    int width, int height,
+    std::span<const std::uint8_t, 768> palette,
+    int first_mode_x_column, int second_mode_x_column, int top,
+    std::size_t selected_choice);
+
 }  // namespace swd2

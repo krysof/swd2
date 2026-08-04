@@ -243,12 +243,20 @@ void draw_fig_party_card(BattleSurface& surface,
     }
     if ((status & 0x2000U) != 0) {
         if (menu_sprites.sprites().size() > 153U) {
-            blit(surface, menu_sprites, 153, left, top);
+            // 2cd1 calls 798b with CS:76f2 reset to zero. Zero pixels in the
+            // death overlay therefore shade the portrait through table 1.
+            composite_legacy_masked_sprite(
+                surface.pixels, 320, 200, surface.palette,
+                menu_sprites, 153, left, top, 0x00);
         }
         return;
     }
     if ((status & 0x1000U) != 0 && menu_sprites.sprites().size() > 154U) {
-        blit(surface, menu_sprites, 154, left + 4, top + 2);
+        // 2cf1 calls the normal 799b compositor after 7900/7960 have assigned
+        // every frame-154 colour its own 35/64 palette blend table.
+        composite_legacy_translucent_sprite(
+            surface.pixels, 320, 200, surface.palette,
+            menu_sprites, 154, left + 4, top + 2);
     }
     auto displayed = 0;
     auto mask = std::uint16_t{0x0800};
@@ -871,8 +879,12 @@ void draw_enemies(BattleSurface& surface, const BattleEncounter& encounter,
                                    found->second.sprites().size() > 1
                                ? 1U
                                : 0U;
-        blit(surface, found->second, frame, left,
-             static_cast<int>(monster.vertical_position));
+        // 2deb sets CS:76f2=EF before every 798b monster draw. EF pixels are
+        // not opaque shadow paint: they darken the BA page through table 1.
+        composite_legacy_masked_sprite(
+            surface.pixels, 320, 200, surface.palette,
+            found->second, frame, left,
+            static_cast<int>(monster.vertical_position), 0xef);
 
         if (states.empty() || index >= states.size()) continue;
         auto active_ordinal = std::size_t{};

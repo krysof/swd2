@@ -1,5 +1,6 @@
 #include "swd2/rpg_presentation.hpp"
 
+#include "swd2/battle_presentation.hpp"
 #include "swd2/sprite_archive.hpp"
 
 #include <algorithm>
@@ -77,6 +78,46 @@ void apply_rpg_event_monochrome_filter(
         if (pixel >= 0x10U && pixel < 0x20U) {
             pixel = translation[pixel - 0x10U];
         }
+    }
+}
+
+void apply_rpg_party_target_highlight(
+    std::span<std::uint8_t> pixels,
+    int width, int height,
+    std::span<const std::uint8_t, 768> palette,
+    std::size_t selected_actor, std::size_t party_count) {
+    static constexpr std::array<std::pair<int, int>, 4> positions{{
+        {16, 104}, {40, 104}, {28, 80}, {28, 131},
+    }};
+    party_count = std::min(party_count, positions.size());
+    if (selected_actor >= party_count) {
+        throw std::invalid_argument("RPG party target highlight is outside the party");
+    }
+    for (std::size_t actor = 0; actor < party_count; ++actor) {
+        if (actor == selected_actor) continue;
+        apply_fig_palette_translation(
+            pixels, width, height, palette,
+            positions[actor].first, positions[actor].second,
+            0x0c, 0x33, 3);
+    }
+}
+
+void apply_rpg_binary_choice_highlight(
+    std::span<std::uint8_t> pixels,
+    int width, int height,
+    std::span<const std::uint8_t, 768> palette,
+    int first_mode_x_column, int second_mode_x_column, int top,
+    std::size_t selected_choice) {
+    if (selected_choice > 1U) {
+        throw std::invalid_argument("RPG binary choice must be zero or one");
+    }
+    const std::array<int, 2> columns{
+        first_mode_x_column, second_mode_x_column};
+    for (std::size_t choice = 0; choice < columns.size(); ++choice) {
+        if (choice == selected_choice) continue;
+        apply_fig_palette_translation(
+            pixels, width, height, palette,
+            columns[choice], top, 0x10, 0x20, 3);
     }
 }
 

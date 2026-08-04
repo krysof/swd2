@@ -1,6 +1,7 @@
 #include "swd2/rpg_module.hpp"
 
 #include "swd2/asset_catalog.hpp"
+#include "swd2/battle_presentation.hpp"
 #include "swd2/dialogue.hpp"
 #include "swd2/event_vm.hpp"
 #include "swd2/field_action_system.hpp"
@@ -274,7 +275,7 @@ void draw_item_text(Viewport& viewport, const ItemTextDatabase& texts,
 
 void draw_rpg_actor_card(Viewport& viewport,
                          const SpriteArchive& menu_sprites,
-                         const SharedState& state,
+                         SharedState& state,
                          std::size_t actor, int left, int top) {
     const auto bar_height = [](std::uint16_t current, std::uint16_t maximum,
                                std::uint16_t scale) {
@@ -329,12 +330,60 @@ void draw_rpg_actor_card(Viewport& viewport,
                       top + 47, 1, 2, 0x0e);
         }
     }
+
+    // RPG 25a8..262b is byte-for-byte the same state overlay family as FIG
+    // 2cc9..2d55.  The field/equipment target cards therefore also show
+    // death, low HP, and all eleven status icons; they are not bare gauges.
+    auto status = state.u16(base + 8);
+    if ((status & 0x2000U) != 0) {
+        // RPG:25b0 jumps to the death overlay before the routine refreshes
+        // the derived low-HP bit, so a dead actor's stored word is untouched.
+        if (menu_sprites.sprites().size() > 153U) {
+            composite_legacy_masked_sprite(
+                viewport.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(viewport.palette),
+                menu_sprites, 153, left, top, 0x00);
+        }
+        return;
+    }
+
+    // This is intentionally a state mutation rather than just a rendering
+    // decision. RPG:25cf clears bit 1000h in SAVE and 25e0 sets it again when
+    // current HP is no greater than one quarter of maximum HP.
+    status = static_cast<std::uint16_t>(status & ~0x1000U);
+    const auto hit_points = state.u16(base + 0x2d);
+    const auto maximum_hit_points = state.u16(base + 0x2f);
+    if (hit_points <= (maximum_hit_points >> 2U)) {
+        status = static_cast<std::uint16_t>(status | 0x1000U);
+    }
+    state.set_u16(base + 8, status);
+    if ((status & 0x1000U) != 0 && menu_sprites.sprites().size() > 154U) {
+        composite_legacy_translucent_sprite(
+            viewport.pixels, 320, 200,
+            std::span<const std::uint8_t, 768>(viewport.palette),
+            menu_sprites, 154, left + 4, top + 2);
+    }
+    auto displayed = 0;
+    auto status_mask = std::uint16_t{0x0800};
+    for (std::size_t bit = 0; bit < 11; ++bit, status_mask >>= 1U) {
+        if ((status & status_mask) == 0) continue;
+        const auto frame = 155U + bit;
+        if (frame < menu_sprites.sprites().size()) {
+            const auto& info = menu_sprites.sprites()[frame];
+            blit(viewport, menu_sprites.pixels(frame),
+                 info.width, info.height,
+                 left + 8 + (displayed & 1) * 16,
+                 top + 1 + (displayed / 2) * 16);
+        }
+        ++displayed;
+    }
 }
 
 void draw_rpg_party_target_cards(Viewport& viewport,
                                  const SpriteArchive& menu_sprites,
-                                 const SharedState& state,
-                                 std::size_t party_count) {
+                                 SharedState& state,
+                                 std::size_t party_count,
+                                 std::size_t selected_actor) {
     // RPG.EXE:265a/24b8. The four cards intentionally form a directional
     // diamond: Left, Right, Up, Down correspond to actor indices 0..3.
     static constexpr std::array<std::pair<int, int>, 4> positions{{
@@ -345,6 +394,10 @@ void draw_rpg_party_target_cards(Viewport& viewport,
         const auto [left, top] = positions[actor];
         draw_rpg_actor_card(viewport, menu_sprites, state, actor, left, top);
     }
+    apply_rpg_party_target_highlight(
+        viewport.pixels, 320, 200,
+        std::span<const std::uint8_t, 768>(viewport.palette),
+        selected_actor, party_count);
 }
 
 void draw_rpg_selector_scrollbar(Viewport& viewport,
@@ -823,6 +876,11 @@ public:
                         opaque(0, 62, 90);
                         opaque(29, 50, 99);
                         opaque(8, 68, 99);
+                        apply_rpg_binary_choice_highlight(
+                            confirmation.pixels, 320, 200,
+                            std::span<const std::uint8_t, 768>(
+                                confirmation.palette),
+                            44, 62, 90, choice);
                         platform_.present({
                             320, 200, confirmation.pixels,
                             std::span<const std::uint8_t, 768>(confirmation.palette)});
@@ -895,6 +953,12 @@ public:
                                 opaque(0, 41, 147);
                                 opaque(29, 29, 156);
                                 opaque(8, 47, 156);
+                                apply_rpg_binary_choice_highlight(
+                                    save_frame.pixels, 320, 200,
+                                    std::span<const std::uint8_t, 768>(
+                                        save_frame.palette),
+                                    23, 41, 147,
+                                    selector.confirmation_choice());
                             }
                             platform_.present({
                                 320, 200, save_frame.pixels,
@@ -939,7 +1003,8 @@ public:
                         while (true) {
                             auto target_frame = scene_provider_();
                             draw_rpg_party_target_cards(
-                                target_frame, menu_sprites_, state, party_count);
+                                target_frame, menu_sprites_, state, party_count,
+                                *actor);
                             platform_.present({
                                 320, 200, target_frame.pixels,
                                 std::span<const std::uint8_t, 768>(target_frame.palette)});
@@ -1088,7 +1153,7 @@ public:
                 while (true) {
                     auto actor_frame = scene_provider_();
                     draw_rpg_party_target_cards(
-                        actor_frame, menu_sprites_, state, party_count);
+                        actor_frame, menu_sprites_, state, party_count, actor);
                     platform_.present({
                         320, 200, actor_frame.pixels,
                         std::span<const std::uint8_t, 768>(actor_frame.palette)});
