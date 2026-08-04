@@ -2270,6 +2270,24 @@ void present_round_events(
                 encounter_directory_offset, color);
             context.platform.delay_for(summoned_action_card_delay);
         }
+        if (event.kind == BattleEventKind::ally_fled) {
+            // 0eef..0f18 starts SV3 immediately after the nine-tick colour-6b
+            // card, removes/packs the ally, redraws once, then waits four
+            // ticks.  It does not insert the generic three-tick pre-removal
+            // page or use the attack/ability five-tick epilogue.
+            for (const auto& cue : fig_non_effect_voice_cues(event)) {
+                if (cue.timing == FigVoiceTiming::before_action) {
+                    play_voice_cue(context, cue);
+                }
+            }
+            apply_visual_event(visual, event, abilities);
+            present_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event, std::nullopt,
+                {}, std::nullopt, encounter_directory_offset);
+            context.platform.delay_for(monster_action_card_delay);
+            continue;
+        }
         const auto monster_named_action = action_first &&
             (event.kind == BattleEventKind::monster_ability ||
              event.kind == BattleEventKind::monster_heal);
