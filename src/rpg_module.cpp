@@ -566,6 +566,14 @@ public:
                  std::span<const std::uint8_t> shop_confirmation_prompt,
                  std::span<const std::uint8_t> shop_quantity_error,
                  std::span<const std::uint8_t> shop_unsellable_error,
+                 std::span<const std::uint8_t> item_discard_error,
+                 std::span<const std::uint8_t> item_discard_prompt,
+                 std::span<const std::uint8_t> item_alchemy_error,
+                 std::span<const std::uint8_t> item_alchemy_select_prompt,
+                 std::span<const std::uint8_t> item_alchemy_level_error,
+                 std::span<const std::uint8_t> item_alchemy_data,
+                 std::span<const std::uint8_t> item_effect_labels,
+                 std::span<const std::uint8_t> item_alchemy_result_labels,
                  std::span<const std::uint8_t> equipment_actor_error,
                  std::span<const std::uint8_t> equipment_two_hand_error,
                  std::span<const std::uint8_t> equipment_slot_error,
@@ -603,6 +611,14 @@ public:
           shop_confirmation_prompt_(shop_confirmation_prompt),
           shop_quantity_error_(shop_quantity_error),
           shop_unsellable_error_(shop_unsellable_error),
+          item_discard_error_(item_discard_error),
+          item_discard_prompt_(item_discard_prompt),
+          item_alchemy_error_(item_alchemy_error),
+          item_alchemy_select_prompt_(item_alchemy_select_prompt),
+          item_alchemy_level_error_(item_alchemy_level_error),
+          item_alchemy_data_(item_alchemy_data),
+          item_effect_labels_(item_effect_labels),
+          item_alchemy_result_labels_(item_alchemy_result_labels),
           equipment_actor_error_(equipment_actor_error),
           equipment_two_hand_error_(equipment_two_hand_error),
           equipment_slot_error_(equipment_slot_error),
@@ -898,6 +914,10 @@ public:
         InventorySystem inventory(state, items_);
         std::size_t selected = 0;
         std::size_t first_visible = 0;
+        // DATA:35e6 is shared by successive entries into RPG:2d0f, so the
+        // directional choice remains where the player last left it while the
+        // surrounding 39ed inventory stays open.
+        std::size_t item_action_choice = 0;
         auto scroll_cue = RpgListSelection::ScrollCue::none;
         while (true) {
             auto frame = scene_provider_();
@@ -1058,11 +1078,134 @@ public:
                 if (selected_item >= items_.size()) return InventoryUiResult::occupied_slot;
 
                 const auto& definition = items_.at(selected_item);
+                auto action_frame = frame;
+                if (mode == InventoryUiMode::general) {
+                    bool return_to_inventory = false;
+                    while (true) {
+                        const auto action = select_item_action(
+                            frame, definition.equipment_category() != 0U,
+                            (state.u8(0x3f1U) & 1U) == 0U,
+                            item_action_choice);
+                        if (quit_requested_) return InventoryUiResult::cancelled;
+                        if (!action) {
+                            return_to_inventory = true;
+                            break;
+                        }
+                        action_frame = item_action_choice_frame(
+                            frame, definition.equipment_category() != 0U,
+                            (state.u8(0x3f1U) & 1U) == 0U, *action);
+                        if (*action == 0U) break;
+                        if (*action == 1U) {
+                            // 3c6e loads ITEM2's selected description into
+                            // DATA:4a30 and presents it over the copied 2d0f
+                            // page.  Empty descriptions simply leave the
+                            // action selector active.
+                            if (selected_item < item_texts_.size() &&
+                                !item_texts_.at(selected_item).description.empty() &&
+                                !show_bottom_message(
+                                    item_description_frame(
+                                        action_frame, definition),
+                                    item_texts_.at(selected_item).description)) {
+                                return InventoryUiResult::cancelled;
+                            }
+                            continue;
+                        }
+                        if (*action == 2U) {
+                            if (!definition.discardable()) {
+                                if (!show_bottom_message(
+                                        action_frame, item_discard_error_)) {
+                                    return InventoryUiResult::cancelled;
+                                }
+                                continue;
+                            }
+                            const auto confirmed = confirm_item_discard(action_frame);
+                            if (quit_requested_) return InventoryUiResult::cancelled;
+                            if (!confirmed) continue;
+                            state.set_u16(0x382U + selected * 2U, 0U);
+                            inventory.compact();
+                            return_to_inventory = true;
+                            break;
+                        }
+
+                        // The fourth card is RPG:4397's alchemy-pot path.
+                        // Until that independent state machine is entered, its
+                        // exact precondition must still be honoured instead of
+                        // silently treating the card as Use.
+                        if ((definition.flags & 0xc0U) == 0xc0U) {
+                            if (!show_bottom_message(
+                                    action_frame, item_alchemy_error_)) {
+                                return InventoryUiResult::cancelled;
+                            }
+                            continue;
+                        }
+                        if (!show_bottom_message(
+                                action_frame, item_alchemy_select_prompt_)) {
+                            return InventoryUiResult::cancelled;
+                        }
+
+                        // 4397 temporarily removes the first physical word
+                        // without compacting, then reuses 39ed to choose the
+                        // second ingredient. Cancellation restores that exact
+                        // word; success replaces the second word with the
+                        // DATA:2a42 product and only then runs 3ced.
+                        state.set_u16(0x382U + selected * 2U, 0U);
+                        const auto ingredient = select_alchemy_ingredient(
+                            state, inventory, selected_item);
+                        if (quit_requested_) {
+                            state.set_u16(
+                                0x382U + selected * 2U, selected_item);
+                            return InventoryUiResult::cancelled;
+                        }
+                        if (!ingredient) {
+                            state.set_u16(0x382U + selected * 2U, selected_item);
+                            return_to_inventory = true;
+                            break;
+                        }
+                        const auto second_item = inventory.item(*ingredient);
+                        const auto product = resolve_item_alchemy_product(
+                            items_, item_alchemy_data_, selected_item, second_item);
+                        if (!product || *product >= items_.size()) {
+                            state.set_u16(0x382U + selected * 2U, selected_item);
+                            return_to_inventory = true;
+                            break;
+                        }
+                        const auto product_frame = alchemy_product_frame(*product);
+                        if (items_.at(*product).alchemy_required_level >
+                            static_cast<unsigned>(state.u16(0x137U)) + 5U) {
+                            if (!show_bottom_message(
+                                    product_frame, item_alchemy_level_error_)) {
+                                state.set_u16(
+                                    0x382U + selected * 2U, selected_item);
+                                return InventoryUiResult::cancelled;
+                            }
+                            state.set_u16(0x382U + selected * 2U, selected_item);
+                            return_to_inventory = true;
+                            break;
+                        }
+                        if (!confirm_alchemy_product(product_frame)) {
+                            if (quit_requested_) {
+                                state.set_u16(
+                                    0x382U + selected * 2U, selected_item);
+                                return InventoryUiResult::cancelled;
+                            }
+                            state.set_u16(0x382U + selected * 2U, selected_item);
+                            return_to_inventory = true;
+                            break;
+                        }
+                        state.set_u16(
+                            0x382U + *ingredient * 2U, *product);
+                        inventory.compact();
+                        return_to_inventory = true;
+                        break;
+                    }
+                    if (return_to_inventory) continue;
+                }
+
                 if (definition.equipment_category() == 0) {
                     if (!definition.field_usable()) {
                         // 3b30 enters 4aec with DATA:3620 when ITEM +05 bit
                         // zero is clear; the selection remains in the bag.
-                        if (!show_bottom_message(frame, field_action_error_)) {
+                        if (!show_bottom_message(action_frame, field_action_error_)) {
                             return InventoryUiResult::cancelled;
                         }
                         continue;
@@ -1076,7 +1219,7 @@ public:
                         RpgSaveSlotSelector selector;
                         bool save_cancelled = false;
                         while (true) {
-                            auto save_frame = scene_provider_();
+                            auto save_frame = action_frame;
                             draw_rpg_selector_panel(
                                 save_frame.pixels, 320, 200, menu_sprites_,
                                 4, 112, 7, 4);
@@ -1155,7 +1298,7 @@ public:
                             1, std::min<std::size_t>(state.u16(0x10), 4));
                         bool target_cancelled = false;
                         while (true) {
-                            auto target_frame = scene_provider_();
+                            auto target_frame = action_frame;
                             draw_rpg_party_target_cards(
                                 target_frame, menu_sprites_, state, party_count,
                                 *actor);
@@ -1186,7 +1329,7 @@ public:
                     if (!field_result.dispatched()) {
                         // Travel selectors 28h/29h branch here when the map's
                         // 4000h/8000h permission bit rejects the action.
-                        if (!show_bottom_message(frame, field_action_error_)) {
+                        if (!show_bottom_message(action_frame, field_action_error_)) {
                             return InventoryUiResult::cancelled;
                         }
                         continue;
@@ -1306,7 +1449,7 @@ public:
                 // the equipment layout. The actor is not cycled inside the
                 // subsequent slot list.
                 while (true) {
-                    auto actor_frame = scene_provider_();
+                    auto actor_frame = action_frame;
                     draw_rpg_party_target_cards(
                         actor_frame, menu_sprites_, state, party_count, actor);
                     platform_.present({
@@ -1333,7 +1476,7 @@ public:
                 if (inventory.character_restricted(definition, actor)) {
                     // 3f7f emits DATA:369a and returns before constructing
                     // the equipment screen for a forbidden identity.
-                    auto error_frame = scene_provider_();
+                    auto error_frame = action_frame;
                     draw_rpg_party_target_cards(
                         error_frame, menu_sprites_, state, party_count, actor);
                     if (!show_bottom_message(
@@ -1345,7 +1488,7 @@ public:
                 auto equipment_slot = initial_slot(definition.equipment_category());
                 bool back_to_inventory = false;
                 while (!back_to_inventory) {
-                    auto equipment_frame = scene_provider_();
+                    auto equipment_frame = action_frame;
                     // RPG.EXE:3fd9/46b1 uses a full 8x11 MENU selector panel.
                     draw_rpg_selector_panel(equipment_frame.pixels, 320, 200,
                                             menu_sprites_, 0, 0, 8, 11);
@@ -1495,6 +1638,343 @@ public:
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
 
 private:
+    void draw_alchemy_stats(Viewport& frame,
+                            const ItemDefinition& definition,
+                            std::span<const std::uint8_t> labels,
+                            int label_x_byte, int label_y,
+                            int left_x_byte, int right_x_byte,
+                            int value_y) const {
+        draw_legacy_text(frame, item_font_, labels,
+                         label_x_byte * 4, label_y,
+                         320 - label_x_byte * 4, 160, 15);
+        // 45bc writes level/life/strength/defense down the left column;
+        // 45d9 writes wisdom/magic/agility/dodge down the right.
+        static constexpr std::array<std::size_t, 4> left{0, 2, 4, 6};
+        static constexpr std::array<std::size_t, 4> right{1, 3, 5, 7};
+        for (std::size_t row = 0; row < 4U; ++row) {
+            draw_menu_number(frame, menu_sprites_,
+                             definition.alchemy_stats[left[row]],
+                             left_x_byte, value_y + static_cast<int>(row) * 16,
+                             111);
+            draw_menu_number(frame, menu_sprites_,
+                             definition.alchemy_stats[right[row]],
+                             right_x_byte, value_y + static_cast<int>(row) * 16,
+                             111);
+        }
+    }
+
+    Viewport item_description_frame(
+        const Viewport& source, const ItemDefinition& definition) const {
+        auto frame = source;
+        if (!definition.shows_effect_panel()) return frame;
+        // 3c90..3cd8: extended products display their eight ITEM values on a
+        // 5x4 compact card before 49d0 overlays the ITEM2 description.
+        draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
+                               24, 29, 5, 4);
+        draw_alchemy_stats(frame, definition, item_effect_labels_,
+                           30, 42, 42, 63, 45);
+        return frame;
+    }
+
+    Viewport alchemy_inventory_frame(
+        SharedState& state, const InventorySystem& inventory,
+        std::size_t selected, std::size_t first_visible,
+        RpgListSelection::ScrollCue scroll_cue) {
+        auto frame = scene_provider_();
+        draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                24, 36, 5, 8);
+        draw_rpg_selector_scrollbar(
+            frame.pixels, 320, 200, menu_sprites_,
+            24, 36, 5, 8, 42, first_visible, scroll_cue);
+        if (!menu_sprites_.sprites().empty()) {
+            const auto& preview = menu_sprites_.sprites()[0];
+            blit_opaque(frame, menu_sprites_.pixels(0),
+                        preview.width, preview.height, 58 * 4, 8);
+        }
+
+        const auto selected_item = inventory.item(selected);
+        if (selected_item < items_.size()) {
+            const auto& definition = items_.at(selected_item);
+            draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
+                                   2, 10, 4, 6);
+            auto found = item_preview_cache_.find(definition.preview_sprite);
+            if (found == item_preview_cache_.end()) {
+                const auto path = rpg_item_preview_path(
+                    game_root_, definition.preview_sprite);
+                if (std::filesystem::is_regular_file(path)) {
+                    auto preview_data = decode_rsk_block(read_file(path)).data;
+                    found = item_preview_cache_.emplace(
+                        definition.preview_sprite,
+                        SpriteArchive::parse(std::move(preview_data))).first;
+                }
+            }
+            if (found != item_preview_cache_.end() &&
+                !found->second.sprites().empty()) {
+                const auto& preview = found->second.sprites().front();
+                blit(frame, found->second.pixels(0), preview.width,
+                     preview.height,
+                     (4 + static_cast<int>(definition.preview_x)) * 4,
+                     18 + static_cast<int>(definition.preview_y));
+            }
+            const auto label = static_cast<std::size_t>(definition.type) * 4U;
+            if (selected_item != 0U &&
+                label + 4U <= inventory_category_labels_.size()) {
+                draw_legacy_text(
+                    frame, item_font_,
+                    inventory_category_labels_.subspan(label, 4),
+                    62 * 4, 17, 32, 16, 15);
+            }
+        }
+        for (std::size_t row = 0; row < 8U; ++row) {
+            const auto slot = first_visible + row;
+            if (slot >= inventory_slot_count) break;
+            const auto item_id = inventory.item(slot);
+            const auto top = 49 + static_cast<int>(row) * 16;
+            draw_item_text(frame, item_texts_, item_font_, item_id,
+                           128, top, 96, 15,
+                           static_cast<std::uint8_t>(item_id == 0U ? 8U : 15U));
+            if (item_id >= 0x44U && item_id <= 0x48U) {
+                draw_menu_number(
+                    frame, menu_sprites_,
+                    state.u16(0x3e6U + (item_id - 0x44U) * 2U),
+                    56, top + 3, 111);
+            }
+        }
+        if (menu_sprites_.sprites().size() > 1U) {
+            const auto& cursor = menu_sprites_.sprites()[1];
+            blit(frame, menu_sprites_.pixels(1), cursor.width, cursor.height,
+                 30 * 4,
+                 45 + static_cast<int>(selected - first_visible) * 16);
+        }
+        return frame;
+    }
+
+    std::optional<std::size_t> select_alchemy_ingredient(
+        SharedState& state, const InventorySystem& inventory,
+        std::uint16_t first_item) {
+        std::size_t selected = 0;
+        std::size_t first_visible = 0;
+        auto scroll_cue = RpgListSelection::ScrollCue::none;
+        while (true) {
+            auto frame = alchemy_inventory_frame(
+                state, inventory, selected, first_visible, scroll_cue);
+            scroll_cue = RpgListSelection::ScrollCue::none;
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return std::nullopt;
+            }
+            if (action == InputAction::cancel) return std::nullopt;
+            if (action != InputAction::confirm) {
+                const auto choice = rpg_list_selection_input(
+                    {selected, first_visible}, inventory_slot_count, 8, action);
+                selected = choice.selected;
+                first_visible = choice.first_visible;
+                scroll_cue = choice.scroll_cue;
+                continue;
+            }
+            const auto item = inventory.item(selected);
+            if (item == 0U || item >= items_.size()) continue;
+            if ((items_.at(item).flags & 0xc0U) == 0xc0U) {
+                if (!show_bottom_message(frame, item_alchemy_error_)) {
+                    return std::nullopt;
+                }
+                continue;
+            }
+            auto pair = frame;
+            draw_rpg_compact_panel(pair.pixels, 320, 200, menu_sprites_,
+                                   4, 112, 7, 4);
+            draw_item_text(pair, item_texts_, item_font_, first_item,
+                           8 * 4, 125, 112, 16, 15);
+            draw_item_text(pair, item_texts_, item_font_, item,
+                           40 * 4, 125, 112, 16, 15);
+            if (confirm_alchemy_product(pair)) return selected;
+            if (quit_requested_) return std::nullopt;
+            return std::nullopt;
+        }
+    }
+
+    Viewport alchemy_product_frame(std::uint16_t product) {
+        auto frame = scene_provider_();
+        draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                0, 0, 8, 11);
+        draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
+                               4, 12, 5, 4);
+        draw_item_text(frame, item_texts_, item_font_, product,
+                       6 * 4, 21, 144, 16, 15);
+        if (product < items_.size()) {
+            const auto& definition = items_.at(product);
+            auto found = item_preview_cache_.find(definition.preview_sprite);
+            if (found == item_preview_cache_.end()) {
+                const auto path = rpg_item_preview_path(
+                    game_root_, definition.preview_sprite);
+                if (std::filesystem::is_regular_file(path)) {
+                    auto preview_data = decode_rsk_block(read_file(path)).data;
+                    found = item_preview_cache_.emplace(
+                        definition.preview_sprite,
+                        SpriteArchive::parse(std::move(preview_data))).first;
+                }
+            }
+            if (found != item_preview_cache_.end() &&
+                !found->second.sprites().empty()) {
+                const auto& preview = found->second.sprites().front();
+                blit(frame, found->second.pixels(0), preview.width,
+                     preview.height, 30 * 4, 40);
+            }
+            draw_alchemy_stats(frame, definition,
+                               item_alchemy_result_labels_,
+                               8, 50, 20, 64, 53);
+        }
+        return frame;
+    }
+
+    bool confirm_alchemy_product(const Viewport& source) {
+        std::size_t choice = 0;
+        while (true) {
+            auto frame = source;
+            const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+                if (sprite >= menu_sprites_.sprites().size()) return;
+                const auto& info = menu_sprites_.sprites()[sprite];
+                blit_opaque(frame, menu_sprites_.pixels(sprite),
+                            info.width, info.height, x_byte * 4, y);
+            };
+            opaque(0, 23, 147);
+            opaque(0, 41, 147);
+            opaque(29, 29, 156);
+            opaque(8, 47, 156);
+            apply_rpg_binary_choice_highlight(
+                frame.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(frame.palette),
+                23, 41, 147, choice);
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::cancel) return false;
+            if (action == InputAction::left) choice = 0;
+            else if (action == InputAction::right) choice = 1;
+            else if (action == InputAction::confirm) return choice == 0U;
+        }
+    }
+
+    Viewport item_action_choice_frame(const Viewport& source,
+                                      bool equipment,
+                                      bool has_alchemy,
+                                      std::size_t selected) const {
+        auto frame = source;
+        const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+            if (sprite >= menu_sprites_.sprites().size()) return;
+            const auto& info = menu_sprites_.sprites()[sprite];
+            blit_opaque(frame, menu_sprites_.pixels(sprite),
+                        info.width, info.height, x_byte * 4, y);
+        };
+
+        // RPG:2d0f.  Index order follows DATA:35ca/35d2: left, right,
+        // upper, lower. All frames and glyphs use 653a's opaque copy path.
+        opaque(0, 12, 106);
+        opaque(0, 2, 138);
+        opaque(0, 22, 138);
+        if (equipment) {
+            opaque(66, 6, 147);   // 裝
+            opaque(67, 10, 147);  // 備
+        } else {
+            opaque(70, 6, 147);   // 使
+            opaque(27, 10, 147);  // 用
+        }
+        opaque(28, 26, 147);      // 說
+        opaque(9, 30, 147);       // 明
+        opaque(2, 16, 115);       // 丟
+        opaque(3, 20, 115);       // 棄
+        if (has_alchemy) {
+            opaque(0, 12, 170);
+            opaque(47, 14, 179);  // 煉妖壺
+            opaque(48, 18, 179);
+            opaque(49, 22, 179);
+        }
+
+        static constexpr std::array<std::pair<int, int>, 4> positions{{
+            {2, 138}, {22, 138}, {12, 106}, {12, 170},
+        }};
+        const auto count = has_alchemy ? std::size_t{4} : std::size_t{3};
+        selected = std::min(selected, count - 1U);
+        for (std::size_t choice = 0; choice < count; ++choice) {
+            if (choice == selected) continue;
+            apply_fig_palette_translation(
+                frame.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(frame.palette),
+                positions[choice].first, positions[choice].second,
+                0x10, 0x20, 3);
+        }
+        return frame;
+    }
+
+    std::optional<std::size_t> select_item_action(
+        const Viewport& source, bool equipment, bool has_alchemy,
+        std::size_t& selected) {
+        const auto count = has_alchemy ? std::size_t{4} : std::size_t{3};
+        if (selected >= count) selected = 0;
+        while (true) {
+            auto frame = item_action_choice_frame(
+                source, equipment, has_alchemy, selected);
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return std::nullopt;
+            }
+            if (action == InputAction::cancel) return std::nullopt;
+            if (action == InputAction::left) selected = 0;
+            else if (action == InputAction::right) selected = 1;
+            else if (action == InputAction::up) selected = 2;
+            else if (action == InputAction::down && has_alchemy) selected = 3;
+            else if (action == InputAction::confirm) return selected;
+        }
+    }
+
+    bool confirm_item_discard(const Viewport& source) {
+        std::size_t choice = 0;
+        while (true) {
+            auto frame = source;
+            draw_bottom_message(frame, item_discard_prompt_);
+            const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+                if (sprite >= menu_sprites_.sprites().size()) return;
+                const auto& info = menu_sprites_.sprites()[sprite];
+                blit_opaque(frame, menu_sprites_.pixels(sprite),
+                            info.width, info.height, x_byte * 4, y);
+            };
+            // 46cc: Yes/No cards inside 2cce's bottom panel.
+            opaque(0, 23, 147);
+            opaque(0, 41, 147);
+            opaque(29, 29, 156);
+            opaque(8, 47, 156);
+            apply_rpg_binary_choice_highlight(
+                frame.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(frame.palette),
+                23, 41, 147, choice);
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::cancel) return false;
+            if (action == InputAction::left) choice = 0;
+            else if (action == InputAction::right) choice = 1;
+            else if (action == InputAction::confirm) return choice == 0U;
+        }
+    }
+
     void draw_field_diamond(Viewport& frame, std::size_t selected,
                             bool draw_party_row) {
         draw_compact_money_overlay(
@@ -2580,6 +3060,14 @@ private:
     std::span<const std::uint8_t> shop_confirmation_prompt_;
     std::span<const std::uint8_t> shop_quantity_error_;
     std::span<const std::uint8_t> shop_unsellable_error_;
+    std::span<const std::uint8_t> item_discard_error_;
+    std::span<const std::uint8_t> item_discard_prompt_;
+    std::span<const std::uint8_t> item_alchemy_error_;
+    std::span<const std::uint8_t> item_alchemy_select_prompt_;
+    std::span<const std::uint8_t> item_alchemy_level_error_;
+    std::span<const std::uint8_t> item_alchemy_data_;
+    std::span<const std::uint8_t> item_effect_labels_;
+    std::span<const std::uint8_t> item_alchemy_result_labels_;
     std::span<const std::uint8_t> equipment_actor_error_;
     std::span<const std::uint8_t> equipment_two_hand_error_;
     std::span<const std::uint8_t> equipment_slot_error_;
@@ -2821,6 +3309,22 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3c80);
     const auto shop_unsellable_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3c0a);
+    const auto item_discard_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3686);
+    const auto item_alchemy_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x36b0);
+    const auto item_discard_prompt = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3754);
+    const auto item_alchemy_select_prompt = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x36c8);
+    const auto item_alchemy_level_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x36f8);
+    const auto item_alchemy_data = extract_rpg_embedded_data(
+        rpg_load_image, rpg_entry_offset, 0x2a42, 0x2f08U - 0x2a42U);
+    const auto item_effect_labels = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x399a);
+    const auto item_alchemy_result_labels = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3922);
     const auto equipment_actor_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x369a);
     const auto equipment_two_hand_error = extract_rpg_embedded_text(
@@ -2941,6 +3445,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           shop_sale_prompt, shop_money_error,
                           shop_inventory_error, shop_confirmation_prompt,
                           shop_quantity_error, shop_unsellable_error,
+                          item_discard_error, item_discard_prompt,
+                          item_alchemy_error, item_alchemy_select_prompt,
+                          item_alchemy_level_error, item_alchemy_data,
+                          item_effect_labels, item_alchemy_result_labels,
                           equipment_actor_error, equipment_two_hand_error,
                           equipment_slot_error, field_action_error,
                           ability_value_error, ability_material_error,
@@ -2982,6 +3490,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
                               shop_sale_prompt, shop_money_error,
                               shop_inventory_error, shop_confirmation_prompt,
                               shop_quantity_error, shop_unsellable_error,
+                              item_discard_error, item_discard_prompt,
+                              item_alchemy_error, item_alchemy_select_prompt,
+                              item_alchemy_level_error, item_alchemy_data,
+                              item_effect_labels, item_alchemy_result_labels,
                               equipment_actor_error, equipment_two_hand_error,
                               equipment_slot_error, field_action_error,
                               ability_value_error, ability_material_error,

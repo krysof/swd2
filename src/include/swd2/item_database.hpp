@@ -6,13 +6,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <optional>
 #include <span>
 #include <vector>
 
 namespace swd2 {
 
-// Common 34-byte prefix used by ITEM.EXE's inventory, ability and monster
-// records.  The inventory/equipment fields below are the ones accessed by
+// Common 36-byte record used by ITEM.EXE's ordinary inventory objects. The
+// inventory/equipment fields below are the ones accessed by
 // RPG.EXE:2f3d and 3f53; multi-byte fields at odd offsets are intentional.
 struct ItemDefinition {
     std::uint16_t id{};
@@ -32,6 +33,14 @@ struct ItemDefinition {
     std::array<std::uint8_t, 5> trait_levels{}; // +16,+17,+18,+1a,+1b
     std::int16_t preview_x{};             // +1d, Mode-X byte-column adjustment
     std::int16_t preview_y{};             // +1f, scanline adjustment
+    std::uint8_t alchemy_class{};          // +22, even matrix coordinate 0..20h
+    std::uint8_t alchemy_rank{};           // +23, product threshold input
+    // Alchemy products use ITEM's extended 80-byte record. RPG:4571 compares
+    // the word at +34 against the first actor's level plus five.
+    std::uint16_t alchemy_required_level{}; // +34, zero on short input records
+    // Display order used by DATA:399a/3922: level, wisdom, life, magic,
+    // strength, agility, defense, dodge.
+    std::array<std::uint16_t, 8> alchemy_stats{};
 
     [[nodiscard]] std::uint8_t equipment_category() const noexcept {
         return static_cast<std::uint8_t>(flags & 0x0fU);
@@ -48,6 +57,18 @@ struct ItemDefinition {
     static ItemDefinition parse(std::uint16_t id,
                                 std::span<const std::uint8_t> record);
 };
+
+class ItemDatabase;
+
+// RPG.EXE DATA:2a42 begins with a 17x17 word matrix. The source records store
+// even byte coordinates, so the original address expression is class_a +
+// class_b*11h (not a conventional row*17+column word index). Each matrix
+// entry points at result/maximum-rank word pairs in the same data slice.
+[[nodiscard]] std::optional<std::uint16_t> resolve_item_alchemy_product(
+    const ItemDatabase& items,
+    std::span<const std::uint8_t> alchemy_data,
+    std::uint16_t first_item,
+    std::uint16_t second_item);
 
 class ItemDatabase {
 public:

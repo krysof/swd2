@@ -38,7 +38,60 @@ ItemDefinition ItemDefinition::parse(std::uint16_t id,
     }
     result.preview_x = static_cast<std::int16_t>(word_or_zero(record, 0x1d));
     result.preview_y = static_cast<std::int16_t>(word_or_zero(record, 0x1f));
+    result.alchemy_class = byte_or_zero(record, 0x22);
+    result.alchemy_rank = byte_or_zero(record, 0x23);
+    result.alchemy_required_level = word_or_zero(record, 0x34);
+    constexpr std::array<std::size_t, 8> alchemy_stat_offsets{
+        0x34, 0x3c, 0x2c, 0x44, 0x38, 0x40, 0x4e, 0x4c};
+    for (std::size_t i = 0; i < alchemy_stat_offsets.size(); ++i) {
+        result.alchemy_stats[i] = word_or_zero(record, alchemy_stat_offsets[i]);
+    }
     return result;
+}
+
+std::optional<std::uint16_t> resolve_item_alchemy_product(
+    const ItemDatabase& items,
+    std::span<const std::uint8_t> alchemy_data,
+    std::uint16_t first_item,
+    std::uint16_t second_item) {
+    if (first_item == 0U || second_item == 0U ||
+        first_item >= items.size() || second_item >= items.size()) {
+        return std::nullopt;
+    }
+    const auto& first = items.at(first_item);
+    const auto& second = items.at(second_item);
+    const auto matrix_offset = static_cast<std::size_t>(first.alchemy_class) +
+                               static_cast<std::size_t>(second.alchemy_class) * 0x11U;
+    if (matrix_offset + 2U > alchemy_data.size()) return std::nullopt;
+    const auto word = [&](std::size_t offset) -> std::optional<std::uint16_t> {
+        if (offset + 2U > alchemy_data.size()) return std::nullopt;
+        return static_cast<std::uint16_t>(alchemy_data[offset]) |
+               (static_cast<std::uint16_t>(alchemy_data[offset + 1U]) << 8U);
+    };
+    const auto table_address = word(matrix_offset);
+    if (!table_address || *table_address < 0x2a42U) return std::nullopt;
+    const auto table_offset = static_cast<std::size_t>(*table_address - 0x2a42U);
+    const auto average_rank = static_cast<std::uint16_t>(
+        (static_cast<unsigned>(first.alchemy_rank) + second.alchemy_rank) / 2U);
+
+    // 4477 restarts at the first result when it encounters the ffff
+    // threshold. Shipped tables are ordered, but retaining that fallback is
+    // required for the special DATA:2f00 catch-all pair.
+    const auto first_result = word(table_offset);
+    if (!first_result || *first_result == 0xffffU) return std::nullopt;
+    for (auto offset = table_offset; offset + 4U <= alchemy_data.size();
+         offset += 4U) {
+        const auto result = word(offset);
+        const auto threshold = word(offset + 2U);
+        if (!result || !threshold) return std::nullopt;
+        if (*threshold == 0xffffU) return *first_result;
+        if (average_rank <= *threshold) {
+            return *result == 0xffffU
+                       ? std::optional<std::uint16_t>{}
+                       : std::optional<std::uint16_t>{*result};
+        }
+    }
+    return std::nullopt;
 }
 
 ItemDatabase ItemDatabase::load(const std::filesystem::path& item_executable) {

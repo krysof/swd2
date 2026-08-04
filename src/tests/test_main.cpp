@@ -238,6 +238,18 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
         image, entry, 0x3c80);
     const auto shop_unsellable_error = swd2::extract_rpg_embedded_text(
         image, entry, 0x3c0a);
+    const auto item_discard_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3686);
+    const auto item_alchemy_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x36b0);
+    const auto item_discard_prompt = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3754);
+    const auto item_alchemy_select_prompt = swd2::extract_rpg_embedded_text(
+        image, entry, 0x36c8);
+    const auto item_alchemy_level_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x36f8);
+    const auto item_alchemy_data = swd2::extract_rpg_embedded_data(
+        image, entry, 0x2a42, 0x2f08U - 0x2a42U);
     require(shop_sale_prompt == std::vector<std::uint8_t>({
                 0xb3, 0x6f, 0xbc, 0xcb, 0xaa, 0xab, 0xab, 0x7e, 0xa7,
                 0xda, 0xa5, 0x58, 0xbb, 0xf9, 0xbb, 0xc8, 0xa8, 0xe2}) &&
@@ -255,8 +267,40 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 shop_quantity_error.back() == 0x49U &&
                 shop_unsellable_error == std::vector<std::uint8_t>({
                     0xb3, 0x6f, 0xbc, 0xcb, 0xaa, 0xab, 0xab, 0x7e, 0xa7,
-                    0xda, 0xa4, 0xa3, 0xa6, 0xac, 0xc1, 0xca, 0xa1, 0x49}),
-            "RPG shop confirmation/error Big5 streams were not recovered exactly");
+                    0xda, 0xa4, 0xa3, 0xa6, 0xac, 0xc1, 0xca, 0xa1, 0x49}) &&
+                item_discard_error == std::vector<std::uint8_t>({
+                    0xb3, 0x6f, 0xbc, 0xcb, 0xaa, 0xab, 0xab, 0x7e, 0xa4,
+                    0xa3, 0xaf, 0xe0, 0xa5, 0xe1, 0xb1, 0xf3, 0xa1, 0x49}) &&
+                item_alchemy_error == std::vector<std::uint8_t>({
+                    0xb3, 0x6f, 0xaa, 0xab, 0xab, 0x7e, 0xb5, 0x4c, 0xaa,
+                    0x6b, 0xa9, 0xf1, 0xa4, 0x4a, 0xb7, 0xd2, 0xa7, 0xaf,
+                    0xb3, 0xfd, 0xa1, 0x49}) &&
+                item_discard_prompt == std::vector<std::uint8_t>({
+                    0xbd, 0x54, 0xa9, 0x77, 0xad, 0x6e,
+                    0xa5, 0xe1, 0xb1, 0xf3, 0xa1, 0x48}) &&
+                item_alchemy_select_prompt == std::vector<std::uint8_t>({
+                    0xbd, 0xd0, 0xa6, 0x41, 0xbf, 0xef, 0xa4, 0x40, 0xbc,
+                    0xcb, 0xa9, 0xf1, 0xa4, 0x4a, 0xb7, 0xd2, 0xa7, 0xaf,
+                    0xb3, 0xfd, 0xa1, 0x49}) &&
+                item_alchemy_level_error == std::vector<std::uint8_t>({
+                    0xb5, 0xa5, 0xaf, 0xc5, 0xa4, 0xa3, 0xa8, 0xac, 0xa1,
+                    0x49, 0xb5, 0x4c, 0xaa, 0x6b, 0xb7, 0xd2, 0xa6, 0xa8,
+                    0xa1, 0x49}) &&
+                item_alchemy_data.size() == 0x4c6U &&
+                item_alchemy_data[0] == 0x00U &&
+                item_alchemy_data[1] == 0x2fU &&
+                item_alchemy_data[0x4beU] == 0xcaU &&
+                item_alchemy_data[0x4bfU] == 0x01U,
+            "RPG shop/item confirmation Big5 streams were not recovered exactly");
+
+    const auto item_definitions = swd2::ItemDatabase::load(
+        game_root / "ITEM.EXE");
+    require(item_definitions.at(98).alchemy_class == 0x20U &&
+                item_definitions.at(98).alchemy_rank == 40U &&
+                swd2::resolve_item_alchemy_product(
+                    item_definitions, item_alchemy_data, 98, 99) == 458U &&
+                item_definitions.at(458).alchemy_required_level == 1U,
+            "RPG 4397 alchemy matrix/rank resolver changed");
     // RPG:49d0 skips the wait cursor only when DATA:359b is one.  Otherwise it
     // starts at MENU frame 95h (149), advances through 98h (152), and wraps
     // before 99h.  Keep the machine-code anchors beside the recovered strings
@@ -4525,6 +4569,129 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
             "RPG field-menu page selection/return frames were not stable");
 }
 
+void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
+    // RPG:39ed must copy the completed inventory page before 2d0f adds the
+    // directional Use/Explain/Discard cards. Exercise ITEM2 explanation and
+    // return through that action page without mutating the selected object.
+    ScriptedPlatform explain_platform;
+    explain_platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // physical slot zero
+        swd2::InputAction::right,    // Explain
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // acknowledge ITEM2 text
+        swd2::InputAction::cancel,   // action page -> inventory
+        swd2::InputAction::cancel,   // inventory -> diamond
+        swd2::InputAction::cancel,   // diamond -> map
+        swd2::InputAction::quit,
+    };
+    auto explain_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    explain_state.set_u16(0x382, 98);  // 人髮: descriptive and discardable
+    swd2::GameContext explain_context{
+        game_root, explain_state, explain_platform};
+    require(swd2::RpgModule().run(
+                explain_context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                explain_platform.cursor == explain_platform.actions.size() &&
+                explain_context.shared_state.u16(0x382) == 98,
+            "RPG item Explain action did not preserve/return to 2d0f");
+    require(explain_platform.frame_hashes.size() >= 11U &&
+                explain_platform.frame_hashes[4] !=
+                    explain_platform.frame_hashes[3] &&
+                explain_platform.frame_hashes[6] !=
+                    explain_platform.frame_hashes[5],
+            "RPG item action/ITEM2 message pages were not composed");
+
+    // The upper 2d0f card is Discard.  DATA:3754 is followed by 46cc's
+    // default-Yes selector; confirming clears the physical word and invokes
+    // the original stable 3ced compaction before reconstructing 39ed.
+    ScriptedPlatform discard_platform;
+    discard_platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::up,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // Yes
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto discard_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    discard_state.set_u16(0x382, 98);
+    discard_state.set_u16(0x384, 99);
+    swd2::GameContext discard_context{
+        game_root, discard_state, discard_platform};
+    require(swd2::RpgModule().run(
+                discard_context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                discard_platform.cursor == discard_platform.actions.size() &&
+                discard_context.shared_state.u16(0x382) == 99 &&
+                discard_context.shared_state.u16(0x384) == 0,
+            "RPG item Discard action did not clear/compact the selected slot");
+
+    ScriptedPlatform use_platform;
+    use_platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // Use
+        swd2::InputAction::confirm,  // first actor target
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto use_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    use_state.set_u16(0x382, 76);  // 絞心丸, effect 16h
+    use_state.set_u16(0x106 + 8, 0);
+    use_state.set_u16(0x106 + 0x35, 0);
+    use_state.set_u16(0x106 + 0x37, 100);
+    swd2::GameContext use_context{game_root, use_state, use_platform};
+    require(swd2::RpgModule().run(
+                use_context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                use_platform.cursor == use_platform.actions.size() &&
+                use_context.shared_state.u16(0x382) == 0U &&
+                use_context.shared_state.u16(0x106 + 0x35) == 50U,
+            "RPG item Use action did not target/apply/consume from 2d0f");
+}
+
+void test_rpg_inventory_alchemy(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // first ingredient, slot zero
+        swd2::InputAction::down,     // 煉妖壺 bottom card
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // acknowledge DATA:36c8
+        swd2::InputAction::down,     // temporary hole -> second ingredient
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // combine pair: Yes
+        swd2::InputAction::confirm,  // accept resulting product: Yes
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u8(0x3f1, 0);  // enable 2d0f's fourth action card
+    state.set_u16(0x382, 98);
+    state.set_u16(0x384, 99);
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                platform.cursor == platform.actions.size() &&
+                context.shared_state.u16(0x382) == 458U &&
+                context.shared_state.u16(0x384) == 0U,
+            "RPG 4397 alchemy flow did not consume two items/create product");
+    require(platform.presented >= platform.actions.size() &&
+                std::set<std::uint64_t>(platform.frame_hashes.begin(),
+                                        platform.frame_hashes.end()).size() >= 8U,
+            "RPG alchemy ingredient/result pages were not presented");
+}
+
 void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
@@ -5910,6 +6077,8 @@ int main(int argc, char** argv) {
         test_monolithic_runtime(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
         test_rpg_field_menu_inventory(argv[1]);
+        test_rpg_inventory_item_actions(argv[1]);
+        test_rpg_inventory_alchemy(argv[1]);
         test_rpg_field_status_menu(argv[1]);
         test_rpg_field_magic_menu(argv[1]);
         test_rpg_field_magic_cast(argv[1]);
