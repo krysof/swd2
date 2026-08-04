@@ -6447,6 +6447,18 @@ void test_demo_module(const std::filesystem::path& game_root) {
                 full_platform.music_calls == 1 && full_platform.stop_calls == 1 &&
                 full_platform.cursor == full_platform.presented,
             "DEMO full 960-frame timeline/epilogue did not start SWORD.RIX exactly once");
+
+    ScriptedPlatform muted_platform;
+    muted_platform.actions.assign(201, swd2::InputAction::none);
+    muted_platform.actions.push_back(swd2::InputAction::confirm);
+    auto muted_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    muted_state.set_u8(0x3f4, 1U);
+    swd2::GameContext muted_context{game_root, muted_state, muted_platform};
+    require(swd2::DemoModule().run(
+                muted_context, swd2::Marker::open_demo) == swd2::Marker::none &&
+                muted_platform.presented == 202U &&
+                muted_platform.music_calls == 0U,
+            "merged DEMO ignored the shared saved music-disable byte");
 }
 
 void test_demo_timeline(const std::filesystem::path& game_root) {

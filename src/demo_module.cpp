@@ -131,7 +131,9 @@ Marker DemoModule::run(GameContext& context, Marker) {
     while (continue_demo) {
         auto state = timeline.next();
         if (!state) break;
-        if (state->start_music) context.platform.play_music(music, false);
+        if (state->start_music && context.shared_state.u8(0x3f4) == 0U) {
+            context.platform.play_music(music, false);
+        }
 
         DemoSurface frame;
         // 0a5c deliberately installs the palette belonging to SWORD5 after
