@@ -516,6 +516,7 @@ public:
                  std::span<const std::uint8_t> equipment_actor_error,
                  std::span<const std::uint8_t> equipment_two_hand_error,
                  std::span<const std::uint8_t> equipment_slot_error,
+                 std::span<const std::uint8_t> field_action_error,
                  std::span<const std::uint8_t> inventory_category_labels,
                  std::span<const std::uint8_t> equipment_slot_labels,
                  std::span<const std::uint8_t> equipment_stat_labels,
@@ -537,6 +538,7 @@ public:
           equipment_actor_error_(equipment_actor_error),
           equipment_two_hand_error_(equipment_two_hand_error),
           equipment_slot_error_(equipment_slot_error),
+          field_action_error_(field_action_error),
           inventory_category_labels_(inventory_category_labels),
           equipment_slot_labels_(equipment_slot_labels),
           equipment_stat_labels_(equipment_stat_labels),
@@ -970,7 +972,14 @@ public:
 
                 const auto& definition = items_.at(selected_item);
                 if (definition.equipment_category() == 0) {
-                    if (!definition.field_usable()) continue;
+                    if (!definition.field_usable()) {
+                        // 3b30 enters 4aec with DATA:3620 when ITEM +05 bit
+                        // zero is clear; the selection remains in the bag.
+                        if (!show_bottom_message(frame, field_action_error_)) {
+                            return InventoryUiResult::cancelled;
+                        }
+                        continue;
+                    }
 
                     if (definition.effect_code == 0x6a) {
                         if (map_database_ == nullptr || save_slot_ == nullptr ||
@@ -1087,7 +1096,14 @@ public:
                     }
 
                     const auto field_result = field_actions.apply(definition.effect_code, actor);
-                    if (!field_result.dispatched()) continue;
+                    if (!field_result.dispatched()) {
+                        // Travel selectors 28h/29h branch here when the map's
+                        // 4000h/8000h permission bit rejects the action.
+                        if (!show_bottom_message(frame, field_action_error_)) {
+                            return InventoryUiResult::cancelled;
+                        }
+                        continue;
+                    }
 
                     std::optional<std::uint8_t> travel_index;
                     if (field_result.status == FieldActionStatus::travel_current) {
@@ -1531,6 +1547,7 @@ private:
     std::span<const std::uint8_t> equipment_actor_error_;
     std::span<const std::uint8_t> equipment_two_hand_error_;
     std::span<const std::uint8_t> equipment_slot_error_;
+    std::span<const std::uint8_t> field_action_error_;
     std::span<const std::uint8_t> inventory_category_labels_;
     std::span<const std::uint8_t> equipment_slot_labels_;
     std::span<const std::uint8_t> equipment_stat_labels_;
@@ -1758,6 +1775,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x370e);
     const auto equipment_slot_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3728);
+    const auto field_action_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3620);
     // RPG.EXE:3d7e indexes forty-two fixed two-glyph type names. Equipment
     // uses one eleven-line label string and four consecutive $$-terminated
     // statistic labels rather than host-language UI text.
@@ -1848,7 +1867,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           shop_inventory_error, shop_confirmation_prompt,
                           shop_quantity_error,
                           equipment_actor_error, equipment_two_hand_error,
-                          equipment_slot_error,
+                          equipment_slot_error, field_action_error,
                           inventory_category_labels, equipment_slot_labels,
                           equipment_stat_labels,
                           compose_scene,

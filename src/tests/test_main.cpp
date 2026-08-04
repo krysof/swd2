@@ -258,6 +258,8 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
         image, entry, 0x370e);
     const auto equipment_slot_error = swd2::extract_rpg_embedded_text(
         image, entry, 0x3728);
+    const auto field_action_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3620);
     require(equipment_actor_error == std::vector<std::uint8_t>({
                 0xa6, 0xb9, 0xa4, 0x48, 0xb5, 0x4c, 0xaa, 0x6b, 0xa8, 0xcf,
                 0xa5, 0xce, 0xb3, 0x6f, 0xb8, 0xcb, 0xb3, 0xc6, 0xa1, 0x49}) &&
@@ -266,7 +268,10 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 equipment_two_hand_error.back() == 0x49U &&
                 equipment_slot_error == std::vector<std::uint8_t>({
                     0xb5, 0x4c, 0xaa, 0x6b, 0xb8, 0xcb, 0xb3, 0xc6, 0xa6,
-                    0x62, 0xb3, 0x6f, 0xb3, 0xa1, 0xa6, 0xec, 0xa1, 0x43}),
+                    0x62, 0xb3, 0x6f, 0xb3, 0xa1, 0xa6, 0xec, 0xa1, 0x43}) &&
+                field_action_error == std::vector<std::uint8_t>({
+                    0xa6, 0x62, 0xa6, 0xb9, 0xb5, 0x4c, 0xaa,
+                    0x6b, 0xa8, 0xcf, 0xa5, 0xce, 0xa1, 0x49}),
             "RPG equipment restriction/conflict Big5 streams were not exact");
     const auto category_labels = swd2::extract_rpg_embedded_data(
         image, entry, 0x299a, 42U * 4U);
@@ -539,6 +544,13 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 image[0x4240U] == 0x37U && image[0x4241U] == 0x56U &&
                 image[0x4242U] == 0xe8U,
             "RPG 3f95/4239 equipment feedback branches changed");
+    require(image[0x3b30U] == 0xa8U && image[0x3b31U] == 0x01U &&
+                image[0x3b34U] == 0xbeU && image[0x3b35U] == 0x20U &&
+                image[0x3b36U] == 0x36U && image[0x3b37U] == 0xe8U &&
+                image[0x3b93U] == 0x3dU && image[0x3b94U] == 0x28U &&
+                image[0x3b98U] == 0xf7U && image[0x3b9dU] == 0x40U &&
+                image[0x3bacU] == 0x3dU && image[0x3badU] == 0x29U,
+            "RPG 3b30/3b93 field-item unavailable feedback path changed");
 }
 
 void test_resource_decoder(const std::filesystem::path& game_root) {
