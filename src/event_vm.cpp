@@ -441,7 +441,18 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 }
                 break;
             case 39:
-                if (area) area->entity_fields[0][entity_index(*area, arg(0))] = arg(1);
+                if (area) {
+                    area->entity_fields[0][entity_index(*area, arg(0))] = arg(1);
+                }
+                // RPG 5ac7 rebuilds the off-screen map, waits the event frame
+                // interval and flips pages after changing the entity sprite.
+                // This is what makes the many 39/8 story sequences animate;
+                // it is not merely a state mutation awaiting a later opcode22.
+                if (!host.present_event_command(command.opcode,
+                                                command.arguments)) {
+                    result.status = EventVmStatus::unsupported_opcode;
+                    return result;
+                }
                 break;
             case 40: {
                 // Conditional inventory replacement.  RPG.EXE searches fifty

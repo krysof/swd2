@@ -4905,6 +4905,24 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                 host.presentations - before_presentations == 10,
             "event presentation and scripted movement opcodes did not execute");
 
+    const std::vector<std::vector<std::uint8_t>> entity_frame_records = {
+        event_words({39, 0, 7, 0xffff}),
+    };
+    const auto entity_frame_archive =
+        swd2::ScriptArchive::from_records(entity_frame_records);
+    swd2::MapAreaRecord entity_frame_area;
+    for (auto& field : entity_frame_area.entity_fields) field.resize(1);
+    auto entity_frame_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto before_entity_frames = host.presentations;
+    const auto entity_frame = swd2::execute_event(
+        entity_frame_archive, 2, entity_frame_state,
+        &entity_frame_area, 0, host);
+    require(entity_frame.status == swd2::EventVmStatus::completed &&
+                entity_frame_area.entity_fields[0][0] == 7 &&
+                host.presentations == before_entity_frames + 1U,
+            "event opcode 39 did not present its rebuilt entity frame");
+
     const std::vector<std::vector<std::uint8_t>> byte_slot_records = {
         event_words({54, 0x20, 0x1234, 0xffff}),
     };

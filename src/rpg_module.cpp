@@ -749,6 +749,7 @@ public:
         case 32:
         case 33:
         case 36:
+        case 39:
             present_timed(event_scene());
             return true;
         case 29:
