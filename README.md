@@ -18,7 +18,8 @@ python3 -m http.server 8000 --directory build-wasm/site
 
 然后访问 <http://localhost:8000/>。浏览器产物为 `index.html`、`index.js`、
 `index.wasm` 与 `index.data`，资源使用相对 URL，既可部署在域名根目录，也可部署到
-GitHub Pages 的 `/swd2/` 子路径。存档挂载在 IDBFS 中，保留于当前浏览器。
+GitHub Pages 的 `/swd2/` 子路径。存档挂载在 IDBFS 中，保留于当前浏览器；系统菜单
+每次写入后会立即执行异步 `FS.syncfs(false)`，不必等到游戏进程退出才落盘。
 
 只发布生成后的静态站点、不推送源码：
 

@@ -249,6 +249,10 @@ void play_monolithic(const std::filesystem::path& game_root,
         [&save_root](std::uint8_t selected, const swd2::SharedState& state,
                      const swd2::MapDatabase& map) {
             swd2::SaveSlot::save_as(save_root, selected, state, map);
+            // Native renames are durable on return. In a browser /saves is
+            // IDBFS, so every explicit system-menu save must also flush the
+            // in-memory filesystem instead of waiting for the game to exit.
+            persist_browser_saves();
         },
         [&slot, &game_root, &save_root](std::uint8_t selected) {
             slot = swd2::SaveSlot::open(game_root, save_root, selected);
