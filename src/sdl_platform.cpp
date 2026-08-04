@@ -37,6 +37,10 @@ InputAction translate_event(const SDL_Event& event) {
         case SDLK_DOWN: return InputAction::down;
         case SDLK_LEFT: return InputAction::left;
         case SDLK_RIGHT: return InputAction::right;
+        case SDLK_PAGEUP: return InputAction::page_up;
+        case SDLK_PAGEDOWN: return InputAction::page_down;
+        case SDLK_HOME: return InputAction::home;
+        case SDLK_END: return InputAction::end;
         case SDLK_RETURN:
         case SDLK_KP_ENTER:
         case SDLK_SPACE:
@@ -52,6 +56,10 @@ InputAction translate_event(const SDL_Event& event) {
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN: return InputAction::down;
         case SDL_CONTROLLER_BUTTON_DPAD_LEFT: return InputAction::left;
         case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: return InputAction::right;
+        case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: return InputAction::page_up;
+        case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: return InputAction::page_down;
+        case SDL_CONTROLLER_BUTTON_X: return InputAction::home;
+        case SDL_CONTROLLER_BUTTON_Y: return InputAction::end;
         case SDL_CONTROLLER_BUTTON_A: return InputAction::confirm;
         case SDL_CONTROLLER_BUTTON_B: return InputAction::cancel;
         default: break;

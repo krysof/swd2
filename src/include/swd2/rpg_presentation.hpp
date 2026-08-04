@@ -97,6 +97,30 @@ private:
     std::uint8_t confirmation_choice_{};
 };
 
+struct RpgListSelection {
+    std::size_t selected{};
+    std::size_t first_visible{};
+    enum class ScrollCue { none, toward_start, toward_end } scroll_cue{};
+};
+
+// Exact viewport/row behavior of RPG.EXE:298d. Up/Down move the cursor until
+// an edge and then scroll one entry. PgUp/PgDn/Home/End change only the first
+// visible entry, retaining the cursor's row within the panel.
+[[nodiscard]] RpgListSelection rpg_list_selection_input(
+    RpgListSelection selection, std::size_t item_count,
+    std::size_t visible_rows, InputAction action) noexcept;
+
+// RPG.EXE:2907 scrollbar. Frames 94/95 and 97/98 are the normal/pressed
+// endpoint pairs, frame 96 is the repeated track, and frame 99 is positioned
+// proportionally from top+20 (not on top of the upper endpoint).
+void draw_rpg_selector_scrollbar(
+    std::span<std::uint8_t> surface,
+    std::size_t width, std::size_t height,
+    const SpriteArchive& menu_sprites,
+    int left, int top, int columns, std::size_t rows,
+    std::size_t maximum_first, std::size_t first,
+    RpgListSelection::ScrollCue cue = RpgListSelection::ScrollCue::none);
+
 // RPG.EXE:2fa5 maps the four direction keys directly to the four portrait
 // positions rather than cycling a cursor: Left/Right/Up/Down => actor 0/1/2/3.
 // A direction whose actor is absent is masked and produces no selection.

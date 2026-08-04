@@ -258,6 +258,56 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
             "RPG generic selector panel did not use exact MENU frame geometry");
 
     std::fill(surface.begin(), surface.end(), 0x55);
+    swd2::draw_rpg_selector_scrollbar(
+        surface, 320, 200, menu, 24, 36, 5, 8, 42, 0);
+    const auto thumb = menu.pixels(99);
+    const auto thumb_opaque = std::find_if(
+        thumb.begin(), thumb.end(),
+        [](std::uint8_t value) { return value != 0xfeU; });
+    const auto& thumb_info = menu.sprites()[99];
+    const auto thumb_offset = static_cast<std::size_t>(
+        thumb_opaque - thumb.begin());
+    const auto thumb_row = thumb_offset / thumb_info.width;
+    const auto thumb_column = thumb_offset % thumb_info.width;
+    require(thumb_opaque != thumb.end() &&
+                surface[(56U + thumb_row) * 320U + 300U + thumb_column] ==
+                    *thumb_opaque,
+            "RPG 2907 scrollbar thumb was not based at panel top+20");
+
+    const auto differing_pixel = [&](std::size_t pressed,
+                                     std::size_t normal) {
+        const auto pressed_pixels = menu.pixels(pressed);
+        const auto normal_pixels = menu.pixels(normal);
+        auto offset = std::size_t{0};
+        while (offset < pressed_pixels.size() &&
+               (pressed_pixels[offset] == 0xfeU ||
+                pressed_pixels[offset] == normal_pixels[offset])) {
+            ++offset;
+        }
+        require(offset < pressed_pixels.size(),
+                "RPG scrollbar endpoint frames have no visible pressed delta");
+        return offset;
+    };
+    const auto top_delta = differing_pixel(95, 94);
+    std::fill(surface.begin(), surface.end(), 0x55);
+    swd2::draw_rpg_selector_scrollbar(
+        surface, 320, 200, menu, 24, 36, 5, 8, 42, 0,
+        swd2::RpgListSelection::ScrollCue::toward_start);
+    require(surface[(40U + top_delta / menu.sprites()[95].width) * 320U +
+                    296U + top_delta % menu.sprites()[95].width] ==
+                menu.pixels(95)[top_delta],
+            "RPG 2907 did not show MENU 95 for an upward scroll input");
+    const auto bottom_delta = differing_pixel(98, 97);
+    std::fill(surface.begin(), surface.end(), 0x55);
+    swd2::draw_rpg_selector_scrollbar(
+        surface, 320, 200, menu, 24, 36, 5, 8, 42, 42,
+        swd2::RpgListSelection::ScrollCue::toward_end);
+    require(surface[(168U + bottom_delta / menu.sprites()[98].width) * 320U +
+                    296U + bottom_delta % menu.sprites()[98].width] ==
+                menu.pixels(98)[bottom_delta],
+            "RPG 2907 did not show MENU 98 for a downward scroll input");
+
+    std::fill(surface.begin(), surface.end(), 0x55);
     swd2::draw_rpg_compact_panel(surface, 320, 200, menu, 4, 0, 2, 1);
     require(surface[16] == menu.pixels(80)[0] &&
                 surface[40] == menu.pixels(81)[0] &&
@@ -299,6 +349,45 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
     require(escape_selector.input(swd2::InputAction::cancel) ==
                 swd2::RpgSaveSelectorResult::cancelled,
             "RPG top-level save selector Escape should cancel");
+
+    auto list_selection = swd2::rpg_list_selection_input(
+        {}, 50, 8, swd2::InputAction::end);
+    require(list_selection.selected == 42U &&
+                list_selection.first_visible == 42U &&
+                list_selection.scroll_cue ==
+                    swd2::RpgListSelection::ScrollCue::toward_end,
+            "RPG End key did not retain row zero on the final list page");
+    list_selection = swd2::rpg_list_selection_input(
+        list_selection, 50, 8, swd2::InputAction::up);
+    list_selection = swd2::rpg_list_selection_input(
+        list_selection, 50, 8, swd2::InputAction::down);
+    list_selection = swd2::rpg_list_selection_input(
+        list_selection, 50, 8, swd2::InputAction::home);
+    require(list_selection.selected == 1U &&
+                list_selection.first_visible == 0U,
+            "RPG Home key changed the selector's row within its panel");
+    list_selection = swd2::rpg_list_selection_input(
+        list_selection, 50, 8, swd2::InputAction::page_down);
+    list_selection = swd2::rpg_list_selection_input(
+        list_selection, 50, 8, swd2::InputAction::page_down);
+    require(list_selection.selected == 17U &&
+                list_selection.first_visible == 16U,
+            "RPG PgDn did not advance one viewport while retaining its row");
+    list_selection = swd2::rpg_list_selection_input(
+        list_selection, 50, 8, swd2::InputAction::end);
+    list_selection = swd2::rpg_list_selection_input(
+        list_selection, 50, 8, swd2::InputAction::page_up);
+    require(list_selection.selected == 35U &&
+                list_selection.first_visible == 34U &&
+                list_selection.scroll_cue ==
+                    swd2::RpgListSelection::ScrollCue::toward_start,
+            "RPG PgUp/final partial-page behavior differs from 298d");
+    const auto edge_scroll = swd2::rpg_list_selection_input(
+        {7, 0}, 50, 8, swd2::InputAction::down);
+    require(edge_scroll.selected == 8U && edge_scroll.first_visible == 1U &&
+                edge_scroll.scroll_cue ==
+                    swd2::RpgListSelection::ScrollCue::toward_end,
+            "RPG Down key did not scroll while retaining the bottom row");
 
     require(swd2::rpg_party_target_for_direction(
                 swd2::InputAction::left, 4) == 0 &&
@@ -370,6 +459,23 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 image[0x25e0U] == 0xe8U &&
                 image[0x25edU] == 0xc7U && image[0x25f2U] == 0x00U,
             "RPG 24b8 death/low-health/status overlay path changed");
+    const std::array<std::pair<std::size_t, std::array<std::uint8_t, 5>>, 5>
+        list_input_branches{{
+            {0x29ccU, {0x80, 0x3e, 0x45, 0x69, 0x01}},
+            {0x2a3dU, {0x80, 0x3e, 0x46, 0x69, 0x01}},
+            {0x2a64U, {0x80, 0x3e, 0x3e, 0x69, 0x01}},
+            {0x2a89U, {0x80, 0x3e, 0x3c, 0x69, 0x01}},
+            {0x2aa4U, {0x80, 0x3e, 0x44, 0x69, 0x01}},
+        }};
+    require(image.size() > 0x2aa9U &&
+                std::all_of(
+                    list_input_branches.begin(), list_input_branches.end(),
+                    [&](const auto& branch) {
+                        return std::equal(branch.second.begin(),
+                                          branch.second.end(),
+                                          image.begin() + branch.first);
+                    }),
+            "RPG 298d Down/PgDn/PgUp/Home/End input branches changed");
 }
 
 void test_resource_decoder(const std::filesystem::path& game_root) {

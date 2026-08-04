@@ -313,6 +313,127 @@ RpgSaveSelectorResult RpgSaveSlotSelector::input(InputAction action) noexcept {
     }
 }
 
+RpgListSelection rpg_list_selection_input(
+    RpgListSelection selection, std::size_t item_count,
+    std::size_t visible_rows, InputAction action) noexcept {
+    if (item_count == 0 || visible_rows == 0) return {};
+    selection.scroll_cue = RpgListSelection::ScrollCue::none;
+    visible_rows = std::min(visible_rows, item_count);
+    const auto maximum_first = item_count - visible_rows;
+    selection.first_visible = std::min(selection.first_visible, maximum_first);
+    selection.selected = std::clamp(
+        selection.selected, selection.first_visible,
+        std::min(item_count - 1U,
+                 selection.first_visible + visible_rows - 1U));
+    const auto row = selection.selected - selection.first_visible;
+
+    switch (action) {
+    case InputAction::down:
+        if (row + 1U < visible_rows && selection.selected + 1U < item_count) {
+            ++selection.selected;
+        } else if (selection.first_visible < maximum_first) {
+            ++selection.first_visible;
+            ++selection.selected;
+            selection.scroll_cue = RpgListSelection::ScrollCue::toward_end;
+        }
+        break;
+    case InputAction::up:
+        if (row != 0) {
+            --selection.selected;
+        } else if (selection.first_visible != 0) {
+            --selection.first_visible;
+            --selection.selected;
+            selection.scroll_cue = RpgListSelection::ScrollCue::toward_start;
+        }
+        break;
+    case InputAction::page_down:
+        selection.first_visible = std::min(
+            maximum_first, selection.first_visible + visible_rows);
+        selection.selected = std::min(
+            item_count - 1U, selection.first_visible + row);
+        selection.scroll_cue = RpgListSelection::ScrollCue::toward_end;
+        break;
+    case InputAction::page_up:
+        selection.first_visible =
+            selection.first_visible < visible_rows
+                ? 0U
+                : selection.first_visible - visible_rows;
+        selection.selected = selection.first_visible + row;
+        selection.scroll_cue = RpgListSelection::ScrollCue::toward_start;
+        break;
+    case InputAction::home:
+        selection.first_visible = 0;
+        selection.selected = row;
+        selection.scroll_cue = RpgListSelection::ScrollCue::toward_start;
+        break;
+    case InputAction::end:
+        selection.first_visible = maximum_first;
+        selection.selected = selection.first_visible + row;
+        selection.scroll_cue = RpgListSelection::ScrollCue::toward_end;
+        break;
+    default:
+        break;
+    }
+    return selection;
+}
+
+void draw_rpg_selector_scrollbar(
+    std::span<std::uint8_t> surface,
+    std::size_t width, std::size_t height,
+    const SpriteArchive& menu_sprites,
+    int left, int top, int columns, std::size_t rows,
+    std::size_t maximum_first, std::size_t first,
+    RpgListSelection::ScrollCue cue) {
+    if (width == 0 || height == 0 || surface.size() != width * height ||
+        columns < 0 || rows == 0 || menu_sprites.sprites().size() <= 99U) {
+        throw std::runtime_error("invalid RPG selector scrollbar arguments");
+    }
+    const auto sprite = [&](std::size_t frame, int x_byte, int y) {
+        const auto& info = menu_sprites.sprites().at(frame);
+        const auto source = menu_sprites.pixels(frame);
+        const auto left_pixel = x_byte * 4;
+        for (std::size_t row = 0; row < info.height; ++row) {
+            for (std::size_t column = 0; column < info.width; ++column) {
+                const auto color = source[row * info.width + column];
+                if (color == 0xfeU) continue;
+                const auto x = left_pixel + static_cast<int>(column);
+                const auto target_y = y + static_cast<int>(row);
+                if (x < 0 || target_y < 0 ||
+                    x >= static_cast<int>(width) ||
+                    target_y >= static_cast<int>(height)) {
+                    continue;
+                }
+                surface[static_cast<std::size_t>(target_y) * width +
+                        static_cast<std::size_t>(x)] = color;
+            }
+        }
+    };
+
+    const auto track_x = left + columns * 8 + 10;
+    auto y = top + 4;
+    sprite(cue == RpgListSelection::ScrollCue::toward_start ? 95U : 94U,
+           track_x, y);
+    y += 16;
+    for (std::size_t row = 1; row < rows; ++row, y += 16) {
+        sprite(96, track_x, y);
+    }
+    sprite(cue == RpgListSelection::ScrollCue::toward_end ? 98U : 97U,
+           track_x, y);
+
+    // 298d precomputes quotient/remainder from an extent of
+    // (rows-1)*16-6; 2907 adds top+14h after distributing that remainder.
+    const auto extent = rows > 1U ? (rows - 1U) * 16U - 6U : 0U;
+    auto thumb_y = top + 20;
+    if (maximum_first != 0) {
+        first = std::min(first, maximum_first);
+        const auto quotient = extent / maximum_first;
+        const auto remainder = extent % maximum_first;
+        thumb_y += static_cast<int>(first * quotient +
+                                    std::min(first, remainder));
+    }
+    sprite(99, track_x + 1, thumb_y);
+}
+
 std::optional<std::size_t> rpg_party_target_for_direction(
     InputAction action,
     std::size_t party_count) noexcept {

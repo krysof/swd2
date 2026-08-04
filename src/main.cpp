@@ -188,6 +188,12 @@ std::vector<swd2::InputAction> parse_actions(const std::string& text) {
         else if (token == "DOWN") result.push_back(swd2::InputAction::down);
         else if (token == "LEFT") result.push_back(swd2::InputAction::left);
         else if (token == "RIGHT") result.push_back(swd2::InputAction::right);
+        else if (token == "PGUP" || token == "PAGEUP")
+            result.push_back(swd2::InputAction::page_up);
+        else if (token == "PGDN" || token == "PAGEDOWN")
+            result.push_back(swd2::InputAction::page_down);
+        else if (token == "HOME") result.push_back(swd2::InputAction::home);
+        else if (token == "END") result.push_back(swd2::InputAction::end);
         else if (token == "OK" || token == "CONFIRM") result.push_back(swd2::InputAction::confirm);
         else if (token == "CANCEL") result.push_back(swd2::InputAction::cancel);
         else if (token == "TICK" || token == "NONE") result.push_back(swd2::InputAction::none);

@@ -400,39 +400,6 @@ void draw_rpg_party_target_cards(Viewport& viewport,
         selected_actor, party_count);
 }
 
-void draw_rpg_selector_scrollbar(Viewport& viewport,
-                                 const SpriteArchive& menu_sprites,
-                                 int left, int top, int columns,
-                                 std::size_t rows,
-                                 std::size_t maximum_first,
-                                 std::size_t first) {
-    const auto sprite = [&](std::size_t frame, int x_byte, int y) {
-        if (frame >= menu_sprites.sprites().size()) return;
-        const auto& info = menu_sprites.sprites()[frame];
-        blit(viewport, menu_sprites.pixels(frame), info.width, info.height,
-             x_byte * 4, y);
-    };
-    const auto track_x = left + columns * 8 + 10;
-    auto y = top + 4;
-    sprite(94, track_x, y);
-    y += 16;
-    for (std::size_t row = 1; row < rows; ++row, y += 16) {
-        sprite(96, track_x, y);
-    }
-    sprite(97, track_x, y);
-
-    auto thumb_y = top + 4;
-    if (maximum_first != 0) {
-        const auto extent = (rows - 1U) * 16U - 6U;
-        const auto quotient = extent / maximum_first;
-        const auto remainder = extent % maximum_first;
-        first = std::min(first, maximum_first);
-        thumb_y += static_cast<int>(first * quotient +
-                                    std::min(first, remainder));
-    }
-    sprite(99, track_x + 1, thumb_y);
-}
-
 void install_map_location(SharedState& state, MapDatabase& database,
                           std::uint16_t encoded_directory_offset) {
     const auto position_only = (encoded_directory_offset & 0x8000U) != 0;
@@ -685,6 +652,7 @@ public:
         InventorySystem inventory(state, items_);
         std::size_t selected = 0;
         std::size_t first_visible = 0;
+        auto scroll_cue = RpgListSelection::ScrollCue::none;
         while (true) {
             auto frame = scene_provider_();
             // RPG.EXE:57d9..580e. The shop composes the normal top selector,
@@ -697,9 +665,10 @@ public:
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                     15, 30, 5, 5);
             draw_rpg_selector_scrollbar(
-                frame, menu_sprites_, 15, 30, 5, 5,
+                frame.pixels, 320, 200, menu_sprites_, 15, 30, 5, 5,
                 item_ids.size() > 5U ? item_ids.size() - 5U : 0U,
-                first_visible);
+                first_visible, scroll_cue);
+            scroll_cue = RpgListSelection::ScrollCue::none;
 
             const auto selected_id = item_ids[selected];
             draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
@@ -742,18 +711,12 @@ public:
                 return true;
             }
             if (action == InputAction::cancel) return true;
-            if (action == InputAction::up) {
-                if (selected != 0) --selected;
-                if (selected < first_visible) first_visible = selected;
-                continue;
-            }
-            if (action == InputAction::down) {
-                if (selected + 1 < item_ids.size()) ++selected;
-                if (selected >= first_visible + visible_rows) {
-                    first_visible = selected + 1 - visible_rows;
-                }
-                continue;
-            }
+            const auto selection = rpg_list_selection_input(
+                {selected, first_visible}, item_ids.size(), visible_rows,
+                action);
+            selected = selection.selected;
+            first_visible = selection.first_visible;
+            scroll_cue = selection.scroll_cue;
             if (action != InputAction::confirm) continue;
 
             const auto item_id = item_ids[selected];
@@ -766,14 +729,17 @@ public:
         InventorySystem inventory(state, items_);
         std::size_t selected = 0;
         std::size_t first_visible = 0;
+        auto scroll_cue = RpgListSelection::ScrollCue::none;
         while (true) {
             auto frame = scene_provider_();
             // RPG.EXE:2ae4/3d1e uses the shared selector frame at mode-X
             // (24,36), not two invented packed-pixel rectangles.
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                     24, 36, 5, 8);
-            draw_rpg_selector_scrollbar(frame, menu_sprites_,
-                                        24, 36, 5, 8, 42, first_visible);
+            draw_rpg_selector_scrollbar(
+                frame.pixels, 320, 200, menu_sprites_,
+                24, 36, 5, 8, 42, first_visible, scroll_cue);
+            scroll_cue = RpgListSelection::ScrollCue::none;
             if (!menu_sprites_.sprites().empty()) {
                 const auto& preview = menu_sprites_.sprites()[0];
                 blit_opaque(frame, menu_sprites_.pixels(0),
@@ -846,15 +812,14 @@ public:
                 return InventoryUiResult::cancelled;
             }
             if (action == InputAction::cancel) return InventoryUiResult::cancelled;
-            if (action == InputAction::up) {
-                if (selected != 0) --selected;
-                if (selected < first_visible) first_visible = selected;
-            } else if (action == InputAction::down) {
-                if (selected + 1 < inventory_slot_count) ++selected;
-                if (selected >= first_visible + visible_rows) {
-                    first_visible = selected + 1 - visible_rows;
-                }
-            } else if (action == InputAction::confirm) {
+            if (action != InputAction::confirm) {
+                const auto selection = rpg_list_selection_input(
+                    {selected, first_visible}, inventory_slot_count,
+                    visible_rows, action);
+                selected = selection.selected;
+                first_visible = selection.first_visible;
+                scroll_cue = selection.scroll_cue;
+            } else {
                 const auto selected_item = inventory.item(selected);
                 if (selected_item == 0) return InventoryUiResult::empty_slot;
                 if (mode == InventoryUiMode::sell) {
@@ -1042,6 +1007,7 @@ public:
                         if (destinations.empty()) continue;
                         std::size_t destination = 0;
                         std::size_t first_visible = 0;
+                        auto scroll_cue = RpgListSelection::ScrollCue::none;
                         bool destination_cancelled = false;
                         while (true) {
                             auto destination_frame = scene_provider_();
@@ -1059,8 +1025,10 @@ public:
                             };
                             const auto maximum_first = destinations.size() - visible;
                             draw_rpg_selector_scrollbar(
-                                destination_frame, menu_sprites_, 14, 16, 5,
-                                visible, maximum_first, first_visible);
+                                destination_frame.pixels, 320, 200,
+                                menu_sprites_, 14, 16, 5, visible,
+                                maximum_first, first_visible, scroll_cue);
+                            scroll_cue = RpgListSelection::ScrollCue::none;
 
                             for (std::size_t row = 0; row < visible; ++row) {
                                 const auto index = first_visible + row;
@@ -1090,26 +1058,17 @@ public:
                                 destination_cancelled = true;
                                 break;
                             }
-                            if (destination_action == InputAction::up) {
-                                if (destination > first_visible) {
-                                    --destination;
-                                } else if (first_visible != 0) {
-                                    --first_visible;
-                                    --destination;
-                                }
-                            } else if (destination_action == InputAction::down) {
-                                if (destination + 1U <
-                                    first_visible + visible) {
-                                    if (destination + 1U < destinations.size()) {
-                                        ++destination;
-                                    }
-                                } else if (first_visible < maximum_first) {
-                                    ++first_visible;
-                                    ++destination;
-                                }
-                            } else if (destination_action == InputAction::confirm) {
+                            if (destination_action == InputAction::confirm) {
                                 travel_index = destinations[destination];
                                 break;
+                            } else {
+                                const auto selection = rpg_list_selection_input(
+                                    {destination, first_visible},
+                                    destinations.size(), visible,
+                                    destination_action);
+                                destination = selection.selected;
+                                first_visible = selection.first_visible;
+                                scroll_cue = selection.scroll_cue;
                             }
                         }
                         if (destination_cancelled) continue;
