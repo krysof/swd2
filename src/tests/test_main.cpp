@@ -6045,6 +6045,8 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
                 talisman_context, swd2::Marker::menu_ready) ==
                     swd2::Marker::none &&
                 talisman_platform.cursor == talisman_platform.actions.size() &&
+                talisman_platform.frame_hashes.size() == 9U &&
+                talisman_platform.frame_hashes[2] == 7287266437654658794ULL &&
                 talisman_context.shared_state.u16(0x382U) == 0U &&
                 talisman_context.shared_state.u16(0x106U + 0x55U) == 3U &&
                 talisman_context.shared_state.u16(0x106U + 0x2dU) != 0U,
@@ -6120,7 +6122,7 @@ void test_rpg_inventory_alchemy(const std::filesystem::path& game_root) {
                 platform.frame_hashes[8] == 14503042325848200927ULL &&
                 platform.frame_hashes[9] == 10742568333542727258ULL &&
                 platform.frame_hashes[10] == 8770727228813360409ULL &&
-                platform.frame_hashes[11] == 12546521570861062241ULL &&
+                platform.frame_hashes[11] == 15396706612090017963ULL &&
                 platform.frame_hashes[12] == platform.frame_hashes[2] &&
                 platform.frame_hashes[13] == platform.frame_hashes[0] &&
                 std::set<std::uint64_t>(platform.frame_hashes.begin(),

@@ -1253,16 +1253,15 @@ public:
             for (std::size_t row = 0; row < visible_rows; ++row) {
                 const auto slot = first_visible + row;
                 if (slot >= inventory_slot_count) break;
-                const auto item_id = inventory.item(slot);
-                const auto top = 49 + static_cast<int>(row) * 16;
-                draw_item_text(frame, item_texts_, item_font_, item_id,
-                               128, top, 96, 15, 0);
-                if (item_id >= 0x44 && item_id <= 0x48) {
-                    draw_menu_number(
-                        frame, menu_sprites_,
-                        state.u16(0x3e6 + (item_id - 0x44) * 2U),
-                        56, top + 3, 111);
-                }
+            const auto item_id = inventory.item(slot);
+            const auto top = 49 + static_cast<int>(row) * 16;
+            draw_item_text(frame, item_texts_, item_font_, item_id,
+                           128, top, 96, 15, 0);
+            if (const auto value = inventory_row_value(state, item_id)) {
+                draw_menu_number(
+                    frame, menu_sprites_, *value,
+                    56, top + 3, 111);
+            }
             }
             if (menu_sprites_.sprites().size() > 1U) {
                 const auto& cursor = menu_sprites_.sprites()[1];
@@ -1903,6 +1902,36 @@ public:
     }
 
 private:
+    [[nodiscard]] std::optional<std::uint16_t> inventory_row_value(
+        const SharedState& state, std::uint16_t item_id) const {
+        if (item_id >= items_.size()) return std::nullopt;
+
+        // RPG 3dc4 checks extended ITEM ids before every other special case.
+        // Their +34h word is doubled by the literal SHL before 2315 draws it.
+        if (item_id >= 0x13aU) {
+            return static_cast<std::uint16_t>(
+                items_.at(item_id).alchemy_required_level << 1U);
+        }
+        if (item_id >= 0x44U && item_id <= 0x48U) {
+            return state.u16(0x3e6U + (item_id - 0x44U) * 2U);
+        }
+
+        // Type-10 talismans show the same DATA:1dce +10h resource cost that
+        // 3857 later charges when the item is used.
+        if (items_.at(item_id).type != 0x10U || item_id < 0x8cU) {
+            return std::nullopt;
+        }
+        const auto record_offset =
+            static_cast<std::size_t>(item_id - 0x8cU) * 20U;
+        if (record_offset + 18U > field_ability_records_.size()) {
+            return std::nullopt;
+        }
+        return static_cast<std::uint16_t>(
+            field_ability_records_[record_offset + 16U] |
+            (static_cast<std::uint16_t>(
+                 field_ability_records_[record_offset + 17U]) << 8U));
+    }
+
     void draw_alchemy_stats(Viewport& frame,
                             const ItemDefinition& definition,
                             std::span<const std::uint8_t> labels,
@@ -1997,10 +2026,9 @@ private:
             const auto top = 49 + static_cast<int>(row) * 16;
             draw_item_text(frame, item_texts_, item_font_, item_id,
                            128, top, 96, 15, 0);
-            if (item_id >= 0x44U && item_id <= 0x48U) {
+            if (const auto value = inventory_row_value(state, item_id)) {
                 draw_menu_number(
-                    frame, menu_sprites_,
-                    state.u16(0x3e6U + (item_id - 0x44U) * 2U),
+                    frame, menu_sprites_, *value,
                     56, top + 3, 111);
             }
         }
