@@ -1047,6 +1047,8 @@ void test_item_inventory(const std::filesystem::path& game_root) {
     std::size_t nonempty_texts = 0;
     std::size_t name_bytes = 0;
     std::size_t description_bytes = 0;
+    std::size_t paged_descriptions = 0;
+    std::size_t description_page_breaks = 0;
     std::uint64_t text_hash = 1'469'598'103'934'665'603ULL;
     const auto hash_byte = [&](std::uint8_t byte) {
         text_hash ^= byte;
@@ -1057,6 +1059,16 @@ void test_item_inventory(const std::filesystem::path& game_root) {
         if (!text.empty()) ++nonempty_texts;
         name_bytes += text.name.size();
         description_bytes += text.description.size();
+        auto page_breaks = std::size_t{0};
+        for (std::size_t offset = 0; offset + 1U < text.description.size();
+             ++offset) {
+            if (text.description[offset] == '%' &&
+                text.description[offset + 1U] == '%') {
+                ++page_breaks;
+            }
+        }
+        if (page_breaks != 0U) ++paged_descriptions;
+        description_page_breaks += page_breaks;
         hash_byte(static_cast<std::uint8_t>(id));
         hash_byte(static_cast<std::uint8_t>(id >> 8U));
         hash_byte(static_cast<std::uint8_t>(text.name.size()));
@@ -1067,7 +1079,8 @@ void test_item_inventory(const std::filesystem::path& game_root) {
         for (const auto byte : text.description) hash_byte(byte);
     }
     require(nonempty_texts == 449 && name_bytes == 2'484 &&
-                description_bytes == 22'492 &&
+                description_bytes == 22'492 && paged_descriptions == 7U &&
+                description_page_breaks == 8U &&
                 text_hash == 0x2aa57a4be3a622d9ULL,
             "ITEM2 full text corpus differs from the original archive");
     const auto item_font = swd2::LegacyFont::load(game_root / "CHAIN.DSK");
@@ -5793,6 +5806,39 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
                 explain_platform.frame_hashes[6] !=
                     explain_platform.frame_hashes[5],
             "RPG item action/ITEM2 message pages were not composed");
+
+    // Seven ITEM2 records contain 49d0's literal %% page separator.  Item
+    // 250 has two pages and exercises the intermediate MENU frame-91h wait
+    // before the ordinary animated final acknowledgement.
+    ScriptedPlatform paged_platform;
+    paged_platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // %% continuation
+        swd2::InputAction::confirm,  // final page acknowledgement
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto paged_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    paged_state.set_u16(0x382, 250);
+    swd2::GameContext paged_context{game_root, paged_state, paged_platform};
+    require(swd2::RpgModule().run(
+                paged_context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                paged_platform.cursor == paged_platform.actions.size() &&
+                paged_context.shared_state.u16(0x382) == 250U,
+            "RPG paged ITEM2 explanation did not return to 2d0f");
+    require(paged_platform.frame_hashes.size() == 12U &&
+                paged_platform.frame_hashes[6] !=
+                    paged_platform.frame_hashes[7] &&
+                paged_platform.frame_hashes[8] ==
+                    paged_platform.frame_hashes[5],
+            "RPG 49d0 %% continuation did not show both ITEM2 pages");
 
     // The upper 2d0f card is Discard.  DATA:3754 is followed by 46cc's
     // default-Yes selector; confirming clears the physical word and invokes

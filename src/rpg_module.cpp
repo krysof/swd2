@@ -3036,22 +3036,71 @@ private:
 
     bool show_bottom_message(Viewport frame,
                              std::span<const std::uint8_t> text) {
-        draw_bottom_message(frame, text);
-        auto cursor_x_byte = 10;
-        auto cursor_y = 125;
-        for (std::size_t offset = 0; offset < text.size();) {
-            if (text[offset] == ' ') {
-                ++cursor_x_byte;
-                ++offset;
-            } else if (offset + 1U < text.size() &&
-                       text[offset] == '#' && text[offset + 1U] == '#') {
-                cursor_x_byte = 10;
-                cursor_y += 16;
-                offset += 2U;
-            } else {
-                cursor_x_byte += 4;
-                offset += std::min<std::size_t>(2U, text.size() - offset);
+        auto page_start = std::size_t{0};
+        auto final_cursor_x_byte = 10;
+        auto final_cursor_y = 125;
+        while (true) {
+            auto page_end = page_start;
+            while (page_end + 1U < text.size() &&
+                   !(text[page_end] == '%' && text[page_end + 1U] == '%')) {
+                ++page_end;
             }
+            if (page_end + 1U >= text.size()) page_end = text.size();
+
+            auto page = frame;
+            const auto page_text = text.subspan(page_start, page_end - page_start);
+            draw_bottom_message(page, page_text);
+            auto cursor_x_byte = 10;
+            auto cursor_y = 125;
+            for (std::size_t offset = 0; offset < page_text.size();) {
+                if (page_text[offset] == ' ') {
+                    ++cursor_x_byte;
+                    ++offset;
+                } else if (offset + 1U < page_text.size() &&
+                           page_text[offset] == '#' &&
+                           page_text[offset + 1U] == '#') {
+                    cursor_x_byte = 10;
+                    cursor_y += 16;
+                    offset += 2U;
+                } else {
+                    cursor_x_byte += 4;
+                    offset += std::min<std::size_t>(
+                        2U, page_text.size() - offset);
+                }
+            }
+
+            if (page_end == text.size()) {
+                final_cursor_x_byte = cursor_x_byte;
+                final_cursor_y = cursor_y;
+                frame = std::move(page);
+                break;
+            }
+
+            // 49d0's %% branch leaves the text cursor in place, draws MENU
+            // frame 91h, waits for an action, and then re-enters 49d0 after
+            // the separator.  Each continuation therefore rebuilds 2cce's
+            // panel over the same saved source page instead of appending to
+            // the previous four lines.
+            while (true) {
+                auto shown = page;
+                if (menu_sprites_.sprites().size() > 0x91U) {
+                    const auto& info = menu_sprites_.sprites()[0x91U];
+                    blit(shown, menu_sprites_.pixels(0x91U),
+                         info.width, info.height,
+                         cursor_x_byte * 4, cursor_y);
+                }
+                platform_.present({
+                    320, 200, shown.pixels,
+                    std::span<const std::uint8_t, 768>(shown.palette)});
+                const auto action = platform_.poll_input();
+                if (action == InputAction::quit) {
+                    quit_requested_ = true;
+                    return false;
+                }
+                if (action != InputAction::none) break;
+                platform_.delay_for(std::chrono::milliseconds(20));
+            }
+            page_start = page_end + 2U;
         }
 
         auto indicator = std::size_t{149};
@@ -3061,7 +3110,7 @@ private:
                 const auto& info = menu_sprites_.sprites()[indicator];
                 blit(shown, menu_sprites_.pixels(indicator),
                      info.width, info.height,
-                     cursor_x_byte * 4, cursor_y);
+                     final_cursor_x_byte * 4, final_cursor_y);
             }
             platform_.present({
                 320, 200, shown.pixels,
