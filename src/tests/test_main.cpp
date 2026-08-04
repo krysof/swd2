@@ -2799,6 +2799,75 @@ void test_battle_effects(const std::filesystem::path& game_root) {
     require(shipped_special_abilities.size() == 19 &&
                 unsupported_shipped_specials.empty(),
             "FIG shipped monster special-ability domain remains unsupported");
+
+    // Captured monsters deliberately do not enter the enemy-only 26af
+    // dispatcher.  FIG 10fa7 calls 1048, which uses the ordinary player
+    // DS:2bbd table after the ally AI has already paid/rolled in 22f3.  Audit
+    // every generic/A/B ability referenced by a shipped monster definition so
+    // the portable ally adapter cannot silently omit a player-side selector.
+    std::set<std::uint16_t> shipped_ally_abilities;
+    for (std::uint16_t item_id = 0x13aU;
+         static_cast<std::size_t>(item_id) + 2U < item_records.entry_count();
+         ++item_id) {
+        const auto record = item_records.entry(
+            static_cast<std::size_t>(item_id) + 2U);
+        if (record.size() < 0x50U) continue;
+        const auto monster = swd2::MonsterDefinition::parse(item_id, record);
+        for (const auto ability_id : {
+                 monster.generic_ability,
+                 monster.special_ability_a,
+                 monster.special_ability_b,
+             }) {
+            if (ability_id != 0) shipped_ally_abilities.insert(ability_id);
+        }
+    }
+    std::vector<std::uint16_t> unsupported_shipped_ally_abilities;
+    for (const auto ability_id : shipped_ally_abilities) {
+        const auto effect_code = abilities.ability(ability_id).effect_code;
+        const auto zero_random = [](std::uint16_t modulus) {
+            if (modulus == 0) {
+                throw std::runtime_error("zero exhaustive-ally modulus");
+            }
+            return std::uint16_t{};
+        };
+        bool supported = false;
+        if (effect_code <= 0x30U) {
+            std::array<swd2::PlayerSupportState, 1> players{};
+            players[0].hit_points = players[0].maximum_hit_points = 100;
+            players[0].secondary_points =
+                players[0].maximum_secondary_points = 100;
+            players[0].ability_points =
+                players[0].maximum_ability_points = 100;
+            supported = swd2::apply_player_support_effect(
+                            effect_code, 0, 0, players)
+                            .supported;
+        } else {
+            std::array<swd2::PlayerBattleState, 1> players{};
+            players[0].hit_points = players[0].maximum_hit_points = 100;
+            swd2::MonsterBattleState monster;
+            monster.hit_points = monster.maximum_hit_points = 10000;
+            monster.physical_attack = 20;
+            monster.evasion = 1;
+            const auto tactical = swd2::apply_player_tactical_effect(
+                effect_code, 10, 0, 0, players, &monster, 20, 1,
+                abilities, zero_random);
+            if (tactical.supported) {
+                supported = true;
+            } else {
+                std::array<swd2::MonsterBattleState, 1> monsters = {monster};
+                supported = swd2::apply_player_ability_effect(
+                                effect_code, 10, 0, monsters,
+                                abilities, zero_random)
+                                .supported;
+            }
+        }
+        if (!supported) {
+            unsupported_shipped_ally_abilities.push_back(ability_id);
+        }
+    }
+    require(shipped_ally_abilities.size() == 68 &&
+                unsupported_shipped_ally_abilities.empty(),
+            "FIG shipped captured-ally ability domain has an unsupported player dispatch");
 }
 
 void test_battle_session(const std::filesystem::path& game_root) {
