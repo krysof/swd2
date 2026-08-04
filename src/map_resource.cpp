@@ -52,6 +52,19 @@ MapResource MapResource::load(const std::filesystem::path& graphics_base_path,
     for (std::size_t i = 0; i < result.animation_words_.size(); ++i) {
         result.animation_words_[i] = read_u16(metadata, 770 + i * 2);
     }
+    for (std::size_t group = 0; group < 6; ++group) {
+        const auto base = group * 4U;
+        const auto count = result.animation_words_[base];
+        if (count == 0) continue;
+        const auto first = result.animation_words_[base + 1U];
+        const auto last = result.animation_words_[base + 2U];
+        if (first % 3U != 0U || last % 3U != 0U ||
+            last + 3U > result.palette_.size() ||
+            static_cast<std::size_t>(first) +
+                    static_cast<std::size_t>(count) * 3U != last) {
+            throw std::runtime_error("map RSK palette animation is malformed");
+        }
+    }
 
     for (std::size_t plane = 0; plane < result.planes_.size(); ++plane) {
         const auto extension = ".RS" + std::to_string(plane + 1);
@@ -160,6 +173,41 @@ IndexedMapImage MapResource::render(bool include_overlays) const {
         }
     }
     return image;
+}
+
+bool advance_map_palette(
+    std::array<std::uint8_t, 768>& palette,
+    std::array<std::uint16_t, 24>& runtime_words) {
+    bool changed = false;
+    for (std::size_t group = 0; group < 6; ++group) {
+        const auto base = group * 4U;
+        const auto count = runtime_words[base];
+        if (count == 0) continue;
+
+        auto phase = static_cast<std::uint16_t>(
+            runtime_words[base + 3U] + 0x0100U);
+        const auto interval = static_cast<std::uint8_t>(phase);
+        const auto elapsed = static_cast<std::uint8_t>(phase >> 8U);
+        if (elapsed < interval) {
+            runtime_words[base + 3U] = phase;
+            continue;
+        }
+        // 5e3b clears AH but preserves the interval in AL.
+        runtime_words[base + 3U] = interval;
+
+        const auto first = static_cast<std::size_t>(runtime_words[base + 1U]);
+        const auto last = static_cast<std::size_t>(runtime_words[base + 2U]);
+        const std::array<std::uint8_t, 3> tail{
+            palette[last], palette[last + 1U], palette[last + 2U]};
+        for (auto offset = last; offset > first; offset -= 3U) {
+            std::copy_n(palette.begin() + static_cast<std::ptrdiff_t>(offset - 3U),
+                        3, palette.begin() + static_cast<std::ptrdiff_t>(offset));
+        }
+        std::copy(tail.begin(), tail.end(),
+                  palette.begin() + static_cast<std::ptrdiff_t>(first));
+        changed = true;
+    }
+    return changed;
 }
 
 }  // namespace swd2

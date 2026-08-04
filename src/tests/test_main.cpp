@@ -1282,6 +1282,31 @@ void test_map_resource(const std::filesystem::path& game_root) {
     const auto image = map.render(true);
     require(image.width == 1440 && image.height == 1440, "unexpected rendered map dimensions");
     require(!map.overlays().empty(), "TW-2A overlay records were not decoded");
+
+    const auto animated = swd2::MapResource::load(game_root / "T1" / "AREA1");
+    require(animated.animation_words()[0] == 5U &&
+                animated.animation_words()[1] == 720U &&
+                animated.animation_words()[2] == 735U &&
+                animated.animation_words()[3] == 0x0305U,
+            "AREA1 palette-cycle metadata was not decoded");
+    auto palette = animated.palette();
+    const auto original = palette;
+    std::array<std::uint16_t, 24> runtime{};
+    std::copy_n(animated.animation_words().begin(), 4, runtime.begin());
+    require(!swd2::advance_map_palette(palette, runtime) &&
+                runtime[3] == 0x0405U && palette == original,
+            "RPG 5e16 palette cycle ignored its fixed-point phase");
+    require(swd2::advance_map_palette(palette, runtime) &&
+                runtime[3] == 0x0005U &&
+                std::equal(palette.begin() + 720, palette.begin() + 723,
+                           original.begin() + 735),
+            "RPG 5e16 palette cycle did not wrap the final RGB color");
+    for (std::size_t offset = 723; offset <= 735; offset += 3U) {
+        require(std::equal(palette.begin() + static_cast<std::ptrdiff_t>(offset),
+                           palette.begin() + static_cast<std::ptrdiff_t>(offset + 3U),
+                           original.begin() + static_cast<std::ptrdiff_t>(offset - 3U)),
+                "RPG 5e16 palette cycle did not shift an RGB triplet");
+    }
 }
 
 void test_map_database(const std::filesystem::path& game_root) {

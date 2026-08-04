@@ -47,6 +47,9 @@ public:
     [[nodiscard]] const std::array<std::uint16_t, 24>& animation_words() const noexcept {
         return animation_words_;
     }
+    [[nodiscard]] const std::array<std::uint8_t, 768>& palette() const noexcept {
+        return palette_;
+    }
     [[nodiscard]] IndexedMapImage render(bool include_overlays = true) const;
 
 private:
@@ -59,5 +62,13 @@ private:
     std::vector<std::uint16_t> cells_;
     std::vector<MapOverlay> overlays_;
 };
+
+// RPG.EXE:5e16 treats the final 24 RSK words as six four-word palette-cycle
+// records: color-shift count, first RGB byte offset, last RGB byte offset and
+// an interval/phase word. `runtime_words` is mutable because the high byte of
+// every fourth word is the original fixed-point phase accumulator.
+bool advance_map_palette(
+    std::array<std::uint8_t, 768>& palette,
+    std::array<std::uint16_t, 24>& runtime_words);
 
 }  // namespace swd2

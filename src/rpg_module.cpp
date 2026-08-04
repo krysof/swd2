@@ -593,6 +593,7 @@ public:
                  std::span<const std::uint8_t> equipment_slot_labels,
                  std::span<const std::uint8_t> equipment_stat_labels,
                  std::function<Viewport()> scene_provider,
+                 std::function<void()> scene_palette_advance,
                  MapDatabase* map_database, const SaveSlotWriter* save_slot,
                  const SaveSlotLoader* load_slot,
                  std::shared_ptr<MapDatabase>* live_map_database,
@@ -637,6 +638,7 @@ public:
           equipment_slot_labels_(equipment_slot_labels),
           equipment_stat_labels_(equipment_stat_labels),
           scene_provider_(std::move(scene_provider)),
+          scene_palette_advance_(std::move(scene_palette_advance)),
           map_database_(map_database), save_slot_(save_slot),
           load_slot_(load_slot), live_map_database_(live_map_database),
           field_action_runtime_(field_action_runtime), state_(state),
@@ -708,6 +710,8 @@ public:
         layout.replace_extension();
         relocated_map_ = MapResource::load(game_root_ / graphics,
                                            game_root_ / layout);
+        relocated_palette_ = relocated_map_->palette();
+        relocated_palette_animation_ = relocated_map_->animation_words();
         if (!relocated_actors_) {
             relocated_actors_ = SpriteArchive::parse(
                 decode_rsk_block(read_file(game_root_ / "MAN1.RSK")).data);
@@ -750,10 +754,14 @@ public:
             present(event_scene());
             return true;
         case 22:
+            reset_direct_page_layers();
+            present_timed(event_scene());
+            return true;
         case 30:
         case 31:
         case 32:
         case 33:
+            advance_event_palette();
             reset_direct_page_layers();
             present_timed(event_scene());
             return true;
@@ -3000,6 +3008,15 @@ private:
         monochrome_event_page_ = false;
     }
 
+    void advance_event_palette() {
+        if (relocated_map_) {
+            advance_map_palette(relocated_palette_,
+                                relocated_palette_animation_);
+        } else if (scene_palette_advance_) {
+            scene_palette_advance_();
+        }
+    }
+
     void present_timed(Viewport scene) {
         present(std::move(scene));
         if (frame_delay_ticks_ != 0) {
@@ -3091,6 +3108,7 @@ private:
             }
             auto viewport = crop_map(relocated_map_->render(true),
                                      state_.viewport_x(), state_.viewport_y());
+            viewport.palette = relocated_palette_;
             draw_entities(viewport, *relocated_area_, state_, game_root_,
                           *relocated_actors_, relocated_animation_sets_);
             draw_actor(viewport, *relocated_actors_, state_);
@@ -3184,6 +3202,7 @@ private:
     std::span<const std::uint8_t> equipment_slot_labels_;
     std::span<const std::uint8_t> equipment_stat_labels_;
     std::function<Viewport()> scene_provider_;
+    std::function<void()> scene_palette_advance_;
     MapDatabase* map_database_{};
     const SaveSlotWriter* save_slot_{};
     const SaveSlotLoader* load_slot_{};
@@ -3212,6 +3231,8 @@ private:
     bool quit_requested_{};
     const MapAreaRecord* relocated_area_{};
     std::optional<MapResource> relocated_map_;
+    std::array<std::uint8_t, 768> relocated_palette_{};
+    std::array<std::uint16_t, 24> relocated_palette_animation_{};
     std::optional<SpriteArchive> relocated_actors_;
     std::map<std::uint16_t, PlanarSpriteSet> relocated_animation_sets_;
 };
@@ -3533,10 +3554,16 @@ Marker RpgModule::run(GameContext& context, Marker) {
     auto actor_data = decode_rsk_block(read_file(context.game_root / "MAN1.RSK")).data;
     const auto actors = SpriteArchive::parse(std::move(actor_data));
     std::map<std::uint16_t, PlanarSpriteSet> animation_sets;
+    auto map_palette = map.palette();
+    auto map_palette_animation = map.animation_words();
+    const auto advance_scene_palette = [&]() {
+        advance_map_palette(map_palette, map_palette_animation);
+    };
     const auto compose_scene = [&]() {
         const auto rendered = map.render(true);
         auto viewport = crop_map(rendered, context.shared_state.viewport_x(),
                                  context.shared_state.viewport_y());
+        viewport.palette = map_palette;
         draw_entities(viewport, location.area, context.shared_state, context.game_root, actors,
                       animation_sets);
         draw_actor(viewport, actors, context.shared_state);
@@ -3570,6 +3597,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           inventory_category_labels, equipment_slot_labels,
                           equipment_stat_labels,
                           compose_scene,
+                          advance_scene_palette,
                           &map_database, &context.save_slot,
                           &context.load_slot, &context.map_database,
                           field_action_runtime,
@@ -3585,6 +3613,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
                                   std::move(result.relocated_area)};
     };
     while (true) {
+        // RPG's main loop calls 5e16 after composing pixels and before the
+        // page flip. Apply one fixed-point palette-cycle step to the palette
+        // carried by this submitted frame.
+        advance_scene_palette();
         auto viewport = compose_scene();
         context.platform.present({320, 200, viewport.pixels,
                                   std::span<const std::uint8_t, 768>(viewport.palette)});
@@ -3616,6 +3648,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                               inventory_category_labels, equipment_slot_labels,
                               equipment_stat_labels,
                               compose_scene,
+                              advance_scene_palette,
                               &map_database, &context.save_slot,
                               &context.load_slot, &context.map_database,
                               field_action_runtime,
