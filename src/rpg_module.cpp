@@ -3310,26 +3310,59 @@ private:
     std::map<std::uint16_t, PlanarSpriteSet> relocated_animation_sets_;
 };
 
-std::optional<std::size_t> entity_in_front(const MapLocationRecord& location,
-                                           const SharedState& state,
-                                           const MapResource& map) {
-    auto x = static_cast<int>(state.world_x());
-    auto y = static_cast<int>(state.world_y());
-    if (state.actor_direction() == 0) ++y;
-    else if (state.actor_direction() == 3) --y;
-    else if (state.actor_direction() == 6) --x;
-    else if (state.actor_direction() == 9) ++x;
-    if (x < 0 || y < 0 || x >= map.layout().width || y >= map.layout().height) {
-        return std::nullopt;
+std::optional<std::size_t> interaction_entity(const MapLocationRecord& location,
+                                              const SharedState& state,
+                                              const MapResource& map) {
+    const auto occupied_entity = [&](std::uint16_t target) {
+        for (std::size_t index = 0; index < location.area.entity_count(); ++index) {
+            const auto entity = map_entity(location.area, index);
+            if (entity.behavior == 3) continue;
+            if (entity.cell_offset == target || entity.cell_offset + 2U == target ||
+                entity.cell_offset + 4U == target) {
+                return std::optional<std::size_t>{index};
+            }
+        }
+        return std::optional<std::size_t>{};
+    };
+    const auto probe = [&](int x, int y) {
+        if (x < 0 || y < 0 || x >= map.layout().width ||
+            y >= map.layout().height) {
+            return std::pair{false, std::optional<std::size_t>{}};
+        }
+        const auto cell = static_cast<std::size_t>(y) * map.layout().width +
+                          static_cast<std::size_t>(x);
+        const auto target = static_cast<std::uint16_t>(
+            state.u16(0x40f) + cell * 2U);
+        const auto entity = occupied_entity(target);
+        const auto special = (map.cells()[cell] & 0x0800U) != 0U ||
+                             entity.has_value();
+        return std::pair{special, entity};
+    };
+
+    // RPG:523d/52fd scans three parallel forward rays, each at most four
+    // cells long. After an empty centre ray DATA:3cbf offsets the next ray
+    // one cell to either side before 52fd repeats the actor direction.
+    std::array<std::pair<int, int>, 3> ray_offsets{};
+    if (state.actor_direction() == 0U || state.actor_direction() == 3U) {
+        ray_offsets = {{{0, 0}, {-1, 0}, {1, 0}}};
+    } else {
+        ray_offsets = {{{0, 0}, {0, 1}, {0, -1}}};
     }
-    const auto target = static_cast<std::uint16_t>(
-        state.u16(0x40f) + (static_cast<std::size_t>(y) * map.layout().width + x) * 2);
-    for (std::size_t index = 0; index < location.area.entity_count(); ++index) {
-        const auto entity = map_entity(location.area, index);
-        if (entity.behavior == 3) continue;
-        if (entity.cell_offset == target || entity.cell_offset + 2U == target ||
-            entity.cell_offset + 4U == target) {
-            return index;
+    const auto center_x = static_cast<int>(state.world_x());
+    const auto center_y = static_cast<int>(state.world_y());
+    for (const auto [offset_x, offset_y] : ray_offsets) {
+        auto x = center_x + offset_x;
+        auto y = center_y + offset_y;
+        for (std::size_t distance = 0; distance < 4U; ++distance) {
+            if (state.actor_direction() == 0U) ++y;
+            else if (state.actor_direction() == 3U) --y;
+            else if (state.actor_direction() == 6U) --x;
+            else ++x;
+            const auto [special, entity] = probe(x, y);
+            if (!special) continue;
+            // A static 0800h word without an entity ends the DOS search too;
+            // it does not fall through to another ray.
+            return entity;
         }
     }
     return std::nullopt;
@@ -3865,7 +3898,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
             continue;
         }
         if (action == InputAction::confirm) {
-            if (const auto entity = entity_in_front(location, context.shared_state, map)) {
+            if (const auto entity = interaction_entity(
+                    location, context.shared_state, map)) {
                 auto outcome = run_entity_event(*entity);
                 if (outcome.quit) {
                     context.platform.stop_audio();
@@ -3928,7 +3962,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
             // event merely because the player walked into them.
             if (movement_has_special_cell(location, context.shared_state, map,
                                           action, target_x, target_y)) {
-              if (const auto entity = entity_in_front(
+              if (const auto entity = interaction_entity(
                       location, context.shared_state, map)) {
                 const auto encountered = map_entity(location.area, *entity);
                 if (encountered.behavior == 6U) {

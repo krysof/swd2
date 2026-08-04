@@ -6484,6 +6484,43 @@ void test_rpg_behavior_six_collision(const std::filesystem::path& game_root) {
             "RPG 5298 did not hide behavior six without dispatching its event");
 }
 
+void test_rpg_interaction_rays(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(12);
+    require(location.area.entity_count() > 5U &&
+                location.area.entity_fields[2][5] == 25008U,
+            "SBOUT four-cell interaction oracle changed");
+    for (std::size_t entity = 0; entity < location.area.entity_count(); ++entity) {
+        location.area.entity_fields[3][entity] = entity == 5U ? 1U : 3U;
+    }
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::confirm,  // entity begins four cells east
+        swd2::InputAction::quit,     // consumed by its first dialogue
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(state, *database, 12U);
+    state.set_viewport_x(56U);
+    state.set_viewport_y(57U);
+    state.set_actor_screen_x(38U);  // centre (76,69), entity anchor (80,69)
+    state.set_actor_screen_y(80U);
+    state.set_actor_direction(9U);
+    state.set_u16(0x40f, 8U);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 56U) * 2U));
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto ray_result = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(ray_result == swd2::Marker::none &&
+                platform.cursor == platform.actions.size() &&
+                platform.poll_calls == 1U && platform.wait_calls == 1U &&
+                platform.presented == 2U,
+            "RPG 523d/52fd did not find an entity on the fourth forward probe");
+}
+
 void test_rpg_corner_slide(const std::filesystem::path& game_root) {
     const auto map = swd2::MapResource::load(game_root / "T1" / "AREA1");
     std::size_t center_x = 0;
@@ -6775,7 +6812,6 @@ void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
     platform.actions = {
         swd2::InputAction::right,
         swd2::InputAction::confirm,
-        swd2::InputAction::confirm,
         swd2::InputAction::quit,
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
@@ -6798,11 +6834,10 @@ void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
     require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
                 swd2::Marker::none,
             "RPG compact money-overlay event did not terminate normally");
-    require(platform.presented == 5 && platform.compact_hashes.size() == 5 &&
+    require(platform.presented == 4 && platform.compact_hashes.size() == 4 &&
                 platform.compact_hashes[1] == 6584855232119388833ULL &&
                 platform.compact_hashes[1] == platform.compact_hashes[2] &&
                 platform.compact_hashes[1] != platform.compact_hashes[0] &&
-                platform.compact_hashes[3] == platform.compact_hashes[4] &&
                 platform.compact_hashes[3] != platform.compact_hashes[1],
             "RPG opcode 14 did not persist its overlay through dialogue and clear afterward");
 }
@@ -7536,6 +7571,7 @@ int main(int argc, char** argv) {
         test_rpg_system_audio_toggle(argv[1]);
         test_rpg_entity_collision(argv[1]);
         test_rpg_behavior_six_collision(argv[1]);
+        test_rpg_interaction_rays(argv[1]);
         test_rpg_corner_slide(argv[1]);
         test_rpg_overworld_poison(argv[1]);
         test_rpg_random_encounter(argv[1]);
