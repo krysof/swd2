@@ -747,41 +747,61 @@ BattleRoundResult BattleSession::play_round(
                 } else if (item.targets_monster()) {
                     const auto target_index = first_living_monster(command.target);
                     if (target_index == no_target) break;
-                    const auto effect = apply_player_ability_effect(
-                        item.effect_code, party_[actor].level, target_index,
-                        monsters_, abilities, random);
-                    applied = effect.supported;
-                    if (applied) {
-                        for (std::size_t index = 0; index < monsters_.size(); ++index) {
-                            monster_ai_[index].hit_points = monsters_[index].hit_points;
+                    // 1138 enters the same DS:2bbd dispatcher as a learned
+                    // ability. Direct tactical items such as item 211/effect
+                    // 61 must therefore clear monster buffs before falling
+                    // through to the ordinary damage/status handlers.
+                    applied = apply_tactical(
+                        item.effect_code, target_index,
+                        &monsters_[target_index],
+                        monster_definitions_[target_index].physical_attack,
+                        monster_definitions_[target_index].evasion,
+                        item.id);
+                    if (!applied) {
+                        const auto effect = apply_player_ability_effect(
+                            item.effect_code, party_[actor].level, target_index,
+                            monsters_, abilities, random);
+                        applied = effect.supported;
+                        if (applied) {
+                            for (std::size_t index = 0; index < monsters_.size(); ++index) {
+                                monster_ai_[index].hit_points = monsters_[index].hit_points;
+                            }
+                            add_ability_events(result.events,
+                                               BattleEventKind::player_ability,
+                                               false, actor, true, item.id,
+                                               item.effect_code,
+                                               effect.targets);
                         }
-                        add_ability_events(result.events,
-                                           BattleEventKind::player_ability,
-                                           false, actor, true, item.id,
-                                           item.effect_code,
-                                           effect.targets);
                     }
                 } else {
                     const auto target_index =
                         command.target < party_count_ ? command.target : actor;
-                    std::array<PlayerSupportState, 4> support_states{};
-                    for (std::size_t index = 0; index < party_count_; ++index) {
-                        support_states[index] = party_[index].support_target();
-                    }
-                    const auto effect = apply_player_support_effect(
-                        item.effect_code, actor, target_index,
-                        std::span<PlayerSupportState>(support_states).first(party_count_),
-                        &player_support_runtime_);
-                    applied = effect.supported;
-                    if (applied) {
+                    // Direct item selectors 62/63/66..69 are tactical too;
+                    // previously only nested 6b wrappers reached this path,
+                    // leaving shipped items 186/204/226 as invalid commands.
+                    applied = apply_tactical(
+                        item.effect_code, target_index, nullptr, 0, 0,
+                        item.id);
+                    if (!applied) {
+                        std::array<PlayerSupportState, 4> support_states{};
                         for (std::size_t index = 0; index < party_count_; ++index) {
-                            party_[index].apply_support_target(support_states[index]);
+                            support_states[index] = party_[index].support_target();
                         }
-                        add_ability_events(result.events,
-                                           BattleEventKind::player_ability,
-                                           false, actor, false, item.id,
-                                           item.effect_code,
-                                           effect.targets);
+                        const auto effect = apply_player_support_effect(
+                            item.effect_code, actor, target_index,
+                            std::span<PlayerSupportState>(support_states).first(party_count_),
+                            &player_support_runtime_);
+                        applied = effect.supported;
+                        if (applied) {
+                            for (std::size_t index = 0; index < party_count_; ++index) {
+                                party_[index].apply_support_target(support_states[index]);
+                            }
+                            add_ability_events(result.events,
+                                               BattleEventKind::player_ability,
+                                               false, actor, false, item.id,
+                                               item.effect_code,
+                                               effect.targets);
+                        }
                     }
                 }
                 if (!applied) {

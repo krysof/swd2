@@ -166,6 +166,11 @@ FieldActionResult FieldActionSystem::apply(
                 changed |= restore_percent(actor, 0x35, runtime_->secondary_operand);
                 if ((state_.u16(actor_offset(actor) + 8) & 0xe000U) == 0) {
                     changed |= clear_status(actor, 0);
+                    // RPG:358d..3593 performs a third 38ab call for +55
+                    // with cx=100 after the shared HP/secondary recovery.
+                    // This is the only all-party handler that restores all
+                    // three gauges as well as clearing status.
+                    changed |= restore_percent(actor, 0x55, 100);
                 }
             }
         }

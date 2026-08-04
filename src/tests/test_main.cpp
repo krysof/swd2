@@ -1205,6 +1205,21 @@ void test_field_actions(const std::filesystem::path& game_root) {
             "RPG percentage restorative used target +45 instead of DS:35fc owner");
 
     state.set_u16(base + 8, 0x0300);
+    state.set_u16(base + 0x2d, 1);
+    state.set_u16(base + 0x35, 2);
+    state.set_u16(base + 0x55, 3);
+    state.set_u16(base + 0x57, 40);
+    state.set_u16(target_one + 8, 0x0100);
+    state.set_u16(target_one + 0x55, 4);
+    state.set_u16(target_one + 0x57, 50);
+    require(actions.apply(0x12).status == swd2::FieldActionStatus::applied &&
+                state.u16(base + 8) == 0 && state.u16(base + 0x2d) == 100 &&
+                state.u16(base + 0x35) == 80 && state.u16(base + 0x55) == 40 &&
+                state.u16(target_one + 8) == 0 &&
+                state.u16(target_one + 0x55) == 50,
+            "RPG all-party action 12h omitted 358d's +55 ability-pool restore");
+
+    state.set_u16(base + 8, 0x0300);
     state.set_u16(base + 0x2d, 0);
     state.set_u16(base + 0x35, 0);
     require(actions.apply(0x10, 0).status == swd2::FieldActionStatus::applied &&
@@ -3489,6 +3504,59 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 tactical_item_session.inventory()[0] == 0 &&
                 tactical_nested == std::vector<std::uint16_t>{0x66, 0x69},
             "FIG targetless composite item did not dispatch both tactical effects");
+
+    // Direct ITEM selectors enter the same tactical handlers as learned and
+    // nested abilities. Cover both the player/self side (62/63/69) and the
+    // monster-buff removal side (61) using the shipped records.
+    struct DirectTacticalItemCase {
+        std::uint16_t item;
+        std::uint16_t effect;
+        bool targets_monster;
+        bool consumed;
+    };
+    const std::array<DirectTacticalItemCase, 4> direct_tactical_items{{
+        {186, 0x69, false, false}, // 辟邪戒指
+        {204, 0x62, false, true},  // 代形符
+        {211, 0x61, true, true},   // 破法符
+        {226, 0x63, false, true},  // 踏風符
+    }};
+    for (const auto& test : direct_tactical_items) {
+        auto direct_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+        direct_state.set_u16(0x10, 1);
+        direct_state.set_u16(0x382, test.item);
+        direct_state.set_u16(actor_zero + 0x55, 1000);
+        direct_state.set_u16(actor_zero + 0x57, 1000);
+        direct_state.set_u16(actor_zero + 0x2d, 60000);
+        direct_state.set_u16(actor_zero + 0x2f, 60000);
+        direct_state.set_u16(actor_zero + 0x5d, 1);
+        auto direct_session = swd2::BattleSession::create(
+            direct_state, selected->get(), items);
+        const auto speed_before = direct_session.party()[0].speed;
+        auto direct_commands = skip_commands;
+        direct_commands[0] = {
+            swd2::PlayerCommandKind::item, 0, 0, 0,
+        };
+        const auto direct_round = direct_session.play_round(
+            direct_commands, abilities, zero_random);
+        const auto event = std::find_if(
+            direct_round.events.begin(), direct_round.events.end(),
+            [&](const swd2::BattleSessionEvent& candidate) {
+                return candidate.kind ==
+                           swd2::BattleEventKind::player_ability &&
+                       candidate.source == 0 &&
+                       candidate.ability_id == test.item &&
+                       candidate.effect_code == test.effect;
+            });
+        require(event != direct_round.events.end() &&
+                    event->target_is_monster == test.targets_monster &&
+                    direct_session.inventory()[0] ==
+                        (test.consumed ? 0 : test.item),
+                "FIG direct tactical item remained an invalid command");
+        if (test.item == 226) {
+            require(direct_session.party()[0].speed > speed_before,
+                    "FIG direct effect-63 item did not apply its speed buff");
+        }
+    }
 
     // 58fa skips a medium-dependent effect body but returns to the ordinary
     // payment/consumption path. The monster is untouched and the exact failed
