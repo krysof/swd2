@@ -1895,7 +1895,7 @@ void present_medium_summon_animation(
     throw std::runtime_error("FIG mediator summon animation did not converge");
 }
 
-void present_round_events(
+bool present_round_events(
     GameContext& context, const BattleSurface& base_surface,
     const BattleEncounter& encounter, const ScriptArchive& items,
     const BattleAbilityDatabase& abilities, const LegacyFont& font,
@@ -1919,6 +1919,10 @@ void present_round_events(
     std::map<std::uint16_t, SpriteArchive> effect_cache;
     for (std::size_t event_index = 0; event_index < result.events.size();
          ++event_index) {
+        // A resolved round can contain a long multi-target presentation. Its
+        // rules are already committed atomically, but a closed frontend need
+        // not render every remaining DOS animation before the process exits.
+        if (context.platform.poll_frontend_quit()) return false;
         const auto& event = result.events[event_index];
         const auto action_first =
             event_index == 0 ||
@@ -2906,6 +2910,7 @@ void present_round_events(
             context.platform.delay_for(action_delay);
         }
     }
+    return !context.platform.poll_frontend_quit();
 }
 
 void begin_battle_shared_state(SharedState& state) {
@@ -3558,11 +3563,14 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             auto visual = capture_visual_state(session, abilities);
             const auto round_result =
                 session.play_round(round_commands, abilities, random.function());
-            present_round_events(context, base_surface, encounter, items,
-                                 abilities, command_font, command_name_font,
-                                 fighters, menu_sprites,
-                                 visual, round_result,
-                                 encounter_offset);
+            if (!present_round_events(
+                    context, base_surface, encounter, items,
+                    abilities, command_font, command_name_font,
+                    fighters, menu_sprites, visual, round_result,
+                    encounter_offset)) {
+                quit_battle = true;
+                break;
+            }
 
             // Recompose from the decoded background after each resolved round
             // so defeated monsters disappear and portable frontends receive a

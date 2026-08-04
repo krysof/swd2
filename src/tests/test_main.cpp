@@ -7435,6 +7435,27 @@ void test_demo_timeline(const std::filesystem::path& game_root) {
 }
 
 void test_battle_module(const std::filesystem::path& game_root) {
+    ScriptedPlatform round_quit_platform;
+    round_quit_platform.actions.assign(2U, swd2::InputAction::confirm);
+    round_quit_platform.frontend_actions = {swd2::InputAction::quit};
+    auto round_quit_state = swd2::SharedState::load(
+        game_root / "SAVE.DA1");
+    const auto round_quit_money = round_quit_state.u16(0x104);
+    round_quit_state.set_u16(0x4a0, 392);
+    round_quit_state.set_u16(0x106 + 0x0c, 1234U);
+    swd2::GameContext round_quit_context{
+        game_root, round_quit_state, round_quit_platform};
+    require(swd2::BattleModule().run(
+                round_quit_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                round_quit_platform.cursor == 2U &&
+                round_quit_platform.frontend_cursor == 1U &&
+                round_quit_platform.stop_calls == 1U &&
+                round_quit_context.shared_state.u16(0x4a0) == 0U &&
+                round_quit_context.shared_state.u16(0x104) ==
+                    round_quit_money,
+            "FIG round presentation ignored frontend quit or awarded an unseen win");
+
     ScriptedPlatform defeat_quit_platform;
     defeat_quit_platform.actions.clear();
     defeat_quit_platform.frontend_actions = {swd2::InputAction::quit};
