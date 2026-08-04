@@ -513,6 +513,7 @@ public:
                  std::span<const std::uint8_t> shop_inventory_error,
                  std::span<const std::uint8_t> shop_confirmation_prompt,
                  std::span<const std::uint8_t> shop_quantity_error,
+                 std::span<const std::uint8_t> shop_unsellable_error,
                  std::span<const std::uint8_t> equipment_actor_error,
                  std::span<const std::uint8_t> equipment_two_hand_error,
                  std::span<const std::uint8_t> equipment_slot_error,
@@ -535,6 +536,7 @@ public:
           shop_inventory_error_(shop_inventory_error),
           shop_confirmation_prompt_(shop_confirmation_prompt),
           shop_quantity_error_(shop_quantity_error),
+          shop_unsellable_error_(shop_unsellable_error),
           equipment_actor_error_(equipment_actor_error),
           equipment_two_hand_error_(equipment_two_hand_error),
           equipment_slot_error_(equipment_slot_error),
@@ -913,7 +915,14 @@ public:
                 if (selected_item == 0) return InventoryUiResult::empty_slot;
                 if (mode == InventoryUiMode::sell) {
                     const auto value = inventory.sale_value(selected);
-                    if (!value) continue;
+                    if (!value) {
+                        // 5617 presents DATA:3c0a when ITEM +05 bit 08 is
+                        // clear instead of treating Enter as a no-op.
+                        if (!show_bottom_message(frame, shop_unsellable_error_)) {
+                            return InventoryUiResult::cancelled;
+                        }
+                        continue;
+                    }
                     std::uint8_t choice = 0;
                     bool rejected = false;
                     while (true) {
@@ -1544,6 +1553,7 @@ private:
     std::span<const std::uint8_t> shop_inventory_error_;
     std::span<const std::uint8_t> shop_confirmation_prompt_;
     std::span<const std::uint8_t> shop_quantity_error_;
+    std::span<const std::uint8_t> shop_unsellable_error_;
     std::span<const std::uint8_t> equipment_actor_error_;
     std::span<const std::uint8_t> equipment_two_hand_error_;
     std::span<const std::uint8_t> equipment_slot_error_;
@@ -1769,6 +1779,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3c6c);
     const auto shop_quantity_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3c80);
+    const auto shop_unsellable_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3c0a);
     const auto equipment_actor_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x369a);
     const auto equipment_two_hand_error = extract_rpg_embedded_text(
@@ -1865,7 +1877,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           save_slot_prompt, travel_labels, shop_prompt,
                           shop_sale_prompt, shop_money_error,
                           shop_inventory_error, shop_confirmation_prompt,
-                          shop_quantity_error,
+                          shop_quantity_error, shop_unsellable_error,
                           equipment_actor_error, equipment_two_hand_error,
                           equipment_slot_error, field_action_error,
                           inventory_category_labels, equipment_slot_labels,

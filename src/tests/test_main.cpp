@@ -236,6 +236,8 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
         image, entry, 0x3c6c);
     const auto shop_quantity_error = swd2::extract_rpg_embedded_text(
         image, entry, 0x3c80);
+    const auto shop_unsellable_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3c0a);
     require(shop_sale_prompt == std::vector<std::uint8_t>({
                 0xb3, 0x6f, 0xbc, 0xcb, 0xaa, 0xab, 0xab, 0x7e, 0xa7,
                 0xda, 0xa5, 0x58, 0xbb, 0xf9, 0xbb, 0xc8, 0xa8, 0xe2}) &&
@@ -250,7 +252,10 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                     0x6f, 0xaa, 0xab, 0xab, 0x7e, 0xb6, 0xdc, 0xa1, 0x48}) &&
                 shop_quantity_error.size() == 14U &&
                 shop_quantity_error.front() == 0xb3U &&
-                shop_quantity_error.back() == 0x49U,
+                shop_quantity_error.back() == 0x49U &&
+                shop_unsellable_error == std::vector<std::uint8_t>({
+                    0xb3, 0x6f, 0xbc, 0xcb, 0xaa, 0xab, 0xab, 0x7e, 0xa7,
+                    0xda, 0xa4, 0xa3, 0xa6, 0xac, 0xc1, 0xca, 0xa1, 0x49}),
             "RPG shop confirmation/error Big5 streams were not recovered exactly");
     const auto equipment_actor_error = swd2::extract_rpg_embedded_text(
         image, entry, 0x369a);
@@ -536,6 +541,12 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 image[0x5893U] == 0xc6U && image[0x5896U] == 0x3cU &&
                 image[0x5898U] == 0xe8U,
             "RPG 565f/5884 sale and purchase confirmation paths changed");
+    require(image[0x560aU] == 0xbeU && image[0x560bU] == 0x05U &&
+                image[0x560dU] == 0xe8U && image[0x5610U] == 0xa8U &&
+                image[0x5611U] == 0x08U && image[0x5617U] == 0xbeU &&
+                image[0x5618U] == 0x0aU && image[0x5619U] == 0x3cU &&
+                image[0x561aU] == 0xe8U,
+            "RPG 560a unsellable-item feedback path changed");
     require(image[0x3f95U] == 0xbeU && image[0x3f96U] == 0x9aU &&
                 image[0x3f97U] == 0x36U && image[0x3f98U] == 0xe8U &&
                 image[0x4239U] == 0xbeU && image[0x423aU] == 0x0eU &&
