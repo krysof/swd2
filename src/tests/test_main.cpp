@@ -7424,6 +7424,28 @@ void test_demo_timeline(const std::filesystem::path& game_root) {
 }
 
 void test_battle_module(const std::filesystem::path& game_root) {
+    ScriptedPlatform settlement_quit_platform;
+    settlement_quit_platform.actions.assign(2U, swd2::InputAction::confirm);
+    settlement_quit_platform.actions.push_back(swd2::InputAction::quit);
+    auto settlement_quit_state = swd2::SharedState::load(
+        game_root / "SAVE.DA1");
+    const auto settlement_money = settlement_quit_state.u16(0x104);
+    settlement_quit_state.set_u16(0x4a0, 392);
+    settlement_quit_state.set_u16(0x106 + 0x0c, 1234U);
+    swd2::GameContext settlement_quit_context{
+        game_root, settlement_quit_state, settlement_quit_platform};
+    const auto settlement_quit_result = swd2::BattleModule().run(
+        settlement_quit_context, swd2::Marker::open_figure);
+    require(settlement_quit_result ==
+                swd2::Marker::none &&
+                settlement_quit_platform.cursor ==
+                    settlement_quit_platform.actions.size() &&
+                settlement_quit_platform.stop_calls == 1U &&
+                settlement_quit_context.shared_state.u16(0x4a0) == 0U &&
+                settlement_quit_context.shared_state.u16(0x104) ==
+                    settlement_money + 20U,
+            "FIG victory-page quit continued into RPG or lost committed rewards");
+
     ScriptedPlatform introduction_cursor_platform;
     introduction_cursor_platform.actions = {swd2::InputAction::quit};
     introduction_cursor_platform.text_actions = {swd2::InputAction::confirm};

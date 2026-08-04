@@ -3038,9 +3038,12 @@ std::uint16_t apply_victory_rewards(SharedState& state,
     return share;
 }
 
-void wait_for_battle_ack(GameContext& context) {
-    while (context.platform.wait_for_input() == InputAction::none) {
+bool wait_for_battle_ack(GameContext& context) {
+    auto action = InputAction::none;
+    while (action == InputAction::none) {
+        action = context.platform.wait_for_input();
     }
+    return action != InputAction::quit;
 }
 
 BattleSurface compose_settlement_scene(
@@ -3057,7 +3060,7 @@ BattleSurface compose_settlement_scene(
     return frame;
 }
 
-BattleSurface present_victory_summary(
+std::optional<BattleSurface> present_victory_summary(
     GameContext& context, const BattleSurface& base_surface,
     const BattleEncounter& encounter, const ScriptArchive& items,
     const SpriteArchive& menu_sprites, const LegacyFont& font,
@@ -3079,11 +3082,11 @@ BattleSurface present_victory_summary(
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
     });
-    wait_for_battle_ack(context);
+    if (!wait_for_battle_ack(context)) return std::nullopt;
     return frame;
 }
 
-void present_encounter_capture_reward(
+bool present_encounter_capture_reward(
     GameContext& context, BattleSurface frame,
     const SpriteArchive& menu_sprites, const LegacyFont& font,
     const LegacyFont& fallback, const BattleAbilityDatabase& abilities) {
@@ -3095,7 +3098,7 @@ void present_encounter_capture_reward(
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
     });
-    wait_for_battle_ack(context);
+    return wait_for_battle_ack(context);
 }
 
 void present_defeat_summary(
@@ -3119,7 +3122,7 @@ void present_defeat_summary(
     context.platform.delay_for(std::chrono::milliseconds(771)); // 54/70 s
 }
 
-void present_level_ups(
+bool present_level_ups(
     GameContext& context, const BattleSurface& base_surface,
     const BattleEncounter& encounter, const ScriptArchive& items,
     const SpriteArchive& menu_sprites, const LegacyFont& font,
@@ -3180,9 +3183,10 @@ void present_level_ups(
                 320, 200, frame.pixels,
                 std::span<const std::uint8_t, 768>(frame.palette),
             });
-            wait_for_battle_ack(context);
+            if (!wait_for_battle_ack(context)) return false;
         }
     }
+    return true;
 }
 
 }  // namespace
@@ -3588,17 +3592,24 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 context, base_surface, encounter, items, menu_sprites,
                 command_font, command_name_font, session, abilities,
                 presentation_rewards, share);
-            if (encounter_capture_granted) {
-                present_encounter_capture_reward(
-                    context, std::move(victory_frame), menu_sprites,
+            auto frontend_quit = !victory_frame;
+            if (!frontend_quit && encounter_capture_granted) {
+                frontend_quit = !present_encounter_capture_reward(
+                    context, std::move(*victory_frame), menu_sprites,
                     command_font, command_name_font, abilities);
             }
             // FIG 0592 restores the pre-battle temporary-stat snapshots
             // before applying any growth-table delta.
             finish_battle_shared_state(context.shared_state);
-            present_level_ups(
-                context, base_surface, encounter, items, menu_sprites,
-                command_font, command_name_font, abilities, database);
+            if (!frontend_quit) {
+                frontend_quit = !present_level_ups(
+                    context, base_surface, encounter, items, menu_sprites,
+                    command_font, command_name_font, abilities, database);
+            }
+            if (frontend_quit) {
+                context.platform.stop_audio();
+                return Marker::none;
+            }
         } else {
             if (outcome == BattleOutcome::defeat) {
                 present_defeat_summary(
