@@ -2218,7 +2218,7 @@ private:
             draw_legacy_text(
                 frame, item_font_,
                 ability_resource_labels_.subspan(label_offset, 4U),
-                6 * 4, 113, 32, 16, 15);
+                6 * 4, 113, 32, 16, 0);
         }
         if (type != 5U) {
             const auto actor_base = 0x106U + actor * 0x9fU;
@@ -2328,7 +2328,7 @@ private:
                     draw_legacy_text(
                         frame, item_font_, travel_labels_.subspan(label, 8),
                         22 * 4, 29 + static_cast<int>(row) * 16,
-                        64, 16, 15);
+                        64, 16, 0);
                 }
             }
             if (menu_sprites_.sprites().size() > 1U) {
@@ -2415,7 +2415,7 @@ private:
                     if (record_offset + 20U > field_ability_records_.size()) continue;
                     const auto record = field_ability_records_.subspan(record_offset, 20);
                     const auto color = static_cast<std::uint8_t>(
-                        (record[13] & 0x80U) != 0U ? 0x6bU : 15U);
+                        (record[13] & 0x80U) != 0U ? 0x6bU : 0U);
                     const auto top = 49 + static_cast<int>(row) * 16;
                     draw_legacy_text(frame, item_font_, record.first(12),
                                      32 * 4, top, 96, 16, color);

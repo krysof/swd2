@@ -5991,7 +5991,9 @@ void test_rpg_field_magic_menu(const std::filesystem::path& game_root) {
                 platform.presented == 9U && platform.stop_calls == 1U,
             "RPG 2fb7 actor selector/list did not return through the field menu");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
+                platform.frame_hashes[4] == 11767186264042232530ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
+                platform.frame_hashes[5] == 14138796905971499288ULL &&
                 platform.frame_hashes[6] == platform.frame_hashes[3] &&
                 platform.frame_hashes[7] == platform.frame_hashes[2] &&
                 platform.frame_hashes[8] == platform.frame_hashes[0],
@@ -6259,6 +6261,7 @@ void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 8U && platform.stop_calls == 1U &&
                 platform.frame_hashes[6] != platform.frame_hashes[5] &&
+                platform.frame_hashes[6] == 6054732217561583608ULL &&
                 platform.frame_hashes[7] != platform.frame_hashes[0],
             "RPG action-29h travel list/map reload frames were not stable");
 }
