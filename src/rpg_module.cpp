@@ -1294,12 +1294,16 @@ public:
                     return true;
                 }
                 if (confirmation_action == InputAction::cancel) {
+                    present(confirmation_source);
                     finished_confirmation = true;
                 } else if (confirmation_action == InputAction::left) {
                     choice = 0;
                 } else if (confirmation_action == InputAction::right) {
                     choice = 1;
                 } else if (confirmation_action == InputAction::confirm) {
+                    // 555a restores the prompt/price page before 5884
+                    // applies the accepted purchase and rebuilds the list.
+                    present(confirmation_source);
                     if (choice == 0) {
                         static_cast<void>(inventory.purchase(item_id));
                     }
@@ -1436,13 +1440,15 @@ public:
                     bool rejected = false;
                     bool sold = false;
                     while (true) {
-                        auto confirmation = frame;
-                        draw_bottom_message(confirmation, shop_sale_prompt_);
+                        auto confirmation_source = frame;
+                        draw_bottom_message(
+                            confirmation_source, shop_sale_prompt_);
                         // 565f renders DATA:3c1e without waiting, advances
                         // one Mode-X column/four lines, then 2315 writes the
                         // exact three-quarter sale value with MENU 101..110.
-                        draw_menu_number(confirmation, menu_sprites_, *value,
+                        draw_menu_number(confirmation_source, menu_sprites_, *value,
                                          47, 129, 101);
+                        auto confirmation = confirmation_source;
                         const auto opaque = [&](std::size_t sprite,
                                                 int x_byte, int y) {
                             if (sprite >= menu_sprites_.sprites().size()) return;
@@ -1469,6 +1475,7 @@ public:
                             return InventoryUiResult::cancelled;
                         }
                         if (confirmation_action == InputAction::cancel) {
+                            present(confirmation_source);
                             rejected = true;
                             break;
                         }
@@ -1477,6 +1484,9 @@ public:
                         } else if (confirmation_action == InputAction::right) {
                             choice = 1;
                         } else if (confirmation_action == InputAction::confirm) {
+                            // 555a exposes the sale prompt/price source page
+                            // before 568d mutates money and the selected word.
+                            present(confirmation_source);
                             if (choice == 0) {
                                 sold = inventory.sell(selected);
                                 break;

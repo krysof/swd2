@@ -7471,17 +7471,19 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
     };
     swd2::GameContext no_context{game_root, no_state, no_platform};
     no_context.map_database = no_database;
-    require(swd2::RpgModule().run(no_context, swd2::Marker::menu_ready) ==
-                swd2::Marker::none &&
+    const auto no_result = swd2::RpgModule().run(
+        no_context, swd2::Marker::menu_ready);
+    require(no_result == swd2::Marker::none &&
                 no_context.shared_state.u16(0x104) == 100U &&
                 no_context.shared_state.u16(0x382) == 0U &&
                 no_platform.cursor == no_platform.actions.size() &&
                 no_platform.text_cursor == no_platform.text_actions.size() &&
                 no_platform.direct_updates == 4U &&
-                no_platform.presented == 9U &&
+                no_platform.presented == 10U &&
                 no_platform.frame_hashes[4] == 2974691146617333747ULL &&
-                no_platform.frame_hashes[7] == no_platform.frame_hashes[4] &&
-                no_platform.frame_hashes[8] == no_platform.frame_hashes[0],
+                no_platform.frame_hashes[7] == 15896012307976257435ULL &&
+                no_platform.frame_hashes[8] == no_platform.frame_hashes[4] &&
+                no_platform.frame_hashes[9] == no_platform.frame_hashes[0],
             "RPG 5884 purchase confirmation did not preserve state on No");
 
     auto [yes_database, yes_state] = prepare();
@@ -7501,10 +7503,11 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 yes_context.shared_state.u16(0x104) == 75U &&
                 yes_context.shared_state.u16(0x382) == 117U &&
                 yes_platform.cursor == yes_platform.actions.size() &&
-                yes_platform.presented == 8U &&
+                yes_platform.presented == 9U &&
                 yes_platform.frame_hashes[4] == 2974691146617333747ULL &&
-                yes_platform.frame_hashes[6] == 2389578071134734502ULL &&
-                yes_platform.frame_hashes[7] == yes_platform.frame_hashes[0],
+                yes_platform.frame_hashes[6] == 15896012307976257435ULL &&
+                yes_platform.frame_hashes[7] == 2389578071134734502ULL &&
+                yes_platform.frame_hashes[8] == yes_platform.frame_hashes[0],
             "RPG 5884 purchase confirmation did not commit the default Yes");
 
     auto [error_database, error_state] = prepare();
@@ -7558,21 +7561,22 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 sell_context.shared_state.u16(0x104U) == 119U &&
                 sell_context.shared_state.u16(0x382U) == 0U,
             "RPG opcode 17 did not select Sell, repeat its inventory or reload");
-    require(sell_platform.frame_hashes.size() == 18U &&
+    require(sell_platform.frame_hashes.size() == 19U &&
                 sell_platform.frame_hashes[4] == 13513023463937595710ULL &&
                 sell_platform.frame_hashes[5] == 15331958951154741984ULL &&
                 sell_platform.frame_hashes[6] == sell_platform.frame_hashes[3] &&
                 sell_platform.frame_hashes[8] == 15263479975629331374ULL &&
-                sell_platform.frame_hashes[9] ==
-                    sell_platform.frame_hashes[11] &&
-                sell_platform.bottom_hashes[9] == 8638034060943885118ULL &&
-                sell_platform.bottom_hashes[10] == 17483802272307405006ULL &&
-                sell_platform.bottom_hashes[11] ==
-                    sell_platform.bottom_hashes[9] &&
-                sell_platform.frame_hashes[12] == sell_platform.frame_hashes[0] &&
-                sell_platform.frame_hashes[15] == 7672109878915942062ULL &&
-                sell_platform.frame_hashes[16] == sell_platform.frame_hashes[14] &&
-                sell_platform.frame_hashes[17] == sell_platform.frame_hashes[0],
+                sell_platform.frame_hashes[9] == 14190787542881041504ULL &&
+                sell_platform.frame_hashes[10] ==
+                    sell_platform.frame_hashes[12] &&
+                sell_platform.bottom_hashes[10] == 8638034060943885118ULL &&
+                sell_platform.bottom_hashes[11] == 17483802272307405006ULL &&
+                sell_platform.bottom_hashes[12] ==
+                    sell_platform.bottom_hashes[10] &&
+                sell_platform.frame_hashes[13] == sell_platform.frame_hashes[0] &&
+                sell_platform.frame_hashes[16] == 7672109878915942062ULL &&
+                sell_platform.frame_hashes[17] == sell_platform.frame_hashes[15] &&
+                sell_platform.frame_hashes[18] == sell_platform.frame_hashes[0],
             "RPG opcode-17 Buy/Sell, empty feedback or reload frames changed");
 }
 
