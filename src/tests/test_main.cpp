@@ -1863,6 +1863,15 @@ void test_battle_database(const std::filesystem::path& game_root) {
                      swd2::FigVoiceTiming::after_action},
                 }),
             "FIG monster physical/death voices did not select SP106/SP015");
+    swd2::BattleSessionEvent ally_miss;
+    ally_miss.kind = swd2::BattleEventKind::ally_attack;
+    ally_miss.evaded = true;
+    require(swd2::fig_non_effect_voice_cues(ally_miss) ==
+                std::vector<swd2::FigVoiceCue>({
+                    {swd2::FigVoiceFile::sp, 106,
+                     swd2::FigVoiceTiming::before_action},
+                }),
+            "FIG captured ally did not start SP106 before a missed attack");
     swd2::BattleSessionEvent fled;
     fled.kind = swd2::BattleEventKind::monster_fled;
     require(swd2::fig_non_effect_voice_cues(fled) ==

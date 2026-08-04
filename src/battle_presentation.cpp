@@ -959,11 +959,16 @@ std::vector<FigVoiceCue> fig_non_effect_voice_cues(
         break;
     }
     case BattleEventKind::monster_attack:
-    case BattleEventKind::ally_attack:
         if (event.damage != 0) {
             result.push_back({FigVoiceFile::sp, 106,
                               FigVoiceTiming::before_action});
         }
+        break;
+    case BattleEventKind::ally_attack:
+        // Captured ally 0fce calls the SP106 path before rolling attack,
+        // defense, or evasion. Enemy 2a65 reaches it only after a hit.
+        result.push_back({FigVoiceFile::sp, 106,
+                          FigVoiceTiming::before_action});
         break;
     case BattleEventKind::monster_fled:
     case BattleEventKind::ally_fled:
