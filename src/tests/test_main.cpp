@@ -5147,6 +5147,41 @@ void test_event_vm(const std::filesystem::path& game_root) {
         require(state.u16(0xa2 + i * 2) == destination.actor_direction,
                 "event opcode 37 did not synchronize actor directions");
     }
+
+    const std::vector<std::vector<std::uint8_t>> position_records = {
+        event_words({37, 0x800a, 41, 3, 0xffff}),
+    };
+    const auto position_archive =
+        swd2::ScriptArchive::from_records(position_records);
+    auto position_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto& original_location = world.location_at_directory_offset(8);
+    position_state.set_dos_string(
+        0x42d, 22, original_location.area.graphics_path);
+    position_state.set_dos_string(
+        0x443, 22, original_location.area.layout_path);
+    position_state.set_dos_string(
+        0x459, 22, original_location.area.music_path);
+    auto position_area = original_location.area;
+    const auto position_money = position_state.u16(0x104);
+    const auto relocation_calls = host.map_relocations;
+    const auto positioned = swd2::execute_event(
+        position_archive, 2, position_state, &position_area, 0, host,
+        10'000, &world);
+    require(positioned.status == swd2::EventVmStatus::completed &&
+                !positioned.requested_map_reload &&
+                !positioned.relocated_area &&
+                positioned.commands_executed == 2U &&
+                host.map_relocations == relocation_calls &&
+                position_state.u16(0x424) == 10U &&
+                position_state.u16(0x40d) == destination.map_position &&
+                position_state.area_graphics_path() ==
+                    original_location.area.graphics_path &&
+                position_state.area_collision_path() ==
+                    original_location.area.layout_path &&
+                position_state.music_path() ==
+                    original_location.area.music_path &&
+                position_state.u16(0x104) == position_money + 3U,
+            "event opcode 37 position-only form reloaded destination resources");
 }
 
 class ScriptedPlatform final : public swd2::PlatformBackend {
