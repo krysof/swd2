@@ -5160,8 +5160,57 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
     require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
             "RPG entity-dialogue run did not terminate normally");
     require(platform.presented == 3 && platform.music_calls == 1 &&
-                platform.stop_calls == 1,
+                platform.stop_calls == 1 && platform.frame_hashes.size() == 3 &&
+                platform.frame_hashes[1] == 5520302039675693235ULL,
             "RPG did not present dialogue and manage map music in-process");
+}
+
+void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(684);
+    require(location.area.event_archive_path == "CHNA6.EXE" &&
+                location.area.entity_count() >= 1,
+            "RPG top-dialogue oracle location changed");
+    std::fill(location.area.entity_fields[3].begin(),
+              location.area.entity_fields[3].end(), 3);
+    location.area.entity_fields[3][0] = 0;
+    location.area.entity_fields[9][0] = 250;  // CHNA6 entry 125: opcode 46
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    constexpr std::uint16_t map_width = 39;
+    constexpr std::uint16_t cell_base = 904;
+    state.set_u16(0x424, 684);
+    state.set_u16(0x40f, cell_base);
+    state.set_viewport_x(16);
+    state.set_viewport_y(14);
+    state.set_actor_screen_x(12);  // world x 23, left of entity x 24
+    state.set_actor_screen_y(88);  // world y 27
+    state.set_actor_direction(9);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        cell_base + (27U * map_width + 23U) * 2U));
+    state.set_dos_string(0x42d, 22, location.area.graphics_path);
+    state.set_dos_string(0x443, 22, location.area.layout_path);
+    state.set_dos_string(0x459, 22, location.area.music_path);
+    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+    state.set_dos_string(0x485, 24, location.area.event_font_path);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto top_result = swd2::RpgModule().run(context, swd2::Marker::menu_ready);
+    require(top_result ==
+                swd2::Marker::none &&
+                platform.cursor == platform.actions.size() &&
+                platform.frame_hashes.size() == 11 &&
+                platform.frame_hashes[9] == 6572942975181326235ULL,
+            "RPG opcode-46 top-dialogue run did not terminate normally");
 }
 
 void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
@@ -6696,6 +6745,7 @@ int main(int argc, char** argv) {
         test_stateful_event_opcodes(argv[1]);
         test_monolithic_runtime(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
+        test_rpg_top_dialogue_panel(argv[1]);
         test_rpg_field_menu_inventory(argv[1]);
         test_rpg_inventory_item_actions(argv[1]);
         test_rpg_inventory_alchemy(argv[1]);

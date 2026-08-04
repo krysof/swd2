@@ -647,12 +647,28 @@ public:
                        std::span<const std::uint8_t> text) override {
         std::size_t offset = 0;
         do {
-            const auto page = render_dialogue_page(font_, text, offset, 288, 64, 15, &name_font_);
+            // 2cce installs the 7x4 MENU panel at byte column four. Mode 2
+            // (opcode 46) uses y=0; every other dialogue mode uses y=112.
+            // Text begins at byte column ten and panel_y+13, wrapping at
+            // byte column 72: 62 Mode-X columns = 248 linear pixels.
+            const auto page = render_dialogue_page(
+                font_, text, offset, 248, 64, 15, &name_font_);
             auto frame = event_scene();
+            const auto panel_top = opcode == 46 ? 0 : 112;
+            const auto text_left = 10 * 4;
+            const auto text_top = panel_top + 13;
+            draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                    4, panel_top, 7, 4);
             for (std::size_t y = 0; y < page.height; ++y) {
                 for (std::size_t x = 0; x < page.width; ++x) {
-                    const auto destination = (128 + y) * 320 + 16 + x;
-                    frame.pixels[destination] = page.pixels[y * page.width + x];
+                    const auto color = page.pixels[y * page.width + x];
+                    if (color == 0) continue;
+                    const auto destination_y = text_top + static_cast<int>(y);
+                    const auto destination_x = text_left + static_cast<int>(x);
+                    if (destination_y < 200 && destination_x < 320) {
+                        frame.pixels[static_cast<std::size_t>(destination_y) * 320U +
+                                     static_cast<std::size_t>(destination_x)] = color;
+                    }
                 }
             }
             platform_.present({320, 200, frame.pixels,
