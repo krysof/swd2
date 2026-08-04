@@ -4846,6 +4846,28 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                 missing.u8(0x163) == 7 && missing.u8(0x114) == 13,
             "event opcodes 40/61 did not take and execute the missing-item branch");
 
+    const std::vector<std::vector<std::uint8_t>> removal_records = {
+        event_words({40, 75, 4, 0, 0xffff}),
+        event_words({61, 0xffff}),
+    };
+    const auto removal_archive =
+        swd2::ScriptArchive::from_records(removal_records);
+    auto removal_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    for (std::size_t i = 0; i < 50; ++i) {
+        removal_state.set_u16(0x382 + i * 2U, 0);
+    }
+    removal_state.set_u16(0x382, 1);
+    removal_state.set_u16(0x384, 75);
+    removal_state.set_u16(0x386, 2);
+    const auto removal = swd2::execute_event(
+        removal_archive, 2, removal_state, nullptr, 0, host);
+    require(removal.status == swd2::EventVmStatus::completed &&
+                removal.commands_executed == 1 && removal.last_opcode == 40 &&
+                removal_state.u16(0x382) == 1 &&
+                removal_state.u16(0x384) == 2 &&
+                removal_state.u16(0x386) == 0,
+            "event opcode 40 removal did not run its 3ced stable compaction");
+
     for (const auto opcode : {std::uint16_t{59}, std::uint16_t{60}}) {
         const std::vector<std::vector<std::uint8_t>> battle_records = {
             event_words({opcode, 7, 444, 0xffff}),

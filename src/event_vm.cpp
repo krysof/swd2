@@ -48,6 +48,18 @@ void request_battle(SharedState& state, EventVmResult& result,
     result.requested_marker = Marker::open_figure;
 }
 
+void compact_inventory(SharedState& state) {
+    std::size_t output = 0;
+    for (std::size_t input = 0; input < 50; ++input) {
+        const auto value = state.u16(0x382 + input * 2U);
+        if (value == 0) continue;
+        state.set_u16(0x382 + output++ * 2U, value);
+    }
+    while (output < 50) {
+        state.set_u16(0x382 + output++ * 2U, 0);
+    }
+}
+
 void move_scripted_actor(SharedState& state, std::uint16_t opcode,
                          std::uint16_t steps) {
     const auto direction = opcode == 30 ? 3U : opcode == 31 ? 0U :
@@ -440,7 +452,13 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                     const auto offset = 0x382 + i * 2;
                     if (state.u16(offset) != arg(0)) continue;
                     found = true;
-                    if (arg(2) != 0xf800) state.set_u16(offset, arg(2));
+                    if (arg(2) != 0xf800) {
+                        state.set_u16(offset, arg(2));
+                        // 5b18 calls 3ced even for nonzero replacements. It
+                        // becomes observable when a shipped removal writes
+                        // zero (CHNA2 item 75 and CHNA5 item 257).
+                        compact_inventory(state);
+                    }
                     break;
                 }
                 if (!found) {
@@ -466,17 +484,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                     const auto offset = 0x382 + i * 2;
                     if (state.u16(offset) >= 0x013a) state.set_u16(offset, 0);
                 }
-                {
-                    std::size_t output = 0;
-                    for (std::size_t input = 0; input < 50; ++input) {
-                        const auto value = state.u16(0x382 + input * 2U);
-                        if (value == 0) continue;
-                        state.set_u16(0x382 + output++ * 2U, value);
-                    }
-                    while (output < 50) {
-                        state.set_u16(0x382 + output++ * 2U, 0);
-                    }
-                }
+                compact_inventory(state);
                 break;
             case 43:
             case 44:
