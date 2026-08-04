@@ -3491,6 +3491,12 @@ Marker RpgModule::run(GameContext& context, Marker) {
     FieldActionRuntime field_action_runtime;
     std::optional<MapAreaRecord> relocated_transient_area;
     while (true) {
+    // RPG:10fd installs a fresh transient entity array for every area load;
+    // the behavior-stream cursor, delays and roam counters beside it are BSS
+    // scratch, not save data. Reusing a runtime merely because two successive
+    // areas happen to have the same entity count carries movement state across
+    // opcode 37/52 and travel boundaries.
+    entity_runtime = {};
     auto graphics_relative = normalize_dos_asset_path(context.shared_state.area_graphics_path());
     auto layout_relative = normalize_dos_asset_path(context.shared_state.area_collision_path());
     graphics_relative.replace_extension();
