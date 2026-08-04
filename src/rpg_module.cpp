@@ -518,6 +518,10 @@ public:
                  std::span<const std::uint8_t> equipment_two_hand_error,
                  std::span<const std::uint8_t> equipment_slot_error,
                  std::span<const std::uint8_t> field_action_error,
+                 std::span<const std::uint8_t> ability_value_error,
+                 std::span<const std::uint8_t> ability_material_error,
+                 std::span<const std::uint8_t> ability_dead_error,
+                 std::span<const std::uint8_t> field_ability_records,
                  std::span<const std::uint8_t> system_menu_labels,
                  std::span<const std::uint8_t> system_exit_prompt,
                  std::span<const std::uint8_t> status_menu_labels,
@@ -547,6 +551,10 @@ public:
           equipment_two_hand_error_(equipment_two_hand_error),
           equipment_slot_error_(equipment_slot_error),
           field_action_error_(field_action_error),
+          ability_value_error_(ability_value_error),
+          ability_material_error_(ability_material_error),
+          ability_dead_error_(ability_dead_error),
+          field_ability_records_(field_ability_records),
           system_menu_labels_(system_menu_labels),
           system_exit_prompt_(system_exit_prompt),
           status_menu_labels_(status_menu_labels),
@@ -1384,9 +1392,10 @@ public:
     // RPG.EXE:2e63 is the field menu entered by the second action key.  It is
     // a directional diamond, not a conventional vertical host menu: Magic,
     // Item, System and Status are selected directly by Up/Right/Down/Left.
-    // The Item and System branches connect to their reconstructed state
-    // machines. Magic remains on the diamond until its complete field-casting
-    // state machine has been recovered rather than substituting native UI.
+    // Each branch connects to its reconstructed state machine.  The Magic
+    // branch uses RPG's embedded 20-byte records and actor ability slots;
+    // uncommon special handlers still remain explicit instead of being
+    // silently approximated by a native UI.
     [[nodiscard]] bool run_field_menu() {
         std::size_t selected = 2;  // 2e63 initializes DATA:35e2 to System.
         while (true) {
@@ -1459,7 +1468,10 @@ public:
             else if (action == InputAction::right) selected = 1;
             else if (action == InputAction::down) selected = 2;
             else if (action == InputAction::left) selected = 3;
-            else if (action == InputAction::confirm && selected == 1U) {
+            else if (action == InputAction::confirm && selected == 0U) {
+                if (run_magic_menu()) return true;
+                if (quit_requested_) return false;
+            } else if (action == InputAction::confirm && selected == 1U) {
                 const auto result = run_inventory(
                     state_, InventoryUiMode::general);
                 if (quit_requested_) return false;
@@ -1477,6 +1489,300 @@ public:
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
 
 private:
+    std::optional<std::uint8_t> select_magic_travel_destination() {
+        FieldActionSystem field_actions(state_, &field_action_runtime_);
+        const auto destinations = field_actions.unlocked_travel_indices();
+        if (destinations.empty()) return std::nullopt;
+        std::size_t selected = 0;
+        std::size_t first_visible = 0;
+        auto scroll_cue = RpgListSelection::ScrollCue::none;
+        while (true) {
+            auto frame = scene_provider_();
+            const auto visible = std::min<std::size_t>(destinations.size(), 10U);
+            draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                    14, 16, 5, static_cast<int>(visible));
+            draw_rpg_selector_scrollbar(
+                frame.pixels, 320, 200, menu_sprites_,
+                14, 16, 5, static_cast<int>(visible),
+                destinations.size() - visible, first_visible, scroll_cue);
+            scroll_cue = RpgListSelection::ScrollCue::none;
+            for (std::size_t row = 0; row < visible; ++row) {
+                const auto index = first_visible + row;
+                const auto label = static_cast<std::size_t>(destinations[index]) * 8U;
+                if (label + 8U <= travel_labels_.size()) {
+                    draw_legacy_text(
+                        frame, item_font_, travel_labels_.subspan(label, 8),
+                        22 * 4, 29 + static_cast<int>(row) * 16,
+                        64, 16, 15);
+                }
+            }
+            if (menu_sprites_.sprites().size() > 1U) {
+                const auto& cursor = menu_sprites_.sprites()[1];
+                blit(frame, menu_sprites_.pixels(1),
+                     cursor.width, cursor.height, 20 * 4,
+                     25 + static_cast<int>(selected - first_visible) * 16);
+            }
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return std::nullopt;
+            }
+            if (action == InputAction::cancel) return std::nullopt;
+            if (action == InputAction::confirm) return destinations[selected];
+            const auto selection = rpg_list_selection_input(
+                {selected, first_visible}, destinations.size(), visible, action);
+            selected = selection.selected;
+            first_visible = selection.first_visible;
+            scroll_cue = selection.scroll_cue;
+        }
+    }
+
+    [[nodiscard]] bool run_magic_menu() {
+        const auto party_count = std::max<std::size_t>(
+            1, std::min<std::size_t>(state_.u16(0x10), 4));
+        std::size_t actor = 0;
+        while (true) {
+            while (true) {
+                auto actor_frame = scene_provider_();
+                draw_rpg_party_target_cards(
+                    actor_frame, menu_sprites_, state_, party_count, actor);
+                platform_.present({
+                    320, 200, actor_frame.pixels,
+                    std::span<const std::uint8_t, 768>(actor_frame.palette)});
+                const auto action = platform_.wait_for_input();
+                if (action == InputAction::quit) {
+                    quit_requested_ = true;
+                    return false;
+                }
+                if (action == InputAction::cancel) return false;
+                if (const auto target = rpg_party_target_for_direction(
+                        action, party_count)) {
+                    actor = *target;
+                } else if (action == InputAction::confirm) {
+                    break;
+                }
+            }
+
+            std::size_t selected = 0;
+            std::size_t first_visible = 0;
+            auto scroll_cue = RpgListSelection::ScrollCue::none;
+            bool back_to_actor = false;
+            while (!back_to_actor) {
+                auto frame = scene_provider_();
+                draw_rpg_actor_card(frame, menu_sprites_, state_, actor,
+                                    8 * 4, 21);
+                draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
+                                       4, 72, 4, 1);
+                draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                        24, 36, 5, 8);
+                draw_rpg_selector_scrollbar(
+                    frame.pixels, 320, 200, menu_sprites_,
+                    24, 36, 5, 8, 42, first_visible, scroll_cue);
+                scroll_cue = RpgListSelection::ScrollCue::none;
+                const auto actor_base = 0x106U + actor * 0x9fU;
+
+                for (std::size_t row = 0; row < 8U; ++row) {
+                    const auto slot = first_visible + row;
+                    const auto id = state_.u8(actor_base + 0x6dU + slot);
+                    const auto record_offset = static_cast<std::size_t>(id) * 20U;
+                    if (record_offset + 20U > field_ability_records_.size()) continue;
+                    const auto record = field_ability_records_.subspan(record_offset, 20);
+                    const auto color = static_cast<std::uint8_t>(
+                        (record[13] & 0x80U) != 0U ? 0x6bU : 15U);
+                    const auto top = 49 + static_cast<int>(row) * 16;
+                    draw_legacy_text(frame, item_font_, record.first(12),
+                                     32 * 4, top, 96, 16, color);
+                    const auto type = static_cast<std::uint8_t>(record[13] & 0x0fU);
+                    const auto parameter = static_cast<std::uint16_t>(
+                        static_cast<std::uint16_t>(record[16]) |
+                        (static_cast<std::uint16_t>(record[17]) << 8U));
+                    if (type != 0U && type != 5U) {
+                        draw_menu_number(frame, menu_sprites_, parameter,
+                                         54, top + 3, 111);
+                    } else if (type == 5U) {
+                        static constexpr std::array<std::array<std::uint8_t, 2>, 5>
+                            elements{{{{0xaa, 0xf7}}, {{0xa4, 0xec}}, {{0xa4, 0xf4}},
+                                      {{0xa4, 0xf5}}, {{0xa4, 0x67}}}};
+                        auto x_byte = 54;
+                        auto bit = std::uint8_t{0x10};
+                        for (const auto& element : elements) {
+                            if ((parameter & bit) != 0U) {
+                                draw_legacy_text(frame, item_font_, element,
+                                                 x_byte * 4, top, 16, 16, 1);
+                                x_byte += 4;
+                            }
+                            bit >>= 1U;
+                        }
+                    }
+                }
+                if (menu_sprites_.sprites().size() > 1U) {
+                    const auto& cursor = menu_sprites_.sprites()[1];
+                    blit(frame, menu_sprites_.pixels(1),
+                         cursor.width, cursor.height, 30 * 4,
+                         45 + static_cast<int>(selected - first_visible) * 16);
+                }
+                platform_.present({
+                    320, 200, frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette)});
+                const auto action = platform_.wait_for_input();
+                if (action == InputAction::quit) {
+                    quit_requested_ = true;
+                    return false;
+                }
+                if (action == InputAction::cancel) {
+                    back_to_actor = true;
+                    continue;
+                }
+                if (action != InputAction::confirm) {
+                    const auto selection = rpg_list_selection_input(
+                        {selected, first_visible}, 50, 8, action);
+                    selected = selection.selected;
+                    first_visible = selection.first_visible;
+                    scroll_cue = selection.scroll_cue;
+                    continue;
+                }
+
+                const auto id = state_.u8(actor_base + 0x6dU + selected);
+                const auto record_offset = static_cast<std::size_t>(id) * 20U;
+                if (id == 0U || record_offset + 20U > field_ability_records_.size()) {
+                    continue;
+                }
+                const auto record = field_ability_records_.subspan(record_offset, 20);
+                const auto effect = static_cast<std::uint16_t>(
+                    static_cast<std::uint16_t>(record[14]) |
+                    (static_cast<std::uint16_t>(record[15]) << 8U));
+                const auto cost = static_cast<std::uint16_t>(
+                    static_cast<std::uint16_t>(record[16]) |
+                    (static_cast<std::uint16_t>(record[17]) << 8U));
+                const auto type = static_cast<std::uint8_t>(record[13] & 0x0fU);
+                if (effect == 0U) continue;
+                if ((state_.u16(actor_base + 8U) & 0xe000U) != 0U) {
+                    if (!show_bottom_message(frame, ability_dead_error_)) return false;
+                    continue;
+                }
+                if ((record[13] & 0x80U) != 0U || effect > 0x29U) {
+                    if (!show_bottom_message(frame, field_action_error_)) return false;
+                    continue;
+                }
+
+                std::optional<std::size_t> resource_offset;
+                if (type == 1U || type == 4U) resource_offset = actor_base + 0x55U;
+                else if (type == 2U || type == 3U) resource_offset = actor_base + 0x35U;
+                if (resource_offset && state_.u16(*resource_offset) < cost) {
+                    if (!show_bottom_message(frame, ability_value_error_)) return false;
+                    continue;
+                }
+                if (type == 5U) {
+                    auto bit = std::uint8_t{0x10};
+                    bool missing = false;
+                    for (std::size_t material = 0; material < 5U; ++material) {
+                        if ((cost & bit) != 0U &&
+                            state_.u16(0x3e6U + material * 2U) == 0U) {
+                            missing = true;
+                        }
+                        bit >>= 1U;
+                    }
+                    if (missing) {
+                        if (!show_bottom_message(frame, ability_material_error_)) return false;
+                        continue;
+                    }
+                }
+
+                std::optional<std::size_t> target_actor;
+                if (FieldActionSystem::requires_target(effect)) {
+                    target_actor = 0;
+                    bool target_cancelled = false;
+                    while (true) {
+                        auto target_frame = scene_provider_();
+                        draw_rpg_party_target_cards(
+                            target_frame, menu_sprites_, state_, party_count,
+                            *target_actor);
+                        platform_.present({
+                            320, 200, target_frame.pixels,
+                            std::span<const std::uint8_t, 768>(target_frame.palette)});
+                        const auto target_action = platform_.wait_for_input();
+                        if (target_action == InputAction::quit) {
+                            quit_requested_ = true;
+                            return false;
+                        }
+                        if (target_action == InputAction::cancel) {
+                            target_cancelled = true;
+                            break;
+                        }
+                        if (const auto target = rpg_party_target_for_direction(
+                                target_action, party_count)) {
+                            *target_actor = *target;
+                        } else if (target_action == InputAction::confirm) {
+                            break;
+                        }
+                    }
+                    if (target_cancelled) continue;
+                }
+
+                FieldActionSystem field_actions(
+                    state_, &field_action_runtime_, actor);
+                const auto result = field_actions.apply(effect, target_actor);
+                if (!result.dispatched()) {
+                    if (!show_bottom_message(frame, field_action_error_)) return false;
+                    continue;
+                }
+
+                std::optional<std::uint8_t> travel_index;
+                if (result.status == FieldActionStatus::travel_current) {
+                    const auto current = state_.u16(0x40a);
+                    if (current <= 0xffU) {
+                        travel_index = static_cast<std::uint8_t>(current);
+                    }
+                } else if (result.status == FieldActionStatus::travel_select) {
+                    travel_index = select_magic_travel_destination();
+                    if (quit_requested_) return false;
+                    if (!travel_index) continue;
+                }
+
+                if (resource_offset) {
+                    state_.set_u16(
+                        *resource_offset,
+                        static_cast<std::uint16_t>(
+                            state_.u16(*resource_offset) - cost));
+                } else if (type == 5U) {
+                    InventorySystem inventory(state_, items_);
+                    auto bit = std::uint8_t{0x10};
+                    for (std::size_t material = 0; material < 5U; ++material) {
+                        if ((cost & bit) != 0U) {
+                            const auto quantity_offset = 0x3e6U + material * 2U;
+                            const auto quantity = static_cast<std::uint16_t>(
+                                state_.u16(quantity_offset) - 1U);
+                            state_.set_u16(quantity_offset, quantity);
+                            if (quantity == 0U) {
+                                const auto item = static_cast<std::uint16_t>(0x44U + material);
+                                for (std::size_t slot = 0; slot < inventory_slot_count; ++slot) {
+                                    if (inventory.item(slot) == item) {
+                                        state_.set_u16(0x382U + slot * 2U, 0);
+                                        inventory.compact();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        bit >>= 1U;
+                    }
+                }
+
+                if (travel_index) {
+                    if (const auto directory =
+                            FieldActionSystem::travel_directory_offset(*travel_index);
+                        directory && map_database_ != nullptr) {
+                        install_map_location(state_, *map_database_, *directory);
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
     void run_status_menu() {
         const auto party_count = std::max<std::size_t>(
             1, std::min<std::size_t>(state_.u16(0x10), 4));
@@ -2037,6 +2343,10 @@ private:
     std::span<const std::uint8_t> equipment_two_hand_error_;
     std::span<const std::uint8_t> equipment_slot_error_;
     std::span<const std::uint8_t> field_action_error_;
+    std::span<const std::uint8_t> ability_value_error_;
+    std::span<const std::uint8_t> ability_material_error_;
+    std::span<const std::uint8_t> ability_dead_error_;
+    std::span<const std::uint8_t> field_ability_records_;
     std::span<const std::uint8_t> system_menu_labels_;
     std::span<const std::uint8_t> system_exit_prompt_;
     std::span<const std::uint8_t> status_menu_labels_;
@@ -2275,6 +2585,14 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3728);
     const auto field_action_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3620);
+    const auto ability_value_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3630);
+    const auto ability_material_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x364a);
+    const auto ability_dead_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3678);
+    const auto field_ability_records = extract_rpg_embedded_data(
+        rpg_load_image, rpg_entry_offset, 0x1dce, 151U * 20U);
     const auto system_menu_labels = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x39e6);
     const auto system_exit_prompt = extract_rpg_embedded_text(
@@ -2375,6 +2693,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           shop_quantity_error, shop_unsellable_error,
                           equipment_actor_error, equipment_two_hand_error,
                           equipment_slot_error, field_action_error,
+                          ability_value_error, ability_material_error,
+                          ability_dead_error, field_ability_records,
                           system_menu_labels, system_exit_prompt,
                           status_menu_labels,
                           inventory_category_labels, equipment_slot_labels,
@@ -2412,6 +2732,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
                               shop_quantity_error, shop_unsellable_error,
                               equipment_actor_error, equipment_two_hand_error,
                               equipment_slot_error, field_action_error,
+                              ability_value_error, ability_material_error,
+                              ability_dead_error, field_ability_records,
                               system_menu_labels, system_exit_prompt,
                               status_menu_labels,
                               inventory_category_labels, equipment_slot_labels,

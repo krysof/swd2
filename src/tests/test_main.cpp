@@ -279,6 +279,14 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
         image, entry, 0x3728);
     const auto field_action_error = swd2::extract_rpg_embedded_text(
         image, entry, 0x3620);
+    const auto ability_value_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3630);
+    const auto ability_material_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x364a);
+    const auto ability_dead_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3678);
+    const auto field_abilities = swd2::extract_rpg_embedded_data(
+        image, entry, 0x1dce, 151U * 20U);
     const auto system_menu_labels = swd2::extract_rpg_embedded_text(
         image, entry, 0x39e6);
     const auto system_exit_prompt = swd2::extract_rpg_embedded_text(
@@ -297,6 +305,17 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 field_action_error == std::vector<std::uint8_t>({
                     0xa6, 0x62, 0xa6, 0xb9, 0xb5, 0x4c, 0xaa,
                     0x6b, 0xa8, 0xcf, 0xa5, 0xce, 0xa1, 0x49}) &&
+                ability_value_error.size() == 24U &&
+                ability_value_error.front() == 0xbcU &&
+                ability_material_error.size() == 24U &&
+                ability_material_error.front() == 0xc3U &&
+                ability_dead_error == std::vector<std::uint8_t>({
+                    0xc3, 0x78, 0xa6, 0xba, 0xa9, 0xfc,
+                    0xb0, 0x67, 0xa4, 0xa4, 0xa1, 0x49}) &&
+                field_abilities.size() == 3020U &&
+                field_abilities[76U * 20U] == 0xa5U &&
+                field_abilities[76U * 20U + 13U] == 0xa4U &&
+                field_abilities[76U * 20U + 14U] == 0x38U &&
                 system_menu_labels.size() == 78U &&
                 system_menu_labels[0] == 0xadU &&
                 system_menu_labels[1] == 0xb5U &&
@@ -4523,6 +4542,127 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
             "RPG Status paging/return frames were not stable");
 }
 
+void test_rpg_field_magic_menu(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::up,       // Magic
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // first actor
+        swd2::InputAction::page_down,
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG field Magic run did not terminate normally");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 9U && platform.stop_calls == 1U,
+            "RPG 2fb7 actor selector/list did not return through the field menu");
+    require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
+                platform.frame_hashes[5] != platform.frame_hashes[4] &&
+                platform.frame_hashes[6] == platform.frame_hashes[3] &&
+                platform.frame_hashes[7] == platform.frame_hashes[2] &&
+                platform.frame_hashes[8] == platform.frame_hashes[0],
+            "RPG Magic paging/return frames were not stable");
+}
+
+void test_rpg_field_magic_cast(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::up,
+        swd2::InputAction::confirm,
+        swd2::InputAction::right,    // actor one: ability 50 / action 01h
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // target actor zero
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto actor_base = 0x106U + 0x9fU;
+    const auto before = state.u16(actor_base + 0x55U);
+    require(state.u8(actor_base + 0x6dU) == 50U && before >= 7U,
+            "fixture no longer exposes actor-one field ability 50");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context.shared_state.u16(actor_base + 0x55U) == before - 7U,
+            "RPG field ability did not dispatch/deduct DATA:1dce cost");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 11U && platform.stop_calls == 1U,
+            "RPG field ability target/cast did not return to its source list");
+}
+
+void test_rpg_field_magic_value_error(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::up,
+        swd2::InputAction::confirm,
+        swd2::InputAction::right,    // actor one: ability 50 / action 01h
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // dismiss DATA:3630
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto actor_base = 0x106U + 0x9fU;
+    require(state.u8(actor_base + 0x6dU) == 50U,
+            "fixture no longer exposes actor-one field ability 50");
+    state.set_u16(actor_base + 0x55U, 0);
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context.shared_state.u16(actor_base + 0x55U) == 0U,
+            "RPG insufficient ability resource changed actor state");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 11U && platform.stop_calls == 1U &&
+                platform.bottom_hashes[6] != platform.bottom_hashes[5],
+            "RPG DATA:3630 resource feedback did not preserve the ability list");
+}
+
+void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::up,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // actor zero
+        swd2::InputAction::confirm,  // ability 99 / action 29h
+        swd2::InputAction::confirm,  // first unlocked destination
+        swd2::InputAction::quit,     // reloaded map
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    constexpr auto actor_base = 0x106U;
+    state.set_u8(actor_base + 0x6dU, 99U);
+    state.set_u16(actor_base + 0x55U, 100U);
+    state.set_u8(0x51eU, 1U);
+    require((state.u16(0x408U) & 0x8000U) != 0U,
+            "fixture no longer permits action-29h travel");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context.shared_state.u16(actor_base + 0x55U) == 85U &&
+                context.shared_state.map_location_directory_offset() == 0x0046U,
+            "RPG ability 99 did not deduct/reload the selected MAPZ destination");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 7U && platform.stop_calls == 1U &&
+                platform.frame_hashes[5] != platform.frame_hashes[4] &&
+                platform.frame_hashes[6] != platform.frame_hashes[0],
+            "RPG action-29h travel list/map reload frames were not stable");
+}
+
 void test_rpg_system_menu_speed_and_exit(
     const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
@@ -5520,6 +5660,10 @@ int main(int argc, char** argv) {
         test_rpg_entity_dialogue(argv[1]);
         test_rpg_field_menu_inventory(argv[1]);
         test_rpg_field_status_menu(argv[1]);
+        test_rpg_field_magic_menu(argv[1]);
+        test_rpg_field_magic_cast(argv[1]);
+        test_rpg_field_magic_value_error(argv[1]);
+        test_rpg_field_magic_travel(argv[1]);
         test_rpg_system_menu_speed_and_exit(argv[1]);
         test_rpg_system_menu_save(argv[1]);
         test_rpg_system_menu_load(argv[1]);
