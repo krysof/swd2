@@ -624,6 +624,7 @@ public:
                  std::span<const std::uint8_t> system_menu_labels,
                  std::span<const std::uint8_t> system_exit_prompt,
                  std::span<const std::uint8_t> status_menu_labels,
+                 std::span<const std::uint8_t> status_value_labels,
                  std::span<const std::uint8_t> inventory_category_labels,
                  std::span<const std::uint8_t> equipment_slot_labels,
                  std::span<const std::uint8_t> equipment_stat_labels,
@@ -669,6 +670,7 @@ public:
           system_menu_labels_(system_menu_labels),
           system_exit_prompt_(system_exit_prompt),
           status_menu_labels_(status_menu_labels),
+          status_value_labels_(status_value_labels),
           inventory_category_labels_(inventory_category_labels),
           equipment_slot_labels_(equipment_slot_labels),
           equipment_stat_labels_(equipment_stat_labels),
@@ -2729,6 +2731,30 @@ private:
                     } else if (index == 1U) {
                         draw_pair(state_.u16(actor_base + 0x35),
                                   state_.u16(actor_base + 0x37), top);
+                    } else if (index == 2U &&
+                               status_value_labels_.size() >= 15U * 4U) {
+                        // RPG:4877/4960 expands the status word below the
+                        // label. Zero, death and near-death are exclusive;
+                        // otherwise set bits 1000h..0002h are listed in
+                        // descending priority. 499a advances one row for each
+                        // name and clips only outside y=49..161, so up to six
+                        // simultaneous conditions can remain visible beside
+                        // the later money/strength rows.
+                        const auto bits = state_.u16(actor_base + 8U);
+                        auto status_top = top;
+                        const auto draw_status = [&](std::size_t entry) {
+                            if (status_top >= 49 && status_top <= 161) {
+                                draw_legacy_text(
+                                    frame, item_font_,
+                                    status_value_labels_.subspan(entry * 4U, 4U),
+                                    42 * 4, status_top, 32, 16, 15);
+                            }
+                            status_top += 16;
+                        };
+                        for (const auto entry :
+                             rpg_status_label_indices(bits)) {
+                            draw_status(entry);
+                        }
                     } else if (index == 6U) {
                         draw_menu_number(frame, menu_sprites_, state_.u16(0x104),
                                          56, top + 3, 111);
@@ -3277,6 +3303,7 @@ private:
     std::span<const std::uint8_t> system_menu_labels_;
     std::span<const std::uint8_t> system_exit_prompt_;
     std::span<const std::uint8_t> status_menu_labels_;
+    std::span<const std::uint8_t> status_value_labels_;
     std::span<const std::uint8_t> inventory_category_labels_;
     std::span<const std::uint8_t> equipment_slot_labels_;
     std::span<const std::uint8_t> equipment_stat_labels_;
@@ -3598,6 +3625,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3a36);
     const auto status_menu_labels = extract_rpg_embedded_data(
         rpg_load_image, rpg_entry_offset, 0x3806, 28U * 8U);
+    // RPG:4960 indexes fifteen fixed two-glyph condition names at 38e6:
+    // healthy/dead/near-death, then status bits 1000h down through 0002h.
+    const auto status_value_labels = extract_rpg_embedded_data(
+        rpg_load_image, rpg_entry_offset, 0x38e6, 15U * 4U);
     // RPG.EXE:3d7e indexes forty-two fixed two-glyph type names. Equipment
     // uses one eleven-line label string and four consecutive $$-terminated
     // statistic labels rather than host-language UI text.
@@ -3724,7 +3755,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
             field_ability_records, ability_resource_labels,
             ability_descriptions,
             system_menu_labels, system_exit_prompt,
-            status_menu_labels,
+            status_menu_labels, status_value_labels,
             inventory_category_labels, equipment_slot_labels,
             equipment_stat_labels,
             compose_scene, advance_scene_palette,

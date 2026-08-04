@@ -154,6 +154,21 @@ std::vector<std::uint8_t> extract_rpg_embedded_data(
             load_image.begin() + static_cast<std::ptrdiff_t>(address + size)};
 }
 
+std::vector<std::size_t> rpg_status_label_indices(
+    std::uint16_t status_bits) {
+    if (status_bits == 0U) return {0U};
+    if ((status_bits & 0x4000U) != 0U) return {1U};
+    if ((status_bits & 0x2000U) != 0U) return {2U};
+
+    std::vector<std::size_t> result;
+    auto mask = std::uint16_t{0x1000U};
+    for (std::size_t entry = 3U; entry < 15U;
+         ++entry, mask >>= 1U) {
+        if ((status_bits & mask) != 0U) result.push_back(entry);
+    }
+    return result;
+}
+
 void draw_rpg_selector_panel(
     std::span<std::uint8_t> surface,
     std::size_t width,

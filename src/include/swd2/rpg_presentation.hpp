@@ -47,6 +47,12 @@ std::vector<std::uint8_t> extract_rpg_embedded_data(
     std::uint16_t data_offset,
     std::size_t size);
 
+// RPG:4960 selection indices into DATA:38e6's fifteen four-byte status names.
+// Healthy/dead/near-death are exclusive; ordinary condition bits are returned
+// in the original descending 1000h..0002h display priority.
+std::vector<std::size_t> rpg_status_label_indices(
+    std::uint16_t status_bits);
+
 // RPG.EXE and FIG.EXE share MENU frames 83..93 for their generic selector
 // panel. Coordinates are the original mode-X byte columns (four pixels each).
 void draw_rpg_selector_panel(

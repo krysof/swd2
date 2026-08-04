@@ -343,6 +343,17 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
         image, entry, 0x3a36);
     const auto status_menu_labels = swd2::extract_rpg_embedded_data(
         image, entry, 0x3806, 28U * 8U);
+    const auto status_value_labels = swd2::extract_rpg_embedded_data(
+        image, entry, 0x38e6, 15U * 4U);
+    require(swd2::rpg_status_label_indices(0U) ==
+                    std::vector<std::size_t>{0U} &&
+                swd2::rpg_status_label_indices(0x5ffeU) ==
+                    std::vector<std::size_t>{1U} &&
+                swd2::rpg_status_label_indices(0x3ffeU) ==
+                    std::vector<std::size_t>{2U} &&
+                swd2::rpg_status_label_indices(0x1403U) ==
+                    std::vector<std::size_t>({3U, 5U, 14U}),
+            "RPG 4960 status-name priority differs from the original bits");
     require(equipment_actor_error == std::vector<std::uint8_t>({
                 0xa6, 0xb9, 0xa4, 0x48, 0xb5, 0x4c, 0xaa, 0x6b, 0xa8, 0xcf,
                 0xa5, 0xce, 0xb3, 0x6f, 0xb8, 0xcb, 0xb3, 0xc6, 0xa1, 0x49}) &&
@@ -386,7 +397,16 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 status_menu_labels[0] == 0xa5U &&
                 status_menu_labels[1] == 0xcdU &&
                 status_menu_labels[216] == 0xaaU &&
-                status_menu_labels[223] == '$',
+                status_menu_labels[223] == '$' &&
+                status_value_labels.size() == 60U &&
+                std::equal(status_value_labels.begin(),
+                           status_value_labels.begin() + 4,
+                           std::array<std::uint8_t, 4>{
+                               0xb0, 0xb7, 0xb1, 0x64}.begin()) &&
+                std::equal(status_value_labels.end() - 4,
+                           status_value_labels.end(),
+                           std::array<std::uint8_t, 4>{
+                               0xa7, 0xf4, 0xbf, 0xa3}.begin()),
             "RPG equipment/system-menu Big5 streams were not exact");
     const auto category_labels = swd2::extract_rpg_embedded_data(
         image, entry, 0x299a, 42U * 4U);
@@ -5876,6 +5896,7 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
         swd2::InputAction::quit,
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x106U + 8U, 0x1ffeU);
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
                 context, swd2::Marker::menu_ready) == swd2::Marker::none,
@@ -5884,8 +5905,9 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
                 platform.presented == 9U && platform.stop_calls == 1U,
             "RPG 2f64 actor selector did not enter/return from 26f3 Status");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
+                platform.frame_hashes[4] == 8457148711059547239ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 197763952523392121ULL &&
+                platform.frame_hashes[5] == 7591659222446035225ULL &&
                 platform.frame_hashes[6] == platform.frame_hashes[3] &&
                 platform.frame_hashes[7] == platform.frame_hashes[2] &&
                 platform.frame_hashes[8] == platform.frame_hashes[0],
