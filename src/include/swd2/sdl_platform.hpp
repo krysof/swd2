@@ -22,6 +22,7 @@ public:
     ClockTime clock_time() const override;
     void play_music(std::span<const std::uint8_t> rix_data, bool loop) override;
     void play_voice(std::span<const std::uint8_t> voc_data) override;
+    void stop_music() override;
     void stop_audio() override;
 
 private:

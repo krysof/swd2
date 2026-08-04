@@ -50,6 +50,9 @@ public:
     virtual ClockTime clock_time() const = 0;
     virtual void play_music(std::span<const std::uint8_t> rix_data, bool loop) = 0;
     virtual void play_voice(std::span<const std::uint8_t> voc_data) = 0;
+    // RIX/MIDI stop commands do not silence an independently playing VOC.
+    // Backends predating the split retain safe stop-all behavior by default.
+    virtual void stop_music() { stop_audio(); }
     virtual void stop_audio() = 0;
 };
 

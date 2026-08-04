@@ -293,6 +293,15 @@ void SdlPlatform::play_voice(std::span<const std::uint8_t> voc_data) {
     SDL_UnlockAudioDevice(impl_->audio_device);
 }
 
+void SdlPlatform::stop_music() {
+    if (impl_->audio_device == 0) return;
+    SDL_LockAudioDevice(impl_->audio_device);
+    impl_->music_samples.clear();
+    impl_->music_cursor = 0;
+    impl_->loop_music = false;
+    SDL_UnlockAudioDevice(impl_->audio_device);
+}
+
 void SdlPlatform::stop_audio() {
     if (impl_->audio_device == 0) return;
     SDL_LockAudioDevice(impl_->audio_device);

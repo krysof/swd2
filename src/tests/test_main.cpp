@@ -5221,11 +5221,13 @@ public:
         voice_hashes.push_back(hash);
     }
     void stop_audio() override { ++stop_calls; }
+    void stop_music() override { ++music_stop_calls; }
     std::size_t presented{};
     std::size_t music_calls{};
     std::size_t voice_calls{};
     std::size_t voice_bytes{};
     std::size_t stop_calls{};
+    std::size_t music_stop_calls{};
     std::size_t wait_calls{};
     std::size_t poll_calls{};
     std::vector<std::uint64_t> frame_hashes;
@@ -6025,7 +6027,7 @@ void test_rpg_system_audio_toggle(const std::filesystem::path& game_root) {
             "RPG system audio-toggle run did not terminate normally");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 11U && platform.music_calls == 2U &&
-                platform.stop_calls == 2U,
+                platform.music_stop_calls == 1U && platform.stop_calls == 1U,
             "RPG system Music toggle did not stop/restart the current RIX");
     require(platform.frame_hashes[3] == platform.frame_hashes[7] &&
                 platform.frame_hashes[2] == platform.frame_hashes[8] &&

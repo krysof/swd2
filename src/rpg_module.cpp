@@ -824,7 +824,7 @@ public:
             present(event_scene());
             return true;
         case 56:
-            platform_.stop_audio();
+            platform_.stop_music();
             if (playing_music_) playing_music_->clear();
             return true;
         case 57:
@@ -2890,7 +2890,7 @@ private:
             if (selected == 0U) {
                 music_enabled_ = !music_enabled_;
                 if (!music_enabled_) {
-                    platform_.stop_audio();
+                    platform_.stop_music();
                 } else if (playing_music_ != nullptr &&
                            !playing_music_->empty()) {
                     const auto path = game_root_ / *playing_music_;

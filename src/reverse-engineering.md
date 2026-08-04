@@ -780,6 +780,9 @@ SWORD8 标题尾声：装入/淡入调色板、揭示三个人物、等待五秒
   unsigned 8-bit mono、codec 0，采样率为 `1,000,000/(256-time_constant)`，随后 type-0
   结束。`decode_voc` 已对签名、版本 checksum、block 边界及 codec 做严格验证，合计转换
   834,549 个 signed 16-bit PCM sample；SDL 后端不再静默丢弃语音。
+- Opcode 56 的 `1472` 和系统菜单的音乐关闭只停止 RIX/MIDI 通道，并不清空独立的
+  VOC 缓冲。`PlatformBackend` 因而区分 `stop_music` 与模块退出用的 `stop_audio`；
+  SDL 在剧情停乐或菜单切换时不会再顺带截断仍在播放的语音。
 - 43 个 `.RIX` 都以 `55 AA` 开头，`+8/+0c` 分别给出 64 字节乐器表和音乐流；音乐
   是 `(value,control)` 对，`90/A0/B0/C0` 高半字节分别选择乐器、弯音、音量和音符，
   其余 word 是由 70 Hz 中断每次减 14 的延时，`80` 结束。严格解码结果为 9,942 个
