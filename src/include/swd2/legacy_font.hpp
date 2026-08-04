@@ -26,6 +26,10 @@ public:
     glyph(std::uint16_t big5_code) const;
     [[nodiscard]] std::array<std::uint8_t, glyph_width * glyph_height>
     rasterize(std::uint16_t big5_code) const;
+    // The DOS 70a6/7284 lookup leaves AX at zero when a code is absent and
+    // therefore draws glyph slot zero instead of throwing or skipping it.
+    [[nodiscard]] std::array<std::uint8_t, glyph_width * glyph_height>
+    rasterize_or_first(std::uint16_t big5_code) const;
 
 private:
     std::vector<std::uint16_t> codes_;

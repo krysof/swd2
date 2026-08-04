@@ -39,11 +39,10 @@ DialoguePage render_dialogue_page(const LegacyFont& font, std::span<const std::u
         }
         if (cursor + 1 >= text.size()) throw std::runtime_error("truncated Big5 dialogue code");
         const auto code = static_cast<std::uint16_t>(text[cursor]) << 8U | text[cursor + 1];
-        const auto glyph = font.contains(code)
-                               ? font.rasterize(code)
-                               : (name_font && name_font->contains(code)
-                                      ? name_font->rasterize(code)
-                                      : font.rasterize(code));
+        const auto glyph = !font.contains(code) && name_font &&
+                                   name_font->contains(code)
+                               ? name_font->rasterize(code)
+                               : font.rasterize_or_first(code);
         for (std::size_t row = 0; row < LegacyFont::glyph_height; ++row) {
             for (std::size_t column = 0; column < LegacyFont::glyph_width; ++column) {
                 if (glyph[row * LegacyFont::glyph_width + column] != 0 &&

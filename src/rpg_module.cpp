@@ -328,18 +328,16 @@ void draw_legacy_text(Viewport& viewport, const LegacyFont& font,
         }
         const auto code = static_cast<std::uint16_t>(text[cursor]) << 8U |
                           text[cursor + 1];
-        if (font.contains(code)) {
-            const auto glyph = font.rasterize(code);
-            for (std::size_t row = 0; row < LegacyFont::glyph_height; ++row) {
-                for (std::size_t column = 0; column < LegacyFont::glyph_width; ++column) {
-                    if (glyph[row * LegacyFont::glyph_width + column] == 0) continue;
-                    const auto target_x = left + x + static_cast<int>(column);
-                    const auto target_y = top + y + static_cast<int>(row);
-                    if (target_x >= 0 && target_x < 320 &&
-                        target_y >= 0 && target_y < 200) {
-                        viewport.pixels[static_cast<std::size_t>(target_y) * 320U +
-                                        static_cast<std::size_t>(target_x)] = color;
-                    }
+        const auto glyph = font.rasterize_or_first(code);
+        for (std::size_t row = 0; row < LegacyFont::glyph_height; ++row) {
+            for (std::size_t column = 0; column < LegacyFont::glyph_width; ++column) {
+                if (glyph[row * LegacyFont::glyph_width + column] == 0) continue;
+                const auto target_x = left + x + static_cast<int>(column);
+                const auto target_y = top + y + static_cast<int>(row);
+                if (target_x >= 0 && target_x < 320 &&
+                    target_y >= 0 && target_y < 200) {
+                    viewport.pixels[static_cast<std::size_t>(target_y) * 320U +
+                                    static_cast<std::size_t>(target_x)] = color;
                 }
             }
         }

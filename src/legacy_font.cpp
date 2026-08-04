@@ -14,6 +14,23 @@ std::uint16_t little_u16(std::span<const std::uint8_t> bytes, std::size_t offset
            (static_cast<std::uint16_t>(bytes[offset + 1]) << 8U);
 }
 
+std::array<std::uint8_t,
+           LegacyFont::glyph_width * LegacyFont::glyph_height>
+rasterize_bitmap(
+    std::span<const std::uint8_t, LegacyFont::glyph_bytes> bits) {
+    std::array<std::uint8_t,
+               LegacyFont::glyph_width * LegacyFont::glyph_height> pixels{};
+    for (std::size_t row = 0; row < LegacyFont::glyph_height; ++row) {
+        const auto word = static_cast<std::uint16_t>(bits[row * 2]) << 8U |
+                          bits[row * 2 + 1];
+        for (std::size_t column = 0; column < LegacyFont::glyph_width; ++column) {
+            pixels[row * LegacyFont::glyph_width + column] =
+                (word & (0x8000U >> column)) != 0 ? 1 : 0;
+        }
+    }
+    return pixels;
+}
+
 }  // namespace
 
 LegacyFont LegacyFont::load(const std::filesystem::path& path) {
@@ -56,15 +73,20 @@ LegacyFont::glyph(std::uint16_t big5_code) const {
 
 std::array<std::uint8_t, LegacyFont::glyph_width * LegacyFont::glyph_height>
 LegacyFont::rasterize(std::uint16_t big5_code) const {
-    const auto bits = glyph(big5_code);
-    std::array<std::uint8_t, glyph_width * glyph_height> pixels{};
-    for (std::size_t row = 0; row < glyph_height; ++row) {
-        const auto word = static_cast<std::uint16_t>(bits[row * 2]) << 8U | bits[row * 2 + 1];
-        for (std::size_t column = 0; column < glyph_width; ++column) {
-            pixels[row * glyph_width + column] = (word & (0x8000U >> column)) != 0 ? 1 : 0;
-        }
+    return rasterize_bitmap(glyph(big5_code));
+}
+
+std::array<std::uint8_t, LegacyFont::glyph_width * LegacyFont::glyph_height>
+LegacyFont::rasterize_or_first(std::uint16_t big5_code) const {
+    const auto found = std::find(codes_.begin(), codes_.end(), big5_code);
+    if (found != codes_.end()) {
+        return rasterize_bitmap(
+            glyphs_[static_cast<std::size_t>(found - codes_.begin())]);
     }
-    return pixels;
+    if (glyphs_.empty()) {
+        throw std::out_of_range("cannot fall back in an empty DSK font");
+    }
+    return rasterize_bitmap(glyphs_.front());
 }
 
 }  // namespace swd2

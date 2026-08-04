@@ -4951,6 +4951,18 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
         &name_font);
     require(std::count(named_page.pixels.begin(), named_page.pixels.end(), 15) > 100,
             "NAME.DSK substitution glyphs were not used by dialogue rendering");
+    // CHNA1 has one shipped B6F2 reference absent from both its main table
+    // and NAME.DSK. 70a6 falls back to glyph index zero (A140, blank) while
+    // still advancing the cursor; it does not throw or collapse the spacing.
+    const std::array<std::uint8_t, 2> absent_code{{0xb6, 0xf2}};
+    const auto absent_page = swd2::render_dialogue_page(
+        font, absent_code, 0, 32, 16, 15, &name_font);
+    require(!font.contains(0xb6f2U) && !name_font.contains(0xb6f2U) &&
+                font.rasterize_or_first(0xb6f2U) == font.rasterize(0xa140U) &&
+                std::count(absent_page.pixels.begin(),
+                           absent_page.pixels.end(), 15) == 0 &&
+                absent_page.cursor_x == 16U,
+            "RPG missing Big5 code did not use 70a6 glyph-zero fallback");
 }
 
 class TestEventHost final : public swd2::EventVmHost {

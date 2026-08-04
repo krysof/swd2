@@ -171,21 +171,18 @@ void draw_big5(BattleSurface& surface, const LegacyFont& font,
         if (text[offset] == 0 && text[offset + 1] == 0) break;
         const auto code = static_cast<std::uint16_t>(text[offset]) << 8U |
                           text[offset + 1];
-        const LegacyFont* selected = nullptr;
-        if (font.contains(code)) selected = &font;
-        else if (fallback.contains(code)) selected = &fallback;
-        if (selected != nullptr) {
-            const auto glyph = selected->rasterize(code);
-            for (std::size_t y = 0; y < LegacyFont::glyph_height; ++y) {
-                for (std::size_t x = 0; x < LegacyFont::glyph_width; ++x) {
-                    const auto destination_x = left + static_cast<int>(x);
-                    const auto destination_y = top + static_cast<int>(y);
-                    if (glyph[y * LegacyFont::glyph_width + x] != 0 &&
-                        destination_x >= 0 && destination_x < 320 &&
-                        destination_y >= 0 && destination_y < 200) {
-                        surface.pixels[static_cast<std::size_t>(destination_y) * 320 +
-                                       static_cast<std::size_t>(destination_x)] = color;
-                    }
+        const auto glyph = !font.contains(code) && fallback.contains(code)
+                               ? fallback.rasterize(code)
+                               : font.rasterize_or_first(code);
+        for (std::size_t y = 0; y < LegacyFont::glyph_height; ++y) {
+            for (std::size_t x = 0; x < LegacyFont::glyph_width; ++x) {
+                const auto destination_x = left + static_cast<int>(x);
+                const auto destination_y = top + static_cast<int>(y);
+                if (glyph[y * LegacyFont::glyph_width + x] != 0 &&
+                    destination_x >= 0 && destination_x < 320 &&
+                    destination_y >= 0 && destination_y < 200) {
+                    surface.pixels[static_cast<std::size_t>(destination_y) * 320 +
+                                   static_cast<std::size_t>(destination_x)] = color;
                 }
             }
         }
