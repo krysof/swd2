@@ -3,6 +3,7 @@
 #include "swd2/sprite_archive.hpp"
 
 #include <algorithm>
+#include <array>
 #include <stdexcept>
 
 namespace swd2 {
@@ -58,6 +59,25 @@ std::vector<std::uint8_t> composite_mode_x_address_offset(
         }
     }
     return result;
+}
+
+void apply_rpg_event_monochrome_filter(
+    std::span<std::uint8_t> pixels,
+    std::span<const std::uint8_t, 768> palette) {
+    std::array<std::uint8_t, 16> translation{};
+    for (std::size_t offset = 0; offset < translation.size(); ++offset) {
+        const auto color = 0x10U + offset;
+        const auto red = static_cast<unsigned>(palette[color * 3U]);
+        const auto green = static_cast<unsigned>(palette[color * 3U + 1U]);
+        const auto blue = static_cast<unsigned>(palette[color * 3U + 2U]);
+        const auto luminance = (red + green * 2U + blue) >> 4U;
+        translation[offset] = static_cast<std::uint8_t>(0x1fU - luminance);
+    }
+    for (auto& pixel : pixels) {
+        if (pixel >= 0x10U && pixel < 0x20U) {
+            pixel = translation[pixel - 0x10U];
+        }
+    }
 }
 
 std::vector<std::uint8_t> extract_rpg_embedded_text(

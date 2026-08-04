@@ -23,6 +23,15 @@ std::vector<std::uint8_t> composite_mode_x_address_offset(
     std::uint16_t address_bytes,
     std::size_t width = 320);
 
+// RPG.EXE event opcode 55 is not CD audio: 5c35 calls two far helpers at
+// 0dbf:0306/0314. The first snapshots the 768-byte VGA palette; the second
+// visits all four mode-X planes and replaces only indices 10h..1fh with the
+// inverse-luminance ramp `1fh - ((R + 2*G + B) >> 4)`. Other indices are
+// preserved byte-for-byte.
+void apply_rpg_event_monochrome_filter(
+    std::span<std::uint8_t> pixels,
+    std::span<const std::uint8_t, 768> palette);
+
 // Extracts a $$-terminated string from the data segment selected by the
 // executable's entry-point `mov ax,DATA; mov ds,ax` prologue.  The returned
 // byte stream excludes the terminator and deliberately stays in its original

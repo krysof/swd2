@@ -571,11 +571,11 @@ public:
             return true;
         case 29:
             if (arguments.empty()) return false;
-            load_cutscene_background(arguments[0], false);
+            select_cutscene_dictionary(arguments[0]);
             return true;
         case 35:
             if (arguments.empty()) return false;
-            load_cutscene_background(arguments[0], false);
+            load_cutscene_layout(arguments[0]);
             return true;
         case 38:
             if (arguments.empty()) return false;
@@ -584,7 +584,7 @@ public:
         case 43:
             if (arguments.empty()) return false;
             fade_out();
-            load_cutscene_background(arguments[0], true);
+            select_cutscene_dictionary(arguments[0]);
             return true;
         case 44:
             if (arguments.empty()) return false;
@@ -595,8 +595,13 @@ public:
             present_timed(shifted_scene(event_scene(), arguments[0]));
             return true;
         case 55:
-            // Calls the optional MSCDEX/CD-audio driver twice. The distributed
-            // data has no red-book tracks, so this is an intentional no-op.
+            // RPG:5c35 snapshots DS:5a5c into a private palette table, then
+            // 0dbf:0314 rewrites palette indices 10h..1fh on all four VGA
+            // planes to an inverse-luminance ramp. Keep the transformed page
+            // active for the following positioned text/fade until a new DE
+            // background overwrites it.
+            monochrome_event_page_ = true;
+            present(event_scene());
             return true;
         case 56:
             platform_.stop_audio();
@@ -1246,20 +1251,35 @@ private:
         palette_dark_ = false;
     }
 
-    void load_cutscene_background(std::uint16_t number, bool) {
-        if (cutscene_id_ && *cutscene_id_ == number) return;
+    void select_cutscene_dictionary(std::uint16_t number) {
+        // RPG handlers 59bc (opcode 29) and 5b57 (opcode 43) load a DE tile
+        // dictionary. They do not select the RAP frame layout; following
+        // opcode-35 calls may deliberately reuse this dictionary for several
+        // numerically non-adjacent RAP files (notably DE063 -> DE066/067).
+        cutscene_dictionary_id_ = number;
+        // The shared loader installs the RSK target palette after opcode 43's
+        // fade-to-black (5f81), so subsequent RAP frames are visible without
+        // a separate opcode-6/45 fade-in.
+        palette_dark_ = false;
+    }
+
+    void load_cutscene_layout(std::uint16_t number) {
+        // RPG:5a5e (opcode 35) installs a new full-page RAP layout using the
+        // dictionary most recently chosen by opcode 29/43. This overwrites
+        // the in-place opcode-55 conversion and any text drawn on the old page.
+        monochrome_event_page_ = false;
+        compact_money_overlay_ = false;
+        positioned_text_.clear();
         auto layout = de_sprite_path(game_root_, number);
         auto rap = layout;
         rap.replace_extension(".RAP");
         if (!std::filesystem::is_regular_file(rap)) return;
-        // RPG DS:3be0 is the DE/DE000.RSK template. Opcode 29 loads its
-        // dictionary and 35/43 select a RAP layout. The portable decoder can
-        // combine both operations, including RAP-only files that reuse the
-        // nearest preceding dictionary.
-        cutscene_ = load_de_sprite(game_root_, number);
+        const auto dictionary = cutscene_dictionary_id_.value_or(number);
+        cutscene_ = PlanarSpriteSet::load(
+            de_sprite_path(game_root_, dictionary), layout);
         cutscene_id_ = number;
-        compact_money_overlay_ = false;
-        positioned_text_.clear();
+        // The RAP loader at 0d84 resets SAVE+411 before rendering frame zero.
+        state_.set_u16(0x411, 0);
     }
 
     void play_event_music(std::uint16_t number) {
@@ -1294,6 +1314,11 @@ private:
                              static_cast<int>(layer.x_byte) * 4,
                              layer.y, 320 - static_cast<int>(layer.x_byte) * 4,
                              200 - static_cast<int>(layer.y), 15);
+        }
+        if (monochrome_event_page_) {
+            apply_rpg_event_monochrome_filter(
+                frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette));
         }
         return frame;
     }
@@ -1340,6 +1365,7 @@ private:
     std::filesystem::path* playing_music_{};
     std::optional<PlanarSpriteSet> cutscene_;
     std::map<std::uint16_t, SpriteArchive> item_preview_cache_;
+    std::optional<std::uint16_t> cutscene_dictionary_id_;
     std::optional<std::uint16_t> cutscene_id_;
     struct PositionedText {
         std::uint16_t x_byte{};
@@ -1350,6 +1376,7 @@ private:
     std::uint16_t frame_delay_ticks_{};
     bool compact_money_overlay_{};
     bool palette_dark_{};
+    bool monochrome_event_page_{};
     bool quit_requested_{};
 };
 

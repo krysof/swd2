@@ -43,6 +43,7 @@
 #include "swd2/voc_decoder.hpp"
 
 #include <cstdlib>
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -134,6 +135,67 @@ void test_original_launcher(const std::filesystem::path& game_root) {
 std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+void test_rpg_opcode55_monochrome(const std::filesystem::path& game_root) {
+    const auto mz = swd2::dos::MzExecutable::load(game_root / "RPG.EXE");
+    const auto file = read_file(game_root / "RPG.EXE");
+    const auto image = std::span<const std::uint8_t>(file).subspan(
+        mz.header_size(), mz.load_image_size());
+
+    // Dispatch entry 37h is RPG:5c35. It preserves the event SI, calls
+    // 0dbf:0306 (palette snapshot), calls 0dbf:0314 (four-plane conversion),
+    // restores SI and returns. These bytes also reject the old MSCDEX/audio
+    // interpretation: the far targets resolve inside RPG's own load image.
+    const std::array<std::uint8_t, 13> handler{
+        0x56, 0x9a, 0x06, 0x03, 0xbf, 0x0d, 0x9a,
+        0x14, 0x03, 0xbf, 0x0d, 0x5e, 0xc3};
+    require(image.size() >= 0x5c35U + handler.size() &&
+                std::equal(handler.begin(), handler.end(), image.begin() + 0x5c35U),
+            "RPG opcode-55 far-call handler changed");
+    require(image.size() > 0xdf63U &&
+                image[0xdef6] == 0xbeU && image[0xdef7] == 0x5cU &&
+                image[0xdef8] == 0x5aU && image[0xdefe] == 0xb9U &&
+                image[0xdeff] == 0x80U && image[0xdf00] == 0x01U &&
+                image[0xdf01] == 0xf3U && image[0xdf02] == 0xa5U &&
+                image[0xdf04] == 0xb8U && image[0xdf05] == 0x00U &&
+                image[0xdf06] == 0xa0U && image[0xdf2f] == 0x3cU &&
+                image[0xdf30] == 0x10U && image[0xdf33] == 0x3cU &&
+                image[0xdf34] == 0x20U,
+            "RPG opcode-55 palette/plane helpers changed");
+
+    std::array<std::uint8_t, 768> palette{};
+    palette[0x10U * 3U] = 0;
+    palette[0x10U * 3U + 1U] = 0;
+    palette[0x10U * 3U + 2U] = 0;
+    palette[0x11U * 3U] = 63;
+    palette[0x11U * 3U + 1U] = 63;
+    palette[0x11U * 3U + 2U] = 63;
+    palette[0x12U * 3U] = 16;
+    palette[0x12U * 3U + 1U] = 32;
+    palette[0x12U * 3U + 2U] = 48;
+    palette[0x1fU * 3U] = 60;
+    palette[0x1fU * 3U + 1U] = 20;
+    palette[0x1fU * 3U + 2U] = 4;
+    std::vector<std::uint8_t> pixels{0x0f, 0x10, 0x11, 0x12, 0x1f, 0x20};
+    swd2::apply_rpg_event_monochrome_filter(pixels, palette);
+    require(pixels == std::vector<std::uint8_t>(
+                          {0x0f, 0x1f, 0x10, 0x17, 0x19, 0x20}),
+            "RPG opcode-55 inverse-luminance conversion differs from 0dbf:0314");
+
+    const auto chna1 = swd2::ScriptArchive::load(game_root / "CHNA1.EXE");
+    const auto chna5 = swd2::ScriptArchive::load(game_root / "CHNA5.EXE");
+    const auto count_opcode = [](const swd2::ScriptArchive& archive,
+                                 std::size_t entry, std::uint16_t opcode) {
+        const auto record = swd2::decode_event_record(archive.entry(entry));
+        return std::count_if(record.commands.begin(), record.commands.end(),
+                             [opcode](const auto& command) {
+                                 return command.opcode == opcode;
+                             });
+    };
+    require(count_opcode(chna1, 229, 55) == 15 &&
+                count_opcode(chna5, 31, 55) == 7,
+            "original monochrome cutscenes no longer expose their opcode-55 frames");
 }
 
 void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
@@ -3919,6 +3981,19 @@ class ScriptedPlatform final : public swd2::PlatformBackend {
 public:
     void present(const swd2::IndexedSurfaceView& surface) override {
         require(surface.width == 320 && surface.height == 200, "unexpected MEO surface size");
+        if (track_monochrome && last_pixels.size() == surface.pixels.size() &&
+            std::equal(last_palette.begin(), last_palette.end(), surface.palette.begin())) {
+            auto filtered = last_pixels;
+            swd2::apply_rpg_event_monochrome_filter(filtered, last_palette);
+            if (filtered != last_pixels &&
+                std::equal(filtered.begin(), filtered.end(), surface.pixels.begin())) {
+                ++monochrome_transitions;
+            }
+        }
+        if (track_monochrome) {
+            last_pixels.assign(surface.pixels.begin(), surface.pixels.end());
+            std::copy(surface.palette.begin(), surface.palette.end(), last_palette.begin());
+        }
         std::uint64_t frame_hash = 1469598103934665603ULL;
         for (const auto pixel : surface.pixels) {
             frame_hash ^= pixel;
@@ -3982,6 +4057,10 @@ public:
     std::vector<std::uint64_t> bottom_hashes;
     std::vector<std::uint64_t> palette_hashes;
     std::vector<std::uint64_t> voice_hashes;
+    bool track_monochrome{};
+    std::size_t monochrome_transitions{};
+    std::vector<std::uint8_t> last_pixels;
+    std::array<std::uint8_t, 768> last_palette{};
     std::vector<swd2::InputAction> actions = {
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
@@ -4276,6 +4355,41 @@ void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
     require(platform.presented >= 80 && platform.music_calls >= 3 &&
                 palettes.size() > 10 && frames.size() > 2,
             "RPG cutscene opcodes did not render DE frames, RI music, and palette ramps");
+}
+
+void test_rpg_opcode55_cutscene(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(12);
+    // CHNA1 entry 229 (directory byte offset 458) is the long DE ending
+    // sequence. Its 15 opcode-55 commands immediately follow DE animation
+    // frames, providing end-to-end oracles for the in-place VGA conversion.
+    location.area.entity_fields[9][5] = 458;
+
+    ScriptedPlatform platform;
+    platform.track_monochrome = true;
+    platform.actions = {swd2::InputAction::right, swd2::InputAction::quit};
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x424, 12);
+    state.set_u16(0x40f, 8);
+    state.set_viewport_x(59);
+    state.set_viewport_y(57);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 59U) * 2U));
+    state.set_dos_string(0x42d, 22, location.area.graphics_path);
+    state.set_dos_string(0x443, 22, location.area.layout_path);
+    state.set_dos_string(0x459, 22, location.area.music_path);
+    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+    state.set_dos_string(0x485, 24, location.area.event_font_path);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none,
+            "RPG opcode-55 ending cutscene did not terminate normally");
+    require(platform.monochrome_transitions == 15,
+            "RPG opcode-55 cutscene did not transform every preceding DE page");
 }
 
 void test_demo_module(const std::filesystem::path& game_root) {
@@ -4698,6 +4812,7 @@ int main(int argc, char** argv) {
         test_launcher();
         test_paths();
         test_rpg_mode_x_event_offset();
+        test_rpg_opcode55_monochrome(argv[1]);
         test_rpg_save_slot_selector(argv[1]);
         test_original_launcher(argv[1]);
         test_resource_decoder(argv[1]);
@@ -4731,6 +4846,7 @@ int main(int argc, char** argv) {
         test_rpg_event_voice(argv[1]);
         test_rpg_compact_money_overlay(argv[1]);
         test_rpg_cutscene_presentation(argv[1]);
+        test_rpg_opcode55_cutscene(argv[1]);
         test_demo_module(argv[1]);
         test_demo_timeline(argv[1]);
         test_battle_module(argv[1]);

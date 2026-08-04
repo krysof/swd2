@@ -86,7 +86,12 @@ PlanarSpriteSet PlanarSpriteSet::load(
             const auto tile = static_cast<std::size_t>(u16(layout, record_offset + 4 + index * 2));
             if (tile == 0) continue;  // transparent lookup used by the DOS compositor
             if (tile >= tile_count) {
-                throw std::runtime_error("planar sprite RAP references an unknown tile");
+                throw std::runtime_error(
+                    with_extension(layout_base_path, ".RAP").string() +
+                    " references tile " + std::to_string(tile) +
+                    " outside dictionary " +
+                    with_extension(graphics_base_path, ".RSK").string() +
+                    " (" + std::to_string(tile_count) + " tiles)");
             }
             const auto tile_x = index % width;
             const auto tile_y = index / width;
