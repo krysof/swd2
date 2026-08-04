@@ -185,6 +185,18 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 3:
                 if (area && current_entity < area->entity_count() && arg(0) < 11) {
                     area->entity_fields[arg(0)][current_entity] = arg(1);
+                    if (map_database) {
+                        // RPG 53ef opens MAPZ, addresses the current area's
+                        // structure-of-arrays word as
+                        // area+6+field*count*2+entity_byte_offset, then calls
+                        // 7cb6 to rewrite the database. Keep the transient
+                        // area copy in sync above, but also patch the source
+                        // image used by later map loads and save slots.
+                        map_database->mutate_area_word(
+                            state.map_location_directory_offset(), arg(0),
+                            static_cast<std::int16_t>(current_entity * 2U),
+                            arg(1), false);
+                    }
                 }
                 break;
             case 4:

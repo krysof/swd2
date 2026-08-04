@@ -5049,8 +5049,11 @@ void test_event_vm(const std::filesystem::path& game_root) {
     const auto map_mutation = swd2::execute_event(
         archive, 15 * 2, state, &area, 1, host, 10'000, &world);
     require(map_mutation.status == swd2::EventVmStatus::completed &&
+                world.location_at_directory_offset(
+                    state.map_location_directory_offset())
+                        .area.entity_fields[3][1] == 3 &&
                 world.location_at_directory_offset(14).area.entity_fields[3][38] == 3,
-            "event opcode 34 did not apply the real CHNA1 MAPZ mutation");
+            "event opcodes 3/34 did not apply the real CHNA1 MAPZ mutations");
     const auto shared_area_offset = world.location_at_directory_offset(14).area_offset;
     for (const auto& location : world.locations()) {
         if (location.area_offset == shared_area_offset) {
@@ -5074,7 +5077,7 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 relocation.last_opcode == 41 && relocation.relocated_area &&
                 relocation.relocated_area->entity_fields[3][0] == 7 &&
                 world.location_at_directory_offset(10).area.entity_fields[3][0] ==
-                    destination_behavior &&
+                    7 && destination_behavior != 7 &&
                 host.map_relocations == 1 &&
                 host.relocated_entity_count == destination.area.entity_count() &&
                 state.u16(0x104) == money_before_relocation + 9U &&
@@ -5089,7 +5092,7 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 state.music_path() == destination.area.music_path &&
                 state.event_executable_path() == destination.area.event_archive_path &&
                 state.event_data_path() == destination.area.event_font_path,
-            "event opcode 37 did not continue on the transient destination area");
+            "event opcode 37 did not continue/persist opcode 3 on the destination area");
     for (std::size_t i = 0; i < 12; ++i) {
         require(state.u16(0xa2 + i * 2) == destination.actor_direction,
                 "event opcode 37 did not synchronize actor directions");

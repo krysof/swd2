@@ -3447,8 +3447,9 @@ Marker RpgModule::run(GameContext& context, Marker) {
     }
     auto& map_database = *active_map_database;
     // RPG.EXE copies the selected MAPZ area into transient BSS arrays. Entity
-    // wandering and most current-entity event writes therefore disappear on
-    // a map reload rather than modifying the source MAPZ record.
+    // wandering and opcodes 1/2/23..27/39 therefore disappear on a map reload.
+    // Opcode 3 is different: it reopens and rewrites MAPZ after changing the
+    // current entity, while opcode 34 patches an explicitly selected area.
     auto location = map_database.location_at_directory_offset(
         context.shared_state.map_location_directory_offset());
     if (relocated_transient_area) {
@@ -3605,7 +3606,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                 }
                 if (outcome.map_reload) {
                     // Restart the outer resource-loading loop. The cached MAPZ
-                    // database (including opcode-34 mutations) remains alive.
+                    // database (including opcode-3/34 mutations) remains alive.
                     relocated_transient_area = std::move(outcome.relocated_area);
                     pending_map_reload_ = true;
                     break;

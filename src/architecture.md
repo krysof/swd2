@@ -62,7 +62,7 @@ Windows、Linux、macOS、iOS、Android、WebAssembly 或主机平台可分别�
   YM3812 PCM 合成；
 - 原版 1350 字节共享状态的无损读写。
 - `SaveSlot` 对 `SAVE.DA1..5`/`MAPZ.DA1..5` 成对选槽、首次复制和临时文件提交；
-  MAPZ 只原位回写 opcode 34 已证明的 word，未知 MZ/目录数据保持逐字节不变。
+  MAPZ 只原位回写 opcode 3/34 已证明的 word，未知 MZ/目录数据保持逐字节不变。
 - `GameContext` 的成对保存/读取均为平台无关回调；RPG 系统菜单的读取会把新的
   `SharedState` 与共享 `MapDatabase` 一次性交给运行时，并只在地图资源循环边界安装，
   因而不会让原始区域引用悬空，也不需要重新启动 RPG 子进程。
