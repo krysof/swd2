@@ -5795,11 +5795,34 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto top_result = swd2::RpgModule().run(context, swd2::Marker::menu_ready);
+    const auto top_archive = swd2::ScriptArchive::load(game_root / "CHNA6.EXE");
+    const auto top_record = swd2::decode_event_record(
+        top_archive.event_stream(125));
+    const auto count_glyphs = [](std::span<const std::uint8_t> text) {
+        auto count = std::size_t{};
+        for (std::size_t offset = 0; offset < text.size();) {
+            if (text[offset] == ' ') {
+                ++offset;
+            } else if (offset + 1U < text.size() &&
+                       ((text[offset] == '#' && text[offset + 1U] == '#') ||
+                        (text[offset] == '%' && text[offset + 1U] == '%'))) {
+                offset += 2U;
+            } else {
+                ++count;
+                offset += 2U;
+            }
+        }
+        return count;
+    };
+    const auto ordinary_glyphs = count_glyphs(top_record.commands[0].text);
+    const auto forced_glyphs = count_glyphs(top_record.commands[3].text);
     require(top_result ==
                 swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 platform.frame_hashes.size() == 12 &&
-                platform.frame_hashes[10] == 2403026594211277006ULL,
+                platform.frame_hashes[10] == 2403026594211277006ULL &&
+                platform.text_poll_calls == ordinary_glyphs &&
+                platform.direct_updates == ordinary_glyphs + forced_glyphs,
             "RPG opcode-46 top-dialogue run did not terminate normally");
 }
 

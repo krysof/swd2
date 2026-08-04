@@ -722,6 +722,10 @@ public:
             // ticks before reading the keyboard flag. A key consumes that
             // flag and changes the remaining per-glyph delay to zero; the
             // later %%/$$ acknowledgement still needs a separate action.
+            // Opcode 20/46 first set DATA:3805 to 1/2: both force two ticks
+            // and jump over the keyboard check after every glyph. Mode 2 also
+            // selects the top panel above; both still keep their final wait.
+            const auto forced_timed_text = opcode == 20U || opcode == 46U;
             auto skipped_delay = false;
             for (const auto glyph_end : page.glyph_end_offsets) {
                 if (skipped_delay) break;
@@ -732,13 +736,15 @@ public:
                 platform_.present_direct_update({
                     320, 200, shown.pixels,
                     std::span<const std::uint8_t, 768>(shown.palette)});
-                const auto text_delay = state_.u16(0x3f2);
+                const auto text_delay = forced_timed_text
+                    ? std::uint16_t{2} : state_.u16(0x3f2);
                 if (text_delay != 0) {
                     platform_.delay_for(std::chrono::milliseconds(
                         (static_cast<std::uint64_t>(text_delay) * 1000U + 69U) /
                         70U));
                 }
-                const auto action = platform_.poll_text_input();
+                const auto action = forced_timed_text
+                    ? InputAction::none : platform_.poll_text_input();
                 if (action == InputAction::quit) {
                     direct_event_page_ = std::move(shown);
                     quit_requested_ = true;
