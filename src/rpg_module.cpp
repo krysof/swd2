@@ -1491,75 +1491,11 @@ public:
                             travel_index = static_cast<std::uint8_t>(current);
                         }
                     } else if (field_result.status == FieldActionStatus::travel_select) {
-                        const auto destinations = field_actions.unlocked_travel_indices();
-                        if (destinations.empty()) continue;
-                        std::size_t destination = 0;
-                        std::size_t first_visible = 0;
-                        auto scroll_cue = RpgListSelection::ScrollCue::none;
-                        bool destination_cancelled = false;
-                        while (true) {
-                            auto destination_frame = scene_provider_();
-                            const auto visible = std::min<std::size_t>(destinations.size(), 10);
-                            draw_rpg_selector_panel(
-                                destination_frame.pixels, 320, 200, menu_sprites_,
-                                14, 16, 5, static_cast<int>(visible));
-
-                            const auto transparent = [&](std::size_t sprite,
-                                                         int x_byte, int y) {
-                                if (sprite >= menu_sprites_.sprites().size()) return;
-                                const auto& info = menu_sprites_.sprites()[sprite];
-                                blit(destination_frame, menu_sprites_.pixels(sprite),
-                                     info.width, info.height, x_byte * 4, y);
-                            };
-                            const auto maximum_first = destinations.size() - visible;
-                            draw_rpg_selector_scrollbar(
-                                destination_frame.pixels, 320, 200,
-                                menu_sprites_, 14, 16, 5, visible,
-                                maximum_first, first_visible, scroll_cue);
-                            scroll_cue = RpgListSelection::ScrollCue::none;
-
-                            for (std::size_t row = 0; row < visible; ++row) {
-                                const auto index = first_visible + row;
-                                if (index >= destinations.size()) break;
-                                const auto label_offset =
-                                    static_cast<std::size_t>(destinations[index]) * 8U;
-                                if (label_offset + 8U <= travel_labels_.size()) {
-                                    draw_legacy_text(
-                                        destination_frame, item_font_,
-                                        travel_labels_.subspan(label_offset, 8),
-                                        22 * 4, 29 + static_cast<int>(row) * 16,
-                                        64, 16, 15);
-                                }
-                            }
-                            transparent(1, 20,
-                                        25 + static_cast<int>(destination -
-                                                              first_visible) * 16);
-                            platform_.present({
-                                320, 200, destination_frame.pixels,
-                                std::span<const std::uint8_t, 768>(destination_frame.palette)});
-                            const auto destination_action = platform_.wait_for_input();
-                            if (destination_action == InputAction::quit) {
-                                quit_requested_ = true;
-                                return InventoryUiResult::cancelled;
-                            }
-                            if (destination_action == InputAction::cancel) {
-                                destination_cancelled = true;
-                                break;
-                            }
-                            if (destination_action == InputAction::confirm) {
-                                travel_index = destinations[destination];
-                                break;
-                            } else {
-                                const auto selection = rpg_list_selection_input(
-                                    {destination, first_visible},
-                                    destinations.size(), visible,
-                                    destination_action);
-                                destination = selection.selected;
-                                first_visible = selection.first_visible;
-                                scroll_cue = selection.scroll_cue;
-                            }
+                        travel_index = select_travel_destination(state);
+                        if (quit_requested_) {
+                            return InventoryUiResult::cancelled;
                         }
-                        if (destination_cancelled) continue;
+                        if (!travel_index) continue;
                     }
 
                     if (definition.consumed_on_use()) {
@@ -2304,8 +2240,9 @@ private:
         }
     }
 
-    std::optional<std::uint8_t> select_magic_travel_destination() {
-        FieldActionSystem field_actions(state_, &field_action_runtime_);
+    std::optional<std::uint8_t> select_travel_destination(
+        SharedState& state) {
+        FieldActionSystem field_actions(state, &field_action_runtime_);
         const auto destinations = field_actions.unlocked_travel_indices();
         if (destinations.empty()) return std::nullopt;
         std::size_t selected = 0;
@@ -2615,7 +2552,7 @@ private:
                         travel_index = static_cast<std::uint8_t>(current);
                     }
                 } else if (result.status == FieldActionStatus::travel_select) {
-                    travel_index = select_magic_travel_destination();
+                    travel_index = select_travel_destination(state_);
                     if (quit_requested_) return false;
                     if (!travel_index) continue;
                 }
