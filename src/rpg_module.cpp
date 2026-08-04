@@ -732,10 +732,14 @@ public:
             fade_out();
             return true;
         case 6:
+            reset_direct_page_layers();
+            fade_in();
+            return true;
         case 45:
             fade_in();
             return true;
         case 7:
+            reset_direct_page_layers();
             palette_dark_ = false;
             present(event_scene());
             return true;
@@ -748,6 +752,7 @@ public:
         case 31:
         case 32:
         case 33:
+            reset_direct_page_layers();
             present_timed(event_scene());
             return true;
         case 39:
@@ -760,6 +765,7 @@ public:
                     (static_cast<std::uint64_t>(frame_delay_ticks_) * 1000U + 69U) /
                     70U));
             }
+            reset_direct_page_layers();
             present(event_scene());
             return true;
         case 36:
@@ -768,6 +774,7 @@ public:
             // separate frontend value: opcode 55 and positioned text operate
             // on that last page, not on the next selector now held in SAVE.
             cutscene_frame_index_ = state_.u16(0x411);
+            reset_direct_page_layers();
             present_timed(event_scene());
             return true;
         case 29:
@@ -793,6 +800,7 @@ public:
             return true;
         case 49:
             if (arguments.empty()) return false;
+            reset_direct_page_layers();
             present_timed(shifted_scene(event_scene(), arguments[0]));
             return true;
         case 55:
@@ -2978,6 +2986,16 @@ private:
         if (palette_dark_) scene.palette.fill(0);
         platform_.present({320, 200, scene.pixels,
                            std::span<const std::uint8_t, 768>(scene.palette)});
+    }
+
+    void reset_direct_page_layers() {
+        // Opcode 14/53/55 modify the already displayed VGA page. Any later
+        // dd6/219 full-page rebuild overwrites those pixels; retaining them as
+        // durable scene state makes money cards, captions or monochrome pages
+        // leak into unrelated map/entity frames.
+        compact_money_overlay_ = false;
+        positioned_text_.clear();
+        monochrome_event_page_ = false;
     }
 
     void present_timed(Viewport scene) {
