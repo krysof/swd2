@@ -5899,7 +5899,8 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
     explain_platform.actions = {
         swd2::InputAction::cancel,
         swd2::InputAction::right,
-        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // choose value two
+        swd2::InputAction::confirm,  // 46cc default Yes
         swd2::InputAction::confirm,  // physical slot zero
         swd2::InputAction::right,    // Explain
         swd2::InputAction::confirm,
@@ -6523,7 +6524,7 @@ void test_rpg_system_menu_speed_and_exit(
                 context.shared_state.u16(0x3f2) == 1U,
             "RPG system menu did not commit the selected message speed");
     require(platform.cursor == platform.actions.size() &&
-                platform.presented == 13U && platform.music_calls == 1U &&
+                platform.presented == 14U && platform.music_calls == 1U &&
                 platform.stop_calls == 1U,
             "RPG 4b76/4e4b/46cc system-menu sequence was not exact");
     require(platform.frame_hashes[2] != platform.frame_hashes[1] &&
@@ -6531,7 +6532,7 @@ void test_rpg_system_menu_speed_and_exit(
                 platform.frame_hashes[7] == 1610721571175691861ULL &&
                 platform.frame_hashes[8] == 8823441461784675157ULL &&
                 platform.frame_hashes[8] != platform.frame_hashes[7] &&
-                platform.frame_hashes[12] != platform.frame_hashes[11],
+                platform.frame_hashes[13] != platform.frame_hashes[12],
             "RPG system menu/value/exit selection frames did not change");
 }
 
@@ -6615,6 +6616,7 @@ void test_rpg_system_menu_load(const std::filesystem::path& game_root) {
         swd2::InputAction::confirm,
         swd2::InputAction::right,    // slot two
         swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // 46cc default Yes
         swd2::InputAction::quit,
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
@@ -6639,7 +6641,7 @@ void test_rpg_system_menu_load(const std::filesystem::path& game_root) {
                 context.map_database != nullptr,
             "RPG system Read did not atomically install the selected SAVE/MAPZ pair");
     require(platform.cursor == platform.actions.size() &&
-                platform.presented == 8U && platform.music_calls == 1U &&
+                platform.presented == 9U && platform.music_calls == 1U &&
                 platform.stop_calls == 1U,
             "RPG system Read did not reload map resources before resuming");
 }

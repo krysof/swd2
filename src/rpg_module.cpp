@@ -2917,6 +2917,41 @@ private:
         }
     }
 
+    bool confirm_binary_choice(Viewport frame) {
+        std::uint8_t choice = 0;
+        while (true) {
+            auto shown = frame;
+            const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+                if (sprite >= menu_sprites_.sprites().size()) return;
+                const auto& info = menu_sprites_.sprites()[sprite];
+                blit_opaque(shown, menu_sprites_.pixels(sprite),
+                            info.width, info.height, x_byte * 4, y);
+            };
+            // RPG 46cc: the shared Yes/No cards used by system exit and by
+            // every five-value load/speed selection.
+            opaque(0, 23, 147);
+            opaque(0, 41, 147);
+            opaque(29, 29, 156);
+            opaque(8, 47, 156);
+            apply_rpg_binary_choice_highlight(
+                shown.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(shown.palette),
+                23, 41, 147, choice);
+            platform_.present({
+                320, 200, shown.pixels,
+                std::span<const std::uint8_t, 768>(shown.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::cancel) return false;
+            if (action == InputAction::left) choice = 0;
+            else if (action == InputAction::right) choice = 1;
+            else if (action == InputAction::confirm) return choice == 0;
+        }
+    }
+
     std::optional<std::size_t> select_system_value(Viewport base) {
         // 4e4b always writes DATA:60d5=0eh before its first MENU 141 cursor.
         // The current value is shown on the seven-row system page, but it is
@@ -2945,43 +2980,18 @@ private:
             if (action == InputAction::cancel) return std::nullopt;
             if (action == InputAction::left && selected != 0U) --selected;
             else if (action == InputAction::right && selected != 4U) ++selected;
-            else if (action == InputAction::confirm) return selected;
+            else if (action == InputAction::confirm) {
+                // 4ef7 preserves AX across 46cc and commits it only when the
+                // default-left Yes choice leaves DATA:35e8 at zero.
+                if (confirm_binary_choice(std::move(frame))) return selected;
+                return std::nullopt;
+            }
         }
     }
 
     bool confirm_system_exit(Viewport frame) {
-        std::uint8_t choice = 0;
         if (!reveal_bottom_message(frame, system_exit_prompt_)) return false;
-        while (true) {
-            auto shown = frame;
-            const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
-                if (sprite >= menu_sprites_.sprites().size()) return;
-                const auto& info = menu_sprites_.sprites()[sprite];
-                blit_opaque(shown, menu_sprites_.pixels(sprite),
-                            info.width, info.height, x_byte * 4, y);
-            };
-            // 46cc is shared by system exit and save confirmation.
-            opaque(0, 23, 147);
-            opaque(0, 41, 147);
-            opaque(29, 29, 156);
-            opaque(8, 47, 156);
-            apply_rpg_binary_choice_highlight(
-                shown.pixels, 320, 200,
-                std::span<const std::uint8_t, 768>(shown.palette),
-                23, 41, 147, choice);
-            platform_.present({
-                320, 200, shown.pixels,
-                std::span<const std::uint8_t, 768>(shown.palette)});
-            const auto action = platform_.wait_for_input();
-            if (action == InputAction::quit) {
-                quit_requested_ = true;
-                return false;
-            }
-            if (action == InputAction::cancel) return false;
-            if (action == InputAction::left) choice = 0;
-            else if (action == InputAction::right) choice = 1;
-            else if (action == InputAction::confirm) return choice == 0;
-        }
+        return confirm_binary_choice(std::move(frame));
     }
 
     void run_system_save(Viewport base) {
