@@ -128,11 +128,13 @@ BattleSurface compose_introduction(
     auto result = scene;
     // FIG 3de8 configures the generic 38e6 selector at Mode-X x=4/y=112,
     // with seven middle columns and four text rows. Text starts at x=10/y=125.
+    // DATA:4d35 is zero; DialoguePage uses one only as a host-side mask so
+    // that the original black glyph can be distinguished from empty pixels.
     draw_selector_panel(result, menu_sprites, 4, 112, 7, 4);
     for (std::size_t y = 0; y < page.height && 125 + y < 200; ++y) {
         for (std::size_t x = 0; x < page.width && 40 + x < 320; ++x) {
-            const auto color = page.pixels[y * page.width + x];
-            if (color != 0) result.pixels[(125 + y) * 320 + 40 + x] = color;
+            const auto mask = page.pixels[y * page.width + x];
+            if (mask != 0) result.pixels[(125 + y) * 320 + 40 + x] = 0;
         }
     }
     if (prompt_selection) {
@@ -3250,7 +3252,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
         while (true) {
             const auto page = render_dialogue_page(
                 font, encounter.introduction_text, text_offset,
-                280, 64, 15, &name_font);
+                280, 64, 1, &name_font);
             auto quit_during_text = false;
             auto skipped_text_delay = false;
             for (const auto glyph_end : page.glyph_end_offsets) {
@@ -3259,7 +3261,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                     font,
                     std::span<const std::uint8_t>(encounter.introduction_text)
                         .first(glyph_end),
-                    text_offset, 280, 64, 15, &name_font);
+                    text_offset, 280, 64, 1, &name_font);
                 const auto frame = compose_introduction(
                     surface, partial, menu_sprites);
                 context.platform.present_direct_update({

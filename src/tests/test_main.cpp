@@ -838,6 +838,12 @@ void test_resource_decoder(const std::filesystem::path& game_root) {
     const auto fig_file = read_file(game_root / "FIG.EXE");
     const auto fig_image = std::span<const std::uint8_t>(fig_file).subspan(
         fig_mz.header_size(), fig_mz.load_image_size());
+    const auto fig_data_paragraph = static_cast<std::size_t>(
+        fig_image[1] | static_cast<std::uint16_t>(fig_image[2]) << 8U);
+    require(fig_data_paragraph * 16U + 0x4d37U <= fig_image.size() &&
+                fig_image[fig_data_paragraph * 16U + 0x4d35U] == 0x00U &&
+                fig_image[fig_data_paragraph * 16U + 0x4d36U] == 0x0fU,
+            "FIG initialized dialogue foreground/background colors changed");
     const std::array<std::uint8_t, 16> masked_entry = {
         0x2e, 0xc6, 0x06, 0xf3, 0x76, 0x01, 0xe8,
         0x07, 0x00, 0x2e, 0xc6, 0x06, 0xf3, 0x76, 0x00, 0xc3,
@@ -7755,7 +7761,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
     require(prompt_result == swd2::Marker::continue_rpg &&
                 prompt_platform.presented == 2 &&
                 prompt_platform.frame_hashes.size() == 2 &&
-                prompt_platform.frame_hashes[1] == 2855080217828813932ULL &&
+                prompt_platform.frame_hashes[1] == 16443477943331878383ULL &&
                 prompt_platform.text_cursor == 1U &&
                 prompt_platform.text_poll_calls == 1U &&
                 prompt_platform.direct_updates == 2U &&
