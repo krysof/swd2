@@ -2917,9 +2917,11 @@ private:
         }
     }
 
-    std::optional<std::size_t> select_system_value(Viewport base,
-                                                   std::size_t initial) {
-        auto selected = std::min<std::size_t>(initial, 4U);
+    std::optional<std::size_t> select_system_value(Viewport base) {
+        // 4e4b always writes DATA:60d5=0eh before its first MENU 141 cursor.
+        // The current value is shown on the seven-row system page, but it is
+        // not carried into this five-choice popup.
+        std::size_t selected = 0;
         while (true) {
             auto frame = base;
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
@@ -3112,7 +3114,7 @@ private:
                 sound_enabled_ = !sound_enabled_;
                 state_.set_u8(0x3f5, sound_enabled_ ? 0U : 1U);
             } else if (selected == 2U) {
-                const auto slot = select_system_value(frame, 0);
+                const auto slot = select_system_value(frame);
                 if (quit_requested_) return false;
                 if (slot && load_slot_ != nullptr && *load_slot_ &&
                     live_map_database_ != nullptr) {
@@ -3143,14 +3145,11 @@ private:
                 run_system_save(frame);
                 if (quit_requested_) return false;
             } else if (selected == 4U) {
-                const auto value = select_system_value(
-                    frame, state_.u16(0x3f2));
+                const auto value = select_system_value(frame);
                 if (quit_requested_) return false;
                 if (value) state_.set_u16(0x3f2, static_cast<std::uint16_t>(*value));
             } else if (selected == 5U) {
-                const auto initial = state_.u16(0x406) == 0U
-                    ? 0U : static_cast<std::size_t>(state_.u16(0x406) - 1U);
-                const auto value = select_system_value(frame, initial);
+                const auto value = select_system_value(frame);
                 if (quit_requested_) return false;
                 if (value) state_.set_u16(
                     0x406, static_cast<std::uint16_t>(*value + 1U));

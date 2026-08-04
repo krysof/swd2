@@ -6520,7 +6520,7 @@ void test_rpg_system_menu_speed_and_exit(
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
                 context, swd2::Marker::menu_ready) == swd2::Marker::none &&
-                context.shared_state.u16(0x3f2) == 2U,
+                context.shared_state.u16(0x3f2) == 1U,
             "RPG system menu did not commit the selected message speed");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 13U && platform.music_calls == 1U &&
@@ -6528,7 +6528,8 @@ void test_rpg_system_menu_speed_and_exit(
             "RPG 4b76/4e4b/46cc system-menu sequence was not exact");
     require(platform.frame_hashes[2] != platform.frame_hashes[1] &&
                 platform.frame_hashes[2] == 8278365232680978070ULL &&
-                platform.frame_hashes[7] == 8823441461784675157ULL &&
+                platform.frame_hashes[7] == 1610721571175691861ULL &&
+                platform.frame_hashes[8] == 8823441461784675157ULL &&
                 platform.frame_hashes[8] != platform.frame_hashes[7] &&
                 platform.frame_hashes[12] != platform.frame_hashes[11],
             "RPG system menu/value/exit selection frames did not change");
