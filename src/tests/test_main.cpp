@@ -7424,6 +7424,27 @@ void test_demo_timeline(const std::filesystem::path& game_root) {
 }
 
 void test_battle_module(const std::filesystem::path& game_root) {
+    ScriptedPlatform defeat_quit_platform;
+    defeat_quit_platform.actions = {swd2::InputAction::quit};
+    auto defeat_quit_state = swd2::SharedState::load(
+        game_root / "SAVE.DA1");
+    defeat_quit_state.set_u16(0x4a0, 392);
+    defeat_quit_state.set_u16(0x10, 1);
+    defeat_quit_state.set_u16(0x106 + 0x2d, 0);
+    defeat_quit_state.set_u16(0x106 + 8, 0x2000);
+    swd2::GameContext defeat_quit_context{
+        game_root, defeat_quit_state, defeat_quit_platform};
+    require(swd2::BattleModule().run(
+                defeat_quit_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                defeat_quit_platform.cursor == 1U &&
+                defeat_quit_platform.poll_calls == 1U &&
+                defeat_quit_platform.presented == 2U &&
+                defeat_quit_platform.music_calls == 2U &&
+                defeat_quit_platform.stop_calls == 1U &&
+                defeat_quit_context.shared_state.u16(0x4a0) == 0U,
+            "FIG defeat timer ignored frontend quit or returned to RPG");
+
     ScriptedPlatform settlement_quit_platform;
     settlement_quit_platform.actions.assign(2U, swd2::InputAction::confirm);
     settlement_quit_platform.actions.push_back(swd2::InputAction::quit);

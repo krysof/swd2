@@ -3046,6 +3046,23 @@ bool wait_for_battle_ack(GameContext& context) {
     return action != InputAction::quit;
 }
 
+bool delay_for_or_frontend_quit(
+    PlatformBackend& platform, std::chrono::milliseconds duration) {
+    // DOS has no window-close event, but the merged frontend must not remain
+    // trapped in an uninterruptible replacement for FIG's timer wait. Poll in
+    // short slices while preserving the exact total duration when no quit is
+    // pending. Other keys are deliberately consumed: the original 0643
+    // defeat page is timed rather than dismissible.
+    constexpr auto slice = std::chrono::milliseconds(20);
+    while (duration.count() > 0) {
+        if (platform.poll_input() == InputAction::quit) return false;
+        const auto current = std::min(duration, slice);
+        platform.delay_for(current);
+        duration -= current;
+    }
+    return true;
+}
+
 BattleSurface compose_settlement_scene(
     const BattleSurface& base_surface, const BattleEncounter& encounter,
     const ScriptArchive& items, const std::filesystem::path& game_root,
@@ -3101,7 +3118,7 @@ bool present_encounter_capture_reward(
     return wait_for_battle_ack(context);
 }
 
-void present_defeat_summary(
+bool present_defeat_summary(
     GameContext& context, const BattleSurface& base_surface,
     const BattleEncounter& encounter, const ScriptArchive& items,
     const SpriteArchive& menu_sprites, const LegacyFont& font,
@@ -3119,7 +3136,8 @@ void present_defeat_summary(
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
     });
-    context.platform.delay_for(std::chrono::milliseconds(771)); // 54/70 s
+    return delay_for_or_frontend_quit(
+        context.platform, std::chrono::milliseconds(771)); // 54/70 s
 }
 
 bool present_level_ups(
@@ -3611,12 +3629,17 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 return Marker::none;
             }
         } else {
+            auto frontend_quit = false;
             if (outcome == BattleOutcome::defeat) {
-                present_defeat_summary(
+                frontend_quit = !present_defeat_summary(
                     context, base_surface, encounter, items, menu_sprites,
                     command_font, command_name_font, session, abilities);
             }
             finish_battle_shared_state(context.shared_state);
+            if (frontend_quit) {
+                context.platform.stop_audio();
+                return Marker::none;
+            }
         }
     } else {
         finish_battle_shared_state(context.shared_state);
