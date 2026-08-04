@@ -745,7 +745,9 @@ public:
             return true;
         case 14:
             compact_money_overlay_ = true;
-            present_timed(event_scene());
+            // RPG:5596 only calls 22cf. It writes the money card directly and
+            // returns; the configurable 5a59 frame interval is not consumed.
+            present(event_scene());
             return true;
         case 22:
         case 30:
