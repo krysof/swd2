@@ -3292,18 +3292,32 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                     std::span<const std::uint8_t, 768>(frame.palette),
                 });
             }
+            const auto wait_at_text_cursor = [&](bool animated) {
+                auto marker = std::size_t{animated ? 149U : 145U};
+                while (true) {
+                    auto frame = compose_introduction(
+                        surface, page, menu_sprites);
+                    blit(frame, menu_sprites, marker,
+                         40 + static_cast<int>(page.cursor_x),
+                         125 + static_cast<int>(page.cursor_y));
+                    context.platform.present({
+                        320, 200, frame.pixels,
+                        std::span<const std::uint8_t, 768>(frame.palette),
+                    });
+                    const auto input = context.platform.poll_input();
+                    if (input != InputAction::none) return input;
+                    context.platform.delay_for(std::chrono::milliseconds(20));
+                    if (animated) {
+                        ++marker;
+                        if (marker == 153U) marker = 149U;
+                    }
+                }
+            };
             if (page.has_more) {
-                const auto frame = compose_introduction(
-                    surface, page, menu_sprites);
-                context.platform.present({
-                    320, 200, frame.pixels,
-                    std::span<const std::uint8_t, 768>(frame.palette),
-                });
-                do {
-                    action = context.platform.wait_for_input();
-                } while (action != InputAction::confirm &&
-                         action != InputAction::cancel &&
-                         action != InputAction::quit);
+                // 3eaa installs the static MENU 91h marker at the direct VGA
+                // cursor. Like the original keyboard flag, any action advances
+                // to the page after %% and consumes that action.
+                action = wait_at_text_cursor(false);
                 if (action == InputAction::quit) {
                     start_battle = false;
                     break;
@@ -3313,17 +3327,10 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             }
 
             if (encounter.prompt_order == BattlePromptOrder::none) {
-                const auto frame = compose_introduction(
-                    surface, page, menu_sprites);
-                context.platform.present({
-                    320, 200, frame.pixels,
-                    std::span<const std::uint8_t, 768>(frame.palette),
-                });
-                do {
-                    action = context.platform.wait_for_input();
-                } while (action != InputAction::confirm &&
-                         action != InputAction::cancel &&
-                         action != InputAction::quit);
+                // 3ed3 cycles MENU 95h..98h at $$ until any key. Question
+                // encounters set the skip-wait byte and proceed directly to
+                // 5c98's Yes/No cards instead.
+                action = wait_at_text_cursor(true);
                 // Fixed ORC introductions are not optional: FIG advances on
                 // either key and enters 028a. Only an explicit frontend quit
                 // may abort the in-process module.

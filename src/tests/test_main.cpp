@@ -7362,6 +7362,25 @@ void test_demo_timeline(const std::filesystem::path& game_root) {
 }
 
 void test_battle_module(const std::filesystem::path& game_root) {
+    ScriptedPlatform introduction_cursor_platform;
+    introduction_cursor_platform.actions = {swd2::InputAction::quit};
+    introduction_cursor_platform.text_actions = {swd2::InputAction::confirm};
+    auto introduction_cursor_state = swd2::SharedState::load(
+        game_root / "SAVE.DA1");
+    introduction_cursor_state.set_u16(0x4a0, 20);  // text, no YN/NY prompt
+    swd2::GameContext introduction_cursor_context{
+        game_root, introduction_cursor_state, introduction_cursor_platform};
+    require(swd2::BattleModule().run(
+                introduction_cursor_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                introduction_cursor_platform.presented == 2U &&
+                introduction_cursor_platform.direct_updates == 2U &&
+                introduction_cursor_platform.text_cursor == 1U &&
+                introduction_cursor_platform.cursor == 1U &&
+                introduction_cursor_platform.frame_hashes[0] !=
+                    introduction_cursor_platform.frame_hashes[1],
+            "FIG 3ed3 did not animate the final 95h..98h text cursor");
+
     ScriptedPlatform immediate_battle_platform;
     immediate_battle_platform.actions = {swd2::InputAction::quit};
     auto immediate_state = swd2::SharedState::load(game_root / "SAVE.DA1");
