@@ -1125,9 +1125,13 @@ public:
 
             std::uint8_t choice = 0;
             bool finished_confirmation = false;
+            auto confirmation_source = frame;
+            if (!reveal_bottom_message(
+                    confirmation_source, shop_confirmation_prompt_)) {
+                return true;
+            }
             while (!finished_confirmation) {
-                auto confirmation = frame;
-                draw_bottom_message(confirmation, shop_confirmation_prompt_);
+                auto confirmation = confirmation_source;
                 const auto opaque = [&](std::size_t sprite,
                                         int x_byte, int y) {
                     if (sprite >= menu_sprites_.sprites().size()) return;
@@ -2930,9 +2934,9 @@ private:
 
     bool confirm_system_exit(Viewport frame) {
         std::uint8_t choice = 0;
+        if (!reveal_bottom_message(frame, system_exit_prompt_)) return false;
         while (true) {
             auto shown = frame;
-            draw_bottom_message(shown, system_exit_prompt_);
             const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
                 if (sprite >= menu_sprites_.sprites().size()) return;
                 const auto& info = menu_sprites_.sprites()[sprite];
@@ -3145,6 +3149,54 @@ private:
                          10 * 4, 125, 240, 64, 0);
     }
 
+    bool reveal_bottom_message(Viewport& frame,
+                               std::span<const std::uint8_t> text) {
+        auto completed = frame;
+        draw_bottom_message(completed, text);
+        std::vector<std::size_t> glyph_end_offsets;
+        for (std::size_t offset = 0; offset < text.size();) {
+            if (text[offset] == ' ') {
+                ++offset;
+            } else if (offset + 1U < text.size() &&
+                       ((text[offset] == '#' && text[offset + 1U] == '#') ||
+                        (text[offset] == '%' && text[offset + 1U] == '%'))) {
+                offset += 2U;
+            } else {
+                offset += std::min<std::size_t>(2U, text.size() - offset);
+                glyph_end_offsets.push_back(offset);
+            }
+        }
+
+        auto skipped_delay = false;
+        for (const auto glyph_end : glyph_end_offsets) {
+            if (skipped_delay) break;
+            auto shown = frame;
+            draw_bottom_message(shown, text.first(glyph_end));
+            platform_.present_direct_update({
+                320, 200, shown.pixels,
+                std::span<const std::uint8_t, 768>(shown.palette)});
+            const auto text_delay = state_.u16(0x3f2);
+            if (text_delay != 0) {
+                platform_.delay_for(std::chrono::milliseconds(
+                    (static_cast<std::uint64_t>(text_delay) * 1000U + 69U) /
+                    70U));
+            }
+            const auto action = platform_.poll_text_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            skipped_delay = action != InputAction::none;
+        }
+        if (skipped_delay && !glyph_end_offsets.empty()) {
+            platform_.present_direct_update({
+                320, 200, completed.pixels,
+                std::span<const std::uint8_t, 768>(completed.palette)});
+        }
+        frame = std::move(completed);
+        return true;
+    }
+
     bool show_bottom_message(Viewport frame,
                              std::span<const std::uint8_t> text) {
         auto page_start = std::size_t{0};
@@ -3158,12 +3210,11 @@ private:
             }
             if (page_end + 1U >= text.size()) page_end = text.size();
 
-            auto page = frame;
             const auto page_text = text.subspan(page_start, page_end - page_start);
-            draw_bottom_message(page, page_text);
+            auto page = frame;
+            if (!reveal_bottom_message(page, page_text)) return false;
             auto cursor_x_byte = 10;
             auto cursor_y = 125;
-            std::vector<std::size_t> glyph_end_offsets;
             for (std::size_t offset = 0; offset < page_text.size();) {
                 if (page_text[offset] == ' ') {
                     ++cursor_x_byte;
@@ -3178,35 +3229,7 @@ private:
                     cursor_x_byte += 4;
                     offset += std::min<std::size_t>(
                         2U, page_text.size() - offset);
-                    glyph_end_offsets.push_back(offset);
                 }
-            }
-
-            auto skipped_delay = false;
-            for (const auto glyph_end : glyph_end_offsets) {
-                if (skipped_delay) break;
-                auto shown = frame;
-                draw_bottom_message(shown, page_text.first(glyph_end));
-                platform_.present_direct_update({
-                    320, 200, shown.pixels,
-                    std::span<const std::uint8_t, 768>(shown.palette)});
-                const auto text_delay = state_.u16(0x3f2);
-                if (text_delay != 0) {
-                    platform_.delay_for(std::chrono::milliseconds(
-                        (static_cast<std::uint64_t>(text_delay) * 1000U + 69U) /
-                        70U));
-                }
-                const auto action = platform_.poll_text_input();
-                if (action == InputAction::quit) {
-                    quit_requested_ = true;
-                    return false;
-                }
-                skipped_delay = action != InputAction::none;
-            }
-            if (skipped_delay && !glyph_end_offsets.empty()) {
-                platform_.present_direct_update({
-                    320, 200, page.pixels,
-                    std::span<const std::uint8_t, 768>(page.palette)});
             }
 
             if (page_end == text.size()) {

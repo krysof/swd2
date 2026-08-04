@@ -7133,6 +7133,10 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
 
     auto [no_database, no_state] = prepare();
     ScriptedPlatform no_platform;
+    no_platform.text_actions = {
+        swd2::InputAction::confirm,  // skip opcode-18 greeting delay
+        swd2::InputAction::confirm,  // skip 5884 purchase-prompt delay
+    };
     no_platform.actions = {
         swd2::InputAction::confirm,  // interact with the shop entity
         // Opcode 18's greeting returns at $$ without a confirmation.
@@ -7149,6 +7153,8 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 no_context.shared_state.u16(0x104) == 100U &&
                 no_context.shared_state.u16(0x382) == 0U &&
                 no_platform.cursor == no_platform.actions.size() &&
+                no_platform.text_cursor == no_platform.text_actions.size() &&
+                no_platform.direct_updates == 4U &&
                 no_platform.presented == 9U &&
                 no_platform.frame_hashes[4] == 2974691146617333747ULL &&
                 no_platform.frame_hashes[7] == no_platform.frame_hashes[4] &&
