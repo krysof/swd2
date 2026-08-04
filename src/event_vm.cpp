@@ -223,17 +223,14 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 restore_party(state);
                 break;
             case 13: {
-                const auto branch = host.run_inventory(state, InventoryUiMode::general);
-                if (!branch) {
+                const auto accepted = host.confirm_event_branch(state);
+                if (!accepted) {
                     result.status = EventVmStatus::unsupported_opcode;
                     return result;
                 }
-                if (*branch == InventoryUiResult::empty_slot) {
+                if (*accepted) {
                     target = arg(0);
                     branched = true;
-                } else if (*branch == InventoryUiResult::map_reload) {
-                    result.requested_map_reload = true;
-                    return result;
                 }
                 break;
             }

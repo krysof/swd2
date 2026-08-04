@@ -52,8 +52,12 @@ public:
     virtual bool run_shop(std::span<const std::uint16_t>, SharedState&) {
         return false;
     }
-    // Opcode 13 branches to its argument only when the inventory UI returns
-    // an empty selection. nullopt means this host has no inventory UI.
+    // Opcode 13 enters RPG.EXE's shared Yes/No selector and branches to its
+    // argument only when the left (Yes) choice is accepted. nullopt means
+    // this host has no confirmation UI.
+    virtual std::optional<bool> confirm_event_branch(SharedState&) {
+        return std::nullopt;
+    }
     virtual std::optional<InventoryUiResult> run_inventory(SharedState&) {
         return std::nullopt;
     }

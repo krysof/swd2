@@ -5020,6 +5020,10 @@ public:
         ++shops;
         return accept_shops;
     }
+    std::optional<bool> confirm_event_branch(swd2::SharedState&) override {
+        ++confirmations;
+        return confirmation_result;
+    }
     std::optional<swd2::InventoryUiResult> run_inventory(swd2::SharedState&) override {
         ++inventories;
         return inventory_result;
@@ -5042,6 +5046,8 @@ public:
     std::vector<std::uint16_t> shop_items;
     std::size_t shops{};
     bool accept_shops{true};
+    std::size_t confirmations{};
+    std::optional<bool> confirmation_result{false};
     std::size_t inventories{};
     std::size_t map_relocations{};
     std::size_t relocated_entity_count{};
@@ -5297,19 +5303,29 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                 host.shop_items == std::vector<std::uint16_t>({117, 118, 120}),
             "event opcode 19 did not pass its variable ITEM list to the shop host");
 
-    const std::vector<std::vector<std::uint8_t>> inventory_records = {
+    const std::vector<std::vector<std::uint8_t>> confirmation_records = {
         event_words({13, 4, 58, 111, 0xffff}),
         event_words({58, 222, 0xffff}),
     };
-    const auto inventory_archive =
-        swd2::ScriptArchive::from_records(inventory_records);
-    auto inventory_state = swd2::SharedState::load(game_root / "SAVE.DA1");
-    host.inventory_result = swd2::InventoryUiResult::empty_slot;
-    const auto inventory =
-        swd2::execute_event(inventory_archive, 2, inventory_state, nullptr, 0, host);
-    require(inventory.requested_marker == swd2::Marker::open_figure &&
-                inventory_state.u16(0x4a0) == 222 && host.inventories == 1,
-            "event opcode 13 did not take the empty-inventory branch");
+    const auto confirmation_archive =
+        swd2::ScriptArchive::from_records(confirmation_records);
+    auto confirmation_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    host.confirmation_result = false;
+    const auto declined = swd2::execute_event(
+        confirmation_archive, 2, confirmation_state, nullptr, 0, host);
+    require(declined.requested_marker == swd2::Marker::open_figure &&
+                confirmation_state.u16(0x4a0) == 111 &&
+                host.confirmations == 1 && host.inventories == 0,
+            "event opcode 13 did not continue after the declined No choice");
+
+    confirmation_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    host.confirmation_result = true;
+    const auto confirmation = swd2::execute_event(
+        confirmation_archive, 2, confirmation_state, nullptr, 0, host);
+    require(confirmation.requested_marker == swd2::Marker::open_figure &&
+                confirmation_state.u16(0x4a0) == 222 &&
+                host.confirmations == 2 && host.inventories == 0,
+            "event opcode 13 did not take the accepted Yes branch");
 
     const std::vector<std::vector<std::uint8_t>> combined_shop_records = {
         event_words({17, 2, 117, 118, 0xffff}),
@@ -5321,6 +5337,7 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
     for (auto& field : shop_area.entity_fields) field.resize(1);
     shop_area.entity_fields[9][0] = 4;
     auto combined_shop_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    host.inventory_result = swd2::InventoryUiResult::occupied_slot;
     const auto combined_shop = swd2::execute_event(
         combined_shop_archive, 2, combined_shop_state, &shop_area, 0, host);
     require(combined_shop.requested_marker == swd2::Marker::open_figure &&
@@ -6169,6 +6186,8 @@ void test_rpg_inventory_equipment_screen(
         swd2::InputAction::confirm,  // physical slot zero
         swd2::InputAction::confirm,  // Equip action card
         swd2::InputAction::confirm,  // actor zero
+        swd2::InputAction::down,
+        swd2::InputAction::down,     // original equipment cursor starts at row zero
         swd2::InputAction::confirm,  // replace the existing two-handed item
         swd2::InputAction::cancel,   // equipment page -> inventory
         swd2::InputAction::cancel,   // inventory -> field diamond
@@ -6187,15 +6206,58 @@ void test_rpg_inventory_equipment_screen(
                 context.shared_state.u16(0x106U + 0x16U) == 117U &&
                 context.shared_state.u8(0x106U + 0x2cU) == 1U,
             "RPG 425b equipment page did not exchange the selected item");
+    require(platform.frame_hashes.size() == 13U &&
+                platform.frame_hashes[3] == 11433385744574714003ULL &&
+                platform.frame_hashes[4] == 2848898498388233175ULL &&
+                platform.frame_hashes[5] == 9218707047594438047ULL &&
+                platform.frame_hashes[6] == 9871791124262577919ULL &&
+                platform.frame_hashes[7] == 6721607259575207961ULL &&
+                platform.frame_hashes[8] == 674075819568147182ULL &&
+                platform.frame_hashes[9] == 14756815826000922593ULL &&
+                platform.frame_hashes[10] == 10019193737471563700ULL &&
+                platform.frame_hashes[11] == platform.frame_hashes[2] &&
+                platform.frame_hashes[12] == platform.frame_hashes[0],
+            "RPG 3feb equipment redraw/return frames were not stable");
+}
+
+void test_rpg_inventory_empty_slot_unequip(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,   // map -> field diamond
+        swd2::InputAction::right,    // Item
+        swd2::InputAction::confirm,  // inventory, physical slot zero is empty
+        swd2::InputAction::confirm,  // empty selection enters 3f53 directly
+        swd2::InputAction::confirm,  // actor zero
+        swd2::InputAction::down,     // equipment selector starts at row zero
+        swd2::InputAction::confirm,  // unequip row one into the empty bag cell
+        swd2::InputAction::cancel,   // equipment page -> inventory
+        swd2::InputAction::cancel,   // inventory -> field diamond
+        swd2::InputAction::cancel,   // field diamond -> map
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    require(state.u16(0x382U) == 0U &&
+                state.u16(0x106U + 0x12U) == 165U,
+            "empty-slot unequip fixture no longer matches SAVE.DA1");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                platform.cursor == platform.actions.size(),
+            "RPG empty-slot unequip run did not terminate normally");
+    require(context.shared_state.u16(0x382U) == 165U &&
+                context.shared_state.u16(0x106U + 0x12U) == 0U,
+            "RPG 3f53/425b did not move equipped item into an empty bag cell");
     require(platform.frame_hashes.size() == 11U &&
-                platform.frame_hashes[6] == 674075819568147182ULL &&
-                platform.frame_hashes[7] == 14756815826000922593ULL &&
-                platform.compact_hashes[6] == 782290740610883250ULL &&
-                platform.compact_hashes[7] == 17431159694511456778ULL &&
-                platform.frame_hashes[8] != platform.frame_hashes[7] &&
+                platform.frame_hashes[3] == 3887926141398700200ULL &&
+                platform.frame_hashes[4] == 6933714104764164447ULL &&
+                platform.frame_hashes[5] == 1877660029463832535ULL &&
+                platform.frame_hashes[6] == 7755562181881063793ULL &&
+                platform.frame_hashes[7] == 9362985103413895260ULL &&
+                platform.frame_hashes[8] == 717940005636157773ULL &&
                 platform.frame_hashes[9] == platform.frame_hashes[2] &&
                 platform.frame_hashes[10] == platform.frame_hashes[0],
-            "RPG 3feb equipment redraw/return frames were not stable");
+            "RPG empty-slot equipment/return frames were not stable");
 }
 
 void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
@@ -7304,9 +7366,9 @@ void test_rpg_dialogue_then_money_overlay(
 
     ScriptedPlatform platform;
     platform.actions = {
-        swd2::InputAction::right,
-        swd2::InputAction::confirm,
-        swd2::InputAction::cancel,  // leave opcode-13 inventory
+        swd2::InputAction::right,    // opcode 13: select No
+        swd2::InputAction::confirm,  // decline its conditional branch
+        swd2::InputAction::cancel,   // close the following dialogue
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     state.set_u16(0x424, 12);
@@ -8152,6 +8214,7 @@ int main(int argc, char** argv) {
         test_rpg_inventory_item_actions(argv[1]);
         test_rpg_inventory_alchemy(argv[1]);
         test_rpg_inventory_equipment_screen(argv[1]);
+        test_rpg_inventory_empty_slot_unequip(argv[1]);
         test_rpg_field_status_menu(argv[1]);
         test_rpg_field_magic_menu(argv[1]);
         test_rpg_field_magic_cast(argv[1]);

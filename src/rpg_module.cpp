@@ -1042,6 +1042,45 @@ public:
         return true;
     }
 
+    std::optional<bool> confirm_event_branch(SharedState&) override {
+        const auto source = event_scene();
+        std::size_t choice = 0;
+        while (true) {
+            auto frame = source;
+            const auto opaque = [&](std::size_t sprite,
+                                    int x_byte, int y) {
+                if (sprite >= menu_sprites_.sprites().size()) return;
+                const auto& info = menu_sprites_.sprites()[sprite];
+                blit_opaque(frame, menu_sprites_.pixels(sprite),
+                            info.width, info.height, x_byte * 4, y);
+            };
+            // EVENT_OP_13 at 54b8 clears DATA:3cd7 before entering 555a.
+            // That selects MENU 29/8 (Yes/No), on two opaque frame-zero
+            // cards at the same coordinates used by shop confirmations.
+            opaque(0, 44, 90);
+            opaque(0, 62, 90);
+            opaque(29, 50, 99);
+            opaque(8, 68, 99);
+            apply_rpg_binary_choice_highlight(
+                frame.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(frame.palette),
+                44, 62, 90, choice);
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::cancel) return false;
+            if (action == InputAction::left) choice = 0;
+            else if (action == InputAction::right) choice = 1;
+            else if (action == InputAction::confirm) return choice == 0U;
+        }
+    }
+
     bool run_shop(std::span<const std::uint16_t> item_ids,
                   SharedState& state) override {
         if (item_ids.empty()) return true;
@@ -1308,8 +1347,10 @@ public:
                 scroll_cue = selection.scroll_cue;
             } else {
                 const auto selected_item = inventory.item(selected);
-                if (selected_item == 0) return InventoryUiResult::empty_slot;
                 if (mode == InventoryUiMode::sell) {
+                    if (selected_item == 0U) {
+                        return InventoryUiResult::empty_slot;
+                    }
                     const auto value = inventory.sale_value(selected);
                     if (!value) {
                         // 5617 presents DATA:3c0a when ITEM +05 bit 08 is
@@ -1377,7 +1418,7 @@ public:
 
                 const auto& definition = items_.at(selected_item);
                 auto action_frame = frame;
-                if (mode == InventoryUiMode::general) {
+                if (mode == InventoryUiMode::general && selected_item != 0U) {
                     bool return_to_inventory = false;
                     while (true) {
                         const auto action = select_item_action(
@@ -1499,7 +1540,8 @@ public:
                     if (return_to_inventory) continue;
                 }
 
-                if (definition.equipment_category() == 0) {
+                if (selected_item != 0U &&
+                    definition.equipment_category() == 0) {
                     if (!definition.field_usable()) {
                         // 3b30 enters 4aec with DATA:3620 when ITEM +05 bit
                         // zero is clear; the selection remains in the bag.
@@ -1701,19 +1743,6 @@ public:
                     continue;
                 }
 
-                const auto initial_slot = [](std::uint8_t category) -> std::size_t {
-                    switch (category) {
-                        case 7: return 0;
-                        case 3: return 1;
-                        case 8: case 9: return 2;
-                        case 2: return 4;
-                        case 1: return 5;
-                        case 5: return 6;
-                        case 6: return 7;
-                        case 4: return 9;
-                        default: return 0;
-                    }
-                };
                 const auto party_count = std::max<std::size_t>(
                     1, std::min<std::size_t>(state.u16(0x10), 4));
                 std::size_t actor = 0;
@@ -1759,7 +1788,10 @@ public:
                     }
                     continue;
                 }
-                auto equipment_slot = initial_slot(definition.equipment_category());
+                // 3fc1..3fd3 always resets the eleven-row equipment selector
+                // to row zero. It does not jump to a compatible row for the
+                // incoming category.
+                std::size_t equipment_slot = 0;
                 bool back_to_inventory = false;
                 while (!back_to_inventory) {
                     // 425b swaps the inventory word and then writes the
@@ -1871,6 +1903,11 @@ public:
                 // That pass recomputes the five maximum equipment traits
                 // from all eleven actor slots.
                 inventory.recalculate_equipment_traits(actor);
+                // The 3b28 caller immediately follows 3f53 with 3ced. This
+                // matters when an empty bag cell was used to unequip an item:
+                // any later occupied words must be shifted behind it before
+                // the general selector is reconstructed.
+                inventory.compact();
             }
         }
     }
