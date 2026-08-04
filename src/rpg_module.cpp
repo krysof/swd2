@@ -1634,6 +1634,12 @@ public:
                 auto equipment_slot = initial_slot(definition.equipment_category());
                 bool back_to_inventory = false;
                 while (!back_to_inventory) {
+                    // 425b swaps the inventory word and then writes the
+                    // returned equipment id back to DATA:3612 before 42c6
+                    // jumps to 3feb.  Consequently both the compact title
+                    // and subsequent category checks use the newly returned
+                    // object, not the item that originally opened this page.
+                    const auto equipment_item = inventory.item(selected);
                     auto equipment_frame = action_frame;
                     // RPG.EXE:3fd9/46b1 uses a full 8x11 MENU selector panel.
                     draw_rpg_selector_panel(equipment_frame.pixels, 320, 200,
@@ -1649,7 +1655,7 @@ public:
                     // single-row item-name card at (48,0), width eight.
                     draw_rpg_compact_panel(equipment_frame.pixels, 320, 200,
                                            menu_sprites_, 48, 0, 8, 1);
-                    draw_item_text(equipment_frame, item_texts_, item_font_, selected_item,
+                    draw_item_text(equipment_frame, item_texts_, item_font_, equipment_item,
                                    51 * 4, 9, 96, 15, 14);
                     const auto actor_base = 0x106 + actor * 0x9f;
                     draw_legacy_text(equipment_frame, item_font_,
@@ -1733,6 +1739,11 @@ public:
                         }
                     }
                 }
+                // 42c9 restores the shared list globals and always calls
+                // 42ff before returning to 39ed, even when no swap occurred.
+                // That pass recomputes the five maximum equipment traits
+                // from all eleven actor slots.
+                inventory.recalculate_equipment_traits(actor);
             }
         }
     }

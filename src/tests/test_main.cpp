@@ -5882,6 +5882,44 @@ void test_rpg_inventory_alchemy(const std::filesystem::path& game_root) {
             "RPG alchemy ingredient/result pages were not presented");
 }
 
+void test_rpg_inventory_equipment_screen(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,   // map -> field diamond
+        swd2::InputAction::right,    // Item
+        swd2::InputAction::confirm,  // inventory
+        swd2::InputAction::confirm,  // physical slot zero
+        swd2::InputAction::confirm,  // Equip action card
+        swd2::InputAction::confirm,  // actor zero
+        swd2::InputAction::confirm,  // replace the existing two-handed item
+        swd2::InputAction::cancel,   // equipment page -> inventory
+        swd2::InputAction::cancel,   // inventory -> field diamond
+        swd2::InputAction::cancel,   // field diamond -> map
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x382U, 117U);  // category-nine two-handed equipment
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                platform.cursor == platform.actions.size(),
+            "RPG equipment-page run did not terminate normally");
+    require(context.shared_state.u16(0x382U) == 122U &&
+                context.shared_state.u16(0x106U + 0x14U) == 117U &&
+                context.shared_state.u16(0x106U + 0x16U) == 117U &&
+                context.shared_state.u8(0x106U + 0x2cU) == 1U,
+            "RPG 425b equipment page did not exchange the selected item");
+    require(platform.frame_hashes.size() == 11U &&
+                platform.frame_hashes[6] == 9256093323189533149ULL &&
+                platform.frame_hashes[7] == 118377266645773032ULL &&
+                platform.compact_hashes[7] != platform.compact_hashes[6] &&
+                platform.frame_hashes[8] != platform.frame_hashes[7] &&
+                platform.frame_hashes[9] == platform.frame_hashes[2] &&
+                platform.frame_hashes[10] == platform.frame_hashes[0],
+            "RPG 3feb equipment redraw/return frames were not stable");
+}
+
 void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
@@ -7584,6 +7622,7 @@ int main(int argc, char** argv) {
         test_rpg_field_menu_inventory(argv[1]);
         test_rpg_inventory_item_actions(argv[1]);
         test_rpg_inventory_alchemy(argv[1]);
+        test_rpg_inventory_equipment_screen(argv[1]);
         test_rpg_field_status_menu(argv[1]);
         test_rpg_field_magic_menu(argv[1]);
         test_rpg_field_magic_cast(argv[1]);
