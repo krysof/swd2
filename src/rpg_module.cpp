@@ -2704,9 +2704,15 @@ private:
                     draw_menu_number(frame, menu_sprites_, maximum,
                                      62, top + 3, 111);
                 };
+                // RPG DATA:376a dispatches the post-status rows as strength,
+                // wisdom, agility, magic, reaction, battle power, defence,
+                // level and experience.  The status handler itself consumes
+                // four visual rows (the three blank labels at 3..5), so these
+                // offsets correspond to labels 7..15 rather than adjacent
+                // entries in the function-pointer table.
                 static constexpr std::array<std::size_t, 9> scalar_offsets{
                     0x3d, 0x45, 0x4d, 0x55, 0x5d,
-                    0x31, 0x0c, 0x0e, 0x39};
+                    0x0c, 0x0e, 0x31, 0x39};
                 for (std::size_t row = 0; row < 8U; ++row) {
                     const auto index = first_visible + row;
                     const auto top = 49 + static_cast<int>(row) * 16;
