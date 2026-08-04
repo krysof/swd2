@@ -458,11 +458,24 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             }
             case 42:
                 // Change the inventory/equipment page and discard the
-                // temporary battle-only item range (ids >= 314).
+                // temporary battle-only item range (ids >= 314). RPG 5b34
+                // then calls 3ced, whose repeated left shifts are equivalent
+                // to a stable compaction of all fifty physical words.
                 state.set_u8(0x3f1, static_cast<std::uint8_t>(arg(0)));
                 for (std::size_t i = 0; i < 50; ++i) {
                     const auto offset = 0x382 + i * 2;
                     if (state.u16(offset) >= 0x013a) state.set_u16(offset, 0);
+                }
+                {
+                    std::size_t output = 0;
+                    for (std::size_t input = 0; input < 50; ++input) {
+                        const auto value = state.u16(0x382 + input * 2U);
+                        if (value == 0) continue;
+                        state.set_u16(0x382 + output++ * 2U, value);
+                    }
+                    while (output < 50) {
+                        state.set_u16(0x382 + output++ * 2U, 0);
+                    }
                 }
                 break;
             case 43:

@@ -4809,6 +4809,9 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
     for (std::size_t i = 0; i < 50; ++i) state.set_u16(0x382 + i * 2, 0);
     state.set_u16(0x382, 123);
     state.set_u16(0x384, 400);
+    state.set_u16(0x388, 88);
+    state.set_u16(0x38a, 314);
+    state.set_u16(0x38c, 99);
     const auto result = swd2::execute_event(archive, 2, state, nullptr, 0, host);
     require(result.status == swd2::EventVmStatus::completed &&
                 result.requested_marker == swd2::Marker::open_figure &&
@@ -4816,8 +4819,10 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
             "event opcode 58 did not request the FIG module");
     require(state.u16(0x106 + 0x2d) == 100,
             "event opcode 10 did not saturate at the adjacent maximum");
-    require(state.u16(0x382) == 257 && state.u16(0x384) == 0 && state.u8(0x3f1) == 1,
-            "event opcodes 40/42 did not update and filter the inventory");
+    require(state.u16(0x382) == 257 && state.u16(0x384) == 88 &&
+                state.u16(0x386) == 99 && state.u16(0x388) == 0 &&
+                state.u8(0x3f1) == 1,
+            "event opcodes 40/42 did not update, filter and compact the inventory");
     require(state.u16(0x10) == 2 && state.u16(0x106 + 2 * 0x9f + 8) == 0x2000 &&
                 state.u16(0x106 + 3 * 0x9f + 8) == 0x2000,
             "event opcode 47 did not mark inactive party records");
