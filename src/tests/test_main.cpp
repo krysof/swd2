@@ -6571,6 +6571,39 @@ void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
             "RPG system Record did not return through 4b76 to the field");
 }
 
+void test_rpg_system_menu_save_restricted(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::confirm,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,     // Record
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // dismiss DATA:3620
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x408U,
+                  static_cast<std::uint16_t>(state.u16(0x408U) & ~0x2000U));
+    std::size_t saves = 0;
+    swd2::GameContext context{game_root, state, platform};
+    context.save_slot = [&](std::uint8_t, const swd2::SharedState&,
+                            const swd2::MapDatabase&) { ++saves; };
+    const auto restricted_result = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(restricted_result == swd2::Marker::none &&
+                saves == 0U &&
+                platform.cursor == platform.actions.size() &&
+                platform.direct_updates == 7U &&
+                platform.presented == 10U &&
+                platform.stop_calls == 1U,
+            "RPG map-restricted Record did not show and dismiss DATA:3620");
+}
+
 void test_rpg_system_menu_load(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
@@ -7968,6 +8001,7 @@ int main(int argc, char** argv) {
         test_rpg_field_magic_travel_restricted(argv[1]);
         test_rpg_system_menu_speed_and_exit(argv[1]);
         test_rpg_system_menu_save(argv[1]);
+        test_rpg_system_menu_save_restricted(argv[1]);
         test_rpg_system_menu_load(argv[1]);
         test_rpg_system_audio_toggle(argv[1]);
         test_rpg_entity_collision(argv[1]);

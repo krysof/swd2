@@ -2983,8 +2983,15 @@ private:
     }
 
     void run_system_save(Viewport base) {
-        if ((state_.u16(0x408) & 0x2000U) == 0U ||
-            map_database_ == nullptr || save_slot_ == nullptr ||
+        if ((state_.u16(0x408) & 0x2000U) == 0U) {
+            // RPG 4cc3..4cd4 does not silently ignore Record on a map which
+            // forbids saving. It routes DATA:3620 through the same 49d0
+            // bottom-message renderer used by restricted field actions.
+            static_cast<void>(show_bottom_message(
+                std::move(base), field_action_error_));
+            return;
+        }
+        if (map_database_ == nullptr || save_slot_ == nullptr ||
             !*save_slot_) {
             return;
         }
