@@ -12,6 +12,7 @@
 #include <chrono>
 #include <cmath>
 #include <ctime>
+#include <deque>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -86,6 +87,8 @@ struct SdlPlatform::Impl {
     std::size_t voice_cursor{};
     bool loop_music{};
     std::vector<SDL_GameController*> controllers;
+    std::deque<InputAction> pending_actions;
+    bool frontend_quit{};
     struct ControllerAxisState {
         int horizontal{};
         int vertical{};
@@ -172,6 +175,23 @@ struct SdlPlatform::Impl {
             return InputAction::none;
         }
         return translate_event(event);
+    }
+
+    InputAction take_pending_action() {
+        if (frontend_quit) return InputAction::quit;
+        if (pending_actions.empty()) return InputAction::none;
+        const auto action = pending_actions.front();
+        pending_actions.pop_front();
+        return action;
+    }
+
+    void retain_event_action(const SDL_Event& event) {
+        const auto action = process_event(event);
+        if (action == InputAction::quit) {
+            frontend_quit = true;
+        } else if (action != InputAction::none) {
+            pending_actions.push_back(action);
+        }
     }
 
     void ensure_texture(std::size_t width, std::size_t height) {
@@ -286,6 +306,10 @@ void SdlPlatform::present(const IndexedSurfaceView& surface) {
 
 InputAction SdlPlatform::wait_for_input() {
     SDL_Event event{};
+    if (const auto pending = impl_->take_pending_action();
+        pending != InputAction::none) {
+        return pending;
+    }
 #ifdef __EMSCRIPTEN__
     // A browser cannot block its main thread in SDL_WaitEvent. ASYNCIFY turns
     // emscripten_sleep into a cooperative suspension, allowing DOM events,
@@ -295,6 +319,7 @@ InputAction SdlPlatform::wait_for_input() {
         while (SDL_PollEvent(&event) != 0) {
             if (const auto action = impl_->process_event(event);
                 action != InputAction::none) {
+                if (action == InputAction::quit) impl_->frontend_quit = true;
                 return action;
             }
         }
@@ -303,19 +328,37 @@ InputAction SdlPlatform::wait_for_input() {
 #else
     while (SDL_WaitEvent(&event) != 0) {
         if (const auto action = impl_->process_event(event);
-            action != InputAction::none) return action;
+            action != InputAction::none) {
+            if (action == InputAction::quit) impl_->frontend_quit = true;
+            return action;
+        }
     }
     fail_sdl("SDL_WaitEvent");
 #endif
 }
 
 InputAction SdlPlatform::poll_input() {
+    if (const auto pending = impl_->take_pending_action();
+        pending != InputAction::none) {
+        return pending;
+    }
     SDL_Event event{};
     while (SDL_PollEvent(&event) != 0) {
         if (const auto action = impl_->process_event(event);
-            action != InputAction::none) return action;
+            action != InputAction::none) {
+            if (action == InputAction::quit) impl_->frontend_quit = true;
+            return action;
+        }
     }
     return InputAction::none;
+}
+
+bool SdlPlatform::poll_frontend_quit() {
+    SDL_Event event{};
+    while (SDL_PollEvent(&event) != 0) {
+        impl_->retain_event_action(event);
+    }
+    return impl_->frontend_quit;
 }
 
 void SdlPlatform::delay_for(std::chrono::milliseconds duration) {

@@ -831,9 +831,21 @@ public:
 
     void delay(std::uint16_t ticks) override {
         // RPG.EXE waits on its 70 Hz IRQ word at 5a55. The backend sleep keeps
-        // that timing without the original busy loop.
-        platform_.delay_for(std::chrono::milliseconds(
-            (static_cast<std::uint64_t>(ticks) * 1000U + 69U) / 70U));
+        // that timing without the original busy loop. A host window close is
+        // not a DOS key, so it can interrupt the replacement sleep without
+        // consuming any queued story/menu input.
+        auto remaining = std::chrono::milliseconds(
+            (static_cast<std::uint64_t>(ticks) * 1000U + 69U) / 70U);
+        constexpr auto slice = std::chrono::milliseconds(20);
+        while (remaining.count() > 0) {
+            if (platform_.poll_frontend_quit()) {
+                quit_requested_ = true;
+                return;
+            }
+            const auto current = std::min(remaining, slice);
+            platform_.delay_for(current);
+            remaining -= current;
+        }
     }
 
     void map_relocated(const MapAreaRecord& area) override {

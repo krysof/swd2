@@ -5547,6 +5547,14 @@ public:
         }
         return swd2::InputAction::none;
     }
+    bool poll_frontend_quit() override {
+        ++frontend_quit_poll_calls;
+        if (frontend_cursor < frontend_actions.size()) {
+            return frontend_actions[frontend_cursor++] ==
+                   swd2::InputAction::quit;
+        }
+        return false;
+    }
     swd2::ClockTime clock_time() const override { return {0, 0}; }
     void play_music(std::span<const std::uint8_t>, bool) override { ++music_calls; }
     void play_voice(std::span<const std::uint8_t> data) override {
@@ -5571,6 +5579,7 @@ public:
     std::size_t poll_calls{};
     std::size_t direct_updates{};
     std::size_t text_poll_calls{};
+    std::size_t frontend_quit_poll_calls{};
     std::vector<std::uint64_t> frame_hashes;
     std::vector<std::uint64_t> compact_hashes;
     std::vector<std::uint64_t> bottom_hashes;
@@ -5587,7 +5596,9 @@ public:
         swd2::InputAction::confirm,
     };
     std::vector<swd2::InputAction> text_actions;
+    std::vector<swd2::InputAction> frontend_actions;
     std::size_t text_cursor{};
+    std::size_t frontend_cursor{};
     std::size_t cursor{};
 };
 
@@ -7425,7 +7436,8 @@ void test_demo_timeline(const std::filesystem::path& game_root) {
 
 void test_battle_module(const std::filesystem::path& game_root) {
     ScriptedPlatform defeat_quit_platform;
-    defeat_quit_platform.actions = {swd2::InputAction::quit};
+    defeat_quit_platform.actions.clear();
+    defeat_quit_platform.frontend_actions = {swd2::InputAction::quit};
     auto defeat_quit_state = swd2::SharedState::load(
         game_root / "SAVE.DA1");
     defeat_quit_state.set_u16(0x4a0, 392);
@@ -7437,8 +7449,9 @@ void test_battle_module(const std::filesystem::path& game_root) {
     require(swd2::BattleModule().run(
                 defeat_quit_context, swd2::Marker::open_figure) ==
                 swd2::Marker::none &&
-                defeat_quit_platform.cursor == 1U &&
-                defeat_quit_platform.poll_calls == 1U &&
+                defeat_quit_platform.cursor == 0U &&
+                defeat_quit_platform.frontend_cursor == 1U &&
+                defeat_quit_platform.frontend_quit_poll_calls == 1U &&
                 defeat_quit_platform.presented == 2U &&
                 defeat_quit_platform.music_calls == 2U &&
                 defeat_quit_platform.stop_calls == 1U &&

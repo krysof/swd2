@@ -3055,7 +3055,7 @@ bool delay_for_or_frontend_quit(
     // defeat page is timed rather than dismissible.
     constexpr auto slice = std::chrono::milliseconds(20);
     while (duration.count() > 0) {
-        if (platform.poll_input() == InputAction::quit) return false;
+        if (platform.poll_frontend_quit()) return false;
         const auto current = std::min(duration, slice);
         platform.delay_for(current);
         duration -= current;

@@ -56,6 +56,10 @@ public:
     // Kept distinct so deterministic replay streams can model the key which
     // skips typewriter delay separately from the later acknowledgement key.
     virtual InputAction poll_text_input() { return poll_input(); }
+    // Window/tab shutdown is a host lifecycle event, not a DOS keyboard key.
+    // Timed original sequences can probe it without consuming a direction or
+    // confirmation which must remain queued for the next interactive screen.
+    virtual bool poll_frontend_quit() { return false; }
     virtual void delay_for(std::chrono::milliseconds) {}
     virtual ClockTime clock_time() const = 0;
     virtual void play_music(std::span<const std::uint8_t> rix_data, bool loop) = 0;

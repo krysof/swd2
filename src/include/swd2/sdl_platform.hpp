@@ -18,6 +18,7 @@ public:
     void present(const IndexedSurfaceView& surface) override;
     InputAction wait_for_input() override;
     InputAction poll_input() override;
+    bool poll_frontend_quit() override;
     void delay_for(std::chrono::milliseconds duration) override;
     ClockTime clock_time() const override;
     void play_music(std::span<const std::uint8_t> rix_data, bool loop) override;
