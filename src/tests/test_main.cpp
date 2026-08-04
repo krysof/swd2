@@ -7466,11 +7466,14 @@ void test_battle_module(const std::filesystem::path& game_root) {
     notice_state.set_u16(0x4a0, 392);
     notice_state.set_u16(0x106 + 0x55, 0);
     swd2::GameContext notice_context{game_root, notice_state, notice_platform};
-    require(swd2::BattleModule().run(
-                notice_context, swd2::Marker::open_figure) ==
+    const auto notice_result = swd2::BattleModule().run(
+        notice_context, swd2::Marker::open_figure);
+    require(notice_result ==
                 swd2::Marker::none && notice_platform.presented == 5 &&
+                notice_platform.direct_updates == 12U &&
+                notice_platform.text_poll_calls == 12U &&
                 notice_platform.frame_hashes.back() ==
-                    13742626491697678824ULL,
+                    15354309854190851288ULL,
             "FIG 3e19 modal battle notice did not consume its closing key");
 
     // 3f3b has a distinct icon pair/resource label for all five classes.

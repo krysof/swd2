@@ -479,7 +479,8 @@ void draw_message_panel(BattleSurface& surface,
 void draw_battle_notice(BattleSurface& surface,
                         const SpriteArchive& menu_sprites,
                         const LegacyFont& font, const LegacyFont& fallback,
-                        std::span<const std::uint8_t> text) {
+                        std::span<const std::uint8_t> text,
+                        std::optional<std::size_t> marker_frame) {
     // FIG 3e19 begins every selector failure with 3de8's 7x4 panel and text
     // origin. The shipped messages used by 184f/4043 are single-line Big5,
     // but preserve the renderer's byte-space and ## newline rules here.
@@ -505,9 +506,9 @@ void draw_battle_notice(BattleSurface& surface,
         column += 4;
         offset += 2U;
     }
-    // At $$, 3e19 places MENU frame 145 immediately after the final glyph
-    // and waits for the key that dismisses the modal panel.
-    blit(surface, menu_sprites, 145, column * 4, top);
+    if (marker_frame) {
+        blit(surface, menu_sprites, *marker_frame, column * 4, top);
+    }
 }
 
 void draw_fig_text(BattleSurface& surface, const LegacyFont& font,
@@ -562,7 +563,9 @@ BattleSurface compose_command_frame(
     const BattleCommandMenu& menu, const BattleEncounter& encounter,
     const BattleAbilityDatabase& abilities, const LegacyFont& font,
     const LegacyFont& fallback, const SpriteArchive& menu_sprites,
-    const ScriptArchive& items, const std::filesystem::path& game_root) {
+    const ScriptArchive& items, const std::filesystem::path& game_root,
+    std::optional<std::size_t> notice_text_bytes = std::nullopt,
+    std::optional<std::size_t> notice_marker = std::size_t{149}) {
     auto result = scene;
     draw_fig_party_cards(
         result, menu_sprites,
@@ -613,8 +616,12 @@ BattleSurface compose_command_frame(
     };
     const auto finish_frame = [&]() -> BattleSurface {
         if (menu.notice() != BattleCommandNotice::none) {
+            auto text = abilities.notice_text(menu.notice());
+            if (notice_text_bytes) {
+                text = text.first(std::min(*notice_text_bytes, text.size()));
+            }
             draw_battle_notice(result, menu_sprites, font, fallback,
-                               abilities.notice_text(menu.notice()));
+                               text, notice_marker);
         }
         return result;
     };
@@ -3418,6 +3425,87 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             } else {
                 BattleCommandMenu menu(session, abilities, items);
                 while (!menu.complete()) {
+                    if (menu.notice() != BattleCommandNotice::none) {
+                        const auto notice_text = abilities.notice_text(menu.notice());
+                        const auto notice_page = render_dialogue_page(
+                            command_font, notice_text, 0, 280, 64, 1,
+                            &command_name_font);
+                        auto skipped_text_delay = false;
+                        auto quit_during_text = false;
+                        for (const auto glyph_end : notice_page.glyph_end_offsets) {
+                            if (skipped_text_delay) break;
+                            const auto frame = compose_command_frame(
+                                surface, session, menu, encounter, abilities,
+                                command_font, command_name_font, menu_sprites,
+                                items, context.game_root, glyph_end,
+                                std::nullopt);
+                            context.platform.present_direct_update({
+                                320, 200, frame.pixels,
+                                std::span<const std::uint8_t, 768>(frame.palette),
+                            });
+                            const auto text_delay =
+                                context.shared_state.u16(0x3f2);
+                            if (text_delay != 0) {
+                                context.platform.delay_for(
+                                    std::chrono::milliseconds(
+                                        (static_cast<std::uint64_t>(text_delay) *
+                                             1000U +
+                                         69U) /
+                                        70U));
+                            }
+                            const auto text_action =
+                                context.platform.poll_text_input();
+                            if (text_action == InputAction::quit) {
+                                menu.input(text_action);
+                                quit_during_text = true;
+                                break;
+                            }
+                            skipped_text_delay =
+                                text_action != InputAction::none;
+                        }
+                        if (quit_during_text) {
+                            quit_battle = true;
+                            break;
+                        }
+                        if (skipped_text_delay &&
+                            !notice_page.glyph_end_offsets.empty()) {
+                            const auto frame = compose_command_frame(
+                                surface, session, menu, encounter, abilities,
+                                command_font, command_name_font, menu_sprites,
+                                items, context.game_root, notice_text.size(),
+                                std::nullopt);
+                            context.platform.present_direct_update({
+                                320, 200, frame.pixels,
+                                std::span<const std::uint8_t, 768>(frame.palette),
+                            });
+                        }
+
+                        auto marker = std::size_t{149};
+                        while (true) {
+                            const auto frame = compose_command_frame(
+                                surface, session, menu, encounter, abilities,
+                                command_font, command_name_font, menu_sprites,
+                                items, context.game_root, std::nullopt, marker);
+                            context.platform.present({
+                                320, 200, frame.pixels,
+                                std::span<const std::uint8_t, 768>(frame.palette),
+                            });
+                            const auto notice_action = context.platform.poll_input();
+                            if (notice_action != InputAction::none) {
+                                menu.input(notice_action);
+                                break;
+                            }
+                            context.platform.delay_for(
+                                std::chrono::milliseconds(20));
+                            ++marker;
+                            if (marker == 153U) marker = 149U;
+                        }
+                        if (menu.quit_requested()) {
+                            quit_battle = true;
+                            break;
+                        }
+                        continue;
+                    }
                     const auto frame = compose_command_frame(
                         surface, session, menu, encounter, abilities,
                         command_font, command_name_font, menu_sprites,
