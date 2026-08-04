@@ -5890,6 +5890,7 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,  // first actor
         swd2::InputAction::page_down,
+        swd2::InputAction::page_down, // equipment rows
         swd2::InputAction::cancel,   // back to actor selector
         swd2::InputAction::cancel,   // back to field diamond
         swd2::InputAction::cancel,   // back to map
@@ -5906,15 +5907,17 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
                 context, swd2::Marker::menu_ready) == swd2::Marker::none,
             "RPG field Status run did not terminate normally");
     require(platform.cursor == platform.actions.size() &&
-                platform.presented == 9U && platform.stop_calls == 1U,
+                platform.presented == 10U && platform.stop_calls == 1U,
             "RPG 2f64 actor selector did not enter/return from 26f3 Status");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
                 platform.frame_hashes[4] == 7182592706806039312ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
                 platform.frame_hashes[5] == 11838541749777298732ULL &&
-                platform.frame_hashes[6] == platform.frame_hashes[3] &&
-                platform.frame_hashes[7] == platform.frame_hashes[2] &&
-                platform.frame_hashes[8] == platform.frame_hashes[0],
+                platform.frame_hashes[6] != platform.frame_hashes[5] &&
+                platform.frame_hashes[6] == 6539716864531171509ULL &&
+                platform.frame_hashes[7] == platform.frame_hashes[3] &&
+                platform.frame_hashes[8] == platform.frame_hashes[2] &&
+                platform.frame_hashes[9] == platform.frame_hashes[0],
             "RPG Status paging/return frames were not stable");
 }
 

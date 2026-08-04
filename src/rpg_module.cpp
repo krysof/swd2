@@ -2804,9 +2804,10 @@ private:
                     } else if (index >= 17U && index <= 27U) {
                         const auto item = state_.u16(
                             actor_base + 0x10U + (index - 17U) * 2U);
+                        // 490f subtracts ten mode-X columns from the common
+                        // x=56 value and draws exactly six ITEM2 glyphs.
                         draw_item_text(frame, item_texts_, item_font_, item,
-                                       42 * 4, top, 88, 15,
-                                       static_cast<std::uint8_t>(item == 0 ? 8 : 14));
+                                       46 * 4, top, 96, 16, 15);
                     }
                 }
                 if (menu_sprites_.sprites().size() > 1U) {
