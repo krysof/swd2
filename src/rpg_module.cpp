@@ -3594,8 +3594,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
     const auto name_font = LegacyFont::load(context.game_root / "NAME.DSK");
     const auto requested_music =
         normalize_dos_asset_path(context.shared_state.music_path());
-    if (!requested_music.empty() && requested_music != playing_music) {
-        if (music_enabled_) {
+    if (requested_music != playing_music) {
+        if (requested_music.empty()) {
+            context.platform.stop_music();
+        } else if (music_enabled_) {
             context.platform.play_music(
                 read_file(context.game_root / requested_music), true);
         }
