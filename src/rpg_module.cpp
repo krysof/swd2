@@ -1373,7 +1373,7 @@ public:
                                 save_frame.pixels, 320, 200, menu_sprites_,
                                 4, 112, 7, 4);
                             draw_legacy_text(save_frame, item_font_, save_slot_prompt_,
-                                             10 * 4, 125, 260, 16, 15);
+                                             10 * 4, 125, 260, 16, 0);
                             if (menu_sprites_.sprites().size() > 141U) {
                                 const auto& cursor = menu_sprites_.sprites()[141];
                                 blit(save_frame, menu_sprites_.pixels(141),
@@ -2858,7 +2858,7 @@ private:
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                     4, 112, 7, 4);
             draw_legacy_text(frame, item_font_, save_slot_prompt_,
-                             10 * 4, 125, 260, 16, 15);
+                             10 * 4, 125, 260, 16, 0);
             if (menu_sprites_.sprites().size() > 141U) {
                 const auto& cursor = menu_sprites_.sprites()[141];
                 blit(frame, menu_sprites_.pixels(141),
@@ -2927,7 +2927,7 @@ private:
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                     4, 112, 7, 4);
             draw_legacy_text(frame, item_font_, save_slot_prompt_,
-                             10 * 4, 125, 260, 16, 15);
+                             10 * 4, 125, 260, 16, 0);
             if (menu_sprites_.sprites().size() > 141U) {
                 const auto& cursor = menu_sprites_.sprites()[141];
                 blit(frame, menu_sprites_.pixels(141),
@@ -2977,7 +2977,7 @@ private:
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                     20, 0, 4, 7);
             draw_legacy_text(frame, item_font_, system_menu_labels_,
-                             28 * 4, 13, 128, 112, 15);
+                             28 * 4, 13, 128, 112, 0);
             static constexpr std::array<std::uint8_t, 2> enabled_label{
                 0xb6, 0x7d};  // 開
             static constexpr std::array<std::uint8_t, 2> disabled_label{

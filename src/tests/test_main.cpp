@@ -6363,6 +6363,8 @@ void test_rpg_system_menu_speed_and_exit(
                 platform.stop_calls == 1U,
             "RPG 4b76/4e4b/46cc system-menu sequence was not exact");
     require(platform.frame_hashes[2] != platform.frame_hashes[1] &&
+                platform.frame_hashes[2] == 8278365232680978070ULL &&
+                platform.frame_hashes[7] == 8823441461784675157ULL &&
                 platform.frame_hashes[8] != platform.frame_hashes[7] &&
                 platform.frame_hashes[12] != platform.frame_hashes[11],
             "RPG system menu/value/exit selection frames did not change");
@@ -6400,7 +6402,8 @@ void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
                 saves == 1U && saved_slot == 1U,
             "RPG system Record did not persist the confirmed slot pair");
     require(platform.cursor == platform.actions.size() &&
-                platform.presented == 11U && platform.stop_calls == 1U,
+                platform.presented == 11U && platform.stop_calls == 1U &&
+                platform.frame_hashes[6] == 17822201426206456687ULL,
             "RPG system Record did not return through 4b76 to the field");
 }
 
