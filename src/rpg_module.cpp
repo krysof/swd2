@@ -3312,8 +3312,7 @@ private:
 
 std::optional<std::size_t> entity_in_front(const MapLocationRecord& location,
                                            const SharedState& state,
-                                           const MapResource& map,
-                                           bool automatic_only = false) {
+                                           const MapResource& map) {
     auto x = static_cast<int>(state.world_x());
     auto y = static_cast<int>(state.world_y());
     if (state.actor_direction() == 0) ++y;
@@ -3327,8 +3326,7 @@ std::optional<std::size_t> entity_in_front(const MapLocationRecord& location,
         state.u16(0x40f) + (static_cast<std::size_t>(y) * map.layout().width + x) * 2);
     for (std::size_t index = 0; index < location.area.entity_count(); ++index) {
         const auto entity = map_entity(location.area, index);
-        if (entity.behavior == 3 || entity.event_directory_offset == 0) continue;
-        if (automatic_only && (entity.flags & 0x8000U) == 0) continue;
+        if (entity.behavior == 3) continue;
         if (entity.cell_offset == target || entity.cell_offset + 2U == target ||
             entity.cell_offset + 4U == target) {
             return index;
@@ -3931,20 +3929,28 @@ Marker RpgModule::run(GameContext& context, Marker) {
             if (movement_has_special_cell(location, context.shared_state, map,
                                           action, target_x, target_y)) {
               if (const auto entity = entity_in_front(
-                      location, context.shared_state, map, true)) {
-                auto outcome = run_entity_event(*entity);
-                if (outcome.quit) {
-                    context.platform.stop_audio();
-                    return Marker::none;
-                }
-                if (outcome.marker != Marker::none) {
-                    context.platform.stop_audio();
-                    return outcome.marker;
-                }
-                if (outcome.map_reload) {
-                    relocated_transient_area = std::move(outcome.relocated_area);
-                    pending_map_reload_ = true;
-                    break;
+                      location, context.shared_state, map)) {
+                const auto encountered = map_entity(location.area, *entity);
+                if (encountered.behavior == 6U) {
+                    // RPG:5298 handles behavior six before checking the
+                    // automatic-event flag: collision removes this transient
+                    // entity and returns without running its event.
+                    location.area.entity_fields[3][*entity] = 3U;
+                } else if ((encountered.flags & 0x8000U) != 0U) {
+                    auto outcome = run_entity_event(*entity);
+                    if (outcome.quit) {
+                        context.platform.stop_audio();
+                        return Marker::none;
+                    }
+                    if (outcome.marker != Marker::none) {
+                        context.platform.stop_audio();
+                        return outcome.marker;
+                    }
+                    if (outcome.map_reload) {
+                        relocated_transient_area = std::move(outcome.relocated_area);
+                        pending_map_reload_ = true;
+                        break;
+                    }
                 }
               }
               advance_rpg_entities(location.area, map, context.shared_state,

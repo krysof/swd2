@@ -6436,6 +6436,54 @@ void test_rpg_entity_collision(const std::filesystem::path& game_root) {
             "ordinary entity collision unexpectedly drew a dialogue panel");
 }
 
+void test_rpg_behavior_six_collision(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(10);
+    require(location.area.entity_count() > 8U &&
+                location.area.entity_fields[3][8] == 6U &&
+                location.area.entity_fields[2][8] == 26734U &&
+                (location.area.entity_fields[8][8] & 0x8000U) == 0U,
+            "MA-DE behavior-six collision oracle changed");
+    for (std::size_t entity = 0; entity < location.area.entity_count(); ++entity) {
+        if (entity != 8U) location.area.entity_fields[3][entity] = 3U;
+    }
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::right,  // collide: 5298 hides entity eight
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(state, *database, 10U);
+    state.set_u16(0x10, 0U);
+    state.set_u16(0x102, 0U);
+    // Keep this isolated collision fixture out of MA-DE's MAP0 portal; the
+    // real area flag behavior is covered independently by the portal tests.
+    state.set_u16(0x408, 0x0ffeU);
+    state.set_viewport_x(22U);
+    state.set_viewport_y(62U);
+    state.set_actor_screen_x(38U);  // world (42,74), immediately left
+    state.set_actor_screen_y(80U);  // of entity eight's (43..45,74) cells
+    state.set_actor_direction(9U);
+    state.set_u16(0x40f, 8U);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (62U * 180U + 22U) * 2U));
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto result = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(result == swd2::Marker::none &&
+                context.shared_state.world_x() == 42U &&
+                context.shared_state.world_y() == 74U,
+            "RPG behavior-six collision unexpectedly moved the actor");
+    require(platform.cursor == platform.actions.size() &&
+                platform.poll_calls == 2U && platform.wait_calls == 0U &&
+                platform.presented == 2U && platform.stop_calls == 1U &&
+                platform.frame_hashes[0] != platform.frame_hashes[1],
+            "RPG 5298 did not hide behavior six without dispatching its event");
+}
+
 void test_rpg_corner_slide(const std::filesystem::path& game_root) {
     const auto map = swd2::MapResource::load(game_root / "T1" / "AREA1");
     std::size_t center_x = 0;
@@ -7487,6 +7535,7 @@ int main(int argc, char** argv) {
         test_rpg_system_menu_load(argv[1]);
         test_rpg_system_audio_toggle(argv[1]);
         test_rpg_entity_collision(argv[1]);
+        test_rpg_behavior_six_collision(argv[1]);
         test_rpg_corner_slide(argv[1]);
         test_rpg_overworld_poison(argv[1]);
         test_rpg_random_encounter(argv[1]);
