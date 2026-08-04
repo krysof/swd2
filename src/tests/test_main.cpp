@@ -1543,6 +1543,25 @@ void test_battle_database(const std::filesystem::path& game_root) {
                 abilities.item_category_label(41) ==
                 std::array<std::uint8_t, 4>{0xc0, 0x73, 0xb1, 0xda},
             "FIG embedded 42-entry item-category table changed");
+    const std::array<std::array<std::uint8_t, 4>, 5>
+        expected_resource_labels = {{
+            {{0xa5, 0x50, 0xb3, 0x4e}},
+            {{0xc5, 0xe9, 0xa4, 0x4f}},
+            {{0xc5, 0xe9, 0xa4, 0x4f}},
+            {{0xa5, 0x50, 0xb3, 0x4e}},
+            {{0xc3, 0xc4, 0xa7, 0xf7}},
+        }};
+    for (std::size_t resource = 0;
+         resource < expected_resource_labels.size(); ++resource) {
+        const auto actual = abilities.ability_resource_label(resource + 1U);
+        require(actual.size() == expected_resource_labels[resource].size() &&
+                    std::equal(actual.begin(), actual.end(),
+                               expected_resource_labels[resource].begin()),
+                "FIG DATA:2ce1 ability-resource label changed");
+    }
+    require(abilities.ability_resource_label(0).empty() &&
+                abilities.ability_resource_label(6).empty(),
+            "FIG ability-resource label bounds changed");
     std::uint64_t notice_hash = 1469598103934665603ULL;
     std::array<std::size_t, 6> notice_sizes{};
     for (std::size_t index = 0; index < notice_sizes.size(); ++index) {
@@ -6464,26 +6483,51 @@ void test_battle_module(const std::filesystem::path& game_root) {
                     13742626491697678824ULL,
             "FIG 3e19 modal battle notice did not consume its closing key");
 
-    ScriptedPlatform ability_card_platform;
-    ability_card_platform.actions = {
-        swd2::InputAction::left,     // ability tile
-        swd2::InputAction::confirm,
-        swd2::InputAction::quit,
+    // 3f3b has a distinct icon pair/resource label for all five classes.
+    // Pin the final composed page for one shipped descriptor from each class,
+    // including class five's five-element glyph mask.
+    static constexpr std::array<std::uint8_t, 5> ability_card_ids = {
+        1, 4, 33, 3, 41,
     };
-    auto ability_card_state = swd2::SharedState::load(game_root / "SAVE.DA1");
-    ability_card_state.set_u16(0x4a0, 392);
-    ability_card_state.set_u8(0x106 + 0x6d, 41);  // class-five, cost mask 1fh
-    for (std::size_t slot = 0; slot < 5; ++slot) {
-        ability_card_state.set_u16(0x3e6 + slot * 2U, 1);
+    static constexpr std::array<std::uint64_t, 5> ability_card_hashes = {
+        13015473527361863690ULL,
+        11277564899619558452ULL,
+        18363502700070130146ULL,
+        10216347769889622229ULL,
+        2119409900340458190ULL,
+    };
+    for (std::size_t resource = 0; resource < ability_card_ids.size();
+         ++resource) {
+        ScriptedPlatform ability_card_platform;
+        ability_card_platform.actions = {
+            swd2::InputAction::left,
+            swd2::InputAction::confirm,
+            swd2::InputAction::quit,
+        };
+        auto ability_card_state =
+            swd2::SharedState::load(game_root / "SAVE.DA1");
+        ability_card_state.set_u16(0x4a0, 392);
+        ability_card_state.set_u16(0x106 + 0x35, 1000);
+        ability_card_state.set_u16(0x106 + 0x55, 1000);
+        for (std::size_t slot = 0; slot < 50; ++slot) {
+            ability_card_state.set_u8(0x106 + 0x6d + slot, 0);
+        }
+        ability_card_state.set_u8(0x106 + 0x6d,
+                                  ability_card_ids[resource]);
+        for (std::size_t slot = 0; slot < 5; ++slot) {
+            ability_card_state.set_u16(0x3e6 + slot * 2U, 1);
+        }
+        swd2::GameContext ability_card_context{
+            game_root, ability_card_state, ability_card_platform};
+        require(swd2::BattleModule().run(
+                    ability_card_context, swd2::Marker::open_figure) ==
+                    swd2::Marker::none &&
+                    ability_card_platform.presented == 4,
+                "FIG 41a1 ability-resource card run failed");
+        require(ability_card_platform.frame_hashes.back() ==
+                    ability_card_hashes[resource],
+                "FIG 3f3b ability-resource card pixel hash changed");
     }
-    swd2::GameContext ability_card_context{
-        game_root, ability_card_state, ability_card_platform};
-    require(swd2::BattleModule().run(
-                ability_card_context, swd2::Marker::open_figure) ==
-                swd2::Marker::none && ability_card_platform.presented == 4 &&
-                ability_card_platform.frame_hashes.back() ==
-                    14316022569089146005ULL,
-            "FIG 41a1 class-five ability-cost card did not render");
 
     ScriptedPlatform item_card_platform;
     item_card_platform.actions = {

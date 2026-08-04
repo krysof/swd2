@@ -56,6 +56,14 @@ public:
         std::size_t category) const {
         return item_category_labels_.at(category);
     }
+    [[nodiscard]] std::span<const std::uint8_t> ability_resource_label(
+        std::size_t resource_class) const noexcept {
+        if (resource_class == 0 ||
+            resource_class > ability_resource_labels_.size()) {
+            return {};
+        }
+        return ability_resource_labels_[resource_class - 1U];
+    }
     [[nodiscard]] std::span<const std::uint8_t> notice_text(
         BattleCommandNotice notice) const noexcept;
     [[nodiscard]] std::span<const std::uint8_t> player_status_text(
@@ -128,6 +136,7 @@ private:
     std::vector<BattleAbility> abilities_;
     std::vector<std::array<std::uint8_t, 12>> item_names_;
     std::vector<std::array<std::uint8_t, 4>> item_category_labels_;
+    std::array<std::array<std::uint8_t, 4>, 5> ability_resource_labels_{};
     std::array<std::vector<std::uint8_t>, 6> notice_texts_;
     std::array<std::vector<std::uint8_t>, 5> player_status_texts_;
     std::array<std::vector<std::uint8_t>, 6> player_removed_buff_texts_;

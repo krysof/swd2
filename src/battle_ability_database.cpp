@@ -103,6 +103,30 @@ BattleAbilityDatabase BattleAbilityDatabase::load(
         0x2cb7, 0x2cd1, 0x2cf5, 0x2d05, 0x2de7, 0x2e65,
     };
     const auto data_base = static_cast<std::size_t>(data_paragraph) * 16U;
+    // 3f3b indexes five consecutive two-glyph labels at DATA:2ce1 using
+    // (resource_class-1)*4. Keep these labels tied to the shipped executable
+    // just like the ability/item names instead of translating them in the
+    // presentation frontend.
+    constexpr std::size_t ability_resource_label_data_offset = 0x2ce1;
+    constexpr std::size_t ability_resource_label_bytes = 4;
+    const auto ability_resource_label_table =
+        data_base + ability_resource_label_data_offset;
+    if (ability_resource_label_table +
+            result.ability_resource_labels_.size() *
+                ability_resource_label_bytes >
+        image.size()) {
+        throw std::runtime_error(
+            "FIG.EXE ability-resource label table is truncated");
+    }
+    for (std::size_t resource = 0;
+         resource < result.ability_resource_labels_.size(); ++resource) {
+        std::copy_n(
+            image.begin() + static_cast<std::ptrdiff_t>(
+                                ability_resource_label_table +
+                                resource * ability_resource_label_bytes),
+            ability_resource_label_bytes,
+            result.ability_resource_labels_[resource].begin());
+    }
     const auto extract_text = [&](std::size_t data_offset) {
         auto cursor = data_base + data_offset;
         if (cursor >= image.size()) {

@@ -698,17 +698,11 @@ BattleSurface compose_command_frame(
                 blit(result, menu_sprites, icon_frames.second, 18 * 4, 27);
             }
             draw_message_panel(result, menu_sprites, 8, 50, 4);
-            if (resource_class >= 1 && resource_class <= 5) {
-                static constexpr std::array<std::array<std::uint8_t, 4>, 5>
-                    resource_labels = {{
-                        {{0xa5, 0x50, 0xb3, 0x4e}},
-                        {{0xc5, 0xe9, 0xa4, 0x4f}},
-                        {{0xc5, 0xe9, 0xa4, 0x4f}},
-                        {{0xa5, 0x50, 0xb3, 0x4e}},
-                        {{0xc3, 0xc4, 0xa7, 0xf7}},
-                    }};
+            if (const auto resource_label =
+                    abilities.ability_resource_label(resource_class);
+                !resource_label.empty()) {
                 draw_big5(result, font, fallback,
-                          resource_labels[resource_class - 1U],
+                          resource_label,
                           10 * 4, 59, enabled_text_color);
                 if (resource_class != 5) {
                     const auto& actor = session.party()[menu.actor()];
