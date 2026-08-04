@@ -5877,7 +5877,15 @@ void test_rpg_inventory_alchemy(const std::filesystem::path& game_root) {
                 context.shared_state.u16(0x382) == 458U &&
                 context.shared_state.u16(0x384) == 0U,
             "RPG 4397 alchemy flow did not consume two items/create product");
-    require(platform.presented >= platform.actions.size() &&
+    require(platform.presented == platform.actions.size() &&
+                platform.frame_hashes.size() == 14U &&
+                platform.frame_hashes[7] == 11364939705330296462ULL &&
+                platform.frame_hashes[8] == 14503042325848200927ULL &&
+                platform.frame_hashes[9] == 10742568333542727258ULL &&
+                platform.frame_hashes[10] == 8770727228813360409ULL &&
+                platform.frame_hashes[11] == 12546521570861062241ULL &&
+                platform.frame_hashes[12] == platform.frame_hashes[2] &&
+                platform.frame_hashes[13] == platform.frame_hashes[0] &&
                 std::set<std::uint64_t>(platform.frame_hashes.begin(),
                                         platform.frame_hashes.end()).size() >= 8U,
             "RPG alchemy ingredient/result pages were not presented");

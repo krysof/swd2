@@ -1802,7 +1802,7 @@ private:
                             int value_y) const {
         draw_legacy_text(frame, item_font_, labels,
                          label_x_byte * 4, label_y,
-                         320 - label_x_byte * 4, 160, 15);
+                         320 - label_x_byte * 4, 160, 0);
         // 45bc writes level/life/strength/defense down the left column;
         // 45d9 writes wisdom/magic/agility/dodge down the right.
         static constexpr std::array<std::size_t, 4> left{0, 2, 4, 6};
@@ -1878,7 +1878,7 @@ private:
                 draw_legacy_text(
                     frame, item_font_,
                     inventory_category_labels_.subspan(label, 4),
-                    62 * 4, 17, 32, 16, 15);
+                    62 * 4, 17, 32, 16, 0);
             }
         }
         for (std::size_t row = 0; row < 8U; ++row) {
@@ -1887,8 +1887,7 @@ private:
             const auto item_id = inventory.item(slot);
             const auto top = 49 + static_cast<int>(row) * 16;
             draw_item_text(frame, item_texts_, item_font_, item_id,
-                           128, top, 96, 15,
-                           static_cast<std::uint8_t>(item_id == 0U ? 8U : 15U));
+                           128, top, 96, 15, 0);
             if (item_id >= 0x44U && item_id <= 0x48U) {
                 draw_menu_number(
                     frame, menu_sprites_,
@@ -1944,9 +1943,9 @@ private:
             draw_rpg_compact_panel(pair.pixels, 320, 200, menu_sprites_,
                                    4, 112, 7, 4);
             draw_item_text(pair, item_texts_, item_font_, first_item,
-                           8 * 4, 125, 112, 16, 15);
+                           8 * 4, 125, 112, 16, 0);
             draw_item_text(pair, item_texts_, item_font_, item,
-                           40 * 4, 125, 112, 16, 15);
+                           40 * 4, 125, 112, 16, 0);
             if (confirm_alchemy_product(pair)) return selected;
             if (quit_requested_) return std::nullopt;
             return std::nullopt;
@@ -1960,7 +1959,7 @@ private:
         draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
                                4, 12, 5, 4);
         draw_item_text(frame, item_texts_, item_font_, product,
-                       6 * 4, 21, 144, 16, 15);
+                       6 * 4, 21, 144, 16, 0);
         if (product < items_.size()) {
             const auto& definition = items_.at(product);
             auto found = item_preview_cache_.find(definition.preview_sprite);
