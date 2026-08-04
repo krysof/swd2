@@ -6091,7 +6091,7 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
     ScriptedPlatform no_platform;
     no_platform.actions = {
         swd2::InputAction::confirm,  // interact with the shop entity
-        swd2::InputAction::confirm,  // close its opcode-8 greeting
+        // Opcode 18's greeting returns at $$ without a confirmation.
         swd2::InputAction::confirm,  // select ITEM 117
         swd2::InputAction::right,    // choose No
         swd2::InputAction::confirm,
@@ -6113,7 +6113,6 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
     yes_platform.actions = {
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
-        swd2::InputAction::confirm,
         swd2::InputAction::confirm,  // default Yes
         swd2::InputAction::cancel,
         swd2::InputAction::quit,
@@ -6133,7 +6132,6 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
     error_state.set_u16(0x104, 0);
     ScriptedPlatform error_platform;
     error_platform.actions = {
-        swd2::InputAction::confirm,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,  // dismiss DATA:3c44/MENU 149

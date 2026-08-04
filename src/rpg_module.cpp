@@ -643,7 +643,8 @@ public:
           game_root_(std::move(game_root)), playing_music_(playing_music),
           music_enabled_(music_enabled), sound_enabled_(sound_enabled) {}
 
-    void show_dialogue(std::uint16_t, std::span<const std::uint8_t> text) override {
+    void show_dialogue(std::uint16_t opcode,
+                       std::span<const std::uint8_t> text) override {
         std::size_t offset = 0;
         do {
             const auto page = render_dialogue_page(font_, text, offset, 288, 64, 15, &name_font_);
@@ -656,14 +657,20 @@ public:
             }
             platform_.present({320, 200, frame.pixels,
                                std::span<const std::uint8_t, 768>(frame.palette)});
-            InputAction action;
-            do {
-                action = platform_.wait_for_input();
-            } while (action != InputAction::confirm && action != InputAction::cancel &&
-                     action != InputAction::quit);
-            if (action == InputAction::quit) {
-                quit_requested_ = true;
-                return;
+            // Opcode 18 enters 5788 with DS:359b=1. The dialogue renderer
+            // still pauses at an explicit %% page break, but 4a94 skips the
+            // final MENU 149..152 acknowledgement when it reaches $$.
+            if (page.has_more || opcode != 18) {
+                InputAction action;
+                do {
+                    action = platform_.wait_for_input();
+                } while (action != InputAction::confirm &&
+                         action != InputAction::cancel &&
+                         action != InputAction::quit);
+                if (action == InputAction::quit) {
+                    quit_requested_ = true;
+                    return;
+                }
             }
             offset = page.next_offset;
             if (!page.has_more) return;
