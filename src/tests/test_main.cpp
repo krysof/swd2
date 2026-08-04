@@ -6027,12 +6027,26 @@ void test_rpg_system_audio_toggle(const std::filesystem::path& game_root) {
             "RPG system audio-toggle run did not terminate normally");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 11U && platform.music_calls == 2U &&
-                platform.music_stop_calls == 1U && platform.stop_calls == 1U,
+                platform.music_stop_calls == 1U && platform.stop_calls == 1U &&
+                context.shared_state.u8(0x3f4) == 0U,
             "RPG system Music toggle did not stop/restart the current RIX");
     require(platform.frame_hashes[3] == platform.frame_hashes[7] &&
                 platform.frame_hashes[2] == platform.frame_hashes[8] &&
                 platform.frame_hashes[2] != platform.frame_hashes[3],
             "RPG system Music state did not survive reconstruction of the menu host");
+
+    ScriptedPlatform disabled_platform;
+    disabled_platform.actions = {swd2::InputAction::quit};
+    auto disabled_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    disabled_state.set_u8(0x3f4, 1U);
+    disabled_state.set_u8(0x3f5, 1U);
+    swd2::GameContext disabled_context{
+        game_root, disabled_state, disabled_platform};
+    require(swd2::RpgModule().run(
+                disabled_context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none &&
+                disabled_platform.music_calls == 0U,
+            "RPG ignored the saved music/sound disable bytes on startup");
 }
 
 void test_rpg_entity_collision(const std::filesystem::path& game_root) {

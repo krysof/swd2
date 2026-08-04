@@ -2889,6 +2889,7 @@ private:
 
             if (selected == 0U) {
                 music_enabled_ = !music_enabled_;
+                state_.set_u8(0x3f4, music_enabled_ ? 0U : 1U);
                 if (!music_enabled_) {
                     platform_.stop_music();
                 } else if (playing_music_ != nullptr &&
@@ -2900,6 +2901,7 @@ private:
                 }
             } else if (selected == 1U) {
                 sound_enabled_ = !sound_enabled_;
+                state_.set_u8(0x3f5, sound_enabled_ ? 0U : 1U);
             } else if (selected == 2U) {
                 const auto slot = select_system_value(frame, 0);
                 if (quit_requested_) return false;
@@ -2913,6 +2915,19 @@ private:
                     }
                     state_ = std::move(loaded.state);
                     *live_map_database_ = std::move(loaded.map_database);
+                    const auto loaded_music_enabled = state_.u8(0x3f4) == 0U;
+                    sound_enabled_ = state_.u8(0x3f5) == 0U;
+                    if (music_enabled_ && !loaded_music_enabled) {
+                        platform_.stop_music();
+                    } else if (!music_enabled_ && loaded_music_enabled &&
+                               playing_music_ != nullptr &&
+                               !playing_music_->empty()) {
+                        const auto path = game_root_ / *playing_music_;
+                        if (std::filesystem::is_regular_file(path)) {
+                            platform_.play_music(read_file(path), true);
+                        }
+                    }
+                    music_enabled_ = loaded_music_enabled;
                     return true;
                 }
             } else if (selected == 3U) {
@@ -3388,6 +3403,11 @@ Marker RpgModule::run(GameContext& context, Marker) {
     // maps indefinitely, whereas recursive re-entry would eventually exhaust
     // the native stack on a long portable session.
     std::filesystem::path playing_music;
+    // RPG:4c38..4c42 restores the two driver-disable bytes from SAVE before
+    // loading map music. Zero means enabled; the system menu writes the same
+    // bytes back, so audio preferences survive save/load and FIG round trips.
+    music_enabled_ = context.shared_state.u8(0x3f4) == 0U;
+    sound_enabled_ = context.shared_state.u8(0x3f5) == 0U;
     const auto item_font = LegacyFont::load(context.game_root / "CHAIN.DSK");
     const auto items = ItemDatabase::load(context.game_root / "ITEM.EXE");
     const auto item_texts = ItemTextDatabase::load(context.game_root / "ITEM2.EXE");
