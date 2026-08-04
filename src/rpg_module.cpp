@@ -513,6 +513,9 @@ public:
                  std::span<const std::uint8_t> shop_inventory_error,
                  std::span<const std::uint8_t> shop_confirmation_prompt,
                  std::span<const std::uint8_t> shop_quantity_error,
+                 std::span<const std::uint8_t> equipment_actor_error,
+                 std::span<const std::uint8_t> equipment_two_hand_error,
+                 std::span<const std::uint8_t> equipment_slot_error,
                  std::span<const std::uint8_t> inventory_category_labels,
                  std::span<const std::uint8_t> equipment_slot_labels,
                  std::span<const std::uint8_t> equipment_stat_labels,
@@ -531,6 +534,9 @@ public:
           shop_inventory_error_(shop_inventory_error),
           shop_confirmation_prompt_(shop_confirmation_prompt),
           shop_quantity_error_(shop_quantity_error),
+          equipment_actor_error_(equipment_actor_error),
+          equipment_two_hand_error_(equipment_two_hand_error),
+          equipment_slot_error_(equipment_slot_error),
           inventory_category_labels_(inventory_category_labels),
           equipment_slot_labels_(equipment_slot_labels),
           equipment_stat_labels_(equipment_stat_labels),
@@ -1224,6 +1230,13 @@ public:
                 if (inventory.character_restricted(definition, actor)) {
                     // 3f7f emits DATA:369a and returns before constructing
                     // the equipment screen for a forbidden identity.
+                    auto error_frame = scene_provider_();
+                    draw_rpg_party_target_cards(
+                        error_frame, menu_sprites_, state, party_count, actor);
+                    if (!show_bottom_message(
+                            std::move(error_frame), equipment_actor_error_)) {
+                        return InventoryUiResult::cancelled;
+                    }
                     continue;
                 }
                 auto equipment_slot = initial_slot(definition.equipment_category());
@@ -1307,8 +1320,25 @@ public:
                             ++equipment_slot;
                         }
                     } else if (equipment_action == InputAction::confirm) {
-                        static_cast<void>(inventory.exchange_equipment(
-                            selected, actor, equipment_slot));
+                        const auto exchange = inventory.exchange_equipment(
+                            selected, actor, equipment_slot);
+                        if (exchange.status != EquipmentExchangeStatus::exchanged) {
+                            auto message = equipment_slot_error_;
+                            if (exchange.status ==
+                                EquipmentExchangeStatus::two_handed_conflict) {
+                                message = equipment_two_hand_error_;
+                            } else if (exchange.status ==
+                                       EquipmentExchangeStatus::character_restricted) {
+                                message = equipment_actor_error_;
+                            }
+                            // 4241 presents the 370e/3728 stream over the
+                            // preserved equipment page, then reconstructs
+                            // 3feb after the acknowledgement.
+                            if (!show_bottom_message(
+                                    std::move(equipment_frame), message)) {
+                                return InventoryUiResult::cancelled;
+                            }
+                        }
                     }
                 }
             }
@@ -1498,6 +1528,9 @@ private:
     std::span<const std::uint8_t> shop_inventory_error_;
     std::span<const std::uint8_t> shop_confirmation_prompt_;
     std::span<const std::uint8_t> shop_quantity_error_;
+    std::span<const std::uint8_t> equipment_actor_error_;
+    std::span<const std::uint8_t> equipment_two_hand_error_;
+    std::span<const std::uint8_t> equipment_slot_error_;
     std::span<const std::uint8_t> inventory_category_labels_;
     std::span<const std::uint8_t> equipment_slot_labels_;
     std::span<const std::uint8_t> equipment_stat_labels_;
@@ -1719,6 +1752,12 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3c6c);
     const auto shop_quantity_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3c80);
+    const auto equipment_actor_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x369a);
+    const auto equipment_two_hand_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x370e);
+    const auto equipment_slot_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3728);
     // RPG.EXE:3d7e indexes forty-two fixed two-glyph type names. Equipment
     // uses one eleven-line label string and four consecutive $$-terminated
     // statistic labels rather than host-language UI text.
@@ -1808,6 +1847,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           shop_sale_prompt, shop_money_error,
                           shop_inventory_error, shop_confirmation_prompt,
                           shop_quantity_error,
+                          equipment_actor_error, equipment_two_hand_error,
+                          equipment_slot_error,
                           inventory_category_labels, equipment_slot_labels,
                           equipment_stat_labels,
                           compose_scene,

@@ -252,6 +252,22 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 shop_quantity_error.front() == 0xb3U &&
                 shop_quantity_error.back() == 0x49U,
             "RPG shop confirmation/error Big5 streams were not recovered exactly");
+    const auto equipment_actor_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x369a);
+    const auto equipment_two_hand_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x370e);
+    const auto equipment_slot_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3728);
+    require(equipment_actor_error == std::vector<std::uint8_t>({
+                0xa6, 0xb9, 0xa4, 0x48, 0xb5, 0x4c, 0xaa, 0x6b, 0xa8, 0xcf,
+                0xa5, 0xce, 0xb3, 0x6f, 0xb8, 0xcb, 0xb3, 0xc6, 0xa1, 0x49}) &&
+                equipment_two_hand_error.size() == 24U &&
+                equipment_two_hand_error.front() == 0xc2U &&
+                equipment_two_hand_error.back() == 0x49U &&
+                equipment_slot_error == std::vector<std::uint8_t>({
+                    0xb5, 0x4c, 0xaa, 0x6b, 0xb8, 0xcb, 0xb3, 0xc6, 0xa6,
+                    0x62, 0xb3, 0x6f, 0xb3, 0xa1, 0xa6, 0xec, 0xa1, 0x43}),
+            "RPG equipment restriction/conflict Big5 streams were not exact");
     const auto category_labels = swd2::extract_rpg_embedded_data(
         image, entry, 0x299a, 42U * 4U);
     const auto equipment_labels = swd2::extract_rpg_embedded_text(
@@ -515,6 +531,14 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 image[0x5893U] == 0xc6U && image[0x5896U] == 0x3cU &&
                 image[0x5898U] == 0xe8U,
             "RPG 565f/5884 sale and purchase confirmation paths changed");
+    require(image[0x3f95U] == 0xbeU && image[0x3f96U] == 0x9aU &&
+                image[0x3f97U] == 0x36U && image[0x3f98U] == 0xe8U &&
+                image[0x4239U] == 0xbeU && image[0x423aU] == 0x0eU &&
+                image[0x423bU] == 0x37U && image[0x423cU] == 0xebU &&
+                image[0x423eU] == 0xbeU && image[0x423fU] == 0x28U &&
+                image[0x4240U] == 0x37U && image[0x4241U] == 0x56U &&
+                image[0x4242U] == 0xe8U,
+            "RPG 3f95/4239 equipment feedback branches changed");
 }
 
 void test_resource_decoder(const std::filesystem::path& game_root) {
