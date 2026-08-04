@@ -289,6 +289,8 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
         image, entry, 0x36e0);
     const auto field_abilities = swd2::extract_rpg_embedded_data(
         image, entry, 0x1dce, 151U * 20U);
+    const auto ability_resource_labels = swd2::extract_rpg_embedded_data(
+        image, entry, 0x3664, 5U * 4U);
     const auto system_menu_labels = swd2::extract_rpg_embedded_text(
         image, entry, 0x39e6);
     const auto system_exit_prompt = swd2::extract_rpg_embedded_text(
@@ -320,6 +322,12 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 field_abilities[76U * 20U] == 0xa5U &&
                 field_abilities[76U * 20U + 13U] == 0xa4U &&
                 field_abilities[76U * 20U + 14U] == 0x38U &&
+                ability_resource_labels == std::vector<std::uint8_t>({
+                    0xa5, 0x50, 0xb3, 0x4e,
+                    0xc5, 0xe9, 0xa4, 0x4f,
+                    0xc5, 0xe9, 0xa4, 0x4f,
+                    0xa5, 0x50, 0xb3, 0x4e,
+                    0xc3, 0xc4, 0xa7, 0xf7}) &&
                 system_menu_labels.size() == 78U &&
                 system_menu_labels[0] == 0xadU &&
                 system_menu_labels[1] == 0xb5U &&

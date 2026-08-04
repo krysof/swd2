@@ -575,6 +575,7 @@ public:
                  std::span<const std::uint8_t> ability_dead_error,
                  std::span<const std::uint8_t> ability_inventory_error,
                  std::span<const std::uint8_t> field_ability_records,
+                 std::span<const std::uint8_t> ability_resource_labels,
                  const std::vector<std::vector<std::uint8_t>>&
                      ability_descriptions,
                  std::span<const std::uint8_t> system_menu_labels,
@@ -611,6 +612,7 @@ public:
           ability_dead_error_(ability_dead_error),
           ability_inventory_error_(ability_inventory_error),
           field_ability_records_(field_ability_records),
+          ability_resource_labels_(ability_resource_labels),
           ability_descriptions_(ability_descriptions),
           system_menu_labels_(system_menu_labels),
           system_exit_prompt_(system_exit_prompt),
@@ -1457,60 +1459,7 @@ public:
         std::size_t selected = 2;  // 2e63 initializes DATA:35e2 to System.
         while (true) {
             auto frame = scene_provider_();
-            draw_compact_money_overlay(
-                frame, menu_sprites_, state_.u16(0x104));
-
-            const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
-                if (sprite >= menu_sprites_.sprites().size()) return;
-                const auto& info = menu_sprites_.sprites()[sprite];
-                blit_opaque(frame, menu_sprites_.pixels(sprite),
-                            info.width, info.height, x_byte * 4, y);
-            };
-            const auto transparent = [&](std::size_t sprite,
-                                         int x_byte, int y) {
-                if (sprite >= menu_sprites_.sprites().size()) return;
-                const auto& info = menu_sprites_.sprites()[sprite];
-                blit(frame, menu_sprites_.pixels(sprite),
-                     info.width, info.height, x_byte * 4, y);
-            };
-
-            // 22a8/211a: four opaque MENU frame-zero cards followed by the
-            // original two-frame labels (Status/Item/System/Magic).
-            opaque(0, 16, 8);
-            opaque(0, 16, 72);
-            opaque(0, 6, 40);
-            opaque(0, 26, 40);
-            transparent(6, 20, 17);
-            transparent(7, 24, 17);
-            transparent(35, 20, 81);
-            transparent(36, 24, 81);
-            transparent(58, 10, 49);
-            transparent(62, 14, 49);
-            transparent(56, 30, 49);
-            transparent(57, 34, 49);
-
-            static constexpr std::array<std::pair<int, int>, 4> card_positions{{
-                {16, 8}, {26, 40}, {16, 72}, {6, 40},
-            }};
-            for (std::size_t choice = 0; choice < card_positions.size(); ++choice) {
-                if (choice == selected) continue;
-                apply_fig_palette_translation(
-                    frame.pixels, 320, 200,
-                    std::span<const std::uint8_t, 768>(frame.palette),
-                    card_positions[choice].first,
-                    card_positions[choice].second,
-                    0x10, 0x20, 3);
-            }
-
-            // 2448 lays the active party cards horizontally along the bottom
-            // of the same page, including the 24b8 death/low-HP/status masks.
-            const auto party_count = std::max<std::size_t>(
-                1, std::min<std::size_t>(state_.u16(0x10), 4));
-            for (std::size_t actor = 0; actor < party_count; ++actor) {
-                draw_rpg_actor_card(frame, menu_sprites_, state_, actor,
-                                    (8 + static_cast<int>(actor) * 18) * 4,
-                                    136);
-            }
+            draw_field_diamond(frame, selected, true);
 
             platform_.present({
                 320, 200, frame.pixels,
@@ -1546,6 +1495,102 @@ public:
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
 
 private:
+    void draw_field_diamond(Viewport& frame, std::size_t selected,
+                            bool draw_party_row) {
+        draw_compact_money_overlay(
+            frame, menu_sprites_, state_.u16(0x104));
+        const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+            if (sprite >= menu_sprites_.sprites().size()) return;
+            const auto& info = menu_sprites_.sprites()[sprite];
+            blit_opaque(frame, menu_sprites_.pixels(sprite),
+                        info.width, info.height, x_byte * 4, y);
+        };
+        const auto transparent = [&](std::size_t sprite, int x_byte, int y) {
+            if (sprite >= menu_sprites_.sprites().size()) return;
+            const auto& info = menu_sprites_.sprites()[sprite];
+            blit(frame, menu_sprites_.pixels(sprite),
+                 info.width, info.height, x_byte * 4, y);
+        };
+
+        opaque(0, 16, 8);
+        opaque(0, 16, 72);
+        opaque(0, 6, 40);
+        opaque(0, 26, 40);
+        transparent(6, 20, 17);
+        transparent(7, 24, 17);
+        transparent(35, 20, 81);
+        transparent(36, 24, 81);
+        transparent(58, 10, 49);
+        transparent(62, 14, 49);
+        transparent(56, 30, 49);
+        transparent(57, 34, 49);
+
+        static constexpr std::array<std::pair<int, int>, 4> card_positions{{
+            {16, 8}, {26, 40}, {16, 72}, {6, 40},
+        }};
+        for (std::size_t choice = 0; choice < card_positions.size(); ++choice) {
+            if (choice == selected) continue;
+            apply_fig_palette_translation(
+                frame.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(frame.palette),
+                card_positions[choice].first,
+                card_positions[choice].second,
+                0x10, 0x20, 3);
+        }
+        if (!draw_party_row) return;
+
+        // 2448 is only part of the top-level diamond.  The 2fb7/2f64 actor
+        // pages instead retain 211a underneath and overlay 2634's directional
+        // cards, so callers can explicitly omit this horizontal row.
+        const auto party_count = std::max<std::size_t>(
+            1, std::min<std::size_t>(state_.u16(0x10), 4));
+        for (std::size_t actor = 0; actor < party_count; ++actor) {
+            draw_rpg_actor_card(frame, menu_sprites_, state_, actor,
+                                (8 + static_cast<int>(actor) * 18) * 4, 136);
+        }
+    }
+
+    void draw_magic_ability_info(Viewport& frame, std::size_t actor,
+                                 std::span<const std::uint8_t> record) const {
+        const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+            if (sprite >= menu_sprites_.sprites().size()) return;
+            const auto& info = menu_sprites_.sprites()[sprite];
+            blit_opaque(frame, menu_sprites_.pixels(sprite),
+                        info.width, info.height, x_byte * 4, y);
+        };
+
+        // 2fed always places the selected-entry frame at (56,8).  2b03
+        // fills it with the two resource glyphs for this record type and
+        // builds a one-row compact value card at (4,104).
+        opaque(0, 56, 8);
+        draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
+                               4, 104, 4, 1);
+        const auto type = static_cast<std::uint8_t>(record[13] & 0x0fU);
+        if (type == 0U || type > 5U) return;
+        std::pair<std::size_t, std::size_t> icons;
+        if (type == 4U) icons = {59U, 60U};
+        else if (type == 2U || type == 3U) icons = {45U, 46U};
+        else if (type == 1U) icons = {20U, 74U};
+        else icons = {61U, 62U};
+        opaque(icons.first, 60, 17);
+        opaque(icons.second, 64, 17);
+
+        const auto label_offset = static_cast<std::size_t>(type - 1U) * 4U;
+        if (label_offset + 4U <= ability_resource_labels_.size()) {
+            draw_legacy_text(
+                frame, item_font_,
+                ability_resource_labels_.subspan(label_offset, 4U),
+                6 * 4, 113, 32, 16, 15);
+        }
+        if (type != 5U) {
+            const auto actor_base = 0x106U + actor * 0x9fU;
+            const auto value = type == 2U || type == 3U
+                                   ? state_.u16(actor_base + 0x35U)
+                                   : state_.u16(actor_base + 0x55U);
+            draw_menu_number(frame, menu_sprites_, value, 15, 116, 111);
+        }
+    }
+
     Viewport magic_action_choice_frame(const Viewport& source,
                                        bool can_refine,
                                        std::size_t selected) const {
@@ -1679,6 +1724,7 @@ private:
         while (true) {
             while (true) {
                 auto actor_frame = scene_provider_();
+                draw_field_diamond(actor_frame, 0U, false);
                 draw_rpg_party_target_cards(
                     actor_frame, menu_sprites_, state_, party_count, actor);
                 platform_.present({
@@ -1704,18 +1750,26 @@ private:
             bool back_to_actor = false;
             while (!back_to_actor) {
                 auto frame = scene_provider_();
+                const auto actor_base = 0x106U + actor * 0x9fU;
+                const auto selected_id =
+                    state_.u8(actor_base + 0x6dU + selected);
+                const auto selected_record_offset =
+                    static_cast<std::size_t>(selected_id) * 20U;
                 draw_rpg_actor_card(frame, menu_sprites_, state_, actor,
                                     8 * 4, 21);
-                draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
-                                       4, 72, 4, 1);
+                if (selected_record_offset + 20U <=
+                    field_ability_records_.size()) {
+                    draw_magic_ability_info(
+                        frame, actor,
+                        field_ability_records_.subspan(
+                            selected_record_offset, 20U));
+                }
                 draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                         24, 36, 5, 8);
                 draw_rpg_selector_scrollbar(
                     frame.pixels, 320, 200, menu_sprites_,
                     24, 36, 5, 8, 42, first_visible, scroll_cue);
                 scroll_cue = RpgListSelection::ScrollCue::none;
-                const auto actor_base = 0x106U + actor * 0x9fU;
-
                 for (std::size_t row = 0; row < 8U; ++row) {
                     const auto slot = first_visible + row;
                     const auto id = state_.u8(actor_base + 0x6dU + slot);
@@ -1834,12 +1888,20 @@ private:
                 }
                 if (action_cancelled) continue;
 
+                // Choice zero remains selected on the copied source page
+                // while 3857 overlays the directional target cards or 4aec
+                // overlays a validation message.
+                const auto action_frame = magic_action_choice_frame(
+                    frame, type == 4U, 0U);
+
                 if ((state_.u16(actor_base + 8U) & 0xe000U) != 0U) {
-                    if (!show_bottom_message(frame, ability_dead_error_)) return false;
+                    if (!show_bottom_message(
+                            action_frame, ability_dead_error_)) return false;
                     continue;
                 }
                 if ((record[13] & 0x80U) != 0U || effect > 0x29U) {
-                    if (!show_bottom_message(frame, field_action_error_)) return false;
+                    if (!show_bottom_message(
+                            action_frame, field_action_error_)) return false;
                     continue;
                 }
 
@@ -1847,7 +1909,8 @@ private:
                 if (type == 1U || type == 4U) resource_offset = actor_base + 0x55U;
                 else if (type == 2U || type == 3U) resource_offset = actor_base + 0x35U;
                 if (resource_offset && state_.u16(*resource_offset) < cost) {
-                    if (!show_bottom_message(frame, ability_value_error_)) return false;
+                    if (!show_bottom_message(
+                            action_frame, ability_value_error_)) return false;
                     continue;
                 }
                 if (type == 5U) {
@@ -1861,7 +1924,8 @@ private:
                         bit >>= 1U;
                     }
                     if (missing) {
-                        if (!show_bottom_message(frame, ability_material_error_)) return false;
+                        if (!show_bottom_message(
+                                action_frame, ability_material_error_)) return false;
                         continue;
                     }
                 }
@@ -1871,7 +1935,7 @@ private:
                     target_actor = 0;
                     bool target_cancelled = false;
                     while (true) {
-                        auto target_frame = scene_provider_();
+                        auto target_frame = action_frame;
                         draw_rpg_party_target_cards(
                             target_frame, menu_sprites_, state_, party_count,
                             *target_actor);
@@ -1901,7 +1965,8 @@ private:
                     state_, &field_action_runtime_, actor);
                 const auto result = field_actions.apply(effect, target_actor);
                 if (!result.dispatched()) {
-                    if (!show_bottom_message(frame, field_action_error_)) return false;
+                    if (!show_bottom_message(
+                            action_frame, field_action_error_)) return false;
                     continue;
                 }
 
@@ -1967,6 +2032,7 @@ private:
             // entering 26f3. A cancellation here returns to the field diamond.
             while (true) {
                 auto actor_frame = scene_provider_();
+                draw_field_diamond(actor_frame, 3U, false);
                 draw_rpg_party_target_cards(
                     actor_frame, menu_sprites_, state_, party_count, actor);
                 platform_.present({
@@ -2523,6 +2589,7 @@ private:
     std::span<const std::uint8_t> ability_dead_error_;
     std::span<const std::uint8_t> ability_inventory_error_;
     std::span<const std::uint8_t> field_ability_records_;
+    std::span<const std::uint8_t> ability_resource_labels_;
     const std::vector<std::vector<std::uint8_t>>& ability_descriptions_;
     std::span<const std::uint8_t> system_menu_labels_;
     std::span<const std::uint8_t> system_exit_prompt_;
@@ -2772,6 +2839,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x36e0);
     const auto field_ability_records = extract_rpg_embedded_data(
         rpg_load_image, rpg_entry_offset, 0x1dce, 151U * 20U);
+    const auto ability_resource_labels = extract_rpg_embedded_data(
+        rpg_load_image, rpg_entry_offset, 0x3664, 5U * 4U);
     const auto ability_descriptions = load_rpg_ability_descriptions(
         context.game_root / "DATE2.EXE");
     const auto system_menu_labels = extract_rpg_embedded_text(
@@ -2876,7 +2945,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           equipment_slot_error, field_action_error,
                           ability_value_error, ability_material_error,
                           ability_dead_error, ability_inventory_error,
-                          field_ability_records, ability_descriptions,
+                          field_ability_records, ability_resource_labels,
+                          ability_descriptions,
                           system_menu_labels, system_exit_prompt,
                           status_menu_labels,
                           inventory_category_labels, equipment_slot_labels,
@@ -2916,7 +2986,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
                               equipment_slot_error, field_action_error,
                               ability_value_error, ability_material_error,
                               ability_dead_error, ability_inventory_error,
-                              field_ability_records, ability_descriptions,
+                              field_ability_records, ability_resource_labels,
+                              ability_descriptions,
                               system_menu_labels, system_exit_prompt,
                               status_menu_labels,
                               inventory_category_labels, equipment_slot_labels,
