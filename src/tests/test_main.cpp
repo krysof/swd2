@@ -52,6 +52,7 @@
 #include <memory>
 #include <map>
 #include <optional>
+#include <queue>
 #include <set>
 
 namespace {
@@ -4561,6 +4562,124 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
                 scripted_dialogue.commands[2].opcode == 3 &&
                 scripted_dialogue.commands[3].opcode == 34,
             "CHNA1 mixed dialogue/event command stream was not decoded");
+
+    // RPG 53b1 copies through the first word-aligned ffff instead of using
+    // the next directory pointer as an end bound. Several shipped, reachable
+    // events rely on that fall-through or put unreachable padding after a
+    // terminal module transition.
+    const auto chapter_zero = swd2::ScriptArchive::load(game_root / "CHNA0.EXE");
+    const auto adjacent_dialogues =
+        swd2::decode_event_record(chapter_zero.event_stream(344));
+    require(chapter_zero.entry(344).size() == 152 &&
+                chapter_zero.event_stream(344).size() == 338 &&
+                adjacent_dialogues.consumed_bytes == 338 &&
+                adjacent_dialogues.commands.size() == 4 &&
+                adjacent_dialogues.commands[0].opcode == 0 &&
+                adjacent_dialogues.commands[1].opcode == 0 &&
+                adjacent_dialogues.commands[2].opcode == 2 &&
+                adjacent_dialogues.commands[3].opcode == 3,
+            "CHNA0 adjacent event fall-through was cut at a directory pointer");
+    const auto chapter_zero_terminal =
+        swd2::decode_event_record(chapter_zero.event_stream(369));
+    require(chapter_zero_terminal.commands.size() == 296 &&
+                chapter_zero_terminal.commands.back().opcode == 28 &&
+                chapter_zero_terminal.consumed_bytes == 1444,
+            "CHNA0 terminal battle tail was decoded as unrelated trailing data");
+
+    const auto battle_tail = swd2::decode_event_record(archive.event_stream(132));
+    const auto ending_tail = swd2::decode_event_record(archive.event_stream(228));
+    require(battle_tail.commands.size() == 3 &&
+                battle_tail.commands.back().opcode == 28 &&
+                battle_tail.consumed_bytes == 70 &&
+                ending_tail.commands.size() == 228 &&
+                ending_tail.commands.back().opcode == 52 &&
+                ending_tail.consumed_bytes == 2276,
+            "CHNA1 terminal event tails were not bounded by native control flow");
+    const auto chapter_five = swd2::ScriptArchive::load(game_root / "CHNA5.EXE");
+    const auto chapter_five_tail =
+        swd2::decode_event_record(chapter_five.event_stream(161));
+    require(chapter_five_tail.commands.size() == 9 &&
+                chapter_five_tail.commands.back().opcode == 58 &&
+                chapter_five_tail.consumed_bytes == 90,
+            "CHNA5 battle transition did not terminate its event stream");
+    const auto chapter_six = swd2::ScriptArchive::load(game_root / "CHNA6.EXE");
+    const auto empty_tail = swd2::decode_event_record(chapter_six.event_stream(24));
+    require(empty_tail.commands.size() == 5 && empty_tail.commands.back().opcode == 12 &&
+                empty_tail.consumed_bytes == 28,
+            "CHNA6 empty trailing event slot was treated as dialogue");
+    const auto recovered_interaction =
+        swd2::decode_event_record(chapter_six.event_stream(45));
+    require(recovered_interaction.commands.size() == 5 &&
+                recovered_interaction.commands[0].opcode == 2 &&
+                recovered_interaction.commands[1].opcode == 3 &&
+                recovered_interaction.commands[2].opcode == 0 &&
+                recovered_interaction.commands[3].opcode == 32 &&
+                recovered_interaction.commands[3].arguments ==
+                    std::vector<std::uint16_t>({3}) &&
+                recovered_interaction.commands[4].opcode == 0 &&
+                recovered_interaction.consumed_bytes ==
+                    chapter_six.event_stream(45).size(),
+            "CHNA6 packed west-step story command was not recovered");
+
+    // Start with every MAPA entity event, then conservatively follow every
+    // static branch and every event-pointer rewrite. This covers all shipped
+    // story interactions that can become live, including CHNA6 entry 45.
+    const auto world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    std::map<std::string, std::set<std::uint16_t>> roots;
+    for (const auto& location : world.locations()) {
+        for (const auto target : location.area.entity_fields[9]) {
+            if (target != 0) roots[location.area.event_archive_path].insert(target);
+        }
+    }
+    std::size_t root_count = 0;
+    std::size_t reachable_count = 0;
+    std::size_t reachable_commands = 0;
+    std::set<std::uint16_t> reachable_opcodes;
+    for (const auto& [name, archive_roots] : roots) {
+        const auto event_archive = swd2::ScriptArchive::load(game_root / name);
+        root_count += archive_roots.size();
+        std::queue<std::uint16_t> pending;
+        for (const auto target : archive_roots) pending.push(target);
+        std::set<std::uint16_t> visited;
+        while (!pending.empty()) {
+            const auto target = pending.front();
+            pending.pop();
+            if (!visited.insert(target).second) continue;
+            require((target & 1U) == 0 && target / 2 < event_archive.entry_count(),
+                    "reachable event target is outside its CHNA directory");
+            const auto record = swd2::decode_event_record(
+                event_archive.event_stream(target / 2));
+            reachable_commands += record.commands.size();
+            for (const auto& command : record.commands) {
+                reachable_opcodes.insert(command.opcode);
+                std::uint16_t next = 0;
+                if (command.opcode == 2 && !command.arguments.empty()) {
+                    next = command.arguments[0];
+                } else if (command.opcode == 3 && command.arguments.size() >= 2 &&
+                           command.arguments[0] == 9) {
+                    next = command.arguments[1];
+                } else if (command.opcode == 4 && command.arguments.size() >= 2) {
+                    next = command.arguments[1];
+                } else if (command.opcode == 13 && !command.arguments.empty()) {
+                    next = command.arguments[0];
+                } else if (command.opcode == 15 && command.arguments.size() >= 2) {
+                    next = command.arguments[1];
+                } else if (command.opcode == 21 && command.arguments.size() >= 2) {
+                    next = command.arguments[1];
+                } else if (command.opcode == 40 && command.arguments.size() >= 2) {
+                    next = command.arguments[1];
+                }
+                // One item-zero fallback contains the inert odd placeholder
+                // 287. RPG only uses it if all fifty inventory slots are
+                // nonzero, which cannot coincide with searching for item 0.
+                if (next != 0 && (next & 1U) == 0) pending.push(next);
+            }
+        }
+        reachable_count += visited.size();
+    }
+    require(root_count == 684 && reachable_count == 1023 &&
+                reachable_commands == 5957 && reachable_opcodes.size() == 58,
+            "reachable CHNA event graph coverage changed");
     require(!swd2::ScriptArchive::probe(game_root / "RPG.EXE"),
             "native RPG code was misclassified as a script archive");
 

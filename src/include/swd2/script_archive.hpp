@@ -25,6 +25,10 @@ public:
     [[nodiscard]] std::uint16_t sentinel_offset() const noexcept { return offsets_.front(); }
     [[nodiscard]] const std::vector<std::uint16_t>& offsets() const noexcept { return offsets_; }
     [[nodiscard]] std::span<const std::uint8_t> entry(std::size_t index) const;
+    // RPG.EXE:53b1 does not stop at the next greater directory pointer. It
+    // copies words from the selected CHNA pointer until the first 0xffff,
+    // which permits event entries to fall through physically adjacent data.
+    [[nodiscard]] std::span<const std::uint8_t> event_stream(std::size_t index) const;
 
 private:
     std::vector<std::uint8_t> image_;

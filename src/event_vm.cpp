@@ -143,7 +143,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
         if ((target & 1U) != 0 || target / 2 >= archive.entry_count()) {
             throw std::runtime_error("event branch target is outside the archive directory");
         }
-        const auto record = decode_event_record(archive.entry(target / 2));
+        const auto record = decode_event_record(archive.event_stream(target / 2));
         bool branched = false;
         for (const auto& command : record.commands) {
             if (result.commands_executed == instruction_limit) {

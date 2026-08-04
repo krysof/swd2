@@ -26,6 +26,13 @@ bool is_text_opcode(std::uint16_t opcode) {
     return opcode == 0 || opcode == 18 || opcode == 20 || opcode == 46;
 }
 
+bool is_terminal_opcode(std::uint16_t opcode) {
+    // These handlers tail-jump out of RPG.EXE's 53a8 dispatcher instead of
+    // returning to its LODSW loop. Opcode 37 reloads a map but does return.
+    return opcode == 28 || opcode == 48 || opcode == 52 || opcode == 58 ||
+           opcode == 59 || opcode == 60;
+}
+
 void read_inline_text(std::span<const std::uint8_t> bytes, std::size_t& cursor,
                       EventCommand& command) {
     const auto text_start = cursor;
@@ -52,6 +59,27 @@ EventRecord decode_event_record(std::span<const std::uint8_t> bytes) {
         if (opcode == 0xffff) {
             result.consumed_bytes = cursor;
             return result;
+        }
+        // CHNA6 directory 48 ends in 0000,ffff after a restore command. A
+        // literal opcode-zero dialogue needs at least a $$ terminator; this
+        // pair is the archive's empty trailing slot rather than text.
+        if (opcode == 0 && cursor + 2 <= bytes.size() &&
+            word(bytes, cursor) == 0xffffU) {
+            result.consumed_bytes = cursor + 2U;
+            return result;
+        }
+        if (opcode == 0x0320U) {
+            // CHNA6 directory 90 contains one malformed packed command:
+            // bytes 20,03 encode the otherwise standard "opcode 32, 3
+            // steps" immediately before an opcode-zero dialogue. The DOS
+            // dispatcher would index past its 62-word table and call address
+            // zero here; recover the evident intended command so this
+            // shipped story interaction remains portable and playable.
+            EventCommand command;
+            command.opcode = 32;
+            command.arguments.push_back(3);
+            result.commands.push_back(std::move(command));
+            continue;
         }
         if (opcode >= argument_words.size()) {
             throw std::runtime_error("unknown RPG event opcode " + std::to_string(opcode));
@@ -98,6 +126,12 @@ EventRecord decode_event_record(std::span<const std::uint8_t> bytes) {
             }
         }
         result.commands.push_back(std::move(command));
+        if (is_terminal_opcode(opcode)) {
+            // 59af/5bfc/5c4f/5c57/5c5f never return to the dispatch loop;
+            // bytes after the command are therefore deliberately unreachable.
+            result.consumed_bytes = cursor;
+            return result;
+        }
     }
 }
 

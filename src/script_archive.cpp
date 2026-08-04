@@ -116,4 +116,17 @@ std::span<const std::uint8_t> ScriptArchive::entry(std::size_t index) const {
     return std::span<const std::uint8_t>(image_).subspan(start, finish - start);
 }
 
+std::span<const std::uint8_t> ScriptArchive::event_stream(std::size_t index) const {
+    const auto start = static_cast<std::size_t>(offsets_.at(index));
+    // FUN_1000_53b1 uses MOVSW/LODSW, so the terminator is aligned relative
+    // to the selected record even when an ASCII space made the VM cursor odd.
+    for (auto cursor = start; cursor + 2 <= image_.size(); cursor += 2) {
+        if (u16(image_, cursor) == 0xffffU) {
+            return std::span<const std::uint8_t>(image_).subspan(
+                start, cursor + 2U - start);
+        }
+    }
+    throw std::runtime_error("legacy event stream has no 0xffff terminator");
+}
+
 }  // namespace swd2
