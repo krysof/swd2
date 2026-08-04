@@ -52,10 +52,6 @@ DialoguePage render_dialogue_page(const LegacyFont& font, std::span<const std::u
             }
         }
         x += LegacyFont::glyph_width;
-        if (x + LegacyFont::glyph_width > width) {
-            x = 0;
-            y += 16;
-        }
         cursor += 2;
     }
     result.next_offset = cursor;

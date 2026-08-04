@@ -3250,7 +3250,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
         while (true) {
             const auto page = render_dialogue_page(
                 font, encounter.introduction_text, text_offset,
-                224, 64, 15, &name_font);
+                280, 64, 15, &name_font);
             if (page.has_more) {
                 const auto frame = compose_introduction(
                     surface, page, menu_sprites);

@@ -297,11 +297,13 @@ void fill_rect(Viewport& viewport, int left, int top, int width, int height,
 // Draw the original byte stream through a DSK subset.  RPG.EXE's text path
 // advances four planar bytes (16 square pixels) per Big5 glyph, treats a
 // literal space as a four-pixel indent, and recognizes ## as a line break.
-// The bounds are explicit because ITEM2 descriptions can be longer than the
-// status pane and the DOS renderer clipped them to its active rectangle.
+// Height is explicit because ITEM2 descriptions can be longer than the status
+// pane. 70a6 itself has no logical right-edge check; horizontal clipping is
+// only against the physical VGA page.
 void draw_legacy_text(Viewport& viewport, const LegacyFont& font,
                       std::span<const std::uint8_t> text, int left, int top,
                       int width, int height, std::uint8_t color) {
+    static_cast<void>(width);
     auto x = 0;
     auto y = 0;
     std::size_t cursor = 0;
@@ -321,11 +323,6 @@ void draw_legacy_text(Viewport& viewport, const LegacyFont& font,
             continue;
         }
         if (cursor + 1 >= text.size()) break;
-        if (x + static_cast<int>(LegacyFont::glyph_width) > width) {
-            x = 0;
-            y += 16;
-            if (y + static_cast<int>(LegacyFont::glyph_height) > height) break;
-        }
         const auto code = static_cast<std::uint16_t>(text[cursor]) << 8U |
                           text[cursor + 1];
         const auto glyph = font.rasterize_or_first(code);
@@ -688,13 +685,14 @@ public:
         do {
             // 2cce installs the 7x4 MENU panel at byte column four. Mode 2
             // (opcode 46) uses y=0; every other dialogue mode uses y=112.
-            // Text begins at byte column ten and panel_y+13, wrapping at
-            // byte column 72: 62 Mode-X columns = 248 linear pixels.
+            // Text begins at byte column ten and panel_y+13. 49d0 has no
+            // logical right boundary and only resets x for a literal ##, so
+            // the host mask extends to the physical 320-pixel page edge.
             // 49d0/70a6 uses the default DATA:6ae5 value 00h for event
             // dialogue. Render a one-bit host mask first because an indexed
             // zero glyph cannot share the page buffer's zero background.
             const auto page = render_dialogue_page(
-                font_, text, offset, 248, 64, 1, &name_font_);
+                font_, text, offset, 280, 64, 1, &name_font_);
             auto frame = event_scene();
             const auto panel_top = opcode == 46 ? 0 : 112;
             const auto text_left = 10 * 4;

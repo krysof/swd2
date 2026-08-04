@@ -4963,6 +4963,22 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
                            absent_page.pixels.end(), 15) == 0 &&
                 absent_page.cursor_x == 16U,
             "RPG missing Big5 code did not use 70a6 glyph-zero fallback");
+
+    // 49d0 advances DATA:60d5 by four Mode-X bytes after every glyph and
+    // changes DATA:60d7 only for a literal ##. It has no right-edge test.
+    // Preserve that distinction from a modern word-wrapping text widget:
+    // the third glyph is clipped by this narrow host mask, but the cursor
+    // remains three glyphs into the same DOS row.
+    const std::array<std::uint8_t, 6> overlong_row{{
+        0xba, 0xf2, 0xba, 0xf2, 0xba, 0xf2,
+    }};
+    const auto overlong_page = swd2::render_dialogue_page(
+        font, overlong_row, 0, 32, 32, 15, &name_font);
+    require(overlong_page.cursor_x == 48U && overlong_page.cursor_y == 0U &&
+                std::none_of(overlong_page.pixels.begin() + 32U * 16U,
+                             overlong_page.pixels.end(),
+                             [](std::uint8_t pixel) { return pixel != 0; }),
+            "RPG 49d0 invented an automatic line wrap without ##");
 }
 
 class TestEventHost final : public swd2::EventVmHost {
@@ -7693,11 +7709,12 @@ void test_battle_module(const std::filesystem::path& game_root) {
     const auto prompt_money = prompt_state.u16(0x104);
     prompt_state.set_u16(0x4a0, 150);  // ORC trailing "NY": default No
     swd2::GameContext prompt_context{game_root, prompt_state, prompt_platform};
-    require(swd2::BattleModule().run(prompt_context, swd2::Marker::open_figure) ==
-                swd2::Marker::continue_rpg &&
+    const auto prompt_result = swd2::BattleModule().run(
+        prompt_context, swd2::Marker::open_figure);
+    require(prompt_result == swd2::Marker::continue_rpg &&
                 prompt_platform.presented == 2 &&
                 prompt_platform.frame_hashes.size() == 2 &&
-                prompt_platform.frame_hashes[1] == 9622397641277919182ULL &&
+                prompt_platform.frame_hashes[1] == 2855080217828813932ULL &&
                 prompt_platform.music_calls == 0U &&
                 prompt_platform.voice_calls == 0U &&
                 prompt_context.shared_state.u16(0x4a0) == 0 &&
