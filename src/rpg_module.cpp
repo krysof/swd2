@@ -723,6 +723,22 @@ public:
                                            game_root_ / layout);
         relocated_palette_ = relocated_map_->palette();
         relocated_palette_animation_ = relocated_map_->animation_words();
+        const auto destination_music =
+            normalize_dos_asset_path(state_.music_path());
+        if (destination_music.empty()) {
+            platform_.stop_music();
+            if (playing_music_) playing_music_->clear();
+        } else {
+            const auto path = game_root_ / destination_music;
+            if (music_enabled_ && std::filesystem::is_regular_file(path)) {
+                // Opcode 37 clears SAVE+459 before edc specifically to force
+                // the loader's comparison unequal. Restart even when the two
+                // areas name the same RIX rather than deferring until the
+                // event eventually returns to the outer map loop.
+                platform_.play_music(read_file(path), true);
+            }
+            if (playing_music_) *playing_music_ = destination_music;
+        }
         if (!relocated_actors_) {
             relocated_actors_ = SpriteArchive::parse(
                 decode_rsk_block(read_file(game_root_ / "MAN1.RSK")).data);
