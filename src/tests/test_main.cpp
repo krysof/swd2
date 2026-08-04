@@ -5515,9 +5515,9 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
             "RPG entity-dialogue run did not terminate normally");
-    require(platform.presented == 3 && platform.music_calls == 1 &&
-                platform.stop_calls == 1 && platform.frame_hashes.size() == 3 &&
-                platform.frame_hashes[1] == 1574579943213790046ULL,
+    require(platform.presented == 4 && platform.music_calls == 1 &&
+                platform.stop_calls == 1 && platform.frame_hashes.size() == 4 &&
+                platform.frame_hashes[2] == 1574579943213790046ULL,
             "RPG did not present dialogue and manage map music in-process");
 }
 
@@ -5617,7 +5617,7 @@ void test_rpg_map_special_event(const std::filesystem::path& game_root) {
     const auto marker = swd2::RpgModule().run(
         context, swd2::Marker::menu_ready);
     require(marker == swd2::Marker::none &&
-                platform.presented == 5U && platform.wait_calls == 1U &&
+                platform.presented == 6U && platform.wait_calls == 1U &&
                 platform.poll_calls == 1U &&
                 context.shared_state.map_location_directory_offset() == 8U &&
                 context.shared_state.world_y() == original_y + 3U &&
@@ -5707,8 +5707,8 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
     require(top_result ==
                 swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
-                platform.frame_hashes.size() == 11 &&
-                platform.frame_hashes[9] == 5264084512101039870ULL,
+                platform.frame_hashes.size() == 12 &&
+                platform.frame_hashes[10] == 5264084512101039870ULL,
             "RPG opcode-46 top-dialogue run did not terminate normally");
 }
 
@@ -6517,7 +6517,7 @@ void test_rpg_interaction_rays(const std::filesystem::path& game_root) {
     require(ray_result == swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 platform.poll_calls == 1U && platform.wait_calls == 1U &&
-                platform.presented == 2U,
+                platform.presented == 3U,
             "RPG 523d/52fd did not find an entity on the fourth forward probe");
 }
 
@@ -6756,8 +6756,9 @@ void test_rpg_automatic_entity_event(const std::filesystem::path& game_root) {
                 context.shared_state.world_y() == 69 &&
                 context.shared_state.actor_direction() == 9,
             "automatic entity event moved the blocked player");
-    require(platform.presented == 2 && platform.bottom_hashes.size() == 2 &&
-                platform.bottom_hashes[0] != platform.bottom_hashes[1] &&
+    require(platform.presented == 3 && platform.bottom_hashes.size() == 3 &&
+                platform.bottom_hashes[0] == platform.bottom_hashes[1] &&
+                platform.bottom_hashes[1] != platform.bottom_hashes[2] &&
                 platform.music_calls == 1 && platform.stop_calls == 1,
             "field-8 8000h collision did not open the entity dialogue immediately");
 }
@@ -6834,11 +6835,11 @@ void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
     require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
                 swd2::Marker::none,
             "RPG compact money-overlay event did not terminate normally");
-    require(platform.presented == 4 && platform.compact_hashes.size() == 4 &&
-                platform.compact_hashes[1] == 6584855232119388833ULL &&
-                platform.compact_hashes[1] == platform.compact_hashes[2] &&
-                platform.compact_hashes[1] != platform.compact_hashes[0] &&
-                platform.compact_hashes[3] != platform.compact_hashes[1],
+    require(platform.presented == 5 && platform.compact_hashes.size() == 5 &&
+                platform.compact_hashes[2] == 6584855232119388833ULL &&
+                platform.compact_hashes[2] == platform.compact_hashes[3] &&
+                platform.compact_hashes[2] != platform.compact_hashes[1] &&
+                platform.compact_hashes[4] != platform.compact_hashes[2],
             "RPG opcode 14 did not persist its overlay through dialogue and clear afterward");
 }
 

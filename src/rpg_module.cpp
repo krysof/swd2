@@ -3729,11 +3729,29 @@ Marker RpgModule::run(GameContext& context, Marker) {
             music_enabled_, sound_enabled_);
     };
     const auto run_entity_event = [&](std::size_t entity_index) {
+        // RPG:52b4 saves the entity's current facing, turns it toward the
+        // leader, redraws/flips the world once, runs the CHNA record, and
+        // finally restores the saved facing.  The faced frame is observable
+        // before even the first dialogue opcode, so it cannot be folded into
+        // the event host's later presentations.
+        const auto old_direction =
+            location.area.entity_fields[1][entity_index];
+        const auto actor_direction = context.shared_state.actor_direction();
+        location.area.entity_fields[1][entity_index] =
+            actor_direction == 0U ? 3U :
+            actor_direction == 9U ? 6U :
+            actor_direction == 6U ? 9U : 0U;
+        auto faced_viewport = compose_scene();
+        context.platform.present(
+            {320, 200, faced_viewport.pixels,
+             std::span<const std::uint8_t, 768>(faced_viewport.palette)});
+
         auto host = make_event_host(event_font);
         const auto entity = map_entity(location.area, entity_index);
         const auto result = execute_event(
             event_archive, entity.event_directory_offset, context.shared_state,
             &location.area, entity_index, host, 10'000, &map_database);
+        location.area.entity_fields[1][entity_index] = old_direction;
         return EntityEventOutcome{result.requested_marker,
                                   host.quit_requested(),
                                   result.requested_map_reload,
@@ -3814,8 +3832,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
                     // f19's non-location actions 1..4/10/12..21 call 52b4
                     // for a fixed transient entity.  The once-only variants
                     // first set a bit in SAVE+51a; an already-set bit makes
-                    // the trigger a no-op.  52b4 temporarily faces that entity
-                    // toward the leader while its normal event record runs.
+                    // the trigger a no-op. They all enter the same 52b4 event
+                    // path as an ordinary explicit/automatic interaction.
                     std::optional<std::size_t> event_entity;
                     std::uint16_t once_flag = 0;
                     switch (transition->special_action()) {
@@ -3845,17 +3863,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                     }
                     if (event_entity &&
                         *event_entity < location.area.entity_count()) {
-                        const auto old_direction =
-                            location.area.entity_fields[1][*event_entity];
-                        const auto actor_direction =
-                            context.shared_state.actor_direction();
-                        location.area.entity_fields[1][*event_entity] =
-                            actor_direction == 0U ? 3U :
-                            actor_direction == 9U ? 6U :
-                            actor_direction == 6U ? 9U : 0U;
                         auto outcome = run_entity_event(*event_entity);
-                        location.area.entity_fields[1][*event_entity] =
-                            old_direction;
                         if (outcome.quit) {
                             context.platform.stop_audio();
                             return Marker::none;
