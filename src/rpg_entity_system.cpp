@@ -199,4 +199,51 @@ void advance_rpg_party_animation(SharedState& state) {
     }
 }
 
+RpgWorldStepResult advance_rpg_world_step(
+    SharedState& state, RpgWorldStepRuntime& runtime,
+    std::span<const std::uint8_t> rpg_load_image,
+    bool encounters_enabled) {
+    RpgWorldStepResult result;
+    if (!encounters_enabled) return result;
+
+    ++runtime.poison_steps;
+    if (runtime.poison_steps >= 10U) {
+        runtime.poison_steps = 0;
+        const auto party_count = std::min<std::size_t>(4U, state.u16(0x10));
+        for (std::size_t actor = 0; actor < party_count; ++actor) {
+            const auto base = 0x106U + actor * 0x9fU;
+            const auto status = state.u16(base + 8U);
+            if ((status & 0x2000U) != 0U || (status & 0x0200U) == 0U) continue;
+            result.poison_flash = true;
+            const auto hit_points = static_cast<std::uint16_t>(
+                state.u16(base + 0x2dU) - 1U);
+            state.set_u16(base + 0x2dU, hit_points);
+            if (hit_points == 0U) {
+                // 1ff4 overwrites the whole status word, clearing poison and
+                // every other field status when the pulse knocks an actor out.
+                state.set_u16(base + 8U, 0x2000U);
+                result.defeated_party_members.push_back(actor);
+            }
+        }
+    }
+
+    ++runtime.encounter_steps;
+    if (runtime.encounter_steps < 40U) return result;
+
+    const auto cursor = state.u16(0x49c);
+    const auto random = read_word(rpg_load_image, code_stream_base + cursor);
+    state.set_u16(0x49c, static_cast<std::uint16_t>(cursor + 2U));
+    if ((random & 4U) == 0U) return result;
+
+    runtime.encounter_steps = static_cast<std::uint8_t>(random & 0x1fU);
+    ++runtime.encounter_hits;
+    if (runtime.encounter_hits >= 4U) {
+        // FIG interprets encounter offset zero as the area/time-selected
+        // random table rather than a fixed ORC directory entry.
+        state.set_u16(0x4a0, 0U);
+        result.random_encounter = true;
+    }
+    return result;
+}
+
 }  // namespace swd2

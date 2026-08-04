@@ -1521,6 +1521,74 @@ void test_rpg_entity_system(const std::filesystem::path& game_root) {
         require(formation.u16(0x8a + slot * 2U) == expected,
                 "RPG 1e63 did not animate exactly three slots per active party member");
     }
+
+    std::uint16_t encounter_cursor = 0;
+    std::uint16_t rejected_cursor = 0;
+    for (std::uint16_t cursor = 0x1000U; cursor < 0x2000U; cursor += 2U) {
+        const auto offset = 0x4f1cU + cursor;
+        const auto word = static_cast<std::uint16_t>(image[offset]) |
+                          (static_cast<std::uint16_t>(image[offset + 1U]) << 8U);
+        if ((word & 4U) != 0U && encounter_cursor == 0U) encounter_cursor = cursor;
+        if ((word & 4U) == 0U && rejected_cursor == 0U) rejected_cursor = cursor;
+    }
+    require(encounter_cursor != 0U && rejected_cursor != 0U,
+            "RPG 1fa8 random code window lacks both tested gate outcomes");
+
+    swd2::SharedState::Storage world_bytes{};
+    auto world = swd2::SharedState::from_bytes(world_bytes);
+    world.set_u16(0x10, 2U);
+    const auto actor_zero = 0x106U;
+    const auto actor_one = actor_zero + 0x9fU;
+    world.set_u16(actor_zero + 8U, 0x0200U);
+    world.set_u16(actor_zero + 0x2dU, 2U);
+    world.set_u16(actor_one + 8U, 0x0200U);
+    world.set_u16(actor_one + 0x2dU, 1U);
+    swd2::RpgWorldStepRuntime world_runtime;
+    world_runtime.poison_steps = 9U;
+    const auto poison = swd2::advance_rpg_world_step(
+        world, world_runtime, image, true);
+    require(poison.poison_flash && !poison.random_encounter &&
+                poison.defeated_party_members == std::vector<std::size_t>{1U} &&
+                world.u16(actor_zero + 0x2dU) == 1U &&
+                world.u16(actor_zero + 8U) == 0x0200U &&
+                world.u16(actor_one + 0x2dU) == 0U &&
+                world.u16(actor_one + 8U) == 0x2000U &&
+                world_runtime.poison_steps == 0U,
+            "RPG 1fa8 ten-step poison pulse differs from the party status loop");
+
+    world.set_u16(0x49c, rejected_cursor);
+    world_runtime.encounter_steps = 39U;
+    world_runtime.encounter_hits = 0U;
+    const auto rejected = swd2::advance_rpg_world_step(
+        world, world_runtime, image, true);
+    require(!rejected.random_encounter &&
+                world_runtime.encounter_steps == 40U &&
+                world_runtime.encounter_hits == 0U &&
+                world.u16(0x49c) == static_cast<std::uint16_t>(rejected_cursor + 2U),
+            "RPG 1fa8 cleared its 40-step counter after a rejected code word");
+
+    world.set_u16(0x49c, encounter_cursor);
+    world.set_u16(0x4a0, 0x1234U);
+    world_runtime.encounter_steps = 39U;
+    world_runtime.encounter_hits = 3U;
+    const auto encounter = swd2::advance_rpg_world_step(
+        world, world_runtime, image, true);
+    const auto encounter_word = static_cast<std::uint16_t>(
+        image[0x4f1cU + encounter_cursor]) |
+        (static_cast<std::uint16_t>(image[0x4f1cU + encounter_cursor + 1U]) << 8U);
+    require(encounter.random_encounter && world.u16(0x4a0) == 0U &&
+                world_runtime.encounter_hits == 4U &&
+                world_runtime.encounter_steps == (encounter_word & 0x1fU),
+            "RPG 1fa8 fourth accepted code word did not request a random battle");
+
+    const auto disabled_before = world_runtime;
+    const auto disabled = swd2::advance_rpg_world_step(
+        world, world_runtime, image, false);
+    require(!disabled.poison_flash && !disabled.random_encounter &&
+                world_runtime.poison_steps == disabled_before.poison_steps &&
+                world_runtime.encounter_steps == disabled_before.encounter_steps &&
+                world_runtime.encounter_hits == disabled_before.encounter_hits,
+            "RPG 1fa8 advanced field hazards in an auxiliary-zero area");
 }
 
 void test_save_slot(const std::filesystem::path& game_root) {
@@ -6419,6 +6487,148 @@ void test_rpg_corner_slide(const std::filesystem::path& game_root) {
             "RPG right-wall collision did not take its south-first corner slide");
 }
 
+void test_rpg_overworld_poison(const std::filesystem::path& game_root) {
+    const auto map = swd2::MapResource::load(game_root / "T1" / "AREA1");
+    std::size_t start_x = 0;
+    std::size_t start_y = 0;
+    bool found = false;
+    for (std::size_t y = 12; y + 1 < map.layout().height && !found; ++y) {
+        for (std::size_t x = 20; x + 12 < map.layout().width; ++x) {
+            bool corridor = true;
+            for (std::size_t center = x; center <= x + 10U; ++center) {
+                corridor = corridor &&
+                    (map.cells()[y * map.layout().width + center] & 0x1000U) == 0U;
+                for (int dx = -1; dx <= 1; ++dx) {
+                    corridor = corridor &&
+                        (map.cells()[y * map.layout().width +
+                                     static_cast<std::size_t>(
+                                         static_cast<int>(center) + dx)] &
+                         0x8000U) == 0U;
+                }
+            }
+            if (corridor) {
+                start_x = x;
+                start_y = y;
+                found = true;
+                break;
+            }
+        }
+    }
+    require(found, "AREA1 has no ten-step poison-test corridor");
+
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(8);
+    require(location.area.auxiliary != 0U,
+            "AREA1 no longer enables RPG 1fa8 field steps");
+    for (auto& behavior : location.area.entity_fields[3]) behavior = 3U;
+
+    ScriptedPlatform platform;
+    platform.actions.assign(10U, swd2::InputAction::right);
+    platform.actions.push_back(swd2::InputAction::confirm);
+    platform.actions.push_back(swd2::InputAction::quit);
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x10, 1U);
+    state.set_u16(0x102, 0U);
+    const auto actor = 0x106U;
+    state.set_u16(actor + 8U, 0x0200U);
+    state.set_u16(actor + 0x2dU, 1U);
+    state.set_viewport_x(static_cast<std::uint16_t>(start_x - 20U));
+    state.set_viewport_y(static_cast<std::uint16_t>(start_y - 12U));
+    state.set_actor_screen_x(38U);
+    state.set_actor_screen_y(80U);
+    state.set_actor_direction(9U);
+    state.set_u16(0x40f, 8U);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + ((start_y - 12U) * map.layout().width + start_x - 20U) * 2U));
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context.shared_state.world_x() == start_x + 10U &&
+                context.shared_state.world_y() == start_y &&
+                context.shared_state.u16(actor + 0x2dU) == 0U &&
+                context.shared_state.u16(actor + 8U) == 0x2000U,
+            "RPG ten-step overworld poison pulse did not defeat the actor");
+    std::uint64_t solid_hash = 1469598103934665603ULL;
+    for (std::size_t pixel = 0; pixel < 320U * 200U; ++pixel) {
+        solid_hash ^= 0x6bU;
+        solid_hash *= 1099511628211ULL;
+    }
+    require(platform.cursor == platform.actions.size() &&
+                platform.wait_calls == 1U && platform.poll_calls == 11U &&
+                platform.presented == 14U && platform.frame_hashes[11] == solid_hash &&
+                platform.frame_hashes[12] == platform.frame_hashes[13],
+            "RPG poison dialogue/6b flash did not preserve the 1ffb/200f sequence");
+}
+
+void test_rpg_random_encounter(const std::filesystem::path& game_root) {
+    const auto map = swd2::MapResource::load(game_root / "T1" / "AREA1");
+    std::size_t start_x = 0;
+    std::size_t start_y = 0;
+    bool found = false;
+    for (std::size_t y = 12; y + 1 < map.layout().height && !found; ++y) {
+        for (std::size_t x = 20; x + 2 < map.layout().width; ++x) {
+            bool clear = true;
+            for (int dx = -1; dx <= 2; ++dx) {
+                clear = clear &&
+                    (map.cells()[y * map.layout().width +
+                                 static_cast<std::size_t>(
+                                     static_cast<int>(x) + dx)] &
+                     0x8000U) == 0U;
+            }
+            clear = clear &&
+                (map.cells()[y * map.layout().width + x] & 0x1000U) == 0U &&
+                (map.cells()[y * map.layout().width + x + 1U] & 0x1000U) == 0U;
+            if (clear) {
+                start_x = x;
+                start_y = y;
+                found = true;
+                break;
+            }
+        }
+    }
+    require(found, "AREA1 has no two-cell random-encounter test path");
+
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(8);
+    for (auto& behavior : location.area.entity_fields[3]) behavior = 3U;
+    ScriptedPlatform platform;
+    platform.actions.clear();
+    for (std::size_t step = 0; step < 75U; ++step) {
+        platform.actions.push_back((step & 1U) == 0U
+            ? swd2::InputAction::right : swd2::InputAction::left);
+    }
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x10, 1U);
+    state.set_u16(0x102, 0U);
+    state.set_viewport_x(static_cast<std::uint16_t>(start_x - 20U));
+    state.set_viewport_y(static_cast<std::uint16_t>(start_y - 12U));
+    state.set_actor_screen_x(38U);
+    state.set_actor_screen_y(80U);
+    state.set_actor_direction(9U);
+    state.set_u16(0x40f, 8U);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + ((start_y - 12U) * map.layout().width + start_x - 20U) * 2U));
+    state.set_u16(0x49c, 0x1000U);
+    state.set_u16(0x4a0, 0x1234U);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto encounter_result = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(encounter_result ==
+                swd2::Marker::open_figure &&
+                platform.cursor == platform.actions.size() &&
+                platform.poll_calls == 75U && platform.presented == 75U &&
+                platform.stop_calls == 1U &&
+                context.shared_state.world_x() == start_x + 1U &&
+                context.shared_state.world_y() == start_y &&
+                context.shared_state.u16(0x49c) == 0x1018U &&
+                context.shared_state.u16(0x4a0) == 0U,
+            "RPG 1fa8 code-window gate did not enter an in-process random FIG battle");
+}
+
 void test_rpg_automatic_entity_event(const std::filesystem::path& game_root) {
     auto database = std::make_shared<swd2::MapDatabase>(
         swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
@@ -7275,6 +7485,8 @@ int main(int argc, char** argv) {
         test_rpg_system_audio_toggle(argv[1]);
         test_rpg_entity_collision(argv[1]);
         test_rpg_corner_slide(argv[1]);
+        test_rpg_overworld_poison(argv[1]);
+        test_rpg_random_encounter(argv[1]);
         test_rpg_automatic_entity_event(argv[1]);
         test_rpg_event_voice(argv[1]);
         test_rpg_compact_money_overlay(argv[1]);

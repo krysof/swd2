@@ -21,6 +21,18 @@ struct RpgEntityRuntime {
     std::uint16_t code_stream_offset{};
 };
 
+struct RpgWorldStepRuntime {
+    std::uint8_t poison_steps{};
+    std::uint8_t encounter_steps{};
+    std::uint8_t encounter_hits{};
+};
+
+struct RpgWorldStepResult {
+    bool poison_flash{};
+    std::vector<std::size_t> defeated_party_members;
+    bool random_encounter{};
+};
+
 // Advances every autonomous map entity by one original main-loop iteration.
 // RPG.EXE used words from its own code bytes at load-image offset 4f1ch as a
 // deterministic movement stream, so the caller supplies that load image as
@@ -39,5 +51,13 @@ void advance_rpg_party_formation(SharedState& state,
 // RPG:1e63 advances all three formation slots belonging to each active party
 // member whenever a direction key is handled, including a blocked step.
 void advance_rpg_party_animation(SharedState& state);
+
+// RPG:1fa8 runs only after a successful ordinary map step and only when the
+// current MAPZ area's auxiliary word is nonzero.  It applies the ten-step
+// poison pulse and advances the original code-window random-encounter gate.
+RpgWorldStepResult advance_rpg_world_step(
+    SharedState& state, RpgWorldStepRuntime& runtime,
+    std::span<const std::uint8_t> rpg_load_image,
+    bool encounters_enabled);
 
 }  // namespace swd2

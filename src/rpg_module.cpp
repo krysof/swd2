@@ -3545,6 +3545,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3678);
     const auto ability_inventory_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x36e0);
+    // RPG:1ffb shows this normal 49d0 dialogue every time an overworld
+    // poison pulse reduces a party member to zero HP.
+    const auto poison_defeat_text = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x373c);
     const auto field_ability_records = extract_rpg_embedded_data(
         rpg_load_image, rpg_entry_offset, 0x1dce, 151U * 20U);
     const auto ability_resource_labels = extract_rpg_embedded_data(
@@ -3567,6 +3571,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
     const auto equipment_stat_labels = extract_rpg_embedded_data(
         rpg_load_image, rpg_entry_offset, 0x3a60, 40U);
     RpgEntityRuntime entity_runtime;
+    RpgWorldStepRuntime world_step_runtime;
     FieldActionRuntime field_action_runtime;
     std::optional<MapAreaRecord> relocated_transient_area;
     while (true) {
@@ -3663,34 +3668,37 @@ Marker RpgModule::run(GameContext& context, Marker) {
         bool map_reload{};
         std::optional<MapAreaRecord> relocated_area;
     };
+    const auto make_event_host = [&](const LegacyFont& dialogue_font) {
+        return RpgEventHost(
+            context.platform, dialogue_font, name_font, item_font,
+            items, item_texts, menu_sprites, equipment_art,
+            save_slot_prompt, travel_labels, shop_prompt,
+            shop_sale_prompt, shop_money_error,
+            shop_inventory_error, shop_confirmation_prompt,
+            shop_quantity_error, shop_unsellable_error,
+            item_discard_error, item_discard_prompt,
+            item_alchemy_error, item_alchemy_select_prompt,
+            item_alchemy_level_error, item_alchemy_data,
+            item_effect_labels, item_alchemy_result_labels,
+            equipment_actor_error, equipment_two_hand_error,
+            equipment_slot_error, field_action_error,
+            ability_value_error, ability_material_error,
+            ability_dead_error, ability_inventory_error,
+            field_ability_records, ability_resource_labels,
+            ability_descriptions,
+            system_menu_labels, system_exit_prompt,
+            status_menu_labels,
+            inventory_category_labels, equipment_slot_labels,
+            equipment_stat_labels,
+            compose_scene, advance_scene_palette,
+            &map_database, &context.save_slot,
+            &context.load_slot, &context.map_database,
+            field_action_runtime,
+            context.shared_state, context.game_root, &playing_music,
+            music_enabled_, sound_enabled_);
+    };
     const auto run_entity_event = [&](std::size_t entity_index) {
-        RpgEventHost host(context.platform, event_font, name_font, item_font,
-                          items, item_texts, menu_sprites, equipment_art,
-                          save_slot_prompt, travel_labels, shop_prompt,
-                          shop_sale_prompt, shop_money_error,
-                          shop_inventory_error, shop_confirmation_prompt,
-                          shop_quantity_error, shop_unsellable_error,
-                          item_discard_error, item_discard_prompt,
-                          item_alchemy_error, item_alchemy_select_prompt,
-                          item_alchemy_level_error, item_alchemy_data,
-                          item_effect_labels, item_alchemy_result_labels,
-                          equipment_actor_error, equipment_two_hand_error,
-                          equipment_slot_error, field_action_error,
-                          ability_value_error, ability_material_error,
-                          ability_dead_error, ability_inventory_error,
-                          field_ability_records, ability_resource_labels,
-                          ability_descriptions,
-                          system_menu_labels, system_exit_prompt,
-                          status_menu_labels,
-                          inventory_category_labels, equipment_slot_labels,
-                          equipment_stat_labels,
-                          compose_scene,
-                          advance_scene_palette,
-                          &map_database, &context.save_slot,
-                          &context.load_slot, &context.map_database,
-                          field_action_runtime,
-                          context.shared_state, context.game_root, &playing_music,
-                          music_enabled_, sound_enabled_);
+        auto host = make_event_host(event_font);
         const auto entity = map_entity(location.area, entity_index);
         const auto result = execute_event(
             event_archive, entity.event_directory_offset, context.shared_state,
@@ -3846,33 +3854,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
             return Marker::none;
         }
         if (action == InputAction::cancel) {
-            RpgEventHost host(context.platform, event_font, name_font, item_font,
-                              items, item_texts, menu_sprites, equipment_art,
-                              save_slot_prompt, travel_labels, shop_prompt,
-                              shop_sale_prompt, shop_money_error,
-                              shop_inventory_error, shop_confirmation_prompt,
-                              shop_quantity_error, shop_unsellable_error,
-                              item_discard_error, item_discard_prompt,
-                              item_alchemy_error, item_alchemy_select_prompt,
-                              item_alchemy_level_error, item_alchemy_data,
-                              item_effect_labels, item_alchemy_result_labels,
-                              equipment_actor_error, equipment_two_hand_error,
-                              equipment_slot_error, field_action_error,
-                              ability_value_error, ability_material_error,
-                              ability_dead_error, ability_inventory_error,
-                              field_ability_records, ability_resource_labels,
-                              ability_descriptions,
-                              system_menu_labels, system_exit_prompt,
-                              status_menu_labels,
-                              inventory_category_labels, equipment_slot_labels,
-                              equipment_stat_labels,
-                              compose_scene,
-                              advance_scene_palette,
-                              &map_database, &context.save_slot,
-                              &context.load_slot, &context.map_database,
-                              field_action_runtime,
-                              context.shared_state, context.game_root,
-                              &playing_music, music_enabled_, sound_enabled_);
+            auto host = make_event_host(event_font);
             const auto map_reload = host.run_field_menu();
             if (host.quit_requested()) {
                 context.platform.stop_audio();
@@ -4023,6 +4005,41 @@ Marker RpgModule::run(GameContext& context, Marker) {
             static_cast<std::int16_t>(
                 (static_cast<int>(previous_viewport_y) -
                  static_cast<int>(viewport_y)) * 8));
+
+        const auto world_step = advance_rpg_world_step(
+            context.shared_state, world_step_runtime, rpg_load_image,
+            location.area.auxiliary != 0U);
+        if (!world_step.defeated_party_members.empty()) {
+            // The main-loop warning is rendered through CHAIN.DSK, not the
+            // current area's CHNA font; its two uncommon glyphs exist only in
+            // that shared field/menu subset.
+            auto host = make_event_host(item_font);
+            for (const auto actor : world_step.defeated_party_members) {
+                static_cast<void>(actor);
+                host.show_dialogue(20U, poison_defeat_text);
+                if (host.quit_requested()) {
+                    context.platform.stop_audio();
+                    return Marker::none;
+                }
+            }
+        }
+        if (world_step.poison_flash) {
+            auto poison_frame = compose_scene();
+            std::fill(poison_frame.pixels.begin(), poison_frame.pixels.end(), 0x6bU);
+            context.platform.present({
+                320, 200, poison_frame.pixels,
+                std::span<const std::uint8_t, 768>(poison_frame.palette)});
+            context.platform.delay_for(std::chrono::milliseconds(15));
+            auto restored_frame = compose_scene();
+            context.platform.present({
+                320, 200, restored_frame.pixels,
+                std::span<const std::uint8_t, 768>(restored_frame.palette)});
+            context.platform.delay_for(std::chrono::milliseconds(15));
+        }
+        if (world_step.random_encounter) {
+            context.platform.stop_audio();
+            return Marker::open_figure;
+        }
         advance_rpg_entities(location.area, map, context.shared_state,
                              entity_runtime, rpg_load_image);
     }
