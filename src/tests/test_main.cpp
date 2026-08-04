@@ -5197,12 +5197,14 @@ public:
         ++presented;
     }
     swd2::InputAction wait_for_input() override {
+        ++wait_calls;
         if (cursor < actions.size()) {
             return actions[cursor++];
         }
         return swd2::InputAction::quit;
     }
     swd2::InputAction poll_input() override {
+        ++poll_calls;
         if (cursor < actions.size()) return actions[cursor++];
         return swd2::InputAction::none;
     }
@@ -5224,6 +5226,8 @@ public:
     std::size_t voice_calls{};
     std::size_t voice_bytes{};
     std::size_t stop_calls{};
+    std::size_t wait_calls{};
+    std::size_t poll_calls{};
     std::vector<std::uint64_t> frame_hashes;
     std::vector<std::uint64_t> compact_hashes;
     std::vector<std::uint64_t> bottom_hashes;
@@ -5243,6 +5247,7 @@ public:
 
 void test_monolithic_runtime(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
+    platform.actions.push_back(swd2::InputAction::quit);
     swd2::GameContext context{game_root, swd2::SharedState::load(game_root / "SAVE.DA1"), platform};
     swd2::ModuleRegistry modules;
     modules.add(std::make_unique<swd2::MeoModule>());
@@ -5280,6 +5285,24 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
                 platform.stop_calls == 1 && platform.frame_hashes.size() == 3 &&
                 platform.frame_hashes[1] == 5520302039675693235ULL,
             "RPG did not present dialogue and manage map music in-process");
+}
+
+void test_rpg_idle_world_ticks(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    ScriptedPlatform platform;
+    platform.actions = {swd2::InputAction::none, swd2::InputAction::quit};
+    swd2::GameContext context{
+        game_root, swd2::SharedState::load(game_root / "SAVE.DA1"), platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none,
+            "RPG idle world tick did not terminate normally");
+    require(platform.poll_calls == 2U && platform.wait_calls == 0U &&
+                platform.presented == 2U &&
+                platform.palette_hashes.size() == 2U &&
+                platform.palette_hashes[0] != platform.palette_hashes[1],
+            "RPG world loop blocked for input or froze its RSK palette cycle");
 }
 
 void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
@@ -6887,6 +6910,7 @@ int main(int argc, char** argv) {
         test_stateful_event_opcodes(argv[1]);
         test_monolithic_runtime(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
+        test_rpg_idle_world_ticks(argv[1]);
         test_rpg_top_dialogue_panel(argv[1]);
         test_rpg_field_menu_inventory(argv[1]);
         test_rpg_inventory_item_actions(argv[1]);

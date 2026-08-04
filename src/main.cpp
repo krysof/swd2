@@ -163,6 +163,7 @@ public:
         }
         return actions_[cursor_++];
     }
+    swd2::InputAction poll_input() override { return wait_for_input(); }
     swd2::ClockTime clock_time() const override { return {0, 0}; }
     void play_music(std::span<const std::uint8_t>, bool) override {}
     void play_voice(std::span<const std::uint8_t>) override {}

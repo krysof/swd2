@@ -643,7 +643,8 @@ public:
           load_slot_(load_slot), live_map_database_(live_map_database),
           field_action_runtime_(field_action_runtime), state_(state),
           game_root_(std::move(game_root)), playing_music_(playing_music),
-          music_enabled_(music_enabled), sound_enabled_(sound_enabled) {}
+          music_enabled_(music_enabled), sound_enabled_(sound_enabled),
+          frame_delay_ticks_(state.u16(0x406)) {}
 
     void show_dialogue(std::uint16_t opcode,
                        std::span<const std::uint8_t> text) override {
@@ -3621,7 +3622,17 @@ Marker RpgModule::run(GameContext& context, Marker) {
         context.platform.present({320, 200, viewport.pixels,
                                   std::span<const std::uint8_t, 768>(viewport.palette)});
 
-        auto action = context.platform.wait_for_input();
+        const auto frame_ticks = context.shared_state.u16(0x406);
+        if (frame_ticks != 0) {
+            context.platform.delay_for(std::chrono::milliseconds(
+                (static_cast<std::uint64_t>(frame_ticks) * 1000U + 69U) / 70U));
+        }
+
+        // RPG:0129..01c6 keeps composing world frames and samples the
+        // keyboard without blocking. Menus/dialogue still use wait_for_input,
+        // but blocking here would freeze autonomous entities and RSK palette
+        // cycles whenever the player releases every key.
+        auto action = context.platform.poll_input();
         if (action == InputAction::quit) {
             context.platform.stop_audio();
             return Marker::none;
