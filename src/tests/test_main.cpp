@@ -257,6 +257,20 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                     0xb3, 0x6f, 0xbc, 0xcb, 0xaa, 0xab, 0xab, 0x7e, 0xa7,
                     0xda, 0xa4, 0xa3, 0xa6, 0xac, 0xc1, 0xca, 0xa1, 0x49}),
             "RPG shop confirmation/error Big5 streams were not recovered exactly");
+    // RPG:49d0 skips the wait cursor only when DATA:359b is one.  Otherwise it
+    // starts at MENU frame 95h (149), advances through 98h (152), and wraps
+    // before 99h.  Keep the machine-code anchors beside the recovered strings
+    // so the portable animation cannot silently drift from a guessed sequence.
+    require(image.size() > 0x4ad4U &&
+                image[0x4a94] == 0x80U && image[0x4a95] == 0x3eU &&
+                image[0x4a96] == 0x9bU && image[0x4a97] == 0x35U &&
+                image[0x4a98] == 0x01U &&
+                image[0x4aa5] == 0xc7U && image[0x4aa7] == 0xd3U &&
+                image[0x4aa9] == 0x95U &&
+                image[0x4acb] == 0xffU && image[0x4ace] == 0x60U &&
+                image[0x4acf] == 0x81U && image[0x4ad2] == 0x60U &&
+                image[0x4ad3] == 0x99U,
+            "RPG 49d0 MENU 149..152 acknowledgement loop changed");
     const auto equipment_actor_error = swd2::extract_rpg_embedded_text(
         image, entry, 0x369a);
     const auto equipment_two_hand_error = swd2::extract_rpg_embedded_text(
@@ -4718,6 +4732,28 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 yes_platform.cursor == yes_platform.actions.size() &&
                 yes_platform.presented >= 5U,
             "RPG 5884 purchase confirmation did not commit the default Yes");
+
+    auto [error_database, error_state] = prepare();
+    error_state.set_u16(0x104, 0);
+    ScriptedPlatform error_platform;
+    error_platform.actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // dismiss DATA:3c44/MENU 149
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    swd2::GameContext error_context{game_root, error_state, error_platform};
+    error_context.map_database = error_database;
+    require(swd2::RpgModule().run(
+                error_context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none &&
+                error_context.shared_state.u16(0x104) == 0U &&
+                error_context.shared_state.u16(0x382) == 0U &&
+                error_platform.cursor == error_platform.actions.size() &&
+                error_platform.presented >= 6U,
+            "RPG 49d0 shop error prompt did not animate/consume acknowledgement");
 }
 
 void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {

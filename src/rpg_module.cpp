@@ -1386,19 +1386,46 @@ private:
     bool show_bottom_message(Viewport frame,
                              std::span<const std::uint8_t> text) {
         draw_bottom_message(frame, text);
-        platform_.present({
-            320, 200, frame.pixels,
-            std::span<const std::uint8_t, 768>(frame.palette)});
+        auto cursor_x_byte = 10;
+        auto cursor_y = 125;
+        for (std::size_t offset = 0; offset < text.size();) {
+            if (text[offset] == ' ') {
+                ++cursor_x_byte;
+                ++offset;
+            } else if (offset + 1U < text.size() &&
+                       text[offset] == '#' && text[offset + 1U] == '#') {
+                cursor_x_byte = 10;
+                cursor_y += 16;
+                offset += 2U;
+            } else {
+                cursor_x_byte += 4;
+                offset += std::min<std::size_t>(2U, text.size() - offset);
+            }
+        }
+
+        auto indicator = std::size_t{149};
         while (true) {
-            const auto action = platform_.wait_for_input();
+            auto shown = frame;
+            if (indicator < menu_sprites_.sprites().size()) {
+                const auto& info = menu_sprites_.sprites()[indicator];
+                blit(shown, menu_sprites_.pixels(indicator),
+                     info.width, info.height,
+                     cursor_x_byte * 4, cursor_y);
+            }
+            platform_.present({
+                320, 200, shown.pixels,
+                std::span<const std::uint8_t, 768>(shown.palette)});
+            const auto action = platform_.poll_input();
             if (action == InputAction::quit) {
                 quit_requested_ = true;
                 return false;
             }
-            if (action == InputAction::confirm ||
-                action == InputAction::cancel) {
+            if (action != InputAction::none) {
                 return true;
             }
+            platform_.delay_for(std::chrono::milliseconds(20));
+            ++indicator;
+            if (indicator == 153U) indicator = 149U;
         }
     }
 
