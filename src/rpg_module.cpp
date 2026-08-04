@@ -691,8 +691,11 @@ public:
             // (opcode 46) uses y=0; every other dialogue mode uses y=112.
             // Text begins at byte column ten and panel_y+13, wrapping at
             // byte column 72: 62 Mode-X columns = 248 linear pixels.
+            // 49d0/70a6 uses the default DATA:6ae5 value 00h for event
+            // dialogue. Render a one-bit host mask first because an indexed
+            // zero glyph cannot share the page buffer's zero background.
             const auto page = render_dialogue_page(
-                font_, text, offset, 248, 64, 15, &name_font_);
+                font_, text, offset, 248, 64, 1, &name_font_);
             auto frame = event_scene();
             const auto panel_top = opcode == 46 ? 0 : 112;
             const auto text_left = 10 * 4;
@@ -707,7 +710,7 @@ public:
                     const auto destination_x = text_left + static_cast<int>(x);
                     if (destination_y < 200 && destination_x < 320) {
                         frame.pixels[static_cast<std::size_t>(destination_y) * 320U +
-                                     static_cast<std::size_t>(destination_x)] = color;
+                                     static_cast<std::size_t>(destination_x)] = 0;
                     }
                 }
             }
@@ -3091,7 +3094,7 @@ private:
         draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                 4, 112, 7, 4);
         draw_legacy_text(frame, item_font_, text,
-                         10 * 4, 125, 240, 64, 15);
+                         10 * 4, 125, 240, 64, 0);
     }
 
     bool show_bottom_message(Viewport frame,

@@ -5537,7 +5537,7 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
             "RPG entity-dialogue run did not terminate normally");
     require(platform.presented == 4 && platform.music_calls == 1 &&
                 platform.stop_calls == 1 && platform.frame_hashes.size() == 4 &&
-                platform.frame_hashes[2] == 1574579943213790046ULL,
+                platform.frame_hashes[2] == 11090360449926961838ULL,
             "RPG did not present dialogue and manage map music in-process");
 }
 
@@ -5728,7 +5728,7 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
                 swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 platform.frame_hashes.size() == 12 &&
-                platform.frame_hashes[10] == 5264084512101039870ULL,
+                platform.frame_hashes[10] == 10500058587234137480ULL,
             "RPG opcode-46 top-dialogue run did not terminate normally");
 }
 
