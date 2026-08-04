@@ -921,7 +921,7 @@ public:
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                     4, 112, 7, 4);
             draw_legacy_text(frame, item_font_, shop_prompt_,
-                             10 * 4, 141, 240, 16, 15);
+                             10 * 4, 141, 240, 16, 0);
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                     15, 30, 5, 5);
             draw_rpg_selector_scrollbar(
@@ -940,7 +940,7 @@ public:
                     draw_legacy_text(
                         frame, item_font_,
                         inventory_category_labels_.subspan(label, 4),
-                        41 * 4, 17, 32, 16, 15);
+                        41 * 4, 17, 32, 16, 0);
                 }
             }
 
@@ -951,7 +951,7 @@ public:
                 const auto item_id = item_ids[index];
                 const auto top = 43 + static_cast<int>(row) * 16;
                 draw_item_text(frame, item_texts_, item_font_, item_id,
-                               92, top, 96, 15, 15);
+                               92, top, 96, 15, 0);
                 if (item_id < items_.size()) {
                     draw_menu_number(frame, menu_sprites_,
                                      items_.at(item_id).price,

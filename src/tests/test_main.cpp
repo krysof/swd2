@@ -6971,7 +6971,10 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 no_context.shared_state.u16(0x104) == 100U &&
                 no_context.shared_state.u16(0x382) == 0U &&
                 no_platform.cursor == no_platform.actions.size() &&
-                no_platform.presented >= 6U,
+                no_platform.presented == 9U &&
+                no_platform.frame_hashes[4] == 2974691146617333747ULL &&
+                no_platform.frame_hashes[7] == no_platform.frame_hashes[4] &&
+                no_platform.frame_hashes[8] == no_platform.frame_hashes[0],
             "RPG 5884 purchase confirmation did not preserve state on No");
 
     auto [yes_database, yes_state] = prepare();
@@ -6991,7 +6994,10 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 yes_context.shared_state.u16(0x104) == 75U &&
                 yes_context.shared_state.u16(0x382) == 117U &&
                 yes_platform.cursor == yes_platform.actions.size() &&
-                yes_platform.presented >= 5U,
+                yes_platform.presented == 8U &&
+                yes_platform.frame_hashes[4] == 2974691146617333747ULL &&
+                yes_platform.frame_hashes[6] == 2389578071134734502ULL &&
+                yes_platform.frame_hashes[7] == yes_platform.frame_hashes[0],
             "RPG 5884 purchase confirmation did not commit the default Yes");
 
     auto [error_database, error_state] = prepare();
