@@ -416,8 +416,12 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 // compare unequal before it installs the destination area.
                 state.set_u8(0x459, 0);
                 load_map_location(state, *map_database, arg(0));
+                result.relocated_area = map_database->location_at_directory_offset(
+                    static_cast<std::uint16_t>(arg(0) & 0x1fffU)).area;
+                area = &*result.relocated_area;
+                host.map_relocated(*area);
                 result.requested_map_reload = true;
-                return result;
+                break;
             case 38:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
                     result.status = EventVmStatus::unsupported_opcode;

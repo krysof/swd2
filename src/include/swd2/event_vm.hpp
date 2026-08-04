@@ -57,6 +57,9 @@ public:
                                                            InventoryUiMode) {
         return run_inventory(state);
     }
+    // Opcode 37 replaces RPG.EXE's transient current-area arrays immediately;
+    // later commands in the same event render and mutate the destination.
+    virtual void map_relocated(const MapAreaRecord&) {}
 };
 
 enum class EventVmStatus {
@@ -75,6 +78,10 @@ struct EventVmResult {
     // Map-changing commands are reloaded by the in-process RPG module rather
     // than terminating and re-executing RPG.EXE.
     bool requested_map_reload{};
+    // Transient current-area state after opcode 37. Direct entity operations
+    // after relocation must survive the portable module's resource-loop
+    // restart, but remain separate from persistent opcode-34 MAPZ writes.
+    std::optional<MapAreaRecord> relocated_area;
 };
 
 // Executes the stateful, platform-independent subset of RPG.EXE's 62-opcode

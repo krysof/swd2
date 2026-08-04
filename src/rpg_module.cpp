@@ -506,14 +506,14 @@ PlanarSpriteSet load_de_sprite(const std::filesystem::path& game_root,
     return PlanarSpriteSet::load(dictionary, layout);
 }
 
-void draw_entities(Viewport& viewport, const MapLocationRecord& location,
+void draw_entities(Viewport& viewport, const MapAreaRecord& area,
                    const SharedState& state, const std::filesystem::path& game_root,
                    const SpriteArchive& actors,
                    std::map<std::uint16_t, PlanarSpriteSet>& animation_sets) {
     const auto cell_base = state.u16(0x40f);
     const auto map_width = state.map_width();
-    for (std::size_t index = 0; index < location.area.entity_count(); ++index) {
-        const auto entity = map_entity(location.area, index);
+    for (std::size_t index = 0; index < area.entity_count(); ++index) {
+        const auto entity = map_entity(area, index);
         if (entity.behavior == 3 || entity.cell_offset < cell_base ||
             ((entity.cell_offset - cell_base) & 1U) != 0) {
             continue;
@@ -675,6 +675,31 @@ public:
         // that timing without the original busy loop.
         platform_.delay_for(std::chrono::milliseconds(
             (static_cast<std::uint64_t>(ticks) * 1000U + 69U) / 70U));
+    }
+
+    void map_relocated(const MapAreaRecord& area) override {
+        relocated_area_ = &area;
+        auto graphics = normalize_dos_asset_path(state_.area_graphics_path());
+        auto layout = normalize_dos_asset_path(state_.area_collision_path());
+        graphics.replace_extension();
+        layout.replace_extension();
+        relocated_map_ = MapResource::load(game_root_ / graphics,
+                                           game_root_ / layout);
+        if (!relocated_actors_) {
+            relocated_actors_ = SpriteArchive::parse(
+                decode_rsk_block(read_file(game_root_ / "MAN1.RSK")).data);
+        }
+        state_.set_u16(0x417, relocated_map_->layout().width);
+        state_.set_u16(0x419, relocated_map_->layout().height);
+        const auto viewport_cells =
+            (static_cast<std::size_t>(state_.viewport_y()) *
+                 relocated_map_->layout().width +
+             state_.viewport_x()) * 2U;
+        if (state_.u16(0x40d) >= viewport_cells) {
+            state_.set_u16(0x40f, static_cast<std::uint16_t>(
+                                      state_.u16(0x40d) - viewport_cells));
+        }
+        relocated_animation_sets_.clear();
     }
 
     bool present_event_command(std::uint16_t opcode,
@@ -2996,7 +3021,18 @@ private:
     }
 
     Viewport event_scene() {
-        auto frame = scene_provider_();
+        auto frame = [&]() {
+            if (!relocated_map_ || relocated_area_ == nullptr ||
+                !relocated_actors_) {
+                return scene_provider_();
+            }
+            auto viewport = crop_map(relocated_map_->render(true),
+                                     state_.viewport_x(), state_.viewport_y());
+            draw_entities(viewport, *relocated_area_, state_, game_root_,
+                          *relocated_actors_, relocated_animation_sets_);
+            draw_actor(viewport, *relocated_actors_, state_);
+            return viewport;
+        }();
         if (cutscene_) {
             frame.palette = cutscene_->palette();
             const auto frame_index = static_cast<std::size_t>(state_.u16(0x411)) %
@@ -3111,6 +3147,10 @@ private:
     bool palette_dark_{};
     bool monochrome_event_page_{};
     bool quit_requested_{};
+    const MapAreaRecord* relocated_area_{};
+    std::optional<MapResource> relocated_map_;
+    std::optional<SpriteArchive> relocated_actors_;
+    std::map<std::uint16_t, PlanarSpriteSet> relocated_animation_sets_;
 };
 
 std::optional<std::size_t> entity_in_front(const MapLocationRecord& location,
@@ -3364,6 +3404,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3a60, 40U);
     RpgEntityRuntime entity_runtime;
     FieldActionRuntime field_action_runtime;
+    std::optional<MapAreaRecord> relocated_transient_area;
     while (true) {
     auto graphics_relative = normalize_dos_asset_path(context.shared_state.area_graphics_path());
     auto layout_relative = normalize_dos_asset_path(context.shared_state.area_collision_path());
@@ -3386,6 +3427,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
     // a map reload rather than modifying the source MAPZ record.
     auto location = map_database.location_at_directory_offset(
         context.shared_state.map_location_directory_offset());
+    if (relocated_transient_area) {
+        location.area = std::move(*relocated_transient_area);
+        relocated_transient_area.reset();
+    }
     context.shared_state.set_u16(0x417, map.layout().width);
     context.shared_state.set_u16(0x419, map.layout().height);
     if (pending_map_reload_) {
@@ -3428,7 +3473,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
         const auto rendered = map.render(true);
         auto viewport = crop_map(rendered, context.shared_state.viewport_x(),
                                  context.shared_state.viewport_y());
-        draw_entities(viewport, location, context.shared_state, context.game_root, actors,
+        draw_entities(viewport, location.area, context.shared_state, context.game_root, actors,
                       animation_sets);
         draw_actor(viewport, actors, context.shared_state);
         return viewport;
@@ -3437,6 +3482,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
         Marker marker{Marker::none};
         bool quit{};
         bool map_reload{};
+        std::optional<MapAreaRecord> relocated_area;
     };
     const auto run_entity_event = [&](std::size_t entity_index) {
         RpgEventHost host(context.platform, event_font, name_font, item_font,
@@ -3471,7 +3517,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
             &location.area, entity_index, host, 10'000, &map_database);
         return EntityEventOutcome{result.requested_marker,
                                   host.quit_requested(),
-                                  result.requested_map_reload};
+                                  result.requested_map_reload,
+                                  std::move(result.relocated_area)};
     };
     while (true) {
         auto viewport = compose_scene();
@@ -3523,7 +3570,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
         }
         if (action == InputAction::confirm) {
             if (const auto entity = entity_in_front(location, context.shared_state, map)) {
-                const auto outcome = run_entity_event(*entity);
+                auto outcome = run_entity_event(*entity);
                 if (outcome.quit) {
                     context.platform.stop_audio();
                     return Marker::none;
@@ -3535,6 +3582,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                 if (outcome.map_reload) {
                     // Restart the outer resource-loading loop. The cached MAPZ
                     // database (including opcode-34 mutations) remains alive.
+                    relocated_transient_area = std::move(outcome.relocated_area);
                     pending_map_reload_ = true;
                     break;
                 }
@@ -3583,7 +3631,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                                           action, target_x, target_y)) {
               if (const auto entity = entity_in_front(
                       location, context.shared_state, map, true)) {
-                const auto outcome = run_entity_event(*entity);
+                auto outcome = run_entity_event(*entity);
                 if (outcome.quit) {
                     context.platform.stop_audio();
                     return Marker::none;
@@ -3593,6 +3641,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                     return outcome.marker;
                 }
                 if (outcome.map_reload) {
+                    relocated_transient_area = std::move(outcome.relocated_area);
                     pending_map_reload_ = true;
                     break;
                 }

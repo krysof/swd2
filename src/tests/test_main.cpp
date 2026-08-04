@@ -4732,6 +4732,10 @@ public:
         ++inventories;
         return inventory_result;
     }
+    void map_relocated(const swd2::MapAreaRecord& area) override {
+        ++map_relocations;
+        relocated_entity_count = area.entity_count();
+    }
 
     std::size_t dialogues{};
     std::size_t dialogue_bytes{};
@@ -4747,6 +4751,8 @@ public:
     std::size_t shops{};
     bool accept_shops{true};
     std::size_t inventories{};
+    std::size_t map_relocations{};
+    std::size_t relocated_entity_count{};
     std::optional<swd2::InventoryUiResult> inventory_result{
         swd2::InventoryUiResult::cancelled};
 };
@@ -4972,15 +4978,25 @@ void test_event_vm(const std::filesystem::path& game_root) {
     }
 
     const std::vector<std::vector<std::uint8_t>> relocation_records = {
-        event_words({37, 10, 0xffff}),
+        event_words({37, 10, 3, 3, 7, 41, 9, 0xffff}),
     };
     const auto relocation_archive =
         swd2::ScriptArchive::from_records(relocation_records);
     const auto& destination = world.location_at_directory_offset(10);
+    const auto destination_behavior = destination.area.entity_fields[3][0];
+    const auto money_before_relocation = state.u16(0x104);
     const auto relocation = swd2::execute_event(
-        relocation_archive, 2, state, &area, 1, host, 10'000, &world);
+        relocation_archive, 2, state, &area, 0, host, 10'000, &world);
     require(relocation.status == swd2::EventVmStatus::completed &&
-                relocation.requested_map_reload && state.u16(0x424) == 10 &&
+                relocation.requested_map_reload && relocation.commands_executed == 3 &&
+                relocation.last_opcode == 41 && relocation.relocated_area &&
+                relocation.relocated_area->entity_fields[3][0] == 7 &&
+                world.location_at_directory_offset(10).area.entity_fields[3][0] ==
+                    destination_behavior &&
+                host.map_relocations == 1 &&
+                host.relocated_entity_count == destination.area.entity_count() &&
+                state.u16(0x104) == money_before_relocation + 9U &&
+                state.u16(0x424) == 10 &&
                 state.u16(0x40d) == destination.map_position &&
                 state.viewport_x() == destination.viewport_x &&
                 state.viewport_y() == destination.viewport_y &&
@@ -4991,7 +5007,7 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 state.music_path() == destination.area.music_path &&
                 state.event_executable_path() == destination.area.event_archive_path &&
                 state.event_data_path() == destination.area.event_font_path,
-            "event opcode 37 did not install the destination MAPZ location");
+            "event opcode 37 did not continue on the transient destination area");
     for (std::size_t i = 0; i < 12; ++i) {
         require(state.u16(0xa2 + i * 2) == destination.actor_direction,
                 "event opcode 37 did not synchronize actor directions");
