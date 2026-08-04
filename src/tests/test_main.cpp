@@ -5889,6 +5889,35 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
                 platform.frame_hashes[4] == platform.frame_hashes[2] &&
                 platform.frame_hashes[5] == platform.frame_hashes[0],
             "RPG field-menu page selection/return frames were not stable");
+
+    ScriptedPlatform reopen_platform;
+    reopen_platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::cancel,   // store 37fd/37ff
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,   // reopen field diamond
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,  // inventory resumes on row two
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto reopen_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::GameContext reopen_context{
+        game_root, reopen_state, reopen_platform};
+    require(swd2::RpgModule().run(
+                reopen_context, swd2::Marker::menu_ready) ==
+                    swd2::Marker::none &&
+                reopen_platform.cursor == reopen_platform.actions.size() &&
+                reopen_platform.frame_hashes.size() == 13U &&
+                reopen_platform.frame_hashes[5] ==
+                    reopen_platform.frame_hashes[10] &&
+                reopen_platform.frame_hashes[5] == 12052809785493428505ULL,
+            "RPG 39ed did not restore 37fd/37ff after reopening inventory");
 }
 
 void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {

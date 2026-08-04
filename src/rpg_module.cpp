@@ -41,6 +41,15 @@ struct Viewport {
     std::array<std::uint8_t, 768> palette{};
 };
 
+// RPG stores these menu cursors in DATA rather than on the stack. 37fd/37ff
+// retain the normal inventory row/window across openings, while 35e6 retains
+// the last directional item-action choice for the whole RPG invocation.
+struct RpgMenuRuntime {
+    std::size_t inventory_selected{};
+    std::size_t inventory_first_visible{};
+    std::size_t item_action_choice{};
+};
+
 std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) throw std::runtime_error("RPG module cannot open " + path.string());
@@ -631,7 +640,8 @@ public:
                  FieldActionRuntime& field_action_runtime,
                  SharedState& state, std::filesystem::path game_root,
                  std::filesystem::path* playing_music,
-                 bool& music_enabled, bool& sound_enabled)
+                 bool& music_enabled, bool& sound_enabled,
+                 RpgMenuRuntime& menu_runtime)
         : platform_(platform), font_(font), name_font_(name_font),
           item_font_(item_font), items_(items), item_texts_(item_texts),
           menu_sprites_(menu_sprites), equipment_art_(equipment_art),
@@ -676,7 +686,7 @@ public:
           field_action_runtime_(field_action_runtime), state_(state),
           game_root_(std::move(game_root)), playing_music_(playing_music),
           music_enabled_(music_enabled), sound_enabled_(sound_enabled),
-          frame_delay_ticks_(state.u16(0x406)) {}
+          menu_runtime_(menu_runtime), frame_delay_ticks_(state.u16(0x406)) {}
 
     void show_dialogue(std::uint16_t opcode,
                        std::span<const std::uint8_t> text) override {
@@ -1188,12 +1198,18 @@ public:
     std::optional<InventoryUiResult> run_inventory(
         SharedState& state, InventoryUiMode mode) override {
         InventorySystem inventory(state, items_);
-        std::size_t selected = 0;
-        std::size_t first_visible = 0;
+        std::size_t selected = std::min<std::size_t>(
+            menu_runtime_.inventory_selected, inventory_slot_count - 1U);
+        std::size_t first_visible = std::min<std::size_t>(
+            menu_runtime_.inventory_first_visible,
+            inventory_slot_count - 8U);
+        selected = std::clamp(
+            selected, first_visible,
+            std::min(inventory_slot_count - 1U, first_visible + 7U));
         // DATA:35e6 is shared by successive entries into RPG:2d0f, so the
-        // directional choice remains where the player last left it while the
-        // surrounding 39ed inventory stays open.
-        std::size_t item_action_choice = 0;
+        // direction remains where the player last left it even after closing
+        // and reopening the field diamond.
+        auto& item_action_choice = menu_runtime_.item_action_choice;
         auto scroll_cue = RpgListSelection::ScrollCue::none;
         while (true) {
             auto frame = scene_provider_();
@@ -1275,7 +1291,14 @@ public:
                 quit_requested_ = true;
                 return InventoryUiResult::cancelled;
             }
-            if (action == InputAction::cancel) return InventoryUiResult::cancelled;
+            if (action == InputAction::cancel) {
+                if (mode != InventoryUiMode::sell) {
+                    // 3a82..3a92 is deliberately skipped by the selling path.
+                    menu_runtime_.inventory_selected = selected;
+                    menu_runtime_.inventory_first_visible = first_visible;
+                }
+                return InventoryUiResult::cancelled;
+            }
             if (action != InputAction::confirm) {
                 const auto selection = rpg_list_selection_input(
                     {selected, first_visible}, inventory_slot_count,
@@ -3608,6 +3631,7 @@ private:
     std::filesystem::path* playing_music_{};
     bool& music_enabled_;
     bool& sound_enabled_;
+    RpgMenuRuntime& menu_runtime_;
     std::optional<PlanarSpriteSet> cutscene_;
     std::map<std::uint16_t, SpriteArchive> item_preview_cache_;
     std::optional<std::uint16_t> cutscene_dictionary_id_;
@@ -3923,6 +3947,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
     RpgEntityRuntime entity_runtime;
     RpgWorldStepRuntime world_step_runtime;
     FieldActionRuntime field_action_runtime;
+    RpgMenuRuntime menu_runtime;
     std::optional<MapAreaRecord> relocated_transient_area;
     while (true) {
     // RPG:10fd installs a fresh transient entity array for every area load;
@@ -4045,7 +4070,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
             &context.load_slot, &context.map_database,
             field_action_runtime,
             context.shared_state, context.game_root, &playing_music,
-            music_enabled_, sound_enabled_);
+            music_enabled_, sound_enabled_, menu_runtime);
     };
     const auto run_entity_event = [&](std::size_t entity_index) {
         // RPG:52b4 saves the entity's current facing, turns it toward the
