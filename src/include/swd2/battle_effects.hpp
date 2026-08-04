@@ -54,8 +54,8 @@ MonsterTurnStatusResult advance_monster_turn_status(
     const BattleRandom& random);
 
 // Portable view of the actor fields used by FIG's support-effect handlers
-// 447b..478f. The otherwise opaque +3d/+45/+4f words are retained by offset
-// because their exact narrative/stat labels are not yet proven.
+// 447b..478f. RPG's status page identifies +3d/+45 as strength/wisdom. Effect
+// 26 increments both persistent reaction +4f and the live battle value +5d.
 struct PlayerSupportState {
     std::uint16_t hit_points{};                 // +2d
     std::uint16_t maximum_hit_points{};         // +2f
@@ -65,9 +65,9 @@ struct PlayerSupportState {
     std::uint16_t maximum_ability_points{};     // +57
     std::uint16_t status_bits{};                // +08
     std::uint16_t physical_attack{};            // +0c
-    std::uint16_t field_3d{};
-    std::uint16_t field_45{};
-    std::uint16_t field_4f{};
+    std::uint16_t strength{};                    // +3d
+    std::uint16_t wisdom{};                      // +45
+    std::uint16_t base_reaction{};               // +4f
     std::uint16_t speed{};                      // +5d
 };
 

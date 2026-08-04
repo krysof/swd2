@@ -33,9 +33,9 @@ struct BattlePartyMember {
     std::uint16_t initiative_range{};
     std::uint16_t secondary_points{};  // +35, classes 2/3
     std::uint16_t maximum_secondary_points{};  // +37
-    std::uint16_t field_3d{};
-    std::uint16_t field_45{};
-    std::uint16_t field_4f{};
+    std::uint16_t strength{};            // +3d
+    std::uint16_t wisdom{};              // +45
+    std::uint16_t base_reaction{};       // +4f; persistent half of live +5d
     std::uint16_t ability_points{};    // +55, classes 1/4
     std::uint16_t maximum_ability_points{};
     std::uint16_t speed{};
@@ -78,7 +78,7 @@ struct BattlePartyMember {
         return {hit_points, maximum_hit_points,
                 secondary_points, maximum_secondary_points,
                 ability_points, maximum_ability_points,
-                status_bits, physical_attack, field_3d, field_45, field_4f, speed};
+                status_bits, physical_attack, strength, wisdom, base_reaction, speed};
     }
     void apply_support_target(const PlayerSupportState& state) noexcept {
         hit_points = state.hit_points;
@@ -89,9 +89,9 @@ struct BattlePartyMember {
         maximum_ability_points = state.maximum_ability_points;
         status_bits = state.status_bits;
         physical_attack = state.physical_attack;
-        field_3d = state.field_3d;
-        field_45 = state.field_45;
-        field_4f = state.field_4f;
+        strength = state.strength;
+        wisdom = state.wisdom;
+        base_reaction = state.base_reaction;
         speed = state.speed;
     }
 };

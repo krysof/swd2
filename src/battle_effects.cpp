@@ -211,7 +211,7 @@ PlayerSupportResult apply_player_support_effect(
     PlayerSupportRuntime local_runtime{};
     auto& operands = runtime != nullptr ? *runtime : local_runtime;
 
-    const auto caster_bonus = static_cast<std::uint16_t>(players[caster].field_45 >> 2U);
+    const auto caster_bonus = static_cast<std::uint16_t>(players[caster].wisdom >> 2U);
     const auto living_normal = [](const PlayerSupportState& player) {
         return (player.status_bits & 0xe000U) == 0;
     };
@@ -350,7 +350,7 @@ PlayerSupportResult apply_player_support_effect(
             operands.primary_operand = flat[effect_code - 0x19];
             if (living_normal(player)) {
                 heal_fixed(player.ability_points, player.maximum_ability_points,
-                           operands.primary_operand, player.field_45);
+                           operands.primary_operand, player.wisdom);
             }
             break;
         }
@@ -382,16 +382,16 @@ PlayerSupportResult apply_player_support_effect(
             break;
         case 0x24:
             operands.primary_operand = 0x3d;
-            player.field_3d = static_cast<std::uint16_t>(player.field_3d + 3U);
+            player.strength = static_cast<std::uint16_t>(player.strength + 3U);
             player.physical_attack = static_cast<std::uint16_t>(player.physical_attack + 3U);
             break;
         case 0x25:
             operands.primary_operand = 0x45;
-            player.field_45 = static_cast<std::uint16_t>(player.field_45 + 3U);
+            player.wisdom = static_cast<std::uint16_t>(player.wisdom + 3U);
             break;
         case 0x26:
             operands.primary_operand = 0x4f;
-            player.field_4f = static_cast<std::uint16_t>(player.field_4f + 3U);
+            player.base_reaction = static_cast<std::uint16_t>(player.base_reaction + 3U);
             player.speed = static_cast<std::uint16_t>(player.speed + 3U);
             break;
         case 0x27:

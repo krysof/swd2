@@ -43,9 +43,9 @@ BattlePartyMember BattlePartyMember::load(
     result.initiative_range = state.u16(base + 0x33);
     result.secondary_points = state.u16(base + 0x35);
     result.maximum_secondary_points = state.u16(base + 0x37);
-    result.field_3d = state.u16(base + 0x3d);
-    result.field_45 = state.u16(base + 0x45);
-    result.field_4f = state.u16(base + 0x4f);
+    result.strength = state.u16(base + 0x3d);
+    result.wisdom = state.u16(base + 0x45);
+    result.base_reaction = state.u16(base + 0x4f);
     result.ability_points = state.u16(base + 0x55);
     result.maximum_ability_points = state.u16(base + 0x57);
     result.speed = state.u16(base + 0x5d);
@@ -70,9 +70,9 @@ void BattlePartyMember::store(SharedState& state) const {
     state.set_u16(base + 0x33, initiative_range);
     state.set_u16(base + 0x35, secondary_points);
     state.set_u16(base + 0x37, maximum_secondary_points);
-    state.set_u16(base + 0x3d, field_3d);
-    state.set_u16(base + 0x45, field_45);
-    state.set_u16(base + 0x4f, field_4f);
+    state.set_u16(base + 0x3d, strength);
+    state.set_u16(base + 0x45, wisdom);
+    state.set_u16(base + 0x4f, base_reaction);
     state.set_u16(base + 0x55, ability_points);
     state.set_u16(base + 0x57, maximum_ability_points);
     state.set_u16(base + 0x5d, speed);

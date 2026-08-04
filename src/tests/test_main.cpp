@@ -1290,10 +1290,10 @@ void test_field_actions(const std::filesystem::path& game_root) {
                 state.u16(base + 8) == 0x0400,
             "RPG action 1fh did not clear the paired 0100/0200 status mask");
     const auto attack = state.u16(base + 0x0c);
-    const auto field_3d = state.u16(base + 0x3d);
+    const auto strength = state.u16(base + 0x3d);
     require(actions.apply(0x24, 0).status == swd2::FieldActionStatus::applied &&
                 state.u16(base + 0x0c) == static_cast<std::uint16_t>(attack + 3) &&
-                state.u16(base + 0x3d) == static_cast<std::uint16_t>(field_3d + 3),
+                state.u16(base + 0x3d) == static_cast<std::uint16_t>(strength + 3),
             "RPG permanent action 24h did not update both linked actor words");
 
     state.set_u16(0x408, 0x4000);
@@ -2363,8 +2363,8 @@ void test_battle_party(const std::filesystem::path& game_root) {
                 member.physical_defense == 30 && member.hit_points == 59 &&
                 member.maximum_hit_points == 59 && member.level == 9 &&
                 member.initiative_range == 14 && member.secondary_points == 52 &&
-                member.maximum_secondary_points == 52 && member.field_3d == 30 &&
-                member.field_45 == 60 && member.field_4f == 22 &&
+                member.maximum_secondary_points == 52 && member.strength == 30 &&
+                member.wisdom == 60 && member.base_reaction == 22 &&
                 member.ability_points == 36 &&
                 member.maximum_ability_points == 36 && member.speed == 26 &&
                 member.evasion == 1 && member.abilities[0] == 76 &&
@@ -2420,9 +2420,9 @@ void test_battle_party(const std::filesystem::path& game_root) {
     member.physical_attack = 99;
     member.ability_points = 7;
     member.maximum_secondary_points = 44;
-    member.field_3d = 45;
-    member.field_45 = 46;
-    member.field_4f = 47;
+    member.strength = 45;
+    member.wisdom = 46;
+    member.base_reaction = 47;
     member.speed = 8;
     member.evasion = 9;
     member.abilities[2] = 5;
@@ -2695,7 +2695,7 @@ void test_battle_effects(const std::filesystem::path& game_root) {
                 support[1].secondary_points == 80 && support[1].status_bits == 0,
             "FIG support healing/status-clear effect 10 was not reproduced");
     const auto temporary_buff = swd2::apply_player_support_effect(0x24, 0, 1, support);
-    require(temporary_buff.supported && support[1].field_3d == 8 &&
+    require(temporary_buff.supported && support[1].strength == 8 &&
                 support[1].physical_attack == 23,
             "FIG paired +3 support buff effect 24 was not reproduced");
     support[1].status_bits = 0x22fe;
@@ -2711,7 +2711,7 @@ void test_battle_effects(const std::filesystem::path& game_root) {
     std::array<swd2::PlayerSupportState, 2> resurrection_quirk{};
     resurrection_quirk[0].hit_points = 1;
     resurrection_quirk[0].maximum_hit_points = 1;
-    resurrection_quirk[0].field_45 = 40;
+    resurrection_quirk[0].wisdom = 40;
     resurrection_quirk[1].hit_points = 1;
     resurrection_quirk[1].maximum_hit_points = 100;
     resurrection_quirk[1].secondary_points = 1;
