@@ -2984,7 +2984,12 @@ private:
                 return std::nullopt;
             }
             if (action == InputAction::cancel) return std::nullopt;
-            if (action == InputAction::left && selected != 0U) --selected;
+            // 4e9d..4ead has the same asymmetric edge rule as the save-slot
+            // selector: Left from the first value jumps to the fifth, while
+            // Right at the fifth value remains clamped.
+            if (action == InputAction::left) {
+                selected = selected == 0U ? 4U : selected - 1U;
+            }
             else if (action == InputAction::right && selected != 4U) ++selected;
             else if (action == InputAction::confirm) {
                 // 4ef7 preserves AX across 46cc and commits it only when the
