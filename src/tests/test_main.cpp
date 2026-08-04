@@ -25,6 +25,7 @@
 #include "swd2/meo.hpp"
 #include "swd2/map_resource.hpp"
 #include "swd2/map_database.hpp"
+#include "swd2/map_transition_database.hpp"
 #include "swd2/meo_module.hpp"
 #include "swd2/mon_database.hpp"
 #include "swd2/monster_definition.hpp"
@@ -1307,6 +1308,14 @@ void test_map_resource(const std::filesystem::path& game_root) {
                            original.begin() + static_cast<std::ptrdiff_t>(offset - 3U)),
                 "RPG 5e16 palette cycle did not shift an RGB triplet");
     }
+
+    const auto padded = swd2::MapResource::load(game_root / "T2" / "HOL2");
+    require((padded.cells().back() & 0x07ffU) >= padded.tile_count(),
+            "HOL2 unreachable RAP padding oracle changed");
+    const auto padded_image = padded.render(true);
+    require(padded_image.width == 1440U && padded_image.height == 1440U &&
+                padded_image.pixels.back() == 0U,
+            "portable full-map renderer dereferenced unreachable RAP padding");
 }
 
 void test_map_database(const std::filesystem::path& game_root) {
@@ -1341,6 +1350,50 @@ void test_map_database(const std::filesystem::path& game_root) {
                 location.area.event_archive_path == "CHNA1.EXE" &&
                 location.area.event_font_path == "CHNA1.DSK",
             "MAPZ AREA1 resource pointers were not decoded");
+}
+
+void test_map_transition_database(const std::filesystem::path& game_root) {
+    const auto transitions =
+        swd2::MapTransitionDatabase::load(game_root / "MAP0.EXE");
+    std::size_t special_count = 0;
+    std::size_t relative_count = 0;
+    std::size_t travel_flag_count = 0;
+    for (std::uint16_t directory_offset = 10; directory_offset < 314;
+         directory_offset = static_cast<std::uint16_t>(directory_offset + 2U)) {
+        for (const auto& record : transitions.records(directory_offset)) {
+            special_count += record.is_special();
+            relative_count += record.uses_relative_placement();
+            travel_flag_count += record.sets_travel_flag();
+        }
+    }
+    require(transitions.area_count() == 152U &&
+                transitions.record_count() == 481U &&
+                special_count == 25U && relative_count == 20U &&
+                travel_flag_count == 35U,
+            "MAP0 transition directory dimensions changed");
+
+    const auto initial = transitions.match(0xe00a, 0x25ae, 180);
+    require(initial && initial->row_count == 1U &&
+                initial->flag_index == 0U &&
+                initial->first_cell == 0x25aeU &&
+                initial->last_cell == 0x25aeU &&
+                initial->action == 0x200aU &&
+                initial->sets_travel_flag() && !initial->is_special() &&
+                initial->destination_directory_offset() == 10U,
+            "MAP0 initial AREA1 portal was not decoded");
+
+    const auto last_row = static_cast<std::uint16_t>(
+        0x70bcU + 46U * 180U * 2U);
+    const auto rectangular = transitions.match(0x0034, last_row, 180);
+    require(rectangular && rectangular->row_count == 47U &&
+                rectangular->first_cell == 0x70bcU &&
+                rectangular->last_cell == 0x710cU &&
+                rectangular->is_special() &&
+                rectangular->special_action() == 7U &&
+                !transitions.match(0x0034,
+                                   static_cast<std::uint16_t>(last_row + 0x52U),
+                                   180),
+            "MAP0 multi-row special-trigger expansion differs from e94");
 }
 
 void test_rpg_entity_system(const std::filesystem::path& game_root) {
@@ -5366,6 +5419,131 @@ void test_rpg_idle_world_ticks(const std::filesystem::path& game_root) {
             "RPG world loop blocked for input or froze its RSK palette cycle");
 }
 
+void test_rpg_map_portal(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    const auto map = swd2::MapResource::load(game_root / "T1" / "AREA1");
+    require(map.layout().width == 180U && map.layout().height == 180U,
+            "AREA1 portal oracle dimensions changed");
+
+    ScriptedPlatform platform;
+    platform.actions = {swd2::InputAction::quit};
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    // AREA1's second MAP0 record spans 4748h..474ch and carries action 200ch.
+    // Position the actor's centre over its first 1000h-marked RAP cell while
+    // keeping the ordinary 38/80 screen anchor.
+    state.set_viewport_x(100);
+    state.set_viewport_y(38);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+                              state.u16(0x40f) +
+                              (38U * map.layout().width + 100U) * 2U));
+    state.set_u16(0x40a, 0xffffU);
+    state.set_u8(0x51f, 0U);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto portal_marker = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(portal_marker == swd2::Marker::none &&
+                platform.presented == 2U && platform.poll_calls == 1U &&
+                platform.music_calls == 2U && platform.stop_calls == 1U &&
+                platform.frame_hashes[1] == 3552891096873288051ULL &&
+                context.shared_state.map_location_directory_offset() == 12U &&
+                context.shared_state.u16(0x40a) == 1U &&
+                context.shared_state.u8(0x51f) == 1U &&
+                context.shared_state.area_graphics_path() ==
+                    database->location_at_directory_offset(12)
+                        .area.graphics_path,
+            "RPG e94 did not enter the initial MAP0 portal before input");
+    for (std::size_t actor = 0; actor < 12U; ++actor) {
+        require(context.shared_state.u16(0x42U + actor * 2U) == 0U,
+                "RPG 136c did not install the BMAN horizontal offsets");
+    }
+    static constexpr std::array<std::uint16_t, 4> bman_y_offsets = {
+        0xfff1U, 0xfff5U, 0xfff1U, 0xfff0U};
+    for (std::size_t group = 0; group < bman_y_offsets.size(); ++group) {
+        for (std::size_t actor = 0; actor < 3U; ++actor) {
+            require(context.shared_state.u16(
+                        0x5aU + group * 6U + actor * 2U) ==
+                        bman_y_offsets[group],
+                    "RPG 136c did not install the BMAN vertical offsets");
+        }
+    }
+}
+
+void test_rpg_map_special_event(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    const auto map = swd2::MapResource::load(game_root / "T1" / "AREA1");
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::confirm,  // close CHNA1 entry 160 dialogue
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    // MAP0 action 4002h at 1f50h calls 52b4 with BX=6, temporarily
+    // faces AREA1 entity three toward the leader and executes its 13eh event.
+    state.set_viewport_x(24);
+    state.set_viewport_y(10);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+                              state.u16(0x40f) +
+                              (10U * map.layout().width + 24U) * 2U));
+    const auto original_y = state.world_y();
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto marker = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(marker == swd2::Marker::none &&
+                platform.presented == 5U && platform.wait_calls == 1U &&
+                platform.poll_calls == 1U &&
+                context.shared_state.map_location_directory_offset() == 8U &&
+                context.shared_state.world_y() == original_y + 3U &&
+                database->location_at_directory_offset(8)
+                        .area.entity_fields[1][3] == 0U,
+            "RPG f19/52b4 did not dispatch and restore a map special event");
+}
+
+void test_rpg_map_actor_variant(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(state, *database, 188);
+    const auto& location = database->location_at_directory_offset(188);
+    auto graphics = swd2::normalize_dos_asset_path(location.area.graphics_path);
+    auto layout = swd2::normalize_dos_asset_path(location.area.layout_path);
+    graphics.replace_extension();
+    layout.replace_extension();
+    const auto map = swd2::MapResource::load(game_root / graphics,
+                                              game_root / layout);
+    require(map.layout().width == 180U && map.layout().height == 180U,
+            "DAU4 BMAN trigger oracle dimensions changed");
+    const auto map_base = static_cast<std::uint16_t>(
+        location.map_position -
+        (location.viewport_y * map.layout().width + location.viewport_x) * 2U);
+    state.set_u16(0x40f, map_base);
+    // DAU4's first 4007h rectangle begins at 1110h (world 20,12).
+    state.set_viewport_x(0);
+    state.set_viewport_y(0);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_u16(0x40d, map_base);
+    ScriptedPlatform platform;
+    platform.actions = {swd2::InputAction::none, swd2::InputAction::quit};
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto variant_marker = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(variant_marker == swd2::Marker::none &&
+                platform.presented == 2U && platform.poll_calls == 2U &&
+                platform.frame_hashes[0] == 15695675713870866150ULL &&
+                platform.frame_hashes[1] == 4319706213072156823ULL &&
+                context.shared_state.map_location_directory_offset() == 188U,
+            "RPG f19 action 7 did not replace BMAN1 with BMAN3");
+}
+
 void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
     auto database = std::make_shared<swd2::MapDatabase>(
         swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
@@ -7004,6 +7182,7 @@ int main(int argc, char** argv) {
         test_field_actions(argv[1]);
         test_map_resource(argv[1]);
         test_map_database(argv[1]);
+        test_map_transition_database(argv[1]);
         test_rpg_entity_system(argv[1]);
         test_save_slot(argv[1]);
         test_planar_sprite_set(argv[1]);
@@ -7022,6 +7201,9 @@ int main(int argc, char** argv) {
         test_monolithic_runtime(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
         test_rpg_idle_world_ticks(argv[1]);
+        test_rpg_map_portal(argv[1]);
+        test_rpg_map_special_event(argv[1]);
+        test_rpg_map_actor_variant(argv[1]);
         test_rpg_top_dialogue_panel(argv[1]);
         test_rpg_field_menu_inventory(argv[1]);
         test_rpg_inventory_item_actions(argv[1]);

@@ -139,7 +139,14 @@ IndexedMapImage MapResource::render(bool include_overlays) const {
         // tile*16 calculation also discards them, leaving an 11-bit index.
         const auto tile = static_cast<std::size_t>(encoded_tile & 0x07ffU);
         if (tile >= tile_count_) {
-            throw std::runtime_error("map references a tile outside RS planes");
+            // Several shipped RAPs keep unreachable padding words after the
+            // last scrollable viewport (often only the bottom-right word),
+            // and T2ROC/Z14/Z17/Z18 have a short padding run. The DOS renderer
+            // only walks the visible 40x25 window and never dereferences those
+            // words. A portable full-map backing image must likewise leave
+            // them blank instead of aborting before a reachable viewport can
+            // be cropped.
+            return;
         }
         const auto source = tile * 16;
         for (std::size_t row = 0; row < 8; ++row) {

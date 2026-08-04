@@ -9,6 +9,7 @@
 #include "swd2/item_database.hpp"
 #include "swd2/map_resource.hpp"
 #include "swd2/map_database.hpp"
+#include "swd2/map_transition_database.hpp"
 #include "swd2/legacy_font.hpp"
 #include "swd2/mz_executable.hpp"
 #include "swd2/rsk_decoder.hpp"
@@ -44,6 +45,33 @@ std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) throw std::runtime_error("RPG module cannot open " + path.string());
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+void install_map_actor_profile(SharedState& state, bool uses_man1) {
+    const auto x_offset = static_cast<std::uint16_t>(uses_man1 ? 1 : 0);
+    for (std::size_t actor = 0; actor < 12; ++actor) {
+        state.set_u16(0x42 + actor * 2U, x_offset);
+    }
+    const std::array<std::int16_t, 4> y_offsets = uses_man1
+        ? std::array<std::int16_t, 4>{-4, -2, -3, -4}
+        : std::array<std::int16_t, 4>{-15, -11, -15, -16};
+    for (std::size_t group = 0; group < y_offsets.size(); ++group) {
+        for (std::size_t actor = 0; actor < 3; ++actor) {
+            state.set_u16(0x5a + group * 6U + actor * 2U,
+                          static_cast<std::uint16_t>(y_offsets[group]));
+        }
+    }
+}
+
+SpriteArchive load_default_map_actors(const std::filesystem::path& game_root,
+                                      SharedState& state) {
+    // RPG:e94 calls 13b4 for area bit 8000h and 136c otherwise.  Besides
+    // choosing MAN1/BMAN1, those routines install the twelve horizontal and
+    // four groups of vertical sprite offsets used by 506d.
+    const auto uses_man1 = (state.u16(0x408) & 0x8000U) != 0U;
+    install_map_actor_profile(state, uses_man1);
+    return SpriteArchive::parse(decode_rsk_block(read_file(
+        game_root / (uses_man1 ? "MAN1.RSK" : "BMAN1.RSK"))).data);
 }
 
 std::vector<std::vector<std::uint8_t>> load_rpg_ability_descriptions(
@@ -711,10 +739,7 @@ public:
             }
             if (playing_music_) *playing_music_ = destination_music;
         }
-        if (!relocated_actors_) {
-            relocated_actors_ = SpriteArchive::parse(
-                decode_rsk_block(read_file(game_root_ / "MAN1.RSK")).data);
-        }
+        relocated_actors_ = load_default_map_actors(game_root_, state_);
         state_.set_u16(0x417, relocated_map_->layout().width);
         state_.set_u16(0x419, relocated_map_->layout().height);
         const auto viewport_cells =
@@ -3409,6 +3434,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
     const auto item_font = LegacyFont::load(context.game_root / "CHAIN.DSK");
     const auto items = ItemDatabase::load(context.game_root / "ITEM.EXE");
     const auto item_texts = ItemTextDatabase::load(context.game_root / "ITEM2.EXE");
+    const auto map_transitions =
+        MapTransitionDatabase::load(context.game_root / "MAP0.EXE");
     auto menu_data = decode_rsk_block(read_file(context.game_root / "MENU.RSK")).data;
     const auto menu_sprites = SpriteArchive::parse(std::move(menu_data));
     auto equipment_data =
@@ -3578,8 +3605,9 @@ Marker RpgModule::run(GameContext& context, Marker) {
     static_cast<void>(event_archive);
     static_cast<void>(event_font);
     static_cast<void>(location);
-    auto actor_data = decode_rsk_block(read_file(context.game_root / "MAN1.RSK")).data;
-    const auto actors = SpriteArchive::parse(std::move(actor_data));
+    auto actors = load_default_map_actors(context.game_root,
+                                          context.shared_state);
+    std::uint8_t actor_resource_variant = 0;
     std::map<std::uint16_t, PlanarSpriteSet> animation_sets;
     auto map_palette = map.palette();
     auto map_palette_animation = map.animation_words();
@@ -3652,6 +3680,127 @@ Marker RpgModule::run(GameContext& context, Marker) {
         if (frame_ticks != 0) {
             context.platform.delay_for(std::chrono::milliseconds(
                 (static_cast<std::uint64_t>(frame_ticks) * 1000U + 69U) / 70U));
+        }
+
+        // RPG:1a26 probes the actor's centre RAP word after the world frame
+        // and dispatches MAP0.EXE through e94 whenever bit 1000h is present.
+        // Normal records install another MAPZ location before the next input
+        // sample.  The packed record's high row-count byte unlocks one of the
+        // 34 travel destinations when action bit 2000h is set.
+        const auto actor_x = context.shared_state.world_x();
+        const auto actor_y = context.shared_state.world_y();
+        if (actor_x < map.layout().width && actor_y < map.layout().height) {
+            const auto cell_index =
+                static_cast<std::size_t>(actor_y) * map.layout().width + actor_x;
+            if ((map.cells()[cell_index] & 0x1000U) != 0U) {
+                const auto actor_cell = static_cast<std::uint16_t>(
+                    context.shared_state.u16(0x40f) + cell_index * 2U);
+                if (const auto transition = map_transitions.match(
+                        context.shared_state.u16(0x408), actor_cell,
+                        map.layout().width)) {
+                    if (!transition->is_special()) {
+                        if (transition->sets_travel_flag()) {
+                            context.shared_state.set_u16(
+                                0x40a, transition->flag_index);
+                            context.shared_state.set_u8(
+                                0x51eU + transition->flag_index, 1U);
+                        }
+                        if (transition->uses_relative_placement()) {
+                            relocated_transient_area = location.area;
+                        }
+                        install_map_location(context.shared_state, map_database,
+                                             transition->action);
+                        pending_map_reload_ = true;
+                        break;
+                    }
+
+                    // Actions 5..9/11 replace the BMAN archive in the same
+                    // buffer used by 506d.  Action 11 deliberately gives the
+                    // runtime selector value five while reloading BMAN5, just
+                    // as the shipped 0ff2h branch does (BMAN6 is not named).
+                    std::optional<std::pair<std::uint8_t, std::uint8_t>>
+                        actor_resource;
+                    switch (transition->special_action()) {
+                    case 5: actor_resource = {{0, 1}}; break;
+                    case 6: actor_resource = {{1, 2}}; break;
+                    case 7: actor_resource = {{2, 3}}; break;
+                    case 8: actor_resource = {{3, 4}}; break;
+                    case 9: actor_resource = {{4, 5}}; break;
+                    case 11: actor_resource = {{5, 5}}; break;
+                    default: break;
+                    }
+                    if (actor_resource &&
+                        actor_resource_variant != actor_resource->first) {
+                        actor_resource_variant = actor_resource->first;
+                        const auto path = context.game_root /
+                            ("BMAN" +
+                             std::to_string(actor_resource->second) + ".RSK");
+                        actors = SpriteArchive::parse(
+                            decode_rsk_block(read_file(path)).data);
+                    }
+
+                    // f19's non-location actions 1..4/10/12..21 call 52b4
+                    // for a fixed transient entity.  The once-only variants
+                    // first set a bit in SAVE+51a; an already-set bit makes
+                    // the trigger a no-op.  52b4 temporarily faces that entity
+                    // toward the leader while its normal event record runs.
+                    std::optional<std::size_t> event_entity;
+                    std::uint16_t once_flag = 0;
+                    switch (transition->special_action()) {
+                    case 1: case 3: case 12: case 16: event_entity = 0; break;
+                    case 2: event_entity = 3; break;
+                    case 4: event_entity = 1; break;
+                    case 10: event_entity = 0; once_flag = 0x0001; break;
+                    case 13: event_entity = 1; once_flag = 0x0004; break;
+                    case 14: event_entity = 0; once_flag = 0x0002; break;
+                    case 15: event_entity = 0; once_flag = 0x0008; break;
+                    case 17: event_entity = 1; once_flag = 0x0010; break;
+                    case 18: event_entity = 0; once_flag = 0x0020; break;
+                    case 19: event_entity = 0; once_flag = 0x0040; break;
+                    case 20: event_entity = 0; once_flag = 0x0080; break;
+                    case 21: event_entity = 0; once_flag = 0x0100; break;
+                    default: break;
+                    }
+                    if (event_entity && once_flag != 0U) {
+                        const auto flags = context.shared_state.u16(0x51a);
+                        if ((flags & once_flag) != 0U) {
+                            event_entity.reset();
+                        } else {
+                            context.shared_state.set_u16(
+                                0x51a,
+                                static_cast<std::uint16_t>(flags | once_flag));
+                        }
+                    }
+                    if (event_entity &&
+                        *event_entity < location.area.entity_count()) {
+                        const auto old_direction =
+                            location.area.entity_fields[1][*event_entity];
+                        const auto actor_direction =
+                            context.shared_state.actor_direction();
+                        location.area.entity_fields[1][*event_entity] =
+                            actor_direction == 0U ? 3U :
+                            actor_direction == 9U ? 6U :
+                            actor_direction == 6U ? 9U : 0U;
+                        auto outcome = run_entity_event(*event_entity);
+                        location.area.entity_fields[1][*event_entity] =
+                            old_direction;
+                        if (outcome.quit) {
+                            context.platform.stop_audio();
+                            return Marker::none;
+                        }
+                        if (outcome.marker != Marker::none) {
+                            context.platform.stop_audio();
+                            return outcome.marker;
+                        }
+                        if (outcome.map_reload) {
+                            relocated_transient_area =
+                                std::move(outcome.relocated_area);
+                            pending_map_reload_ = true;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         // RPG:0129..01c6 keeps composing world frames and samples the

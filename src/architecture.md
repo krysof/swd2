@@ -46,7 +46,8 @@ Windows、Linux、macOS、iOS、Android、WebAssembly 或主机平台可分别�
 - `MEO.EXE` 的五张精灵、VGA 画面合成、输入状态机及已打补丁的三次确认逻辑；
 - `RPG.EXE` 的当前区域加载、四 VGA 平面地图合成、视口、主角/实体精灵、碰撞/滑行、
   自动事件及原版代码窗口驱动的实体移动；
-- MAPA/MAPZ 世界数据库、CHNA 事件 VM、Big5 字库和 NAME 字形替换；
+- MAPA/MAPZ 世界数据库、MAP0 矩形入口/特殊实体事件/BMAN 切换、CHNA 事件 VM、
+  Big5 字库和 NAME 字形替换；
 - 事件 VM 的完整 0..61 调度表、精确 MAPZ 共享区域修改、进程内地图/战斗切换，
   商店、背包使用、装备/出售，以及 DE/RI/VOC/调色板/mode-X 演出；
 - `FIG.EXE` 的 ORC 目录、550 个战斗编队、四组角色成长表、随机遇敌区域表、

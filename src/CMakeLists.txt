@@ -39,6 +39,7 @@ add_library(swd2_core
     legacy_font.cpp
     map_database.cpp
     map_resource.cpp
+    map_transition_database.cpp
     meo.cpp
     meo_module.cpp
     mon_database.cpp

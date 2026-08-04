@@ -9,6 +9,7 @@
 #include "swd2/meo.hpp"
 #include "swd2/map_resource.hpp"
 #include "swd2/map_database.hpp"
+#include "swd2/map_transition_database.hpp"
 #include "swd2/meo_module.hpp"
 #include "swd2/mon_database.hpp"
 #include "swd2/monster_definition.hpp"
@@ -465,10 +466,14 @@ void verify_maps(const std::filesystem::path& game_root) {
         ++de_sets;
         de_frames += animation.frame_count();
     }
+    const auto transitions =
+        swd2::MapTransitionDatabase::load(game_root / "MAP0.EXE");
     std::cout << "verified " << maps << " maps: " << tiles << " tiles, " << cells
               << " cells, " << overlays << " overlay records; " << animation_sets
               << " non-map tile sets skipped; " << de_sets << " DE sprite sets, "
-              << de_frames << " frames\n";
+              << de_frames << " frames; " << transitions.area_count()
+              << " MAP0 areas, " << transitions.record_count()
+              << " transition records\n";
 }
 
 void verify_battles(const std::filesystem::path& game_root) {
