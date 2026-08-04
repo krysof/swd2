@@ -84,13 +84,58 @@ struct SdlPlatform::Impl {
     std::size_t music_cursor{};
     std::size_t voice_cursor{};
     bool loop_music{};
+    std::vector<SDL_GameController*> controllers;
 
     ~Impl() {
+        for (auto* controller : controllers) {
+            SDL_GameControllerClose(controller);
+        }
         if (audio_device != 0) SDL_CloseAudioDevice(audio_device);
         SDL_DestroyTexture(texture);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
+    }
+
+    void open_controller(int device_index) {
+        if (device_index < 0 || SDL_IsGameController(device_index) != SDL_TRUE) return;
+        auto* controller = SDL_GameControllerOpen(device_index);
+        if (!controller) return;
+        const auto instance = SDL_JoystickInstanceID(
+            SDL_GameControllerGetJoystick(controller));
+        const auto duplicate = std::any_of(
+            controllers.begin(), controllers.end(), [&](auto* existing) {
+                return SDL_JoystickInstanceID(
+                           SDL_GameControllerGetJoystick(existing)) == instance;
+            });
+        if (duplicate) {
+            SDL_GameControllerClose(controller);
+        } else {
+            controllers.push_back(controller);
+        }
+    }
+
+    void close_controller(SDL_JoystickID instance) {
+        const auto found = std::find_if(
+            controllers.begin(), controllers.end(), [&](auto* controller) {
+                return SDL_JoystickInstanceID(
+                           SDL_GameControllerGetJoystick(controller)) == instance;
+            });
+        if (found == controllers.end()) return;
+        SDL_GameControllerClose(*found);
+        controllers.erase(found);
+    }
+
+    InputAction process_event(const SDL_Event& event) {
+        if (event.type == SDL_CONTROLLERDEVICEADDED) {
+            open_controller(event.cdevice.which);
+            return InputAction::none;
+        }
+        if (event.type == SDL_CONTROLLERDEVICEREMOVED) {
+            close_controller(event.cdevice.which);
+            return InputAction::none;
+        }
+        return translate_event(event);
     }
 
     void ensure_texture(std::size_t width, std::size_t height) {
@@ -169,6 +214,9 @@ SdlPlatform::SdlPlatform() : impl_(std::make_unique<Impl>()) {
     if (!impl_->renderer) fail_sdl("SDL_CreateRenderer");
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
     SDL_RenderSetIntegerScale(impl_->renderer, SDL_TRUE);
+    for (auto device = 0; device < SDL_NumJoysticks(); ++device) {
+        impl_->open_controller(device);
+    }
 }
 
 SdlPlatform::~SdlPlatform() = default;
@@ -209,7 +257,8 @@ InputAction SdlPlatform::wait_for_input() {
     // synchronous.
     for (;;) {
         while (SDL_PollEvent(&event) != 0) {
-            if (const auto action = translate_event(event); action != InputAction::none) {
+            if (const auto action = impl_->process_event(event);
+                action != InputAction::none) {
                 return action;
             }
         }
@@ -217,7 +266,8 @@ InputAction SdlPlatform::wait_for_input() {
     }
 #else
     while (SDL_WaitEvent(&event) != 0) {
-        if (const auto action = translate_event(event); action != InputAction::none) return action;
+        if (const auto action = impl_->process_event(event);
+            action != InputAction::none) return action;
     }
     fail_sdl("SDL_WaitEvent");
 #endif
@@ -226,7 +276,8 @@ InputAction SdlPlatform::wait_for_input() {
 InputAction SdlPlatform::poll_input() {
     SDL_Event event{};
     while (SDL_PollEvent(&event) != 0) {
-        if (const auto action = translate_event(event); action != InputAction::none) return action;
+        if (const auto action = impl_->process_event(event);
+            action != InputAction::none) return action;
     }
     return InputAction::none;
 }
