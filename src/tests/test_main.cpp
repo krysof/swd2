@@ -4743,6 +4743,79 @@ void test_rpg_field_magic_refine_full(const std::filesystem::path& game_root) {
             "RPG DATA:36e0 Refine capacity feedback did not preserve 2c0b");
 }
 
+void test_rpg_field_magic_material_cast(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::up,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // ability 41 / five materials
+        swd2::InputAction::confirm,  // Use
+        swd2::InputAction::confirm,  // target actor zero
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u8(0x106U + 0x6dU, 41U);
+    for (std::size_t material = 0; material < 5U; ++material) {
+        state.set_u16(0x3e6U + material * 2U, 1U);
+        state.set_u16(0x382U + material * 2U,
+                      static_cast<std::uint16_t>(0x44U + material));
+    }
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG type-five field ability run did not terminate");
+    for (std::size_t material = 0; material < 5U; ++material) {
+        require(context.shared_state.u16(0x3e6U + material * 2U) == 0U,
+                "RPG type-five ability did not consume a selected material");
+    }
+    for (std::size_t slot = 0; slot < 5U; ++slot) {
+        require(context.shared_state.u16(0x382U + slot * 2U) == 0U,
+                "RPG zero-count material item was not removed/compacted");
+    }
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 11U && platform.stop_calls == 1U,
+            "RPG five-material cast did not return through 2fb7");
+}
+
+void test_rpg_field_magic_material_error(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::up,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // Use
+        swd2::InputAction::confirm,  // dismiss DATA:364a
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u8(0x106U + 0x6dU, 41U);
+    for (std::size_t material = 0; material < 5U; ++material) {
+        state.set_u16(0x3e6U + material * 2U,
+                      static_cast<std::uint16_t>(material == 2U ? 0U : 1U));
+    }
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context.shared_state.u16(0x3e6U) == 1U &&
+                context.shared_state.u16(0x3e8U) == 1U &&
+                context.shared_state.u16(0x3eaU) == 0U,
+            "RPG insufficient materials changed counters before dispatch");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 11U && platform.stop_calls == 1U &&
+                platform.bottom_hashes[6] != platform.bottom_hashes[5],
+            "RPG DATA:364a material feedback did not preserve the Use page");
+}
+
 void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
@@ -4773,6 +4846,72 @@ void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
                 platform.frame_hashes[6] != platform.frame_hashes[5] &&
                 platform.frame_hashes[7] != platform.frame_hashes[0],
             "RPG action-29h travel list/map reload frames were not stable");
+}
+
+void test_rpg_field_magic_travel_current(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::up,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // ability 98 / action 28h
+        swd2::InputAction::confirm,  // Use
+        swd2::InputAction::quit,     // reloaded map
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    constexpr auto actor_base = 0x106U;
+    state.set_u8(actor_base + 0x6dU, 98U);
+    state.set_u16(actor_base + 0x55U, 100U);
+    state.set_u16(0x408U,
+                  static_cast<std::uint16_t>(state.u16(0x408U) & ~0x4000U));
+    state.set_u16(0x40aU, 0U);
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context.shared_state.u16(actor_base + 0x55U) == 93U &&
+                context.shared_state.map_location_directory_offset() == 0x0046U,
+            "RPG ability 98 did not reload SAVE+40a at its seven-point cost");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 7U && platform.stop_calls == 1U,
+            "RPG action-28h direct travel did not return on the reloaded map");
+}
+
+void test_rpg_field_magic_travel_restricted(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::up,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // Use action 28h
+        swd2::InputAction::confirm,  // dismiss DATA:3620
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    constexpr auto actor_base = 0x106U;
+    state.set_u8(actor_base + 0x6dU, 98U);
+    state.set_u16(actor_base + 0x55U, 100U);
+    state.set_u16(0x408U,
+                  static_cast<std::uint16_t>(state.u16(0x408U) | 0x4000U));
+    const auto before_location = state.map_location_directory_offset();
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context.shared_state.u16(actor_base + 0x55U) == 100U &&
+                context.shared_state.map_location_directory_offset() ==
+                    before_location,
+            "RPG restricted action-28h changed cost or map location");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 11U && platform.stop_calls == 1U &&
+                platform.bottom_hashes[6] != platform.bottom_hashes[5],
+            "RPG restricted Magic travel did not show DATA:3620 on Use");
 }
 
 void test_rpg_system_menu_speed_and_exit(
@@ -5778,7 +5917,11 @@ int main(int argc, char** argv) {
         test_rpg_field_magic_description(argv[1]);
         test_rpg_field_magic_refine(argv[1]);
         test_rpg_field_magic_refine_full(argv[1]);
+        test_rpg_field_magic_material_cast(argv[1]);
+        test_rpg_field_magic_material_error(argv[1]);
         test_rpg_field_magic_travel(argv[1]);
+        test_rpg_field_magic_travel_current(argv[1]);
+        test_rpg_field_magic_travel_restricted(argv[1]);
         test_rpg_system_menu_speed_and_exit(argv[1]);
         test_rpg_system_menu_save(argv[1]);
         test_rpg_system_menu_load(argv[1]);
