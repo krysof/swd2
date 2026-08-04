@@ -6731,31 +6731,51 @@ void test_battle_module(const std::filesystem::path& game_root) {
                     15441783918533631957ULL,
             "FIG 1ac2 item-category card did not render");
 
-    ScriptedPlatform status_card_platform;
-    status_card_platform.actions = {
-        swd2::InputAction::left,
-        swd2::InputAction::confirm,
-        swd2::InputAction::confirm,  // ability 86 / effect 63
-        swd2::InputAction::quit,
+    struct StatusCardCase {
+        std::uint8_t ability_id;
+        std::size_t card_frame;
+        std::uint64_t card_hash;
     };
-    auto status_card_state = swd2::SharedState::load(game_root / "SAVE.DA1");
-    status_card_state.set_u16(0x4a0, 392);
-    status_card_state.set_u16(0x10, 1);
-    status_card_state.set_u8(0x106 + 0x6d, 86);
-    status_card_state.set_u16(0x106 + 0x55, 1000);
-    status_card_state.set_u16(0x106 + 0x57, 1000);
-    status_card_state.set_u16(0x106 + 0x2d, 1000);
-    status_card_state.set_u16(0x106 + 0x2f, 1000);
-    status_card_state.set_u16(0x106 + 0x5d, 1000);
-    swd2::GameContext status_card_context{
-        game_root, status_card_state, status_card_platform};
-    require(swd2::BattleModule().run(
-                status_card_context, swd2::Marker::open_figure) ==
-                swd2::Marker::none &&
-                status_card_platform.frame_hashes.size() > 14U &&
-                status_card_platform.frame_hashes[14] ==
-                    12944436973162848075ULL,
-            "FIG 57d6 player-status information card run failed");
+    // 57d6 is reached by five distinct effect selectors.  Ability 86 first
+    // installs its required mediator, hence its card occurs eight presents
+    // later than the four direct class-three abilities.
+    static constexpr std::array<StatusCardCase, 5> status_card_cases = {{
+        {86, 14, 12944436973162848075ULL},  // effect 63, speed
+        {35, 6, 2498598045570496996ULL},    // effect 66, defence
+        {38, 6, 4157160127829814172ULL},    // effect 67, attack
+        {33, 6, 2315349818278800257ULL},    // effect 68, evasion
+        {37, 6, 17274552217982981682ULL},   // effect 69, ward
+    }};
+    for (const auto& test : status_card_cases) {
+        ScriptedPlatform status_card_platform;
+        status_card_platform.actions = {
+            swd2::InputAction::left,
+            swd2::InputAction::confirm,
+            swd2::InputAction::confirm,
+            swd2::InputAction::quit,
+        };
+        auto status_card_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+        status_card_state.set_u16(0x4a0, 392);
+        status_card_state.set_u16(0x10, 1);
+        status_card_state.set_u8(0x106 + 0x6d, test.ability_id);
+        status_card_state.set_u16(0x106 + 0x55, 1000);
+        if (test.ability_id != 86) {
+            status_card_state.set_u16(0x106 + 0x35, 1000);
+        }
+        status_card_state.set_u16(0x106 + 0x57, 1000);
+        status_card_state.set_u16(0x106 + 0x2d, 1000);
+        status_card_state.set_u16(0x106 + 0x2f, 1000);
+        status_card_state.set_u16(0x106 + 0x5d, 1000);
+        swd2::GameContext status_card_context{
+            game_root, status_card_state, status_card_platform};
+        require(swd2::BattleModule().run(
+                    status_card_context, swd2::Marker::open_figure) ==
+                    swd2::Marker::none &&
+                    status_card_platform.frame_hashes.size() > test.card_frame &&
+                    status_card_platform.frame_hashes[test.card_frame] ==
+                        test.card_hash,
+                "FIG 57d6 player-status information card run failed");
+    }
 
     ScriptedPlatform target_overlay_platform;
     target_overlay_platform.actions = {
