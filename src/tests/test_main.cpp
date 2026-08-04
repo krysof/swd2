@@ -5911,9 +5911,10 @@ void test_rpg_inventory_equipment_screen(
                 context.shared_state.u8(0x106U + 0x2cU) == 1U,
             "RPG 425b equipment page did not exchange the selected item");
     require(platform.frame_hashes.size() == 11U &&
-                platform.frame_hashes[6] == 9256093323189533149ULL &&
-                platform.frame_hashes[7] == 118377266645773032ULL &&
-                platform.compact_hashes[7] != platform.compact_hashes[6] &&
+                platform.frame_hashes[6] == 674075819568147182ULL &&
+                platform.frame_hashes[7] == 14756815826000922593ULL &&
+                platform.compact_hashes[6] == 782290740610883250ULL &&
+                platform.compact_hashes[7] == 17431159694511456778ULL &&
                 platform.frame_hashes[8] != platform.frame_hashes[7] &&
                 platform.frame_hashes[9] == platform.frame_hashes[2] &&
                 platform.frame_hashes[10] == platform.frame_hashes[0],

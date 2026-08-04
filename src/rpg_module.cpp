@@ -1656,17 +1656,16 @@ public:
                     draw_rpg_compact_panel(equipment_frame.pixels, 320, 200,
                                            menu_sprites_, 48, 0, 8, 1);
                     draw_item_text(equipment_frame, item_texts_, item_font_, equipment_item,
-                                   51 * 4, 9, 96, 15, 14);
+                                   51 * 4, 9, 96, 15, 0);
                     const auto actor_base = 0x106 + actor * 0x9f;
                     draw_legacy_text(equipment_frame, item_font_,
                                      equipment_slot_labels_, 6 * 4, 13,
-                                     80, 176, 15);
+                                     80, 176, 0);
                     for (std::size_t slot = 0; slot < equipment_slot_count; ++slot) {
                         const auto equipped = state.u16(actor_base + 0x10 + slot * 2);
                         draw_item_text(equipment_frame, item_texts_, item_font_, equipped,
                                        28 * 4, 13 + static_cast<int>(slot) * 16,
-                                       96, 15,
-                                       static_cast<std::uint8_t>(equipped == 0 ? 8 : 14));
+                                       96, 15, 0);
                     }
                     draw_rpg_actor_card(equipment_frame, menu_sprites_, state,
                                         actor, 52 * 4, 35);
@@ -1689,7 +1688,7 @@ public:
                             equipment_frame, item_font_,
                             equipment_stat_labels_.subspan(
                                 label_cursor, label_end - label_cursor),
-                            48 * 4, stat_y, 64, 16, 15);
+                            48 * 4, stat_y, 64, 16, 0xbc);
                         draw_menu_number(equipment_frame, menu_sprites_,
                                          state.u16(actor_base + stat_offset),
                                          64, stat_y + 3, 111);
