@@ -1171,7 +1171,28 @@ BattleRoundResult BattleSession::play_round(
                 });
                 continue;
             }
-            const auto effect_code = abilities.ability(decision.ability_id).effect_code;
+            const auto& selected_ability = abilities.ability(decision.ability_id);
+            const auto effect_code = selected_ability.effect_code;
+            // Captured allies enter FIG 1048, not the enemy-only 26af path.
+            // Before 1048 jumps through the ordinary player effect table it
+            // repeats 23b1's 80h/40h/20h mediator test.  An absent requested
+            // mediator is installed by SP049/5b41 and ends the action.  Unlike
+            // the enemy generic path, the AP already paid by 22f3 is not
+            // refunded and the selected ability is not rolled again.
+            if (const auto medium =
+                    fig_medium_from_target_flags(selected_ability.target_flags);
+                medium && !battle_media_[*medium]) {
+                battle_media_[*medium] = true;
+                BattleSessionEvent event;
+                event.kind = BattleEventKind::medium_summoned;
+                event.source = ally_index;
+                event.target = *medium;
+                event.ability_id = decision.ability_id;
+                event.effect_code = effect_code;
+                event.source_is_summoned_ally = true;
+                result.events.push_back(event);
+                continue;
+            }
             if (const auto medium = fig_required_medium(effect_code);
                 medium && !battle_media_[*medium]) {
                 BattleSessionEvent event;

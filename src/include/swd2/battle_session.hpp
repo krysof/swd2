@@ -140,7 +140,8 @@ struct BattleSessionEvent {
     std::uint8_t recovered_player_status_mask{};
     std::uint8_t expired_monster_buff_mask{};
     // Captured-monster allies share player-side effect handlers but are not
-    // party actors. This disambiguates their missing-medium presentation.
+    // party actors. This disambiguates their missing-medium and 1048
+    // mediator-summon presentation.
     bool source_is_summoned_ally{};
     // Exact duration returned by status handlers and silent monster-status
     // expiry bits needed by persistent 2deb icon recomposition.

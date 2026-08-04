@@ -1787,18 +1787,30 @@ void present_medium_summon_animation(
     const LegacyFont& fallback, const BattleVisualState& visual,
     const BattleSessionEvent& event,
     std::uint16_t encounter_directory_offset) {
-    if (event.source >= visual.monsters.size() ||
+    const auto summoned_source = event.source_is_summoned_ally;
+    if ((!summoned_source && event.source >= visual.monsters.size()) ||
+        (summoned_source && event.source >= visual.summoned_ally_present.size()) ||
         event.target >= visual.media.size()) {
         return;
     }
     const auto sprite_frame = 174U + event.target;
     if (sprite_frame >= menu_sprites.sprites().size()) return;
 
-    const auto [source_left, source_top] = monster_visual_center(
-        encounter, items, context.game_root, event.source);
     const auto destination = fig_medium_placement(event.target);
-    auto current_x = static_cast<std::uint16_t>(source_left / 4);
-    auto current_y = static_cast<std::uint16_t>(source_top);
+    auto current_x = std::uint16_t{};
+    auto current_y = std::uint16_t{};
+    if (summoned_source) {
+        // 1048 reads the packed ally slot's +31f5 value (2/16h), adds
+        // 0fh Mode-X columns and fixes y to 0fh before calling 5b41.
+        const auto action = fig_summoned_action_card_placement(event.source);
+        current_x = static_cast<std::uint16_t>(action.left / 4 + 0x0f);
+        current_y = 0x0f;
+    } else {
+        const auto [source_left, source_top] = monster_visual_center(
+            encounter, items, context.game_root, event.source);
+        current_x = static_cast<std::uint16_t>(source_left / 4);
+        current_y = static_cast<std::uint16_t>(source_top);
+    }
     const auto target_x = static_cast<std::uint16_t>(destination.left / 4);
     const auto target_y = static_cast<std::uint16_t>(destination.top);
 
@@ -1816,7 +1828,9 @@ void present_medium_summon_animation(
             frame, menu_sprites, font, fallback, visual);
         draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
                      visual.monsters,
-                     event.source, encounter_directory_offset);
+                     summoned_source ? std::nullopt
+                                     : std::optional<std::size_t>(event.source),
+                     encounter_directory_offset);
         blit(frame, menu_sprites, sprite_frame,
              static_cast<int>(current_x) * 4, static_cast<int>(current_y));
         draw_fig_party_cards(
@@ -1953,10 +1967,23 @@ void present_round_events(
             continue;
         }
         if (event.kind == BattleEventKind::medium_summoned) {
-            present_monster_ability_name_card(
-                context, base_surface, encounter, items, menu_sprites,
-                font, fallback, visual, event, abilities,
-                encounter_directory_offset);
+            if (event.source_is_summoned_ally) {
+                // 0fa7 has already selected the ability and 10fc displays the
+                // fixed “奇術” ally card for nine ticks.  1048 then starts
+                // SP049 and flies the mediator from slot x+0fh/y=0fh; it does
+                // not show the enemy 262f ability-name card.
+                present_summoned_ally_action_card(
+                    context, base_surface, encounter, items, menu_sprites,
+                    font, fallback, visual, event,
+                    abilities.summoned_ally_ability_text(),
+                    encounter_directory_offset);
+                context.platform.delay_for(summoned_action_card_delay);
+            } else {
+                present_monster_ability_name_card(
+                    context, base_surface, encounter, items, menu_sprites,
+                    font, fallback, visual, event, abilities,
+                    encounter_directory_offset);
+            }
             play_voice_cue(context, {FigVoiceFile::sp, 0x31,
                                      FigVoiceTiming::before_action});
             present_medium_summon_animation(
@@ -1967,7 +1994,11 @@ void present_round_events(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
                 encounter_directory_offset);
-            if (finish_monster_action_here) {
+            if (event.source_is_summoned_ally) {
+                // The captured-ally caller 0fb9 redraws the newly persistent
+                // mediator and holds that clean page for five ticks.
+                context.platform.delay_for(ward_card_delay);
+            } else if (finish_monster_action_here) {
                 present_monster_turn_tail(event);
             }
             continue;

@@ -4006,6 +4006,76 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 medium_monster_session.battle_media()[0],
             "FIG 23b1 generic-path marker/refunded prepaid casts differ");
 
+    // Captured ally 374 selects generic ability 12 with zero_random.  Its
+    // effect 57 itself needs no mediator, but the ability record's low-byte
+    // 40h flag makes 1048 install MENU AF before dispatch.  This is distinct
+    // from both enemy 23b1 (which refunds AP) and player 58fa (which displays
+    // the missing-medium modal).
+    auto ally_medium_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    ally_medium_state.set_u16(0x10, 1);
+    for (std::size_t slot = 0; slot < 50; ++slot) {
+        ally_medium_state.set_u16(0x382 + slot * 2U, 0);
+    }
+    ally_medium_state.set_u16(0x382, 374);
+    ally_medium_state.set_u16(actor_zero + 8, 0);
+    ally_medium_state.set_u16(actor_zero + 0x0e, 60000);
+    ally_medium_state.set_u16(actor_zero + 0x2d, 60000);
+    ally_medium_state.set_u16(actor_zero + 0x2f, 60000);
+    ally_medium_state.set_u16(actor_zero + 0x35, 1000);
+    ally_medium_state.set_u16(actor_zero + 0x37, 1000);
+    ally_medium_state.set_u16(actor_zero + 0x5d, 1000);
+    auto ally_medium_session = swd2::BattleSession::create(
+        ally_medium_state, selected->get(), items);
+    auto ally_summon_commands = skip_commands;
+    ally_summon_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    static_cast<void>(ally_medium_session.play_round(
+        ally_summon_commands, abilities, zero_random));
+    require(ally_medium_session.summoned_allies().size() == 1,
+            "FIG captured-ally mediator regression summon failed");
+    const auto ally_initial_points =
+        ally_medium_session.summoned_allies()[0].ai.ability_points;
+    const auto ally_medium_round = ally_medium_session.play_round(
+        skip_commands, abilities, zero_random);
+    require(ally_medium_session.battle_media() ==
+                    std::array<bool, 3>{false, true, false} &&
+                ally_medium_session.summoned_allies()[0].ai.ability_points ==
+                    static_cast<std::uint16_t>(
+                        ally_initial_points - abilities.ability(12).cost) &&
+                std::any_of(
+                    ally_medium_round.events.begin(),
+                    ally_medium_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_summoned &&
+                               event.source_is_summoned_ally &&
+                               !event.source_is_monster && event.source == 0 &&
+                               event.target == 1 && event.ability_id == 12 &&
+                               event.effect_code == 0x57;
+                    }) &&
+                std::none_of(
+                    ally_medium_round.events.begin(),
+                    ally_medium_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::missing_medium &&
+                               event.source_is_summoned_ally;
+                    }),
+            "FIG 1048 captured ally did not pay and summon its flagged mediator");
+    const auto ally_medium_success = ally_medium_session.play_round(
+        skip_commands, abilities, zero_random);
+    require(std::any_of(
+                ally_medium_success.events.begin(),
+                ally_medium_success.events.end(),
+                [](const swd2::BattleSessionEvent& event) {
+                    return event.kind == swd2::BattleEventKind::ally_ability &&
+                           event.source == 0 && event.ability_id == 12 &&
+                           event.effect_code == 0x57;
+                }),
+            "FIG 1048 did not dispatch the captured-ally effect after mediator install");
+
     auto medium_success_state = medium_monster_state;
     medium_success_state.set_u8(actor_zero + 0x6d, 54);
     medium_success_state.set_u16(actor_zero + 0x55, 100);
