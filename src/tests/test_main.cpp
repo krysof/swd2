@@ -5754,6 +5754,7 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
                 platform.frame_hashes[1] != platform.frame_hashes[0] &&
                 platform.frame_hashes[2] != platform.frame_hashes[1] &&
                 platform.frame_hashes[3] != platform.frame_hashes[2] &&
+                platform.frame_hashes[3] == 3887926141398700200ULL &&
                 platform.frame_hashes[4] == platform.frame_hashes[2] &&
                 platform.frame_hashes[5] == platform.frame_hashes[0],
             "RPG field-menu page selection/return frames were not stable");

@@ -1117,7 +1117,7 @@ public:
                     draw_legacy_text(
                         frame, item_font_,
                         inventory_category_labels_.subspan(label, 4),
-                        62 * 4, 17, 32, 16, 15);
+                        62 * 4, 17, 32, 16, 0);
                 }
             }
             for (std::size_t row = 0; row < visible_rows; ++row) {
@@ -1126,7 +1126,7 @@ public:
                 const auto item_id = inventory.item(slot);
                 const auto top = 49 + static_cast<int>(row) * 16;
                 draw_item_text(frame, item_texts_, item_font_, item_id,
-                               128, top, 96, 15, item_id == 0 ? 8 : 15);
+                               128, top, 96, 15, 0);
                 if (item_id >= 0x44 && item_id <= 0x48) {
                     draw_menu_number(
                         frame, menu_sprites_,
