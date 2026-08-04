@@ -10,8 +10,8 @@ namespace swd2 {
 
 FigBattleRandom FigBattleRandom::load(
     const std::filesystem::path& fig_executable, std::uint16_t cursor) {
-    if (cursor < 0x1000 || cursor >= 0x2000 || (cursor & 1U) != 0) {
-        throw std::runtime_error("FIG random cursor is outside the exact 1000..1ffe window");
+    if (cursor < 0x1000 || cursor > 0x2000 || (cursor & 1U) != 0) {
+        throw std::runtime_error("FIG random cursor is outside the exact 1000..2000 domain");
     }
     const auto executable = dos::MzExecutable::load(fig_executable);
     std::ifstream input(fig_executable, std::ios::binary);
@@ -20,7 +20,10 @@ FigBattleRandom FigBattleRandom::load(
     std::vector<std::uint8_t> image(
         (std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
     constexpr std::size_t code_bias = 0x028a;
-    constexpr std::size_t window_finish = code_bias + 0x2000;
+    // 2b41 computes CS:[028a+cursor] before incrementing and normalizing the
+    // cursor. RPG:202f can hand FIG the boundary value 2000h, so retain the
+    // extra word at 228ah rather than rejecting a valid module transition.
+    constexpr std::size_t window_finish = code_bias + 0x2002;
     if (image.size() < window_finish) {
         throw std::runtime_error("FIG load image is too short for its random-code window");
     }

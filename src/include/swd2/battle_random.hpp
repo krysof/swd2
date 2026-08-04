@@ -11,8 +11,10 @@ namespace swd2 {
 
 // FIG 1000:2b41 does not use a conventional PRNG. It reads successive words
 // from CS:[028a + SharedState[049c]], returns the remainder by the requested
-// modulus, advances by two, and wraps 2000 -> 1000. Capturing that code window
-// makes replays identical without executing any x86 instructions.
+// modulus, advances by two, and then normalizes values >=2000 to 1000.  The
+// incoming cursor may itself be 2000 after RPG's encounter sampler, in which
+// case FIG reads the extra word at 228a once before wrapping. Capturing that
+// code window makes replays identical without executing any x86 instructions.
 class FigBattleRandom {
 public:
     static FigBattleRandom load(const std::filesystem::path& fig_executable,

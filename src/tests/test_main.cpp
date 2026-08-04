@@ -2307,6 +2307,9 @@ void test_battle_random(const std::filesystem::path& game_root) {
     require(wrapping.cursor() == 0x1000 && wrapping.draw(6) == 4 &&
                 wrapping.cursor() == 0x1002,
             "FIG random cursor did not wrap from 1ffe to 1000");
+    auto boundary = swd2::FigBattleRandom::load(game_root / "FIG.EXE", 0x2000);
+    require(boundary.draw(7) == 6U && boundary.cursor() == 0x1000U,
+            "FIG rejected RPG's boundary 2000h random cursor before its 228ah read");
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     wrapping.store(state);
     require(state.u16(0x49c) == 0x1002,
