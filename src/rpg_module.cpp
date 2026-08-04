@@ -2753,7 +2753,7 @@ private:
                         draw_legacy_text(
                             frame, item_font_,
                             status_menu_labels_.subspan(label, 8),
-                            32 * 4, top, 48, 16, 15);
+                            32 * 4, top, 48, 16, 0);
                     }
                     if (index == 0U) {
                         draw_pair(state_.u16(actor_base + 0x2d),
@@ -2777,7 +2777,7 @@ private:
                                 draw_legacy_text(
                                     frame, item_font_,
                                     status_value_labels_.subspan(entry * 4U, 4U),
-                                    42 * 4, status_top, 32, 16, 15);
+                                    42 * 4, status_top, 32, 16, 0);
                             }
                             status_top += 16;
                         };
@@ -2817,7 +2817,7 @@ private:
                         // 490f subtracts ten mode-X columns from the common
                         // x=56 value and draws exactly six ITEM2 glyphs.
                         draw_item_text(frame, item_texts_, item_font_, item,
-                                       46 * 4, top, 96, 16, 15);
+                                       46 * 4, top, 96, 16, 0);
                     }
                 }
                 if (menu_sprites_.sprites().size() > 1U) {
