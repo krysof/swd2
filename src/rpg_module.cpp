@@ -748,8 +748,19 @@ public:
         case 31:
         case 32:
         case 33:
-        case 39:
             present_timed(event_scene());
+            return true;
+        case 39:
+            // Unlike opcode 22/36, RPG:5ac7 renders the changed entity to the
+            // back page, waits at 5ec0 while the old page is still visible,
+            // and only then flips at 6e14. Preserve that pre-flip hold rather
+            // than delaying on the newly exposed animation frame.
+            if (frame_delay_ticks_ != 0) {
+                platform_.delay_for(std::chrono::milliseconds(
+                    (static_cast<std::uint64_t>(frame_delay_ticks_) * 1000U + 69U) /
+                    70U));
+            }
+            present(event_scene());
             return true;
         case 36:
             // The VM advances SAVE+411 after this presentation, matching
