@@ -259,18 +259,18 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 }
                 break;
             case 17: {
-                const auto inventory = host.run_inventory(state, InventoryUiMode::sell);
-                if (!inventory) {
+                if (command.arguments.empty()) {
                     result.status = EventVmStatus::unsupported_opcode;
                     return result;
                 }
-                if (*inventory == InventoryUiResult::cancelled) break;
-                if (command.arguments.empty() ||
-                    !host.run_shop(std::span<const std::uint16_t>(command.arguments).subspan(1),
-                                   state)) {
+                const auto completed = host.run_combined_shop(
+                    std::span<const std::uint16_t>(command.arguments).subspan(1),
+                    state);
+                if (!completed) {
                     result.status = EventVmStatus::unsupported_opcode;
                     return result;
                 }
+                if (!*completed) break;
                 // RPG.EXE reloads the current entity's event after leaving
                 // the combined sell/buy UI. Command 2 commonly changes this
                 // field immediately before opcode 17.

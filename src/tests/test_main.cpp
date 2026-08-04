@@ -5020,6 +5020,13 @@ public:
         ++shops;
         return accept_shops;
     }
+    std::optional<bool> run_combined_shop(
+        std::span<const std::uint16_t> items,
+        swd2::SharedState&) override {
+        shop_items.assign(items.begin(), items.end());
+        ++combined_shops;
+        return combined_shop_result;
+    }
     std::optional<bool> confirm_event_branch(swd2::SharedState&) override {
         ++confirmations;
         return confirmation_result;
@@ -5046,6 +5053,8 @@ public:
     std::vector<std::uint16_t> shop_items;
     std::size_t shops{};
     bool accept_shops{true};
+    std::size_t combined_shops{};
+    std::optional<bool> combined_shop_result{false};
     std::size_t confirmations{};
     std::optional<bool> confirmation_result{false};
     std::size_t inventories{};
@@ -5337,11 +5346,22 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
     for (auto& field : shop_area.entity_fields) field.resize(1);
     shop_area.entity_fields[9][0] = 4;
     auto combined_shop_state = swd2::SharedState::load(game_root / "SAVE.DA1");
-    host.inventory_result = swd2::InventoryUiResult::occupied_slot;
+    host.combined_shop_result = false;
+    const auto combined_cancelled = swd2::execute_event(
+        combined_shop_archive, 2, combined_shop_state, &shop_area, 0, host);
+    require(combined_cancelled.status == swd2::EventVmStatus::completed &&
+                combined_cancelled.requested_marker == swd2::Marker::none &&
+                host.combined_shops == 1 && host.shops == 1 &&
+                host.inventories == 0,
+            "event opcode 17 did not stop after its initial selector was cancelled");
+
+    host.combined_shop_result = true;
     const auto combined_shop = swd2::execute_event(
         combined_shop_archive, 2, combined_shop_state, &shop_area, 0, host);
     require(combined_shop.requested_marker == swd2::Marker::open_figure &&
-                combined_shop_state.u16(0x4a0) == 333 && host.shops == 2 &&
+                combined_shop_state.u16(0x4a0) == 333 &&
+                host.combined_shops == 2 && host.shops == 1 &&
+                host.inventories == 0 &&
                 host.shop_items == std::vector<std::uint16_t>({117, 118}),
             "event opcode 17 did not run its shop list and reload the entity event");
 }
@@ -7502,6 +7522,53 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 error_platform.cursor == error_platform.actions.size() &&
                 error_platform.presented >= 6U,
             "RPG 49d0 shop error prompt did not animate/consume acknowledgement");
+
+    auto [sell_database, sell_state] = prepare();
+    // CHNA1 entry 28 is the opcode-17 combined Buy/Sell form. Its entity
+    // event is intentionally reloaded after leaving either sub-loop, so the
+    // second initial selector cancellation below is what exits the shop.
+    sell_database->location_at_directory_offset(46)
+        .area.entity_fields[9][0] = 56U;
+    sell_state.set_u16(0x382U, 117U);
+    ScriptedPlatform sell_platform;
+    sell_platform.actions = {
+        swd2::InputAction::confirm,  // interact with the shop entity
+        swd2::InputAction::right,    // initial selector: Sell
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // select ITEM 117
+        swd2::InputAction::confirm,  // accept three-quarter sale value
+        swd2::InputAction::confirm,  // select the now-empty physical cell
+        swd2::InputAction::confirm,  // dismiss DATA:3c0a unsellable feedback
+        swd2::InputAction::cancel,   // leave the repeated sale selector
+        swd2::InputAction::cancel,   // leave reloaded Buy/Sell selector
+        swd2::InputAction::quit,
+    };
+    swd2::GameContext sell_context{
+        game_root, sell_state, sell_platform};
+    sell_context.map_database = sell_database;
+    require(swd2::RpgModule().run(
+                sell_context, swd2::Marker::menu_ready) ==
+                    swd2::Marker::none &&
+                sell_platform.cursor == sell_platform.actions.size() &&
+                sell_context.shared_state.u16(0x104U) == 119U &&
+                sell_context.shared_state.u16(0x382U) == 0U,
+            "RPG opcode 17 did not select Sell, repeat its inventory or reload");
+    require(sell_platform.frame_hashes.size() == 18U &&
+                sell_platform.frame_hashes[4] == 13513023463937595710ULL &&
+                sell_platform.frame_hashes[5] == 15331958951154741984ULL &&
+                sell_platform.frame_hashes[6] == sell_platform.frame_hashes[3] &&
+                sell_platform.frame_hashes[8] == 15263479975629331374ULL &&
+                sell_platform.frame_hashes[9] ==
+                    sell_platform.frame_hashes[11] &&
+                sell_platform.bottom_hashes[9] == 8638034060943885118ULL &&
+                sell_platform.bottom_hashes[10] == 17483802272307405006ULL &&
+                sell_platform.bottom_hashes[11] ==
+                    sell_platform.bottom_hashes[9] &&
+                sell_platform.frame_hashes[12] == sell_platform.frame_hashes[0] &&
+                sell_platform.frame_hashes[15] == 7672109878915942062ULL &&
+                sell_platform.frame_hashes[16] == sell_platform.frame_hashes[14] &&
+                sell_platform.frame_hashes[17] == sell_platform.frame_hashes[0],
+            "RPG opcode-17 Buy/Sell, empty feedback or reload frames changed");
 }
 
 void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {

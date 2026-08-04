@@ -52,6 +52,13 @@ public:
     virtual bool run_shop(std::span<const std::uint16_t>, SharedState&) {
         return false;
     }
+    // Opcode 17 first presents its Buy/Sell selector, then owns the selected
+    // purchase or repeated-sale loop. false means the initial selector was
+    // cancelled; true requests the original current-entity event reload.
+    virtual std::optional<bool> run_combined_shop(
+        std::span<const std::uint16_t>, SharedState&) {
+        return std::nullopt;
+    }
     // Opcode 13 enters RPG.EXE's shared Yes/No selector and branches to its
     // argument only when the left (Yes) choice is accepted. nullopt means
     // this host has no confirmation UI.

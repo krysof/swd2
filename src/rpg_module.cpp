@@ -1081,6 +1081,73 @@ public:
         }
     }
 
+    std::optional<bool> run_combined_shop(
+        std::span<const std::uint16_t> item_ids,
+        SharedState& state) override {
+        const auto source = event_scene();
+        std::size_t choice = 0;
+        while (true) {
+            auto frame = source;
+            const auto opaque = [&](std::size_t sprite,
+                                    int x_byte, int y) {
+                if (sprite >= menu_sprites_.sprites().size()) return;
+                const auto& info = menu_sprites_.sprites()[sprite];
+                blit_opaque(frame, menu_sprites_.pixels(sprite),
+                            info.width, info.height, x_byte * 4, y);
+            };
+            opaque(0, 44, 90);
+            opaque(0, 62, 90);
+            // EVENT_OP_17 sets DATA:3cd7=1 before 555a. In this mode 54d5
+            // replaces MENU's Yes/No sprites with the literal Big5 glyphs
+            // B6 52 / BD E6: Buy and Sell.
+            constexpr std::array<std::uint8_t, 2> buy{0xb6, 0x52};
+            constexpr std::array<std::uint8_t, 2> sell{0xbd, 0xe6};
+            draw_legacy_text(frame, font_, buy, 50 * 4, 99, 16, 16, 0);
+            draw_legacy_text(frame, font_, sell, 68 * 4, 99, 16, 16, 0);
+            apply_rpg_binary_choice_highlight(
+                frame.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(frame.palette),
+                44, 62, 90, choice);
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::cancel) {
+                // 555a redraws/flips the saved source page before returning
+                // from either confirmation outcome.
+                present(source);
+                return false;
+            }
+            if (action == InputAction::left) choice = 0;
+            else if (action == InputAction::right) choice = 1;
+            else if (action == InputAction::confirm) {
+                present(source);
+                break;
+            }
+        }
+
+        // Both opcode-19 purchasing and 39ed selling reconstruct a full map
+        // page; the opcode-18 dialogue snapshot underneath the mode selector
+        // is no longer the active direct VGA layer.
+        reset_direct_page_layers();
+        if (choice == 0U) {
+            if (!run_shop(item_ids, state)) return std::nullopt;
+        } else {
+            const auto inventory = run_inventory(state, InventoryUiMode::sell);
+            if (!inventory) return std::nullopt;
+        }
+        // 569b performs one final dd6/6e14 rebuild before 53b1 reloads the
+        // current entity's event record.
+        reset_direct_page_layers();
+        present(event_scene());
+        return true;
+    }
+
     bool run_shop(std::span<const std::uint16_t> item_ids,
                   SharedState& state) override {
         if (item_ids.empty()) return true;
@@ -1348,9 +1415,6 @@ public:
             } else {
                 const auto selected_item = inventory.item(selected);
                 if (mode == InventoryUiMode::sell) {
-                    if (selected_item == 0U) {
-                        return InventoryUiResult::empty_slot;
-                    }
                     const auto value = inventory.sale_value(selected);
                     if (!value) {
                         // 5617 presents DATA:3c0a when ITEM +05 bit 08 is
@@ -1362,6 +1426,7 @@ public:
                     }
                     std::uint8_t choice = 0;
                     bool rejected = false;
+                    bool sold = false;
                     while (true) {
                         auto confirmation = frame;
                         draw_bottom_message(confirmation, shop_sale_prompt_);
@@ -1405,14 +1470,14 @@ public:
                             choice = 1;
                         } else if (confirmation_action == InputAction::confirm) {
                             if (choice == 0) {
-                                static_cast<void>(inventory.sell(selected));
-                                return InventoryUiResult::occupied_slot;
+                                sold = inventory.sell(selected);
+                                break;
                             }
                             rejected = true;
                             break;
                         }
                     }
-                    if (rejected) continue;
+                    if (sold || rejected) continue;
                 }
                 if (selected_item >= items_.size()) return InventoryUiResult::occupied_slot;
 
