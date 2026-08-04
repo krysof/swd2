@@ -14,6 +14,7 @@
 #include <ctime>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace swd2 {
@@ -85,6 +86,11 @@ struct SdlPlatform::Impl {
     std::size_t voice_cursor{};
     bool loop_music{};
     std::vector<SDL_GameController*> controllers;
+    struct ControllerAxisState {
+        int horizontal{};
+        int vertical{};
+    };
+    std::unordered_map<SDL_JoystickID, ControllerAxisState> controller_axes;
 
     ~Impl() {
         for (auto* controller : controllers) {
@@ -124,6 +130,22 @@ struct SdlPlatform::Impl {
         if (found == controllers.end()) return;
         SDL_GameControllerClose(*found);
         controllers.erase(found);
+        controller_axes.erase(instance);
+    }
+
+    static InputAction update_axis_direction(
+        Sint16 value, int& latched, InputAction negative,
+        InputAction positive) {
+        // Use separate engage/release thresholds so a noisy centred stick
+        // cannot scroll a DOS selector repeatedly. Crossing through centre or
+        // directly into the opposite side re-arms exactly one direction.
+        constexpr auto engage = 16'000;
+        constexpr auto release = 8'000;
+        const auto next = value <= -engage ? -1 : value >= engage ? 1 :
+                          (value >= -release && value <= release ? 0 : latched);
+        if (next == latched) return InputAction::none;
+        latched = next;
+        return next < 0 ? negative : next > 0 ? positive : InputAction::none;
     }
 
     InputAction process_event(const SDL_Event& event) {
@@ -133,6 +155,20 @@ struct SdlPlatform::Impl {
         }
         if (event.type == SDL_CONTROLLERDEVICEREMOVED) {
             close_controller(event.cdevice.which);
+            return InputAction::none;
+        }
+        if (event.type == SDL_CONTROLLERAXISMOTION) {
+            auto& axes = controller_axes[event.caxis.which];
+            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX) {
+                return update_axis_direction(
+                    event.caxis.value, axes.horizontal,
+                    InputAction::left, InputAction::right);
+            }
+            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY) {
+                return update_axis_direction(
+                    event.caxis.value, axes.vertical,
+                    InputAction::up, InputAction::down);
+            }
             return InputAction::none;
         }
         return translate_event(event);
