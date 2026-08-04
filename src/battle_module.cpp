@@ -1021,9 +1021,25 @@ std::filesystem::path non_effect_voice_path(const std::filesystem::path& root,
 }
 
 void play_voice_cue(GameContext& context, const FigVoiceCue& cue) {
+    if (context.shared_state.u8(0x3f5) != 0U) return;
     const auto path = non_effect_voice_path(context.game_root, cue);
     if (std::filesystem::exists(path)) {
         context.platform.play_voice(read_file(path));
+    }
+}
+
+void play_battle_voice(GameContext& context,
+                       const std::filesystem::path& path) {
+    if (context.shared_state.u8(0x3f5) == 0U &&
+        std::filesystem::exists(path)) {
+        context.platform.play_voice(read_file(path));
+    }
+}
+
+void play_battle_music(GameContext& context,
+                       const std::filesystem::path& path, bool loop) {
+    if (context.shared_state.u8(0x3f4) == 0U) {
+        context.platform.play_music(read_file(path), loop);
     }
 }
 
@@ -2340,7 +2356,7 @@ void present_round_events(
                 if (std::filesystem::exists(path)) {
                     // FIG 5b37 edits the SP000 template and starts VOC playback
                     // immediately before entering the selected visual handler.
-                    context.platform.play_voice(read_file(path));
+                    play_battle_voice(context, path);
                 }
             }
         }
@@ -2464,7 +2480,7 @@ void present_round_events(
                     // 436a selects SP001/special/effect voice only after the
                     // common base->pose4 pair and immediately before jumping
                     // through DS:2bbd to the selected effect handler.
-                    context.platform.play_voice(read_file(path));
+                    play_battle_voice(context, path);
                 }
             }
         }
@@ -2685,7 +2701,7 @@ void present_round_events(
             if (voice) {
                 const auto path = effect_voice_path(context.game_root, *voice);
                 if (std::filesystem::exists(path)) {
-                    context.platform.play_voice(read_file(path));
+                    play_battle_voice(context, path);
                 }
             }
             auto shield_event = event;
@@ -3042,8 +3058,7 @@ BattleSurface present_victory_summary(
     const LegacyFont& fallback, const BattleSession& session,
     const BattleAbilityDatabase& abilities, const BattleRewards& rewards,
     std::uint16_t experience_share) {
-    context.platform.play_music(
-        read_file(context.game_root / "RX" / "WI01.RIX"), false);
+    play_battle_music(context, context.game_root / "RX" / "WI01.RIX", false);
     auto frame = compose_settlement_scene(
         base_surface, encounter, items, context.game_root, menu_sprites,
         std::span<const BattlePartyMember>(session.party()).first(
@@ -3083,8 +3098,7 @@ void present_defeat_summary(
     const SpriteArchive& menu_sprites, const LegacyFont& font,
     const LegacyFont& fallback, const BattleSession& session,
     const BattleAbilityDatabase& abilities) {
-    context.platform.play_music(
-        read_file(context.game_root / "RX" / "DEAD.RIX"), false);
+    play_battle_music(context, context.game_root / "RX" / "DEAD.RIX", false);
     auto frame = compose_settlement_scene(
         base_surface, encounter, items, context.game_root, menu_sprites,
         std::span<const BattlePartyMember>(session.party()).first(
@@ -3154,8 +3168,8 @@ void present_level_ups(
                           abilities.ability(*step->learned_ability).name_big5,
                           42 * 4, 163, 0x00);
             }
-            context.platform.play_music(
-                read_file(context.game_root / "RX" / "WI02.RIX"), false);
+            play_battle_music(
+                context, context.game_root / "RX" / "WI02.RIX", false);
             context.platform.present({
                 320, 200, frame.pixels,
                 std::span<const std::uint8_t, 768>(frame.palette),
@@ -3226,7 +3240,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
 
     std::ostringstream music;
     music << "FI0" << music_number << ".RIX";
-    context.platform.play_music(read_file(context.game_root / "RX" / music.str()), true);
+    play_battle_music(context, context.game_root / "RX" / music.str(), true);
     context.platform.present({320, 200, surface.pixels,
                               std::span<const std::uint8_t, 768>(surface.palette)});
 

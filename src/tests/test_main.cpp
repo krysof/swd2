@@ -6877,6 +6877,8 @@ void test_battle_module(const std::filesystem::path& game_root) {
     ScriptedPlatform prompt_platform;
     prompt_platform.actions = {swd2::InputAction::confirm};
     auto prompt_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    prompt_state.set_u8(0x3f4, 1U);
+    prompt_state.set_u8(0x3f5, 1U);
     const auto prompt_money = prompt_state.u16(0x104);
     prompt_state.set_u16(0x4a0, 150);  // ORC trailing "NY": default No
     swd2::GameContext prompt_context{game_root, prompt_state, prompt_platform};
@@ -6885,9 +6887,11 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 prompt_platform.presented == 2 &&
                 prompt_platform.frame_hashes.size() == 2 &&
                 prompt_platform.frame_hashes[1] == 9622397641277919182ULL &&
+                prompt_platform.music_calls == 0U &&
+                prompt_platform.voice_calls == 0U &&
                 prompt_context.shared_state.u16(0x4a0) == 0 &&
                 prompt_context.shared_state.u16(0x104) == prompt_money,
-            "FIG ORC NY prompt differs from exact 3de8/5c98 composition/default No");
+            "FIG ORC NY prompt/audio flags differ from exact 3de8/5c98/default No");
 }
 
 }  // namespace
