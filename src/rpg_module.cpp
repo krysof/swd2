@@ -2701,10 +2701,30 @@ private:
                 const auto actor_base = 0x106U + actor * 0x9fU;
                 const auto draw_pair = [&](std::uint16_t current,
                                            std::uint16_t maximum, int top) {
-                    draw_menu_number(frame, menu_sprites_, current,
-                                     52, top + 3, 111);
+                    // 47f8 right-aligns the current value against x=52 and
+                    // changes its MENU digit family at zero/quarter health.
+                    // The maximum begins at x=56; MENU 38 is the slash at
+                    // x=54,y+1. All coordinates are mode-X byte columns.
+                    auto digits = std::size_t{1};
+                    for (auto value = current; value >= 10U; value /= 10U) {
+                        ++digits;
+                    }
+                    const auto current_base = current == 0U
+                        ? 131U
+                        : current <= static_cast<std::uint16_t>(maximum >> 2U)
+                            ? 121U
+                            : 111U;
+                    draw_menu_number(
+                        frame, menu_sprites_, current,
+                        52 - static_cast<int>((digits - 1U) * 2U),
+                        top + 3, current_base);
                     draw_menu_number(frame, menu_sprites_, maximum,
-                                     62, top + 3, 111);
+                                     56, top + 3, 111);
+                    if (menu_sprites_.sprites().size() > 38U) {
+                        const auto& slash = menu_sprites_.sprites()[38U];
+                        blit(frame, menu_sprites_.pixels(38U),
+                             slash.width, slash.height, 54 * 4, top + 1);
+                    }
                 };
                 // RPG DATA:376a dispatches the post-status rows as strength,
                 // wisdom, agility, magic, reaction, battle power, defence,
@@ -2756,8 +2776,20 @@ private:
                             draw_status(entry);
                         }
                     } else if (index == 6U) {
-                        draw_menu_number(frame, menu_sprites_, state_.u16(0x104),
-                                         56, top + 3, 111);
+                        // 488b uses MENU 100 as the currency mark at x=46,
+                        // then the 101..110 digit family from x=50. This is
+                        // distinct from the 111..120 small numbers used by
+                        // ordinary attributes and inventory quantities.
+                        if (menu_sprites_.sprites().size() > 100U) {
+                            const auto& currency =
+                                menu_sprites_.sprites()[100U];
+                            blit(frame, menu_sprites_.pixels(100U),
+                                 currency.width, currency.height,
+                                 46 * 4, top);
+                        }
+                        draw_menu_number(frame, menu_sprites_,
+                                         state_.u16(0x104),
+                                         50, top + 3, 101);
                     } else if (index >= 7U && index <= 15U) {
                         const auto offset = scalar_offsets[index - 7U];
                         if (index == 10U || index == 15U) {
@@ -2767,7 +2799,7 @@ private:
                             draw_menu_number(
                                 frame, menu_sprites_,
                                 state_.u16(actor_base + offset),
-                                56, top + 3, 111);
+                                52, top + 3, 111);
                         }
                     } else if (index >= 17U && index <= 27U) {
                         const auto item = state_.u16(

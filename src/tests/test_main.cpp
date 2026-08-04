@@ -5897,6 +5897,10 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     state.set_u16(0x106U + 8U, 0x1ffeU);
+    state.set_u16(0x106U + 0x2dU, 0U);
+    state.set_u16(0x106U + 0x35U,
+                  static_cast<std::uint16_t>(
+                      state.u16(0x106U + 0x37U) >> 2U));
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
                 context, swd2::Marker::menu_ready) == swd2::Marker::none,
@@ -5905,9 +5909,9 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
                 platform.presented == 9U && platform.stop_calls == 1U,
             "RPG 2f64 actor selector did not enter/return from 26f3 Status");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
-                platform.frame_hashes[4] == 8457148711059547239ULL &&
+                platform.frame_hashes[4] == 7182592706806039312ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 7591659222446035225ULL &&
+                platform.frame_hashes[5] == 11838541749777298732ULL &&
                 platform.frame_hashes[6] == platform.frame_hashes[3] &&
                 platform.frame_hashes[7] == platform.frame_hashes[2] &&
                 platform.frame_hashes[8] == platform.frame_hashes[0],
