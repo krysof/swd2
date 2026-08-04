@@ -3634,6 +3634,52 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 support_effects == std::vector<std::uint16_t>{0x08, 0x0f},
             "FIG direct support composite did not restore/cleanse its party target");
 
+    // Execute every shipped, non-summon ITEM record whose +5 battle bit is
+    // set. This catches holes between the support, damage/status, tactical,
+    // escape, medium and composite adapters instead of relying on a handpicked
+    // subset of the 1138 input domain.
+    std::size_t shipped_battle_item_count = 0;
+    std::vector<std::uint16_t> invalid_shipped_battle_items;
+    for (std::uint16_t item_id = 0; item_id < 0x13aU; ++item_id) {
+        const auto record_index = static_cast<std::size_t>(item_id) + 2U;
+        if (record_index >= items.entry_count()) break;
+        const auto record = items.entry(record_index);
+        if (record.size() < 9U || (record[5] & 0x02U) == 0U) continue;
+        ++shipped_battle_item_count;
+
+        auto exhaustive_state =
+            swd2::SharedState::load(game_root / "SAVE.DA1");
+        exhaustive_state.set_u16(0x10, 1);
+        exhaustive_state.set_u16(0x382, item_id);
+        exhaustive_state.set_u16(actor_zero + 8, 0);
+        exhaustive_state.set_u16(actor_zero + 0x2d, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x2f, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x35, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x37, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x55, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x57, 60000);
+        exhaustive_state.set_u16(actor_zero + 0x5d, 1000);
+        auto exhaustive_session = swd2::BattleSession::create(
+            exhaustive_state, selected->get(), items, false);
+        auto exhaustive_commands = skip_commands;
+        exhaustive_commands[0] = {
+            swd2::PlayerCommandKind::item, 0, 0, 0,
+        };
+        const auto exhaustive_round = exhaustive_session.play_round(
+            exhaustive_commands, abilities, zero_random);
+        if (std::any_of(
+                exhaustive_round.events.begin(), exhaustive_round.events.end(),
+                [](const swd2::BattleSessionEvent& event) {
+                    return event.kind ==
+                           swd2::BattleEventKind::invalid_command;
+                })) {
+            invalid_shipped_battle_items.push_back(item_id);
+        }
+    }
+    require(shipped_battle_item_count == 124 &&
+                invalid_shipped_battle_items.empty(),
+            "FIG shipped +5-bit1 battle-item domain still contains an invalid dispatch");
+
     // 58fa skips a medium-dependent effect body but returns to the ordinary
     // payment/consumption path. The monster is untouched and the exact failed
     // selector remains available to every presentation frontend.

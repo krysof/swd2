@@ -803,24 +803,53 @@ BattleRoundResult BattleSession::play_round(
                         item.effect_code, target_index, nullptr, 0, 0,
                         item.id);
                     if (!applied) {
-                        std::array<PlayerSupportState, 4> support_states{};
-                        for (std::size_t index = 0; index < party_count_; ++index) {
-                            support_states[index] = party_[index].support_target();
-                        }
-                        const auto effect = apply_player_support_effect(
-                            item.effect_code, actor, target_index,
-                            std::span<PlayerSupportState>(support_states).first(party_count_),
-                            &player_support_runtime_);
-                        applied = effect.supported;
-                        if (applied) {
+                        if (item.effect_code <= 0x30U) {
+                            std::array<PlayerSupportState, 4> support_states{};
                             for (std::size_t index = 0; index < party_count_; ++index) {
-                                party_[index].apply_support_target(support_states[index]);
+                                support_states[index] = party_[index].support_target();
                             }
-                            add_ability_events(result.events,
-                                               BattleEventKind::player_ability,
-                                               false, actor, false, item.id,
-                                               item.effect_code,
-                                               effect.targets);
+                            const auto effect = apply_player_support_effect(
+                                item.effect_code, actor, target_index,
+                                std::span<PlayerSupportState>(support_states).first(
+                                    party_count_),
+                                &player_support_runtime_);
+                            applied = effect.supported;
+                            if (applied) {
+                                for (std::size_t index = 0; index < party_count_; ++index) {
+                                    party_[index].apply_support_target(
+                                        support_states[index]);
+                                }
+                                add_ability_events(result.events,
+                                                   BattleEventKind::player_ability,
+                                                   false, actor, false, item.id,
+                                                   item.effect_code,
+                                                   effect.targets);
+                            }
+                        } else {
+                            // Target bits control the selection page, but 1138
+                            // still dispatches the effect selector verbatim.
+                            // Shipped targetless environment items (31/3b..3f)
+                            // and odd records such as wine/5e would otherwise
+                            // be misrouted into the 01..30 support table.
+                            const auto monster_target =
+                                first_living_monster(command.target);
+                            if (monster_target == no_target) break;
+                            const auto effect = apply_player_ability_effect(
+                                item.effect_code, party_[actor].level,
+                                monster_target, monsters_, abilities, random);
+                            applied = effect.supported;
+                            if (applied) {
+                                for (std::size_t index = 0;
+                                     index < monsters_.size(); ++index) {
+                                    monster_ai_[index].hit_points =
+                                        monsters_[index].hit_points;
+                                }
+                                add_ability_events(
+                                    result.events,
+                                    BattleEventKind::player_ability,
+                                    false, actor, !effect.targets.empty(),
+                                    item.id, item.effect_code, effect.targets);
+                            }
                         }
                     }
                 }
