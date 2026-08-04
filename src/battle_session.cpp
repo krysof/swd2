@@ -412,25 +412,21 @@ BattleRoundResult BattleSession::play_round(
                                    applied.removed_monster_buff_mask);
                 return true;
             };
-            // FIG 57f2 reads ITEM[0x8c + ability_id] bytes +9/+0a,
-            // dispatches the low byte, and only dispatches the high byte when
-            // DS:[selected-monster + 33ad] is still non-zero.  Item execution
-            // at 1138 sets ability_id to item_id-0x8c before taking this exact
-            // path, so learned and inventory versions must share this helper.
-            const auto apply_composite = [&](std::size_t composite_id,
-                                             std::uint16_t presentation_id,
-                                             std::size_t preferred_target) {
-                if (composite_id >= composite_effects_.size() ||
-                    !composite_effects_[composite_id]) {
-                    return false;
-                }
+            // FIG 57f2 dispatches ITEM[0x8c + ability_id] bytes +9/+0a and
+            // skips the second byte only when the selected monster has died.
+            // Learned abilities supply their mapped ITEM record; 1138 stores
+            // item_id-8c for every direct item type, which maps straight back
+            // to that item's own +9/+0a bytes (including ids below 8ch via
+            // 16-bit wraparound).
+            const auto apply_composite = [&](
+                std::array<std::uint8_t, 2> nested,
+                std::uint16_t presentation_id,
+                std::size_t preferred_target) {
                 const auto target_index = first_living_monster(preferred_target);
                 if (target_index == no_target) return false;
-
-                const auto& composite = *composite_effects_[composite_id];
-                const std::array<std::uint8_t, 2> nested = {
-                    composite.first_effect, composite.second_effect,
-                };
+                const auto party_target = preferred_target < party_count_
+                                              ? preferred_target
+                                              : actor;
                 for (const auto effect_code : nested) {
                     if (monsters_[target_index].hit_points == 0) break;
                     if (const auto medium = fig_required_medium(effect_code);
@@ -444,10 +440,32 @@ BattleRoundResult BattleSession::play_round(
                         continue;
                     }
                     if (apply_tactical(
-                            effect_code, target_index, &monsters_[target_index],
+                            effect_code,
+                            effect_code == 0x61 ? target_index : party_target,
+                            &monsters_[target_index],
                             monster_definitions_[target_index].physical_attack,
                             monster_definitions_[target_index].evasion,
                             presentation_id)) {
+                        continue;
+                    }
+                    if (effect_code <= 0x30U) {
+                        std::array<PlayerSupportState, 4> support_states{};
+                        for (std::size_t index = 0; index < party_count_; ++index) {
+                            support_states[index] = party_[index].support_target();
+                        }
+                        const auto applied = apply_player_support_effect(
+                            effect_code, actor, party_target,
+                            std::span<PlayerSupportState>(support_states).first(
+                                party_count_),
+                            &player_support_runtime_);
+                        if (!applied.supported) return false;
+                        for (std::size_t index = 0; index < party_count_; ++index) {
+                            party_[index].apply_support_target(support_states[index]);
+                        }
+                        add_ability_events(result.events,
+                                           BattleEventKind::player_ability,
+                                           false, actor, false, presentation_id,
+                                           effect_code, applied.targets);
                         continue;
                     }
                     const auto applied = apply_player_ability_effect(
@@ -737,7 +755,9 @@ BattleRoundResult BattleSession::play_round(
                 bool applied = false;
                 if (item.effect_code == 0x6b) {
                     applied = apply_composite(
-                        item_ability_id, item.id, command.target);
+                        {item.first_composite_effect,
+                         item.second_composite_effect},
+                        item.id, command.target);
                 } else if (item.effect_code == 0) {
                     applied = true;  // dispatch entry zero is a literal RET
                     result.events.push_back({
@@ -891,8 +911,12 @@ BattleRoundResult BattleSession::play_round(
             if (ability.effect_code == 0x6b) {
                 const auto target_index = first_living_monster(command.target);
                 if (target_index == no_target ||
-                    !apply_composite(command.ability_id, command.ability_id,
-                                     command.target)) {
+                    command.ability_id >= composite_effects_.size() ||
+                    !composite_effects_[command.ability_id] ||
+                    !apply_composite(
+                        {composite_effects_[command.ability_id]->first_effect,
+                         composite_effects_[command.ability_id]->second_effect},
+                        command.ability_id, command.target)) {
                     if (!class_five) {
                         *resource = static_cast<std::uint16_t>(
                             *resource + ability.cost);

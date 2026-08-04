@@ -17,6 +17,10 @@ BattleItemDefinition BattleItemDefinition::parse(
     result.target_flags = item_record[6];
     result.effect_code = static_cast<std::uint16_t>(item_record[7]) |
                          (static_cast<std::uint16_t>(item_record[8]) << 8U);
+    if (item_record.size() >= 11U) {
+        result.first_composite_effect = item_record[9];
+        result.second_composite_effect = item_record[10];
+    }
     return result;
 }
 

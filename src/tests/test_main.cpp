@@ -1527,6 +1527,14 @@ void test_battle_database(const std::filesystem::path& game_root) {
                 battle_item.target_flags == 0x10 && battle_item.effect_code == 0x1c &&
                 battle_item.consumed_on_use() && !battle_item.targets_monster(),
             "ITEM.EXE unaligned FIG battle-item fields were not decoded");
+    const auto composite_item =
+        swd2::BattleItemDefinition::parse(248, items.entry(250));
+    require(composite_item.effect_code == 0x6b &&
+                composite_item.first_composite_effect == 0x08 &&
+                composite_item.second_composite_effect == 0x0f &&
+                composite_item.targets_party() &&
+                !composite_item.targets_monster(),
+            "ITEM.EXE direct composite +9/+a fields were not decoded");
 
     const auto abilities = swd2::BattleAbilityDatabase::load(game_root / "FIG.EXE");
     require(abilities.item_category_label(0) ==
@@ -3557,6 +3565,74 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     "FIG direct effect-63 item did not apply its speed buff");
         }
     }
+
+    // 1138 subtracts 8ch from every direct 6b item and 57f2 adds it back.
+    // Item 54 proves the 16-bit underflow case still resolves its own record,
+    // rather than indexing only the learned-ability 140..290 table.
+    auto wrapped_composite_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    wrapped_composite_state.set_u16(0x10, 1);
+    wrapped_composite_state.set_u16(0x382, 54);
+    wrapped_composite_state.set_u16(actor_zero + 0x2d, 60000);
+    wrapped_composite_state.set_u16(actor_zero + 0x2f, 60000);
+    wrapped_composite_state.set_u16(actor_zero + 0x5d, 1000);
+    auto wrapped_composite_session = swd2::BattleSession::create(
+        wrapped_composite_state, selected->get(), items);
+    auto wrapped_composite_commands = skip_commands;
+    wrapped_composite_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto wrapped_composite_round = wrapped_composite_session.play_round(
+        wrapped_composite_commands, abilities, zero_random);
+    std::vector<std::uint16_t> wrapped_effects;
+    for (const auto& event : wrapped_composite_round.events) {
+        if (event.kind == swd2::BattleEventKind::player_ability &&
+            event.source == 0 && event.ability_id == 54) {
+            wrapped_effects.push_back(event.effect_code);
+        }
+    }
+    require(wrapped_composite_session.inventory()[0] == 0 &&
+                wrapped_effects == std::vector<std::uint16_t>{0x31, 0x3b},
+            "FIG direct composite item below 8ch did not wrap to its own record");
+
+    // Item 248's two nested selectors target a party member. Composite
+    // dispatch therefore also has to route 01..30 through the support state
+    // adapter instead of assuming every nested selector hits a monster.
+    auto support_composite_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    support_composite_state.set_u16(0x10, 3);
+    support_composite_state.set_u16(0x382, 248);
+    support_composite_state.set_u16(actor_zero + 0x2d, 60000);
+    support_composite_state.set_u16(actor_zero + 0x2f, 60000);
+    support_composite_state.set_u16(actor_zero + 0x5d, 1000);
+    const auto support_target = actor_zero + 2U * 0x9fU;
+    support_composite_state.set_u16(support_target + 8, 0x0100);
+    support_composite_state.set_u16(support_target + 0x2d, 1000);
+    support_composite_state.set_u16(support_target + 0x2f, 1000);
+    support_composite_state.set_u16(support_target + 0x55, 1);
+    support_composite_state.set_u16(support_target + 0x57, 100);
+    auto support_composite_session = swd2::BattleSession::create(
+        support_composite_state, selected->get(), items);
+    auto support_composite_commands = skip_commands;
+    support_composite_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 2, 0,
+    };
+    const auto support_composite_round = support_composite_session.play_round(
+        support_composite_commands, abilities, zero_random);
+    std::vector<std::uint16_t> support_effects;
+    for (const auto& event : support_composite_round.events) {
+        if (event.kind == swd2::BattleEventKind::player_ability &&
+            event.source == 0 && event.ability_id == 248) {
+            require(!event.target_is_monster && event.target == 2,
+                    "FIG support composite item used a monster target");
+            support_effects.push_back(event.effect_code);
+        }
+    }
+    require(support_composite_session.inventory()[0] == 0 &&
+                support_composite_session.party()[2].ability_points == 100 &&
+                support_composite_session.party()[2].status_bits == 0 &&
+                support_effects == std::vector<std::uint16_t>{0x08, 0x0f},
+            "FIG direct support composite did not restore/cleanse its party target");
 
     // 58fa skips a medium-dependent effect body but returns to the ordinary
     // payment/consumption path. The monster is untouched and the exact failed
