@@ -519,7 +519,10 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 54: {
                 auto offset = static_cast<std::size_t>(0x106 + arg(0));
                 for (std::size_t i = 0; i < 50; ++i, ++offset) {
-                    if (state.u8(offset) == 0) {
+                    // RPG:5c2a uses a word CMP while advancing DI by one
+                    // byte. A slot is free only when this byte and its
+                    // successor are both zero; 5c32 then stores AL only.
+                    if (state.u16(offset) == 0) {
                         state.set_u8(offset, static_cast<std::uint8_t>(arg(1)));
                         break;
                     }

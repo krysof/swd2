@@ -4859,6 +4859,24 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                 host.presentations - before_presentations == 10,
             "event presentation and scripted movement opcodes did not execute");
 
+    const std::vector<std::vector<std::uint8_t>> byte_slot_records = {
+        event_words({54, 0x20, 0x1234, 0xffff}),
+    };
+    const auto byte_slot_archive =
+        swd2::ScriptArchive::from_records(byte_slot_records);
+    auto byte_slots = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto slot_base = std::size_t{0x126};
+    byte_slots.set_u8(slot_base, 0);
+    byte_slots.set_u8(slot_base + 1, 1);
+    byte_slots.set_u8(slot_base + 2, 0);
+    byte_slots.set_u8(slot_base + 3, 0);
+    const auto byte_slot_result = swd2::execute_event(
+        byte_slot_archive, 2, byte_slots, nullptr, 0, host);
+    require(byte_slot_result.status == swd2::EventVmStatus::completed &&
+                byte_slots.u8(slot_base) == 0 &&
+                byte_slots.u8(slot_base + 2) == 0x34,
+            "event opcode 54 did not use its overlapping word-empty scan");
+
     auto positioned_record = event_words({53, 7, 9});
     positioned_record.insert(positioned_record.end(),
                              {0xa4, 0x40, ' ', 0xa4, 0x41, '$', '$', 0xff, 0xff});
