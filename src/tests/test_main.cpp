@@ -6536,6 +6536,36 @@ void test_rpg_system_menu_speed_and_exit(
             "RPG system menu/value/exit selection frames did not change");
 }
 
+void test_rpg_system_value_confirmation_escape(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::confirm,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,     // message speed
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // first value
+        swd2::InputAction::cancel,   // 46cc Escape commits default Yes
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    require(state.u16(0x3f2) != 0U,
+            "fixture no longer exposes a nonzero message speed");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context.shared_state.u16(0x3f2) == 0U &&
+                platform.cursor == platform.actions.size() &&
+                platform.presented == 12U &&
+                platform.stop_calls == 1U,
+            "RPG 4e4b lost nested 46cc Escape/default-Yes commit behavior");
+}
+
 void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
@@ -8003,6 +8033,7 @@ int main(int argc, char** argv) {
         test_rpg_field_magic_travel_current(argv[1]);
         test_rpg_field_magic_travel_restricted(argv[1]);
         test_rpg_system_menu_speed_and_exit(argv[1]);
+        test_rpg_system_value_confirmation_escape(argv[1]);
         test_rpg_system_menu_save(argv[1]);
         test_rpg_system_menu_save_restricted(argv[1]);
         test_rpg_system_menu_load(argv[1]);

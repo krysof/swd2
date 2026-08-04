@@ -2917,7 +2917,8 @@ private:
         }
     }
 
-    bool confirm_binary_choice(Viewport frame) {
+    bool confirm_binary_choice(Viewport frame,
+                               bool cancel_uses_current_choice = false) {
         std::uint8_t choice = 0;
         while (true) {
             auto shown = frame;
@@ -2945,7 +2946,12 @@ private:
                 quit_requested_ = true;
                 return false;
             }
-            if (action == InputAction::cancel) return false;
+            if (action == InputAction::cancel) {
+                // 4e4b forgets to inspect DATA:3801 after nested 46cc, so
+                // Escape accepts the current choice there. Direct callers
+                // such as system exit do inspect it and therefore cancel.
+                return cancel_uses_current_choice && choice == 0;
+            }
             if (action == InputAction::left) choice = 0;
             else if (action == InputAction::right) choice = 1;
             else if (action == InputAction::confirm) return choice == 0;
@@ -2983,7 +2989,9 @@ private:
             else if (action == InputAction::confirm) {
                 // 4ef7 preserves AX across 46cc and commits it only when the
                 // default-left Yes choice leaves DATA:35e8 at zero.
-                if (confirm_binary_choice(std::move(frame))) return selected;
+                if (confirm_binary_choice(std::move(frame), true)) {
+                    return selected;
+                }
                 return std::nullopt;
             }
         }
