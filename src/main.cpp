@@ -215,6 +215,10 @@ void run_monolithic(const std::filesystem::path& game_root, const std::string& s
             swd2::SaveSlot::save_as(save_root, selected, state, map);
             persist_browser_saves();
         },
+        [&slot, &game_root, &save_root](std::uint8_t selected) {
+            slot = swd2::SaveSlot::open(game_root, save_root, selected);
+            return swd2::LoadedSaveSlot{slot.state(), slot.map_database()};
+        },
     };
     swd2::ModuleRegistry modules;
     modules.add(std::make_unique<swd2::MeoModule>());
@@ -243,6 +247,10 @@ void play_monolithic(const std::filesystem::path& game_root,
         [&save_root](std::uint8_t selected, const swd2::SharedState& state,
                      const swd2::MapDatabase& map) {
             swd2::SaveSlot::save_as(save_root, selected, state, map);
+        },
+        [&slot, &game_root, &save_root](std::uint8_t selected) {
+            slot = swd2::SaveSlot::open(game_root, save_root, selected);
+            return swd2::LoadedSaveSlot{slot.state(), slot.map_database()};
         },
     };
     swd2::ModuleRegistry modules;

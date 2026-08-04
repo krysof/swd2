@@ -518,14 +518,19 @@ public:
                  std::span<const std::uint8_t> equipment_two_hand_error,
                  std::span<const std::uint8_t> equipment_slot_error,
                  std::span<const std::uint8_t> field_action_error,
+                 std::span<const std::uint8_t> system_menu_labels,
+                 std::span<const std::uint8_t> system_exit_prompt,
                  std::span<const std::uint8_t> inventory_category_labels,
                  std::span<const std::uint8_t> equipment_slot_labels,
                  std::span<const std::uint8_t> equipment_stat_labels,
                  std::function<Viewport()> scene_provider,
                  MapDatabase* map_database, const SaveSlotWriter* save_slot,
+                 const SaveSlotLoader* load_slot,
+                 std::shared_ptr<MapDatabase>* live_map_database,
                  FieldActionRuntime& field_action_runtime,
                  SharedState& state, std::filesystem::path game_root,
-                 std::filesystem::path* playing_music)
+                 std::filesystem::path* playing_music,
+                 bool& music_enabled, bool& sound_enabled)
         : platform_(platform), font_(font), name_font_(name_font),
           item_font_(item_font), items_(items), item_texts_(item_texts),
           menu_sprites_(menu_sprites), equipment_art_(equipment_art),
@@ -541,13 +546,17 @@ public:
           equipment_two_hand_error_(equipment_two_hand_error),
           equipment_slot_error_(equipment_slot_error),
           field_action_error_(field_action_error),
+          system_menu_labels_(system_menu_labels),
+          system_exit_prompt_(system_exit_prompt),
           inventory_category_labels_(inventory_category_labels),
           equipment_slot_labels_(equipment_slot_labels),
           equipment_stat_labels_(equipment_stat_labels),
           scene_provider_(std::move(scene_provider)),
           map_database_(map_database), save_slot_(save_slot),
+          load_slot_(load_slot), live_map_database_(live_map_database),
           field_action_runtime_(field_action_runtime), state_(state),
-          game_root_(std::move(game_root)), playing_music_(playing_music) {}
+          game_root_(std::move(game_root)), playing_music_(playing_music),
+          music_enabled_(music_enabled), sound_enabled_(sound_enabled) {}
 
     void show_dialogue(std::uint16_t, std::span<const std::uint8_t> text) override {
         std::size_t offset = 0;
@@ -1373,11 +1382,9 @@ public:
     // RPG.EXE:2e63 is the field menu entered by the second action key.  It is
     // a directional diamond, not a conventional vertical host menu: Status,
     // Item, System and Magic are selected directly by Up/Right/Down/Left.
-    // This first portable entry restores the exact common page and connects
-    // the Item branch to the already reconstructed 39ed inventory state
-    // machine.  The other original branches remain on the diamond until their
-    // own complete screens have been reconstructed rather than substituting
-    // invented native widgets.
+    // The Item and System branches connect to their reconstructed state
+    // machines.  Status and Magic remain on the diamond until their own full
+    // screens have been recovered rather than substituting native widgets.
     [[nodiscard]] bool run_field_menu() {
         std::size_t selected = 2;  // 2e63 initializes DATA:35e2 to System.
         while (true) {
@@ -1455,6 +1462,9 @@ public:
                     state_, InventoryUiMode::general);
                 if (quit_requested_) return false;
                 if (result == InventoryUiResult::map_reload) return true;
+            } else if (action == InputAction::confirm && selected == 2U) {
+                if (run_system_menu()) return true;
+                if (quit_requested_) return false;
             }
         }
     }
@@ -1462,6 +1472,228 @@ public:
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
 
 private:
+    std::optional<std::size_t> select_system_value(Viewport base,
+                                                   std::size_t initial) {
+        auto selected = std::min<std::size_t>(initial, 4U);
+        while (true) {
+            auto frame = base;
+            draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                    4, 112, 7, 4);
+            draw_legacy_text(frame, item_font_, save_slot_prompt_,
+                             10 * 4, 125, 260, 16, 15);
+            if (menu_sprites_.sprites().size() > 141U) {
+                const auto& cursor = menu_sprites_.sprites()[141];
+                blit(frame, menu_sprites_.pixels(141),
+                     cursor.width, cursor.height,
+                     (14 + static_cast<int>(selected) * 8) * 4, 141);
+            }
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return std::nullopt;
+            }
+            if (action == InputAction::cancel) return std::nullopt;
+            if (action == InputAction::left && selected != 0U) --selected;
+            else if (action == InputAction::right && selected != 4U) ++selected;
+            else if (action == InputAction::confirm) return selected;
+        }
+    }
+
+    bool confirm_system_exit(Viewport frame) {
+        std::uint8_t choice = 0;
+        while (true) {
+            auto shown = frame;
+            draw_bottom_message(shown, system_exit_prompt_);
+            const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+                if (sprite >= menu_sprites_.sprites().size()) return;
+                const auto& info = menu_sprites_.sprites()[sprite];
+                blit_opaque(shown, menu_sprites_.pixels(sprite),
+                            info.width, info.height, x_byte * 4, y);
+            };
+            // 46cc is shared by system exit and save confirmation.
+            opaque(0, 23, 147);
+            opaque(0, 41, 147);
+            opaque(29, 29, 156);
+            opaque(8, 47, 156);
+            apply_rpg_binary_choice_highlight(
+                shown.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(shown.palette),
+                23, 41, 147, choice);
+            platform_.present({
+                320, 200, shown.pixels,
+                std::span<const std::uint8_t, 768>(shown.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::cancel) return false;
+            if (action == InputAction::left) choice = 0;
+            else if (action == InputAction::right) choice = 1;
+            else if (action == InputAction::confirm) return choice == 0;
+        }
+    }
+
+    void run_system_save(Viewport base) {
+        if ((state_.u16(0x408) & 0x2000U) == 0U ||
+            map_database_ == nullptr || save_slot_ == nullptr ||
+            !*save_slot_) {
+            return;
+        }
+        RpgSaveSlotSelector selector;
+        while (true) {
+            auto frame = base;
+            draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                    4, 112, 7, 4);
+            draw_legacy_text(frame, item_font_, save_slot_prompt_,
+                             10 * 4, 125, 260, 16, 15);
+            if (menu_sprites_.sprites().size() > 141U) {
+                const auto& cursor = menu_sprites_.sprites()[141];
+                blit(frame, menu_sprites_.pixels(141),
+                     cursor.width, cursor.height,
+                     (14 + static_cast<int>(selector.slot()) * 8) * 4, 141);
+            }
+            if (selector.confirming()) {
+                const auto opaque = [&](std::size_t sprite,
+                                        int x_byte, int y) {
+                    if (sprite >= menu_sprites_.sprites().size()) return;
+                    const auto& info = menu_sprites_.sprites()[sprite];
+                    blit_opaque(frame, menu_sprites_.pixels(sprite),
+                                info.width, info.height, x_byte * 4, y);
+                };
+                opaque(0, 23, 147);
+                opaque(0, 41, 147);
+                opaque(29, 29, 156);
+                opaque(8, 47, 156);
+                apply_rpg_binary_choice_highlight(
+                    frame.pixels, 320, 200,
+                    std::span<const std::uint8_t, 768>(frame.palette),
+                    23, 41, 147, selector.confirmation_choice());
+            }
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto result = selector.input(platform_.wait_for_input());
+            if (result == RpgSaveSelectorResult::quit) {
+                quit_requested_ = true;
+                return;
+            }
+            if (result == RpgSaveSelectorResult::cancelled) return;
+            if (result == RpgSaveSelectorResult::committed) {
+                (*save_slot_)(
+                    static_cast<std::uint8_t>(selector.slot() + 1U),
+                    state_, *map_database_);
+                return;
+            }
+        }
+    }
+
+    [[nodiscard]] bool run_system_menu() {
+        std::size_t selected = 0;
+        while (true) {
+            auto frame = scene_provider_();
+            // 4b76/4dbd: seven rows at mode-X (20,0), four middle pieces.
+            draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                    20, 0, 4, 7);
+            draw_legacy_text(frame, item_font_, system_menu_labels_,
+                             28 * 4, 13, 128, 112, 15);
+            static constexpr std::array<std::uint8_t, 2> enabled_label{
+                0xb6, 0x7d};  // 開
+            static constexpr std::array<std::uint8_t, 2> disabled_label{
+                0xc3, 0xf6};  // 關
+            draw_legacy_text(
+                frame, item_font_,
+                music_enabled_ ? std::span<const std::uint8_t>(enabled_label)
+                               : std::span<const std::uint8_t>(disabled_label),
+                40 * 4, 13, 16, 16, 0x85);
+            draw_legacy_text(
+                frame, item_font_,
+                sound_enabled_ ? std::span<const std::uint8_t>(enabled_label)
+                               : std::span<const std::uint8_t>(disabled_label),
+                40 * 4, 29, 16, 16, 0x85);
+            draw_menu_number(frame, menu_sprites_,
+                             static_cast<std::uint16_t>(state_.u16(0x3f2) + 1U),
+                             49, 80, 111);
+            draw_menu_number(frame, menu_sprites_, state_.u16(0x406),
+                             49, 96, 111);
+            if (menu_sprites_.sprites().size() > 1U) {
+                const auto& cursor = menu_sprites_.sprites()[1];
+                blit(frame, menu_sprites_.pixels(1),
+                     cursor.width, cursor.height, 23 * 4,
+                     9 + static_cast<int>(selected) * 16);
+            }
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::cancel) return false;
+            if (action == InputAction::up && selected != 0U) {
+                --selected;
+                continue;
+            }
+            if (action == InputAction::down && selected != 6U) {
+                ++selected;
+                continue;
+            }
+            if (action != InputAction::confirm) continue;
+
+            if (selected == 0U) {
+                music_enabled_ = !music_enabled_;
+                if (!music_enabled_) {
+                    platform_.stop_audio();
+                } else if (playing_music_ != nullptr &&
+                           !playing_music_->empty()) {
+                    const auto path = game_root_ / *playing_music_;
+                    if (std::filesystem::is_regular_file(path)) {
+                        platform_.play_music(read_file(path), true);
+                    }
+                }
+            } else if (selected == 1U) {
+                sound_enabled_ = !sound_enabled_;
+            } else if (selected == 2U) {
+                const auto slot = select_system_value(frame, 0);
+                if (quit_requested_) return false;
+                if (slot && load_slot_ != nullptr && *load_slot_ &&
+                    live_map_database_ != nullptr) {
+                    auto loaded = (*load_slot_)(
+                        static_cast<std::uint8_t>(*slot + 1U));
+                    if (!loaded.map_database) {
+                        throw std::runtime_error(
+                            "RPG system load returned no MAPZ database");
+                    }
+                    state_ = std::move(loaded.state);
+                    *live_map_database_ = std::move(loaded.map_database);
+                    return true;
+                }
+            } else if (selected == 3U) {
+                run_system_save(frame);
+                if (quit_requested_) return false;
+            } else if (selected == 4U) {
+                const auto value = select_system_value(
+                    frame, state_.u16(0x3f2));
+                if (quit_requested_) return false;
+                if (value) state_.set_u16(0x3f2, static_cast<std::uint16_t>(*value));
+            } else if (selected == 5U) {
+                const auto initial = state_.u16(0x406) == 0U
+                    ? 0U : static_cast<std::size_t>(state_.u16(0x406) - 1U);
+                const auto value = select_system_value(frame, initial);
+                if (quit_requested_) return false;
+                if (value) state_.set_u16(
+                    0x406, static_cast<std::uint16_t>(*value + 1U));
+            } else if (selected == 6U && confirm_system_exit(frame)) {
+                quit_requested_ = true;
+                return false;
+            }
+        }
+    }
+
     void draw_bottom_message(Viewport& frame,
                              std::span<const std::uint8_t> text) const {
         // 49d0 begins with 2cce: a 7x4 selector panel at Mode-X (4,112),
@@ -1601,8 +1833,8 @@ private:
         if (std::filesystem::is_regular_file(path)) {
             // RPG DS:3bf5 is RX/RI000.RIX. Handler 5ab5 patches those digits
             // and calls 144b, the normal looping RIX start routine.
-            platform_.play_music(read_file(path), true);
             if (playing_music_) *playing_music_ = relative;
+            if (music_enabled_) platform_.play_music(read_file(path), true);
         }
     }
 
@@ -1645,6 +1877,7 @@ private:
     }
 
     void play_voice(std::uint16_t number) {
+        if (!sound_enabled_) return;
         std::ostringstream name;
         name << "SP" << std::setw(3) << std::setfill('0') << number << ".VOC";
         const auto path = game_root_ / "VC" / name.str();
@@ -1674,16 +1907,22 @@ private:
     std::span<const std::uint8_t> equipment_two_hand_error_;
     std::span<const std::uint8_t> equipment_slot_error_;
     std::span<const std::uint8_t> field_action_error_;
+    std::span<const std::uint8_t> system_menu_labels_;
+    std::span<const std::uint8_t> system_exit_prompt_;
     std::span<const std::uint8_t> inventory_category_labels_;
     std::span<const std::uint8_t> equipment_slot_labels_;
     std::span<const std::uint8_t> equipment_stat_labels_;
     std::function<Viewport()> scene_provider_;
     MapDatabase* map_database_{};
     const SaveSlotWriter* save_slot_{};
+    const SaveSlotLoader* load_slot_{};
+    std::shared_ptr<MapDatabase>* live_map_database_{};
     FieldActionRuntime& field_action_runtime_;
     SharedState& state_;
     std::filesystem::path game_root_;
     std::filesystem::path* playing_music_{};
+    bool& music_enabled_;
+    bool& sound_enabled_;
     std::optional<PlanarSpriteSet> cutscene_;
     std::map<std::uint16_t, SpriteArchive> item_preview_cache_;
     std::optional<std::uint16_t> cutscene_dictionary_id_;
@@ -1905,6 +2144,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3728);
     const auto field_action_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3620);
+    const auto system_menu_labels = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x39e6);
+    const auto system_exit_prompt = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3a36);
     // RPG.EXE:3d7e indexes forty-two fixed two-glyph type names. Equipment
     // uses one eleven-line label string and four consecutive $$-terminated
     // statistic labels rather than host-language UI text.
@@ -1964,7 +2207,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
     const auto requested_music =
         normalize_dos_asset_path(context.shared_state.music_path());
     if (!requested_music.empty() && requested_music != playing_music) {
-        context.platform.play_music(read_file(context.game_root / requested_music), true);
+        if (music_enabled_) {
+            context.platform.play_music(
+                read_file(context.game_root / requested_music), true);
+        }
         playing_music = requested_music;
     }
     static_cast<void>(event_archive);
@@ -1996,12 +2242,15 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           shop_quantity_error, shop_unsellable_error,
                           equipment_actor_error, equipment_two_hand_error,
                           equipment_slot_error, field_action_error,
+                          system_menu_labels, system_exit_prompt,
                           inventory_category_labels, equipment_slot_labels,
                           equipment_stat_labels,
                           compose_scene,
                           &map_database, &context.save_slot,
+                          &context.load_slot, &context.map_database,
                           field_action_runtime,
-                          context.shared_state, context.game_root, &playing_music);
+                          context.shared_state, context.game_root, &playing_music,
+                          music_enabled_, sound_enabled_);
         const auto entity = map_entity(location.area, entity_index);
         const auto result = execute_event(
             event_archive, entity.event_directory_offset, context.shared_state,
@@ -2029,13 +2278,15 @@ Marker RpgModule::run(GameContext& context, Marker) {
                               shop_quantity_error, shop_unsellable_error,
                               equipment_actor_error, equipment_two_hand_error,
                               equipment_slot_error, field_action_error,
+                              system_menu_labels, system_exit_prompt,
                               inventory_category_labels, equipment_slot_labels,
                               equipment_stat_labels,
                               compose_scene,
                               &map_database, &context.save_slot,
+                              &context.load_slot, &context.map_database,
                               field_action_runtime,
                               context.shared_state, context.game_root,
-                              &playing_music);
+                              &playing_music, music_enabled_, sound_enabled_);
             const auto map_reload = host.run_field_menu();
             if (host.quit_requested()) {
                 context.platform.stop_audio();

@@ -15,6 +15,13 @@ namespace swd2 {
 using SaveSlotWriter = std::function<void(std::uint8_t, const SharedState&,
                                           const MapDatabase&)>;
 
+struct LoadedSaveSlot {
+    SharedState state;
+    std::shared_ptr<MapDatabase> map_database;
+};
+
+using SaveSlotLoader = std::function<LoadedSaveSlot(std::uint8_t)>;
+
 struct GameContext {
     std::filesystem::path game_root;
     SharedState shared_state;
@@ -26,6 +33,9 @@ struct GameContext {
     // deliberately platform-neutral: the core chooses slot 1..5 and supplies
     // both live halves of the DOS save pair.
     SaveSlotWriter save_slot;
+    // Optional matching load hook used by RPG's System/Read row. The core
+    // replaces both halves atomically at the next map-resource boundary.
+    SaveSlotLoader load_slot;
 };
 
 class GameModule {

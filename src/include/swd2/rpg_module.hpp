@@ -17,6 +17,8 @@ private:
     std::optional<MapDatabase> map_database_;
     std::filesystem::path map_database_path_;
     bool pending_map_reload_{};
+    bool music_enabled_{true};
+    bool sound_enabled_{true};
 };
 
 }  // namespace swd2
