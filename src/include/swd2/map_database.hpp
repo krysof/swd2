@@ -9,6 +9,8 @@
 
 namespace swd2 {
 
+class SharedState;
+
 // MAPA.EXE is not executable code. Its MZ load image is the immutable world
 // database. MAPZ.DA0..5/DAQ use the same image layout without MAPA's final
 // 0xffff marker and contain the mutable copy saved by RPG.EXE.
@@ -92,5 +94,11 @@ private:
     std::size_t header_size_{};
     std::size_t image_end_{};
 };
+
+// Installs one MAPA/MAPZ location with RPG.EXE:10fd semantics.  Bit 8000h
+// selects the relative-placement early return used by event opcode 37; the
+// ordinary form also installs the area's name, flags and five resource paths.
+void install_map_location(SharedState& state, MapDatabase& database,
+                          std::uint16_t encoded_directory_offset);
 
 }  // namespace swd2

@@ -1,5 +1,7 @@
 #include "swd2/map_database.hpp"
 
+#include "swd2/shared_state.hpp"
+
 #include <algorithm>
 #include <fstream>
 #include <iterator>
@@ -299,6 +301,52 @@ MapEntityRecord map_entity(const MapAreaRecord& area, std::size_t index) {
         area.entity_fields[9][index],
         area.entity_fields[10][index],
     };
+}
+
+void install_map_location(SharedState& state, MapDatabase& database,
+                          std::uint16_t encoded_directory_offset) {
+    const auto relative_position =
+        (encoded_directory_offset & 0x8000U) != 0;
+    const auto directory_offset =
+        static_cast<std::uint16_t>(encoded_directory_offset & 0x1fffU);
+    const auto& location =
+        database.location_at_directory_offset(directory_offset);
+    const auto previous_actor_x = state.actor_screen_x();
+    const auto previous_actor_y = state.actor_screen_y();
+    state.set_u16(0x424, directory_offset);
+    state.set_u16(0x40d, location.map_position);
+    state.set_viewport_x(location.viewport_x);
+    state.set_viewport_y(location.viewport_y);
+    for (std::size_t i = 0; i < 12; ++i) {
+        if (relative_position) {
+            state.set_u16(
+                0x12 + i * 2,
+                static_cast<std::uint16_t>(
+                    state.u16(0x12 + i * 2) + location.actor_screen_x -
+                    previous_actor_x));
+            state.set_u16(
+                0x2a + i * 2,
+                static_cast<std::uint16_t>(
+                    state.u16(0x2a + i * 2) + location.actor_screen_y -
+                    previous_actor_y));
+        } else {
+            state.set_u16(0x12 + i * 2, location.actor_screen_x);
+            state.set_u16(0x2a + i * 2, location.actor_screen_y);
+            state.set_u16(0xba + i * 2, 7);
+        }
+        state.set_u16(0xa2 + i * 2, location.actor_direction);
+    }
+    if (relative_position) return;
+
+    for (std::size_t i = 0; i < location.big5_name.size(); ++i) {
+        state.set_u8(0x3f6 + i, location.big5_name[i]);
+    }
+    state.set_u16(0x408, location.area.flags);
+    state.set_dos_string(0x42d, 22, location.area.graphics_path);
+    state.set_dos_string(0x443, 22, location.area.layout_path);
+    state.set_dos_string(0x459, 22, location.area.music_path);
+    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+    state.set_dos_string(0x485, 24, location.area.event_font_path);
 }
 
 }  // namespace swd2

@@ -114,34 +114,6 @@ void move_scripted_actor(SharedState& state, std::uint16_t opcode,
     }
 }
 
-void load_map_location(SharedState& state, MapDatabase& database,
-                       std::uint16_t encoded_directory_offset) {
-    const auto position_only = (encoded_directory_offset & 0x8000U) != 0;
-    const auto directory_offset =
-        static_cast<std::uint16_t>(encoded_directory_offset & 0x1fffU);
-    const auto& location = database.location_at_directory_offset(directory_offset);
-    state.set_u16(0x424, directory_offset);
-    state.set_u16(0x40d, location.map_position);
-    state.set_viewport_x(location.viewport_x);
-    state.set_viewport_y(location.viewport_y);
-    state.set_actor_screen_x(location.actor_screen_x);
-    state.set_actor_screen_y(location.actor_screen_y);
-    for (std::size_t i = 0; i < 12; ++i) {
-        state.set_u16(0xa2 + i * 2, location.actor_direction);
-    }
-    if (position_only) return;
-
-    for (std::size_t i = 0; i < location.big5_name.size(); ++i) {
-        state.set_u8(0x3f6 + i, location.big5_name[i]);
-    }
-    state.set_u16(0x408, location.area.flags);
-    state.set_dos_string(0x42d, 22, location.area.graphics_path);
-    state.set_dos_string(0x443, 22, location.area.layout_path);
-    state.set_dos_string(0x459, 22, location.area.music_path);
-    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
-    state.set_dos_string(0x485, 24, location.area.event_font_path);
-}
-
 }  // namespace
 
 EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t directory_offset,
@@ -445,7 +417,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 // edc's 8000h form sets SAVE+426; 10fd then returns at 1160
                 // after placement/direction and never replaces paths/entities.
                 if (!position_only) state.set_u8(0x459, 0);
-                load_map_location(state, *map_database, arg(0));
+                install_map_location(state, *map_database, arg(0));
                 if (position_only) break;
                 result.relocated_area = map_database->location_at_directory_offset(
                     static_cast<std::uint16_t>(arg(0) & 0x1fffU)).area;

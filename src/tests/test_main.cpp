@@ -5144,8 +5144,11 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 state.event_data_path() == destination.area.event_font_path,
             "event opcode 37 did not continue/persist opcode 3 on the destination area");
     for (std::size_t i = 0; i < 12; ++i) {
-        require(state.u16(0xa2 + i * 2) == destination.actor_direction,
-                "event opcode 37 did not synchronize actor directions");
+        require(state.u16(0x12 + i * 2) == destination.actor_screen_x &&
+                    state.u16(0x2a + i * 2) == destination.actor_screen_y &&
+                    state.u16(0xba + i * 2) == 7U &&
+                    state.u16(0xa2 + i * 2) == destination.actor_direction,
+                "event opcode 37 did not reset the twelve actor placements");
     }
 
     const std::vector<std::vector<std::uint8_t>> position_records = {
@@ -5154,6 +5157,14 @@ void test_event_vm(const std::filesystem::path& game_root) {
     const auto position_archive =
         swd2::ScriptArchive::from_records(position_records);
     auto position_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    for (std::size_t i = 0; i < 12; ++i) {
+        position_state.set_u16(0x12 + i * 2,
+                               static_cast<std::uint16_t>(20U + i * 2U));
+        position_state.set_u16(0x2a + i * 2,
+                               static_cast<std::uint16_t>(40U + i * 3U));
+        position_state.set_u16(0xba + i * 2,
+                               static_cast<std::uint16_t>(100U + i));
+    }
     const auto& original_location = world.location_at_directory_offset(8);
     position_state.set_dos_string(
         0x42d, 22, original_location.area.graphics_path);
@@ -5182,6 +5193,19 @@ void test_event_vm(const std::filesystem::path& game_root) {
                     original_location.area.music_path &&
                 position_state.u16(0x104) == position_money + 3U,
             "event opcode 37 position-only form reloaded destination resources");
+    for (std::size_t i = 0; i < 12; ++i) {
+        require(
+            position_state.u16(0x12 + i * 2) ==
+                    static_cast<std::uint16_t>(
+                        20U + i * 2U + destination.actor_screen_x - 20U) &&
+                position_state.u16(0x2a + i * 2) ==
+                    static_cast<std::uint16_t>(
+                        40U + i * 3U + destination.actor_screen_y - 40U) &&
+                position_state.u16(0xba + i * 2) == 100U + i &&
+                position_state.u16(0xa2 + i * 2) ==
+                    destination.actor_direction,
+            "event opcode 37 relative form did not preserve the follower formation");
+    }
 }
 
 class ScriptedPlatform final : public swd2::PlatformBackend {
