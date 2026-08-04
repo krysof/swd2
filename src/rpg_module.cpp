@@ -520,6 +520,7 @@ public:
                  std::span<const std::uint8_t> field_action_error,
                  std::span<const std::uint8_t> system_menu_labels,
                  std::span<const std::uint8_t> system_exit_prompt,
+                 std::span<const std::uint8_t> status_menu_labels,
                  std::span<const std::uint8_t> inventory_category_labels,
                  std::span<const std::uint8_t> equipment_slot_labels,
                  std::span<const std::uint8_t> equipment_stat_labels,
@@ -548,6 +549,7 @@ public:
           field_action_error_(field_action_error),
           system_menu_labels_(system_menu_labels),
           system_exit_prompt_(system_exit_prompt),
+          status_menu_labels_(status_menu_labels),
           inventory_category_labels_(inventory_category_labels),
           equipment_slot_labels_(equipment_slot_labels),
           equipment_stat_labels_(equipment_stat_labels),
@@ -1380,11 +1382,11 @@ public:
     }
 
     // RPG.EXE:2e63 is the field menu entered by the second action key.  It is
-    // a directional diamond, not a conventional vertical host menu: Status,
-    // Item, System and Magic are selected directly by Up/Right/Down/Left.
+    // a directional diamond, not a conventional vertical host menu: Magic,
+    // Item, System and Status are selected directly by Up/Right/Down/Left.
     // The Item and System branches connect to their reconstructed state
-    // machines.  Status and Magic remain on the diamond until their own full
-    // screens have been recovered rather than substituting native widgets.
+    // machines. Magic remains on the diamond until its complete field-casting
+    // state machine has been recovered rather than substituting native UI.
     [[nodiscard]] bool run_field_menu() {
         std::size_t selected = 2;  // 2e63 initializes DATA:35e2 to System.
         while (true) {
@@ -1465,6 +1467,9 @@ public:
             } else if (action == InputAction::confirm && selected == 2U) {
                 if (run_system_menu()) return true;
                 if (quit_requested_) return false;
+            } else if (action == InputAction::confirm && selected == 3U) {
+                run_status_menu();
+                if (quit_requested_) return false;
             }
         }
     }
@@ -1472,6 +1477,131 @@ public:
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
 
 private:
+    void run_status_menu() {
+        const auto party_count = std::max<std::size_t>(
+            1, std::min<std::size_t>(state_.u16(0x10), 4));
+        std::size_t actor = 0;
+        while (true) {
+            // 2f64 uses the common 2634 directional actor selector before
+            // entering 26f3. A cancellation here returns to the field diamond.
+            while (true) {
+                auto actor_frame = scene_provider_();
+                draw_rpg_party_target_cards(
+                    actor_frame, menu_sprites_, state_, party_count, actor);
+                platform_.present({
+                    320, 200, actor_frame.pixels,
+                    std::span<const std::uint8_t, 768>(actor_frame.palette)});
+                const auto action = platform_.wait_for_input();
+                if (action == InputAction::quit) {
+                    quit_requested_ = true;
+                    return;
+                }
+                if (action == InputAction::cancel) return;
+                if (const auto target = rpg_party_target_for_direction(
+                        action, party_count)) {
+                    actor = *target;
+                } else if (action == InputAction::confirm) {
+                    break;
+                }
+            }
+
+            std::size_t selected = 0;
+            std::size_t first_visible = 0;
+            auto scroll_cue = RpgListSelection::ScrollCue::none;
+            bool back_to_actor = false;
+            while (!back_to_actor) {
+                auto frame = scene_provider_();
+                // 33a9/26f3 combines the selected actor card with the shared
+                // eight-row selector. DATA:3806 contains 28 fixed 8-byte rows;
+                // 37f5=20 is therefore the maximum first visible row.
+                draw_rpg_actor_card(frame, menu_sprites_, state_, actor,
+                                    8 * 4, 21);
+                draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
+                                       4, 72, 4, 1);
+                draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                        24, 36, 5, 8);
+                draw_rpg_selector_scrollbar(
+                    frame.pixels, 320, 200, menu_sprites_,
+                    24, 36, 5, 8, 20, first_visible, scroll_cue);
+                scroll_cue = RpgListSelection::ScrollCue::none;
+
+                const auto actor_base = 0x106U + actor * 0x9fU;
+                const auto draw_pair = [&](std::uint16_t current,
+                                           std::uint16_t maximum, int top) {
+                    draw_menu_number(frame, menu_sprites_, current,
+                                     52, top + 3, 111);
+                    draw_menu_number(frame, menu_sprites_, maximum,
+                                     62, top + 3, 111);
+                };
+                static constexpr std::array<std::size_t, 9> scalar_offsets{
+                    0x3d, 0x45, 0x4d, 0x55, 0x5d,
+                    0x31, 0x0c, 0x0e, 0x39};
+                for (std::size_t row = 0; row < 8U; ++row) {
+                    const auto index = first_visible + row;
+                    const auto top = 49 + static_cast<int>(row) * 16;
+                    const auto label = index * 8U;
+                    if (label + 8U <= status_menu_labels_.size()) {
+                        draw_legacy_text(
+                            frame, item_font_,
+                            status_menu_labels_.subspan(label, 8),
+                            32 * 4, top, 48, 16, 15);
+                    }
+                    if (index == 0U) {
+                        draw_pair(state_.u16(actor_base + 0x2d),
+                                  state_.u16(actor_base + 0x2f), top);
+                    } else if (index == 1U) {
+                        draw_pair(state_.u16(actor_base + 0x35),
+                                  state_.u16(actor_base + 0x37), top);
+                    } else if (index == 6U) {
+                        draw_menu_number(frame, menu_sprites_, state_.u16(0x104),
+                                         56, top + 3, 111);
+                    } else if (index >= 7U && index <= 15U) {
+                        const auto offset = scalar_offsets[index - 7U];
+                        if (index == 10U || index == 15U) {
+                            draw_pair(state_.u16(actor_base + offset),
+                                      state_.u16(actor_base + offset + 2U), top);
+                        } else {
+                            draw_menu_number(
+                                frame, menu_sprites_,
+                                state_.u16(actor_base + offset),
+                                56, top + 3, 111);
+                        }
+                    } else if (index >= 17U && index <= 27U) {
+                        const auto item = state_.u16(
+                            actor_base + 0x10U + (index - 17U) * 2U);
+                        draw_item_text(frame, item_texts_, item_font_, item,
+                                       42 * 4, top, 88, 15,
+                                       static_cast<std::uint8_t>(item == 0 ? 8 : 14));
+                    }
+                }
+                if (menu_sprites_.sprites().size() > 1U) {
+                    const auto& cursor = menu_sprites_.sprites()[1];
+                    blit(frame, menu_sprites_.pixels(1),
+                         cursor.width, cursor.height,
+                         30 * 4,
+                         45 + static_cast<int>(selected - first_visible) * 16);
+                }
+                platform_.present({
+                    320, 200, frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette)});
+                const auto action = platform_.wait_for_input();
+                if (action == InputAction::quit) {
+                    quit_requested_ = true;
+                    return;
+                }
+                if (action == InputAction::cancel) {
+                    back_to_actor = true;
+                    continue;
+                }
+                const auto selection = rpg_list_selection_input(
+                    {selected, first_visible}, 28, 8, action);
+                selected = selection.selected;
+                first_visible = selection.first_visible;
+                scroll_cue = selection.scroll_cue;
+            }
+        }
+    }
+
     std::optional<std::size_t> select_system_value(Viewport base,
                                                    std::size_t initial) {
         auto selected = std::min<std::size_t>(initial, 4U);
@@ -1909,6 +2039,7 @@ private:
     std::span<const std::uint8_t> field_action_error_;
     std::span<const std::uint8_t> system_menu_labels_;
     std::span<const std::uint8_t> system_exit_prompt_;
+    std::span<const std::uint8_t> status_menu_labels_;
     std::span<const std::uint8_t> inventory_category_labels_;
     std::span<const std::uint8_t> equipment_slot_labels_;
     std::span<const std::uint8_t> equipment_stat_labels_;
@@ -2148,6 +2279,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x39e6);
     const auto system_exit_prompt = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3a36);
+    const auto status_menu_labels = extract_rpg_embedded_data(
+        rpg_load_image, rpg_entry_offset, 0x3806, 28U * 8U);
     // RPG.EXE:3d7e indexes forty-two fixed two-glyph type names. Equipment
     // uses one eleven-line label string and four consecutive $$-terminated
     // statistic labels rather than host-language UI text.
@@ -2243,6 +2376,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           equipment_actor_error, equipment_two_hand_error,
                           equipment_slot_error, field_action_error,
                           system_menu_labels, system_exit_prompt,
+                          status_menu_labels,
                           inventory_category_labels, equipment_slot_labels,
                           equipment_stat_labels,
                           compose_scene,
@@ -2279,6 +2413,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                               equipment_actor_error, equipment_two_hand_error,
                               equipment_slot_error, field_action_error,
                               system_menu_labels, system_exit_prompt,
+                              status_menu_labels,
                               inventory_category_labels, equipment_slot_labels,
                               equipment_stat_labels,
                               compose_scene,

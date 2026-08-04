@@ -283,6 +283,8 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
         image, entry, 0x39e6);
     const auto system_exit_prompt = swd2::extract_rpg_embedded_text(
         image, entry, 0x3a36);
+    const auto status_menu_labels = swd2::extract_rpg_embedded_data(
+        image, entry, 0x3806, 28U * 8U);
     require(equipment_actor_error == std::vector<std::uint8_t>({
                 0xa6, 0xb9, 0xa4, 0x48, 0xb5, 0x4c, 0xaa, 0x6b, 0xa8, 0xcf,
                 0xa5, 0xce, 0xb3, 0x6f, 0xb8, 0xcb, 0xb3, 0xc6, 0xa1, 0x49}) &&
@@ -302,7 +304,12 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 system_menu_labels[77] == 0xe1U &&
                 system_exit_prompt == std::vector<std::uint8_t>({
                     0xbd, 0x54, 0xa9, 0x77, 0xad, 0x6e, 0xa6, 0x5e, 0xa8,
-                    0xec, 0xa2, 0xd2, 0xa2, 0xdd, 0xa2, 0xe1, 0xa1, 0x48}),
+                    0xec, 0xa2, 0xd2, 0xa2, 0xdd, 0xa2, 0xe1, 0xa1, 0x48}) &&
+                status_menu_labels.size() == 224U &&
+                status_menu_labels[0] == 0xa5U &&
+                status_menu_labels[1] == 0xcdU &&
+                status_menu_labels[216] == 0xaaU &&
+                status_menu_labels[223] == '$',
             "RPG equipment/system-menu Big5 streams were not exact");
     const auto category_labels = swd2::extract_rpg_embedded_data(
         image, entry, 0x299a, 42U * 4U);
@@ -4487,6 +4494,35 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
             "RPG field-menu page selection/return frames were not stable");
 }
 
+void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::left,     // Status
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // first actor
+        swd2::InputAction::page_down,
+        swd2::InputAction::cancel,   // back to actor selector
+        swd2::InputAction::cancel,   // back to field diamond
+        swd2::InputAction::cancel,   // back to map
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG field Status run did not terminate normally");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 9U && platform.stop_calls == 1U,
+            "RPG 2f64 actor selector did not enter/return from 26f3 Status");
+    require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
+                platform.frame_hashes[5] != platform.frame_hashes[4] &&
+                platform.frame_hashes[6] == platform.frame_hashes[3] &&
+                platform.frame_hashes[7] == platform.frame_hashes[2] &&
+                platform.frame_hashes[8] == platform.frame_hashes[0],
+            "RPG Status paging/return frames were not stable");
+}
+
 void test_rpg_system_menu_speed_and_exit(
     const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
@@ -5483,6 +5519,7 @@ int main(int argc, char** argv) {
         test_monolithic_runtime(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
         test_rpg_field_menu_inventory(argv[1]);
+        test_rpg_field_status_menu(argv[1]);
         test_rpg_system_menu_speed_and_exit(argv[1]);
         test_rpg_system_menu_save(argv[1]);
         test_rpg_system_menu_load(argv[1]);
