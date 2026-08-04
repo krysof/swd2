@@ -46,6 +46,58 @@ std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
 
+std::vector<std::vector<std::uint8_t>> load_rpg_ability_descriptions(
+    const std::filesystem::path& path) {
+    const auto executable = dos::MzExecutable::load(path);
+    const auto file = read_file(path);
+    const auto image_start = static_cast<std::size_t>(executable.header_size());
+    const auto image_size = static_cast<std::size_t>(executable.load_image_size());
+    if (image_start > file.size() || image_size > file.size() - image_start ||
+        image_size < 6U) {
+        throw std::runtime_error("DATE2.EXE load image is truncated");
+    }
+    const auto image = std::span<const std::uint8_t>(
+        file.data() + image_start, image_size);
+    const auto u16 = [&](std::size_t offset) {
+        if (offset + 2U > image.size()) {
+            throw std::runtime_error("DATE2.EXE pointer is truncated");
+        }
+        return static_cast<std::uint16_t>(
+            static_cast<std::uint16_t>(image[offset]) |
+            (static_cast<std::uint16_t>(image[offset + 1U]) << 8U));
+    };
+
+    // RPG:2f1a indexes the directory at id*2+4.  The word at +2 is the
+    // first description offset, so it also gives the exact player-record
+    // count: DATE2 contains descriptions 0..113, not the enemy-only tail of
+    // the 151-entry ability table.
+    const auto first_description = static_cast<std::size_t>(u16(2));
+    if (first_description < 4U || (first_description - 4U) % 2U != 0U ||
+        first_description > image.size()) {
+        throw std::runtime_error("DATE2.EXE has an invalid description directory");
+    }
+    const auto count = (first_description - 4U) / 2U;
+    std::vector<std::vector<std::uint8_t>> descriptions;
+    descriptions.reserve(count);
+    for (std::size_t id = 0; id < count; ++id) {
+        const auto offset = static_cast<std::size_t>(u16(4U + id * 2U));
+        if (offset > image.size()) {
+            throw std::runtime_error("DATE2.EXE description points outside the image");
+        }
+        auto end = offset;
+        while (end + 1U < image.size() &&
+               !(image[end] == '$' && image[end + 1U] == '$')) {
+            ++end;
+        }
+        if (end + 1U >= image.size()) {
+            throw std::runtime_error("DATE2.EXE description lacks its $$ terminator");
+        }
+        descriptions.emplace_back(image.begin() + static_cast<std::ptrdiff_t>(offset),
+                                  image.begin() + static_cast<std::ptrdiff_t>(end));
+    }
+    return descriptions;
+}
+
 Viewport crop_map(const IndexedMapImage& map, std::uint16_t viewport_x,
                   std::uint16_t viewport_y) {
     constexpr std::size_t width = 320;
@@ -521,7 +573,10 @@ public:
                  std::span<const std::uint8_t> ability_value_error,
                  std::span<const std::uint8_t> ability_material_error,
                  std::span<const std::uint8_t> ability_dead_error,
+                 std::span<const std::uint8_t> ability_inventory_error,
                  std::span<const std::uint8_t> field_ability_records,
+                 const std::vector<std::vector<std::uint8_t>>&
+                     ability_descriptions,
                  std::span<const std::uint8_t> system_menu_labels,
                  std::span<const std::uint8_t> system_exit_prompt,
                  std::span<const std::uint8_t> status_menu_labels,
@@ -554,7 +609,9 @@ public:
           ability_value_error_(ability_value_error),
           ability_material_error_(ability_material_error),
           ability_dead_error_(ability_dead_error),
+          ability_inventory_error_(ability_inventory_error),
           field_ability_records_(field_ability_records),
+          ability_descriptions_(ability_descriptions),
           system_menu_labels_(system_menu_labels),
           system_exit_prompt_(system_exit_prompt),
           status_menu_labels_(status_menu_labels),
@@ -1489,6 +1546,81 @@ public:
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
 
 private:
+    Viewport magic_action_choice_frame(const Viewport& source,
+                                       bool can_refine,
+                                       std::size_t selected) const {
+        auto frame = source;
+        const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+            if (sprite >= menu_sprites_.sprites().size()) return;
+            const auto& info = menu_sprites_.sprites()[sprite];
+            blit_opaque(frame, menu_sprites_.pixels(sprite),
+                        info.width, info.height, x_byte * 4, y);
+        };
+
+        // RPG:2c0b uses the same 64x32 opaque MENU cards and table-3
+        // highlight as the other binary selectors.  The two bottom cards are
+        // MENU 70/27 (Use) and 28/9 (Explain). Type four adds the upper
+        // MENU 71/59 (Refine talisman) card.
+        opaque(0, 4, 138);
+        opaque(0, 20, 138);
+        opaque(70, 8, 147);
+        opaque(27, 12, 147);
+        opaque(28, 24, 147);
+        opaque(9, 28, 147);
+        if (can_refine) {
+            opaque(0, 12, 106);
+            opaque(71, 16, 115);
+            opaque(59, 20, 115);
+        }
+
+        static constexpr std::array<std::pair<int, int>, 3> positions{{
+            {4, 138}, {20, 138}, {12, 106},
+        }};
+        const auto count = can_refine ? 3U : 2U;
+        for (std::size_t choice = 0; choice < count; ++choice) {
+            if (choice == selected) continue;
+            apply_fig_palette_translation(
+                frame.pixels, 320, 200,
+                std::span<const std::uint8_t, 768>(frame.palette),
+                positions[choice].first, positions[choice].second,
+                0x10, 0x20, 3);
+        }
+        return frame;
+    }
+
+    std::optional<std::size_t> select_magic_action(
+        const Viewport& source, bool can_refine, std::uint8_t ability_id,
+        std::size_t& selected) {
+        while (true) {
+            auto frame = magic_action_choice_frame(source, can_refine, selected);
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return std::nullopt;
+            }
+            if (action == InputAction::cancel) return std::nullopt;
+            if (action == InputAction::left) selected = 0;
+            else if (action == InputAction::right) selected = 1;
+            else if (action == InputAction::up && can_refine) selected = 2;
+            else if (action == InputAction::down && selected == 2U) selected = 0;
+            else if (action == InputAction::confirm) {
+                if (selected != 1U) return selected;
+                if (ability_id < ability_descriptions_.size() &&
+                    !ability_descriptions_[ability_id].empty()) {
+                    // 2f1a copies the DATE2 record to DATA:4a30 and 4aec
+                    // displays it through the ordinary 49d0 bottom message.
+                    if (!show_bottom_message(
+                            std::move(frame), ability_descriptions_[ability_id])) {
+                        return std::nullopt;
+                    }
+                }
+            }
+        }
+    }
+
     std::optional<std::uint8_t> select_magic_travel_destination() {
         FieldActionSystem field_actions(state_, &field_action_runtime_);
         const auto destinations = field_actions.unlocked_travel_indices();
@@ -1659,6 +1791,49 @@ private:
                     (static_cast<std::uint16_t>(record[17]) << 8U));
                 const auto type = static_cast<std::uint8_t>(record[13] & 0x0fU);
                 if (effect == 0U) continue;
+
+                bool action_cancelled = false;
+                std::size_t action_choice = 0;
+                while (true) {
+                    const auto selected_action = select_magic_action(
+                        frame, type == 4U, id, action_choice);
+                    if (quit_requested_) return false;
+                    if (!selected_action) {
+                        action_cancelled = true;
+                        break;
+                    }
+                    if (*selected_action == 0U) break;
+
+                    // The third 2c0b option is not another field effect.
+                    // RPG:333d..337a creates the type-10 battle item
+                    // ability_id+8ch in physical inventory slot 49, compacts
+                    // it forward, and deliberately charges no ability points.
+                    if ((state_.u16(actor_base + 8U) & 0xe000U) != 0U) {
+                        auto action_frame = magic_action_choice_frame(
+                            frame, true, *selected_action);
+                        if (!show_bottom_message(
+                                std::move(action_frame), ability_dead_error_)) {
+                            return false;
+                        }
+                        continue;
+                    }
+                    if (state_.u16(0x3e4U) != 0U) {
+                        auto action_frame = magic_action_choice_frame(
+                            frame, true, *selected_action);
+                        if (!show_bottom_message(
+                                std::move(action_frame), ability_inventory_error_)) {
+                            return false;
+                        }
+                        continue;
+                    }
+                    state_.set_u16(
+                        0x3e4U, static_cast<std::uint16_t>(id + 0x8cU));
+                    InventorySystem(state_, items_).compact();
+                    platform_.delay_for(std::chrono::milliseconds(
+                        (13U * 1000U + 69U) / 70U));
+                }
+                if (action_cancelled) continue;
+
                 if ((state_.u16(actor_base + 8U) & 0xe000U) != 0U) {
                     if (!show_bottom_message(frame, ability_dead_error_)) return false;
                     continue;
@@ -2346,7 +2521,9 @@ private:
     std::span<const std::uint8_t> ability_value_error_;
     std::span<const std::uint8_t> ability_material_error_;
     std::span<const std::uint8_t> ability_dead_error_;
+    std::span<const std::uint8_t> ability_inventory_error_;
     std::span<const std::uint8_t> field_ability_records_;
+    const std::vector<std::vector<std::uint8_t>>& ability_descriptions_;
     std::span<const std::uint8_t> system_menu_labels_;
     std::span<const std::uint8_t> system_exit_prompt_;
     std::span<const std::uint8_t> status_menu_labels_;
@@ -2591,8 +2768,12 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x364a);
     const auto ability_dead_error = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3678);
+    const auto ability_inventory_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x36e0);
     const auto field_ability_records = extract_rpg_embedded_data(
         rpg_load_image, rpg_entry_offset, 0x1dce, 151U * 20U);
+    const auto ability_descriptions = load_rpg_ability_descriptions(
+        context.game_root / "DATE2.EXE");
     const auto system_menu_labels = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x39e6);
     const auto system_exit_prompt = extract_rpg_embedded_text(
@@ -2694,7 +2875,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
                           equipment_actor_error, equipment_two_hand_error,
                           equipment_slot_error, field_action_error,
                           ability_value_error, ability_material_error,
-                          ability_dead_error, field_ability_records,
+                          ability_dead_error, ability_inventory_error,
+                          field_ability_records, ability_descriptions,
                           system_menu_labels, system_exit_prompt,
                           status_menu_labels,
                           inventory_category_labels, equipment_slot_labels,
@@ -2733,7 +2915,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
                               equipment_actor_error, equipment_two_hand_error,
                               equipment_slot_error, field_action_error,
                               ability_value_error, ability_material_error,
-                              ability_dead_error, field_ability_records,
+                              ability_dead_error, ability_inventory_error,
+                              field_ability_records, ability_descriptions,
                               system_menu_labels, system_exit_prompt,
                               status_menu_labels,
                               inventory_category_labels, equipment_slot_labels,
