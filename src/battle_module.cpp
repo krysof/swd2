@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <functional>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
@@ -38,6 +39,20 @@ struct BattleSurface {
 struct BattleRewards {
     std::uint16_t experience{};
     std::uint16_t money{};
+};
+
+class ScopeExit {
+public:
+    explicit ScopeExit(std::function<void()> callback)
+        : callback_(std::move(callback)) {}
+    ScopeExit(const ScopeExit&) = delete;
+    ScopeExit& operator=(const ScopeExit&) = delete;
+    ~ScopeExit() {
+        if (callback_) callback_();
+    }
+
+private:
+    std::function<void()> callback_;
 };
 
 std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
@@ -1926,6 +1941,30 @@ void present_round_events(
                     encounter_directory_offset);
                 context.platform.delay_for(action_delay);
             };
+        // Captured allies return from physical resolution or the player-side
+        // effect table to the same 0fb9/1039 epilogue: rebuild the clean
+        // battlefield and hold it for five ticks.  A scope guard is used
+        // because individual selectors have several faithful early-return
+        // branches of their own.  Multi-target events receive this epilogue
+        // only after the last event in the presented action.
+        const auto captured_ally_dispatch =
+            event.kind == BattleEventKind::ally_attack ||
+            event.kind == BattleEventKind::ally_ability ||
+            (event.kind == BattleEventKind::missing_medium &&
+             event.source_is_summoned_ally);
+        ScopeExit captured_ally_tail([&] {
+            if (!captured_ally_dispatch) return;
+            if (event_index + 1U < result.events.size() &&
+                fig_same_presented_action(
+                    event, result.events[event_index + 1U])) {
+                return;
+            }
+            present_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event, std::nullopt,
+                {}, std::nullopt, encounter_directory_offset);
+            context.platform.delay_for(ward_card_delay);
+        });
         if (event.kind == BattleEventKind::skipped) {
             // 0694/0c11/0c1f/0c2d jump straight back to the initiative loop.
             // A skipped turn is useful to deterministic frontends, but FIG
