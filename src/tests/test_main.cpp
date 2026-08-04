@@ -226,6 +226,32 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 0xbd, 0xd0, 0xbf, 0xef, 0xbe, 0xdc, 0xa7, 0x41,
                 0xaa, 0xba, 0xbb, 0xdd, 0xad, 0x6e, 0xa1, 0x43}),
             "RPG shop did not recover its original DATA:3c32 prompt");
+    const auto shop_sale_prompt = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3c1e);
+    const auto shop_money_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3c44);
+    const auto shop_inventory_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3c54);
+    const auto shop_confirmation = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3c6c);
+    const auto shop_quantity_error = swd2::extract_rpg_embedded_text(
+        image, entry, 0x3c80);
+    require(shop_sale_prompt == std::vector<std::uint8_t>({
+                0xb3, 0x6f, 0xbc, 0xcb, 0xaa, 0xab, 0xab, 0x7e, 0xa7,
+                0xda, 0xa5, 0x58, 0xbb, 0xf9, 0xbb, 0xc8, 0xa8, 0xe2}) &&
+                shop_money_error.size() == 14U &&
+                shop_money_error.front() == 0xa7U &&
+                shop_money_error.back() == 0x49U &&
+                shop_inventory_error.size() == 22U &&
+                shop_inventory_error.front() == 0xaaU &&
+                shop_inventory_error.back() == 0x49U &&
+                shop_confirmation == std::vector<std::uint8_t>({
+                    0xa7, 0x41, 0xad, 0x6e, 0xb6, 0x52, 0xa4, 0x55, 0xb3,
+                    0x6f, 0xaa, 0xab, 0xab, 0x7e, 0xb6, 0xdc, 0xa1, 0x48}) &&
+                shop_quantity_error.size() == 14U &&
+                shop_quantity_error.front() == 0xb3U &&
+                shop_quantity_error.back() == 0x49U,
+            "RPG shop confirmation/error Big5 streams were not recovered exactly");
     const auto category_labels = swd2::extract_rpg_embedded_data(
         image, entry, 0x299a, 42U * 4U);
     const auto equipment_labels = swd2::extract_rpg_embedded_text(
@@ -476,6 +502,19 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                                           image.begin() + branch.first);
                     }),
             "RPG 298d Down/PgDn/PgUp/Home/End input branches changed");
+    require(image[0x565fU] == 0xbeU && image[0x5660U] == 0x1eU &&
+                image[0x5661U] == 0x3cU && image[0x5662U] == 0xe8U &&
+                image[0x5665U] == 0xffU && image[0x5666U] == 0x06U &&
+                image[0x5667U] == 0xd5U && image[0x5668U] == 0x60U &&
+                image[0x5669U] == 0x83U && image[0x566dU] == 0x04U &&
+                image[0x566eU] == 0xe8U &&
+                image[0x5885U] == 0xc6U && image[0x5886U] == 0x06U &&
+                image[0x5887U] == 0x9bU && image[0x5888U] == 0x35U &&
+                image[0x5889U] == 0x01U && image[0x588aU] == 0xbeU &&
+                image[0x588bU] == 0x6cU && image[0x588cU] == 0x3cU &&
+                image[0x5893U] == 0xc6U && image[0x5896U] == 0x3cU &&
+                image[0x5898U] == 0xe8U,
+            "RPG 565f/5884 sale and purchase confirmation paths changed");
 }
 
 void test_resource_decoder(const std::filesystem::path& game_root) {
@@ -4559,6 +4598,81 @@ void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
             "RPG opcode 14 did not persist its overlay through dialogue and clear afterward");
 }
 
+void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
+    const auto prepare = [&]() {
+        auto database = std::make_shared<swd2::MapDatabase>(
+            swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+        const auto& location = database->location_at_directory_offset(46);
+        require(location.area.event_archive_path == "CHNA1.EXE" &&
+                    swd2::map_entity(location.area, 0).event_directory_offset == 58,
+                "RPG shop confirmation oracle no longer points at CHNA1 entry 29");
+        auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+        for (std::size_t slot = 0; slot < 50; ++slot) {
+            state.set_u16(0x382 + slot * 2U, 0);
+        }
+        for (std::size_t counter = 0; counter < 5; ++counter) {
+            state.set_u16(0x3e6 + counter * 2U, 0);
+        }
+        state.set_u16(0x104, 100);
+        state.set_u16(0x424, 46);
+        state.set_u16(0x40f, 684);
+        state.set_u16(0x40d, 684);
+        state.set_viewport_x(0);
+        state.set_viewport_y(0);
+        state.set_actor_screen_x(62);
+        state.set_actor_screen_y(64);
+        state.set_actor_direction(9);
+        state.set_dos_string(0x42d, 22, location.area.graphics_path);
+        state.set_dos_string(0x443, 22, location.area.layout_path);
+        state.set_dos_string(0x459, 22, location.area.music_path);
+        state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+        state.set_dos_string(0x485, 24, location.area.event_font_path);
+        return std::pair{std::move(database), std::move(state)};
+    };
+
+    auto [no_database, no_state] = prepare();
+    ScriptedPlatform no_platform;
+    no_platform.actions = {
+        swd2::InputAction::confirm,  // interact with the shop entity
+        swd2::InputAction::confirm,  // close its opcode-8 greeting
+        swd2::InputAction::confirm,  // select ITEM 117
+        swd2::InputAction::right,    // choose No
+        swd2::InputAction::confirm,
+        swd2::InputAction::cancel,   // close the shop
+        swd2::InputAction::quit,
+    };
+    swd2::GameContext no_context{game_root, no_state, no_platform};
+    no_context.map_database = no_database;
+    require(swd2::RpgModule().run(no_context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none &&
+                no_context.shared_state.u16(0x104) == 100U &&
+                no_context.shared_state.u16(0x382) == 0U &&
+                no_platform.cursor == no_platform.actions.size() &&
+                no_platform.presented >= 6U,
+            "RPG 5884 purchase confirmation did not preserve state on No");
+
+    auto [yes_database, yes_state] = prepare();
+    ScriptedPlatform yes_platform;
+    yes_platform.actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // default Yes
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    swd2::GameContext yes_context{game_root, yes_state, yes_platform};
+    yes_context.map_database = yes_database;
+    const auto yes_result =
+        swd2::RpgModule().run(yes_context, swd2::Marker::menu_ready);
+    require(yes_result == swd2::Marker::none &&
+                yes_context.shared_state.u16(0x104) == 75U &&
+                yes_context.shared_state.u16(0x382) == 117U &&
+                yes_platform.cursor == yes_platform.actions.size() &&
+                yes_platform.presented >= 5U,
+            "RPG 5884 purchase confirmation did not commit the default Yes");
+}
+
 void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
     auto database = std::make_shared<swd2::MapDatabase>(
         swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
@@ -5110,6 +5224,7 @@ int main(int argc, char** argv) {
         test_rpg_automatic_entity_event(argv[1]);
         test_rpg_event_voice(argv[1]);
         test_rpg_compact_money_overlay(argv[1]);
+        test_rpg_shop_confirmation(argv[1]);
         test_rpg_cutscene_presentation(argv[1]);
         test_rpg_opcode55_cutscene(argv[1]);
         test_demo_module(argv[1]);

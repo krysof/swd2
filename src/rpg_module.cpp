@@ -508,6 +508,11 @@ public:
                  std::span<const std::uint8_t> save_slot_prompt,
                  std::span<const std::uint8_t> travel_labels,
                  std::span<const std::uint8_t> shop_prompt,
+                 std::span<const std::uint8_t> shop_sale_prompt,
+                 std::span<const std::uint8_t> shop_money_error,
+                 std::span<const std::uint8_t> shop_inventory_error,
+                 std::span<const std::uint8_t> shop_confirmation_prompt,
+                 std::span<const std::uint8_t> shop_quantity_error,
                  std::span<const std::uint8_t> inventory_category_labels,
                  std::span<const std::uint8_t> equipment_slot_labels,
                  std::span<const std::uint8_t> equipment_stat_labels,
@@ -521,6 +526,11 @@ public:
           menu_sprites_(menu_sprites), equipment_art_(equipment_art),
           save_slot_prompt_(save_slot_prompt), travel_labels_(travel_labels),
           shop_prompt_(shop_prompt),
+          shop_sale_prompt_(shop_sale_prompt),
+          shop_money_error_(shop_money_error),
+          shop_inventory_error_(shop_inventory_error),
+          shop_confirmation_prompt_(shop_confirmation_prompt),
+          shop_quantity_error_(shop_quantity_error),
           inventory_category_labels_(inventory_category_labels),
           equipment_slot_labels_(equipment_slot_labels),
           equipment_stat_labels_(equipment_stat_labels),
@@ -720,7 +730,78 @@ public:
             if (action != InputAction::confirm) continue;
 
             const auto item_id = item_ids[selected];
-            static_cast<void>(inventory.purchase(item_id));
+            if (item_id == 0 || item_id >= items_.size()) continue;
+            const auto& definition = items_.at(item_id);
+            if (definition.price > state.u16(0x104)) {
+                if (!show_bottom_message(frame, shop_money_error_)) return true;
+                continue;
+            }
+
+            auto needs_inventory_slot = true;
+            if (item_id >= 0x44U && item_id <= 0x48U) {
+                const auto quantity = state.u16(
+                    0x3e6U + (item_id - 0x44U) * 2U);
+                if (quantity >= 20U) {
+                    if (!show_bottom_message(frame, shop_quantity_error_)) {
+                        return true;
+                    }
+                    continue;
+                }
+                needs_inventory_slot = quantity == 0;
+            }
+            // 5874 tests the final physical inventory word. Normal RPG
+            // operations keep the 50 slots compact, so this is the original
+            // full-list predicate rather than a host-side capacity guess.
+            if (needs_inventory_slot && inventory.item(49) != 0) {
+                if (!show_bottom_message(frame, shop_inventory_error_)) {
+                    return true;
+                }
+                continue;
+            }
+
+            std::uint8_t choice = 0;
+            bool finished_confirmation = false;
+            while (!finished_confirmation) {
+                auto confirmation = frame;
+                draw_bottom_message(confirmation, shop_confirmation_prompt_);
+                const auto opaque = [&](std::size_t sprite,
+                                        int x_byte, int y) {
+                    if (sprite >= menu_sprites_.sprites().size()) return;
+                    const auto& info = menu_sprites_.sprites()[sprite];
+                    blit_opaque(confirmation, menu_sprites_.pixels(sprite),
+                                info.width, info.height, x_byte * 4, y);
+                };
+                // 54d5/555a uses the same cards as selling: Yes at 44/90,
+                // No at 62/90, with the non-selected card mapped by table 3.
+                opaque(0, 44, 90);
+                opaque(0, 62, 90);
+                opaque(29, 50, 99);
+                opaque(8, 68, 99);
+                apply_rpg_binary_choice_highlight(
+                    confirmation.pixels, 320, 200,
+                    std::span<const std::uint8_t, 768>(confirmation.palette),
+                    44, 62, 90, choice);
+                platform_.present({
+                    320, 200, confirmation.pixels,
+                    std::span<const std::uint8_t, 768>(confirmation.palette)});
+                const auto confirmation_action = platform_.wait_for_input();
+                if (confirmation_action == InputAction::quit) {
+                    quit_requested_ = true;
+                    return true;
+                }
+                if (confirmation_action == InputAction::cancel) {
+                    finished_confirmation = true;
+                } else if (confirmation_action == InputAction::left) {
+                    choice = 0;
+                } else if (confirmation_action == InputAction::right) {
+                    choice = 1;
+                } else if (confirmation_action == InputAction::confirm) {
+                    if (choice == 0) {
+                        static_cast<void>(inventory.purchase(item_id));
+                    }
+                    finished_confirmation = true;
+                }
+            }
         }
     }
 
@@ -829,6 +910,12 @@ public:
                     bool rejected = false;
                     while (true) {
                         auto confirmation = frame;
+                        draw_bottom_message(confirmation, shop_sale_prompt_);
+                        // 565f renders DATA:3c1e without waiting, advances
+                        // one Mode-X column/four lines, then 2315 writes the
+                        // exact three-quarter sale value with MENU 101..110.
+                        draw_menu_number(confirmation, menu_sprites_, *value,
+                                         47, 129, 101);
                         const auto opaque = [&](std::size_t sprite,
                                                 int x_byte, int y) {
                             if (sprite >= menu_sprites_.sprites().size()) return;
@@ -1231,6 +1318,35 @@ public:
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
 
 private:
+    void draw_bottom_message(Viewport& frame,
+                             std::span<const std::uint8_t> text) const {
+        // 49d0 begins with 2cce: a 7x4 selector panel at Mode-X (4,112),
+        // then starts its Big5 stream at (10,125).
+        draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
+                                4, 112, 7, 4);
+        draw_legacy_text(frame, item_font_, text,
+                         10 * 4, 125, 240, 64, 15);
+    }
+
+    bool show_bottom_message(Viewport frame,
+                             std::span<const std::uint8_t> text) {
+        draw_bottom_message(frame, text);
+        platform_.present({
+            320, 200, frame.pixels,
+            std::span<const std::uint8_t, 768>(frame.palette)});
+        while (true) {
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::confirm ||
+                action == InputAction::cancel) {
+                return true;
+            }
+        }
+    }
+
     void present(Viewport scene) {
         if (palette_dark_) scene.palette.fill(0);
         platform_.present({320, 200, scene.pixels,
@@ -1377,6 +1493,11 @@ private:
     std::span<const std::uint8_t> save_slot_prompt_;
     std::span<const std::uint8_t> travel_labels_;
     std::span<const std::uint8_t> shop_prompt_;
+    std::span<const std::uint8_t> shop_sale_prompt_;
+    std::span<const std::uint8_t> shop_money_error_;
+    std::span<const std::uint8_t> shop_inventory_error_;
+    std::span<const std::uint8_t> shop_confirmation_prompt_;
+    std::span<const std::uint8_t> shop_quantity_error_;
     std::span<const std::uint8_t> inventory_category_labels_;
     std::span<const std::uint8_t> equipment_slot_labels_;
     std::span<const std::uint8_t> equipment_stat_labels_;
@@ -1586,6 +1707,18 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x3ace, 34U * 8U);
     const auto shop_prompt = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3c32);
+    // 56xx/58xx shop feedback is not host UI: every prompt is an embedded
+    // Big5 stream consumed by 49d0/4aec before the shared 555a Yes/No page.
+    const auto shop_sale_prompt = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3c1e);
+    const auto shop_money_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3c44);
+    const auto shop_inventory_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3c54);
+    const auto shop_confirmation_prompt = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3c6c);
+    const auto shop_quantity_error = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x3c80);
     // RPG.EXE:3d7e indexes forty-two fixed two-glyph type names. Equipment
     // uses one eleven-line label string and four consecutive $$-terminated
     // statistic labels rather than host-language UI text.
@@ -1672,6 +1805,9 @@ Marker RpgModule::run(GameContext& context, Marker) {
         RpgEventHost host(context.platform, event_font, name_font, item_font,
                           items, item_texts, menu_sprites, equipment_art,
                           save_slot_prompt, travel_labels, shop_prompt,
+                          shop_sale_prompt, shop_money_error,
+                          shop_inventory_error, shop_confirmation_prompt,
+                          shop_quantity_error,
                           inventory_category_labels, equipment_slot_labels,
                           equipment_stat_labels,
                           compose_scene,
