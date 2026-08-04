@@ -42,10 +42,20 @@ class PlatformBackend {
 public:
     virtual ~PlatformBackend() = default;
     virtual void present(const IndexedSurfaceView& surface) = 0;
+    // RPG/FIG write each dialogue glyph directly into the already displayed
+    // VGA page instead of flipping a new page. Backends normally repaint the
+    // submitted indexed surface; replay/test frontends may account for these
+    // incremental writes separately from page presentations.
+    virtual void present_direct_update(const IndexedSurfaceView& surface) {
+        present(surface);
+    }
     virtual InputAction wait_for_input() = 0;
     // Non-blocking input and pacing are used by former DEMO/FIG animation
     // loops. Defaults keep headless/test backends source-compatible.
     virtual InputAction poll_input() { return InputAction::none; }
+    // Kept distinct so deterministic replay streams can model the key which
+    // skips typewriter delay separately from the later acknowledgement key.
+    virtual InputAction poll_text_input() { return poll_input(); }
     virtual void delay_for(std::chrono::milliseconds) {}
     virtual ClockTime clock_time() const = 0;
     virtual void play_music(std::span<const std::uint8_t> rix_data, bool loop) = 0;

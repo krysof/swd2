@@ -693,23 +693,63 @@ public:
             // zero glyph cannot share the page buffer's zero background.
             const auto page = render_dialogue_page(
                 font_, text, offset, 280, 64, 1, &name_font_);
-            auto frame = event_scene();
             const auto panel_top = opcode == 46 ? 0 : 112;
             const auto text_left = 10 * 4;
             const auto text_top = panel_top + 13;
-            draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
-                                    4, panel_top, 7, 4);
-            for (std::size_t y = 0; y < page.height; ++y) {
-                for (std::size_t x = 0; x < page.width; ++x) {
-                    const auto color = page.pixels[y * page.width + x];
-                    if (color == 0) continue;
-                    const auto destination_y = text_top + static_cast<int>(y);
-                    const auto destination_x = text_left + static_cast<int>(x);
-                    if (destination_y < 200 && destination_x < 320) {
-                        frame.pixels[static_cast<std::size_t>(destination_y) * 320U +
-                                     static_cast<std::size_t>(destination_x)] = 0;
+            const auto source = event_scene();
+            const auto compose_page = [&](const DialoguePage& rendered) {
+                auto composed = source;
+                draw_rpg_selector_panel(composed.pixels, 320, 200, menu_sprites_,
+                                        4, panel_top, 7, 4);
+                for (std::size_t y = 0; y < rendered.height; ++y) {
+                    for (std::size_t x = 0; x < rendered.width; ++x) {
+                        const auto color = rendered.pixels[y * rendered.width + x];
+                        if (color == 0) continue;
+                        const auto destination_y = text_top + static_cast<int>(y);
+                        const auto destination_x = text_left + static_cast<int>(x);
+                        if (destination_y < 200 && destination_x < 320) {
+                            composed.pixels[
+                                static_cast<std::size_t>(destination_y) * 320U +
+                                static_cast<std::size_t>(destination_x)] = 0;
+                        }
                     }
                 }
+                return composed;
+            };
+            auto frame = compose_page(page);
+
+            // 49d0 draws one glyph through 70a6, then waits SAVE+3f2 IRQ
+            // ticks before reading the keyboard flag. A key consumes that
+            // flag and changes the remaining per-glyph delay to zero; the
+            // later %%/$$ acknowledgement still needs a separate action.
+            auto skipped_delay = false;
+            for (const auto glyph_end : page.glyph_end_offsets) {
+                if (skipped_delay) break;
+                const auto partial = render_dialogue_page(
+                    font_, text.first(glyph_end), offset, 280, 64, 1,
+                    &name_font_);
+                auto shown = compose_page(partial);
+                platform_.present_direct_update({
+                    320, 200, shown.pixels,
+                    std::span<const std::uint8_t, 768>(shown.palette)});
+                const auto text_delay = state_.u16(0x3f2);
+                if (text_delay != 0) {
+                    platform_.delay_for(std::chrono::milliseconds(
+                        (static_cast<std::uint64_t>(text_delay) * 1000U + 69U) /
+                        70U));
+                }
+                const auto action = platform_.poll_text_input();
+                if (action == InputAction::quit) {
+                    direct_event_page_ = std::move(shown);
+                    quit_requested_ = true;
+                    return;
+                }
+                skipped_delay = action != InputAction::none;
+            }
+            if (skipped_delay && !page.glyph_end_offsets.empty()) {
+                platform_.present_direct_update({
+                    320, 200, frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette)});
             }
             // Opcode 18 enters 5788 with DS:359b=1. The dialogue renderer
             // still pauses at an explicit %% page break, but 4a94 skips the
@@ -3117,6 +3157,7 @@ private:
             draw_bottom_message(page, page_text);
             auto cursor_x_byte = 10;
             auto cursor_y = 125;
+            std::vector<std::size_t> glyph_end_offsets;
             for (std::size_t offset = 0; offset < page_text.size();) {
                 if (page_text[offset] == ' ') {
                     ++cursor_x_byte;
@@ -3131,7 +3172,35 @@ private:
                     cursor_x_byte += 4;
                     offset += std::min<std::size_t>(
                         2U, page_text.size() - offset);
+                    glyph_end_offsets.push_back(offset);
                 }
+            }
+
+            auto skipped_delay = false;
+            for (const auto glyph_end : glyph_end_offsets) {
+                if (skipped_delay) break;
+                auto shown = frame;
+                draw_bottom_message(shown, page_text.first(glyph_end));
+                platform_.present_direct_update({
+                    320, 200, shown.pixels,
+                    std::span<const std::uint8_t, 768>(shown.palette)});
+                const auto text_delay = state_.u16(0x3f2);
+                if (text_delay != 0) {
+                    platform_.delay_for(std::chrono::milliseconds(
+                        (static_cast<std::uint64_t>(text_delay) * 1000U + 69U) /
+                        70U));
+                }
+                const auto action = platform_.poll_text_input();
+                if (action == InputAction::quit) {
+                    quit_requested_ = true;
+                    return false;
+                }
+                skipped_delay = action != InputAction::none;
+            }
+            if (skipped_delay && !glyph_end_offsets.empty()) {
+                platform_.present_direct_update({
+                    320, 200, page.pixels,
+                    std::span<const std::uint8_t, 768>(page.palette)});
             }
 
             if (page_end == text.size()) {

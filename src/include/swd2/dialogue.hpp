@@ -16,6 +16,9 @@ struct DialoguePage {
     std::size_t next_offset{};
     std::size_t cursor_x{};
     std::size_t cursor_y{};
+    // Absolute byte offsets immediately after each rendered Big5 glyph.
+    // Spaces and ## have no DOS timer wait and therefore do not appear here.
+    std::vector<std::size_t> glyph_end_offsets;
     bool page_break{};
     bool has_more{};
 };

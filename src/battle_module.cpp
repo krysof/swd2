@@ -3251,6 +3251,47 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             const auto page = render_dialogue_page(
                 font, encounter.introduction_text, text_offset,
                 280, 64, 15, &name_font);
+            auto quit_during_text = false;
+            auto skipped_text_delay = false;
+            for (const auto glyph_end : page.glyph_end_offsets) {
+                if (skipped_text_delay) break;
+                const auto partial = render_dialogue_page(
+                    font,
+                    std::span<const std::uint8_t>(encounter.introduction_text)
+                        .first(glyph_end),
+                    text_offset, 280, 64, 15, &name_font);
+                const auto frame = compose_introduction(
+                    surface, partial, menu_sprites);
+                context.platform.present_direct_update({
+                    320, 200, frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette),
+                });
+                const auto text_delay = context.shared_state.u16(0x3f2);
+                if (text_delay != 0) {
+                    context.platform.delay_for(std::chrono::milliseconds(
+                        (static_cast<std::uint64_t>(text_delay) * 1000U + 69U) /
+                        70U));
+                }
+                const auto text_action = context.platform.poll_text_input();
+                if (text_action == InputAction::quit) {
+                    quit_during_text = true;
+                    break;
+                }
+                skipped_text_delay = text_action != InputAction::none;
+            }
+            if (quit_during_text) {
+                action = InputAction::quit;
+                start_battle = false;
+                break;
+            }
+            if (skipped_text_delay && !page.glyph_end_offsets.empty()) {
+                const auto frame = compose_introduction(
+                    surface, page, menu_sprites);
+                context.platform.present_direct_update({
+                    320, 200, frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette),
+                });
+            }
             if (page.has_more) {
                 const auto frame = compose_introduction(
                     surface, page, menu_sprites);

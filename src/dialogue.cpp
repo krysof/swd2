@@ -53,6 +53,7 @@ DialoguePage render_dialogue_page(const LegacyFont& font, std::span<const std::u
         }
         x += LegacyFont::glyph_width;
         cursor += 2;
+        result.glyph_end_offsets.push_back(cursor);
     }
     result.next_offset = cursor;
     result.cursor_x = x;

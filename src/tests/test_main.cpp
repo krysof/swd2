@@ -5492,6 +5492,10 @@ public:
         palette_hashes.push_back(palette_hash);
         ++presented;
     }
+    void present_direct_update(const swd2::IndexedSurfaceView& surface) override {
+        ++direct_updates;
+        direct_update_pixels.assign(surface.pixels.begin(), surface.pixels.end());
+    }
     swd2::InputAction wait_for_input() override {
         ++wait_calls;
         if (cursor < actions.size()) {
@@ -5502,6 +5506,13 @@ public:
     swd2::InputAction poll_input() override {
         ++poll_calls;
         if (cursor < actions.size()) return actions[cursor++];
+        return swd2::InputAction::none;
+    }
+    swd2::InputAction poll_text_input() override {
+        ++text_poll_calls;
+        if (text_cursor < text_actions.size()) {
+            return text_actions[text_cursor++];
+        }
         return swd2::InputAction::none;
     }
     swd2::ClockTime clock_time() const override { return {0, 0}; }
@@ -5526,6 +5537,8 @@ public:
     std::size_t music_stop_calls{};
     std::size_t wait_calls{};
     std::size_t poll_calls{};
+    std::size_t direct_updates{};
+    std::size_t text_poll_calls{};
     std::vector<std::uint64_t> frame_hashes;
     std::vector<std::uint64_t> compact_hashes;
     std::vector<std::uint64_t> bottom_hashes;
@@ -5534,12 +5547,15 @@ public:
     bool track_monochrome{};
     std::size_t monochrome_transitions{};
     std::vector<std::uint8_t> last_pixels;
+    std::vector<std::uint8_t> direct_update_pixels;
     std::array<std::uint8_t, 768> last_palette{};
     std::vector<swd2::InputAction> actions = {
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
     };
+    std::vector<swd2::InputAction> text_actions;
+    std::size_t text_cursor{};
     std::size_t cursor{};
 };
 
@@ -5565,6 +5581,9 @@ void test_monolithic_runtime(const std::filesystem::path& game_root) {
 
 void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
+    // The first key skips 49d0's remaining glyph delays. It is deliberately
+    // separate from the later key which dismisses the final cursor.
+    platform.text_actions = {swd2::InputAction::confirm};
     platform.actions = {
         swd2::InputAction::confirm,  // interact with DE068 entity
         swd2::InputAction::confirm,  // close its CHNA1 dialogue
@@ -5581,7 +5600,9 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
             "RPG entity-dialogue run did not terminate normally");
     require(platform.presented == 4 && platform.music_calls == 1 &&
                 platform.stop_calls == 1 && platform.frame_hashes.size() == 4 &&
-                platform.frame_hashes[2] == 13428659426982474716ULL,
+                platform.frame_hashes[2] == 13428659426982474716ULL &&
+                platform.text_cursor == 1U && platform.text_poll_calls == 1U &&
+                platform.direct_updates == 2U,
             "RPG did not present dialogue and manage map music in-process");
 }
 
@@ -7703,6 +7724,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
 
     ScriptedPlatform prompt_platform;
     prompt_platform.actions = {swd2::InputAction::confirm};
+    prompt_platform.text_actions = {swd2::InputAction::confirm};
     auto prompt_state = swd2::SharedState::load(game_root / "SAVE.DA1");
     prompt_state.set_u8(0x3f4, 1U);
     prompt_state.set_u8(0x3f5, 1U);
@@ -7715,6 +7737,9 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 prompt_platform.presented == 2 &&
                 prompt_platform.frame_hashes.size() == 2 &&
                 prompt_platform.frame_hashes[1] == 2855080217828813932ULL &&
+                prompt_platform.text_cursor == 1U &&
+                prompt_platform.text_poll_calls == 1U &&
+                prompt_platform.direct_updates == 2U &&
                 prompt_platform.music_calls == 0U &&
                 prompt_platform.voice_calls == 0U &&
                 prompt_context.shared_state.u16(0x4a0) == 0 &&
