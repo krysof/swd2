@@ -533,8 +533,14 @@ MonsterSpecialAbilityResult apply_prepaid_monster_special(
     case 0x3d:
     case 0x3e:
     case 0x3f:
+    case 0x49:
+    case 0x4c:
         // These entries only run presentation/reposition sequences. They are
         // still successful enemy actions and retain their already-paid cost.
+        // In particular shipped monsters 343/456/501 use 獅子吼 (4ch), and
+        // monster 502 uses 炒飯十八手 (49h); 26af falls through to RET after
+        // their visual handlers rather than applying the player-side damage
+        // descriptor with the same selector.
         result.resolution = MonsterSpecialResolution::applied;
         break;
     case 0x5e: status(0x0020, 0, true); break;

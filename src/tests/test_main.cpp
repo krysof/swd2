@@ -2708,6 +2708,19 @@ void test_battle_effects(const std::filesystem::path& game_root) {
                 swd2::MonsterSpecialResolution::applied &&
                 cinematic_only.targets.empty(),
             "FIG enemy presentation-only ability was treated as unsupported");
+    const auto monster_effect_49 = swd2::apply_prepaid_monster_special(
+        5, 55, special_points, 0, special_player, special_monster,
+        abilities, sequence({}));
+    const auto monster_effect_4c = swd2::apply_prepaid_monster_special(
+        10, 101, special_points, 0, special_player, special_monster,
+        abilities, sequence({}));
+    require(monster_effect_49.resolution ==
+                swd2::MonsterSpecialResolution::applied &&
+                monster_effect_49.targets.empty() &&
+                monster_effect_4c.resolution ==
+                swd2::MonsterSpecialResolution::applied &&
+                monster_effect_4c.targets.empty(),
+            "FIG shipped enemy-only effects 49/4c remained unsupported");
     special_player[0].buff_turns = {1, 0, 2, 0, 3, 4};
     const auto cleanse = swd2::apply_prepaid_monster_special(
         71, 1, special_points, 0, special_player, special_monster,
