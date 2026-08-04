@@ -4448,6 +4448,33 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
             "RPG did not present dialogue and manage map music in-process");
 }
 
+void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,   // RPG second action key: open 2e63.
+        swd2::InputAction::right,    // select Item on the diamond.
+        swd2::InputAction::confirm,  // enter 39ed general inventory.
+        swd2::InputAction::cancel,   // return to the diamond.
+        swd2::InputAction::cancel,   // return to the map.
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "RPG field-menu inventory run did not terminate normally");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 6U && platform.stop_calls == 1U,
+            "RPG 2e63 diamond did not enter/return from 39ed inventory");
+    require(platform.frame_hashes.size() == 6U &&
+                platform.frame_hashes[1] != platform.frame_hashes[0] &&
+                platform.frame_hashes[2] != platform.frame_hashes[1] &&
+                platform.frame_hashes[3] != platform.frame_hashes[2] &&
+                platform.frame_hashes[4] == platform.frame_hashes[2] &&
+                platform.frame_hashes[5] == platform.frame_hashes[0],
+            "RPG field-menu page selection/return frames were not stable");
+}
+
 void test_rpg_entity_collision(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
@@ -5302,6 +5329,7 @@ int main(int argc, char** argv) {
         test_stateful_event_opcodes(argv[1]);
         test_monolithic_runtime(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
+        test_rpg_field_menu_inventory(argv[1]);
         test_rpg_entity_collision(argv[1]);
         test_rpg_corner_slide(argv[1]);
         test_rpg_automatic_entity_event(argv[1]);

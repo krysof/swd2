@@ -1370,6 +1370,95 @@ public:
         }
     }
 
+    // RPG.EXE:2e63 is the field menu entered by the second action key.  It is
+    // a directional diamond, not a conventional vertical host menu: Status,
+    // Item, System and Magic are selected directly by Up/Right/Down/Left.
+    // This first portable entry restores the exact common page and connects
+    // the Item branch to the already reconstructed 39ed inventory state
+    // machine.  The other original branches remain on the diamond until their
+    // own complete screens have been reconstructed rather than substituting
+    // invented native widgets.
+    [[nodiscard]] bool run_field_menu() {
+        std::size_t selected = 2;  // 2e63 initializes DATA:35e2 to System.
+        while (true) {
+            auto frame = scene_provider_();
+            draw_compact_money_overlay(
+                frame, menu_sprites_, state_.u16(0x104));
+
+            const auto opaque = [&](std::size_t sprite, int x_byte, int y) {
+                if (sprite >= menu_sprites_.sprites().size()) return;
+                const auto& info = menu_sprites_.sprites()[sprite];
+                blit_opaque(frame, menu_sprites_.pixels(sprite),
+                            info.width, info.height, x_byte * 4, y);
+            };
+            const auto transparent = [&](std::size_t sprite,
+                                         int x_byte, int y) {
+                if (sprite >= menu_sprites_.sprites().size()) return;
+                const auto& info = menu_sprites_.sprites()[sprite];
+                blit(frame, menu_sprites_.pixels(sprite),
+                     info.width, info.height, x_byte * 4, y);
+            };
+
+            // 22a8/211a: four opaque MENU frame-zero cards followed by the
+            // original two-frame labels (Status/Item/System/Magic).
+            opaque(0, 16, 8);
+            opaque(0, 16, 72);
+            opaque(0, 6, 40);
+            opaque(0, 26, 40);
+            transparent(6, 20, 17);
+            transparent(7, 24, 17);
+            transparent(35, 20, 81);
+            transparent(36, 24, 81);
+            transparent(58, 10, 49);
+            transparent(62, 14, 49);
+            transparent(56, 30, 49);
+            transparent(57, 34, 49);
+
+            static constexpr std::array<std::pair<int, int>, 4> card_positions{{
+                {16, 8}, {26, 40}, {16, 72}, {6, 40},
+            }};
+            for (std::size_t choice = 0; choice < card_positions.size(); ++choice) {
+                if (choice == selected) continue;
+                apply_fig_palette_translation(
+                    frame.pixels, 320, 200,
+                    std::span<const std::uint8_t, 768>(frame.palette),
+                    card_positions[choice].first,
+                    card_positions[choice].second,
+                    0x10, 0x20, 3);
+            }
+
+            // 2448 lays the active party cards horizontally along the bottom
+            // of the same page, including the 24b8 death/low-HP/status masks.
+            const auto party_count = std::max<std::size_t>(
+                1, std::min<std::size_t>(state_.u16(0x10), 4));
+            for (std::size_t actor = 0; actor < party_count; ++actor) {
+                draw_rpg_actor_card(frame, menu_sprites_, state_, actor,
+                                    (8 + static_cast<int>(actor) * 18) * 4,
+                                    136);
+            }
+
+            platform_.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform_.wait_for_input();
+            if (action == InputAction::quit) {
+                quit_requested_ = true;
+                return false;
+            }
+            if (action == InputAction::cancel) return false;
+            if (action == InputAction::up) selected = 0;
+            else if (action == InputAction::right) selected = 1;
+            else if (action == InputAction::down) selected = 2;
+            else if (action == InputAction::left) selected = 3;
+            else if (action == InputAction::confirm && selected == 1U) {
+                const auto result = run_inventory(
+                    state_, InventoryUiMode::general);
+                if (quit_requested_) return false;
+                if (result == InventoryUiResult::map_reload) return true;
+            }
+        }
+    }
+
     [[nodiscard]] bool quit_requested() const noexcept { return quit_requested_; }
 
 private:
@@ -1927,9 +2016,36 @@ Marker RpgModule::run(GameContext& context, Marker) {
                                   std::span<const std::uint8_t, 768>(viewport.palette)});
 
         auto action = context.platform.wait_for_input();
-        if (action == InputAction::quit || action == InputAction::cancel) {
+        if (action == InputAction::quit) {
             context.platform.stop_audio();
             return Marker::none;
+        }
+        if (action == InputAction::cancel) {
+            RpgEventHost host(context.platform, event_font, name_font, item_font,
+                              items, item_texts, menu_sprites, equipment_art,
+                              save_slot_prompt, travel_labels, shop_prompt,
+                              shop_sale_prompt, shop_money_error,
+                              shop_inventory_error, shop_confirmation_prompt,
+                              shop_quantity_error, shop_unsellable_error,
+                              equipment_actor_error, equipment_two_hand_error,
+                              equipment_slot_error, field_action_error,
+                              inventory_category_labels, equipment_slot_labels,
+                              equipment_stat_labels,
+                              compose_scene,
+                              &map_database, &context.save_slot,
+                              field_action_runtime,
+                              context.shared_state, context.game_root,
+                              &playing_music);
+            const auto map_reload = host.run_field_menu();
+            if (host.quit_requested()) {
+                context.platform.stop_audio();
+                return Marker::none;
+            }
+            if (map_reload) {
+                pending_map_reload_ = true;
+                break;
+            }
+            continue;
         }
         if (action == InputAction::confirm) {
             if (const auto entity = entity_in_front(location, context.shared_state, map)) {
