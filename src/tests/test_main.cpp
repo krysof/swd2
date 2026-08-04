@@ -6976,6 +6976,51 @@ void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
             "RPG opcode 14 did not persist its overlay through dialogue and clear afterward");
 }
 
+void test_rpg_dialogue_then_money_overlay(
+    const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(12);
+    // CHNA0 entry 202 starts with opcode 18 immediately followed by opcode
+    // 14. 22cf must draw the compact money card into the dialogue VGA page;
+    // rebuilding the map here erases the still-visible bottom panel.
+    location.area.event_archive_path = "CHNA0.EXE";
+    location.area.event_font_path = "CHNA0.DSK";
+    location.area.entity_fields[9][5] = 202U * 2U;
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::cancel,  // leave opcode-13 inventory
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x424, 12);
+    state.set_u16(0x40f, 8);
+    state.set_viewport_x(59);
+    state.set_viewport_y(57);
+    state.set_actor_screen_x(38);
+    state.set_actor_screen_y(80);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 59U) * 2U));
+    state.set_dos_string(0x42d, 22, location.area.graphics_path);
+    state.set_dos_string(0x443, 22, location.area.layout_path);
+    state.set_dos_string(0x459, 22, location.area.music_path);
+    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
+    state.set_dos_string(0x485, 24, location.area.event_font_path);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto result = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(result == swd2::Marker::open_figure &&
+                platform.cursor == platform.actions.size(),
+            "RPG dialogue-to-money event did not terminate normally");
+    require(platform.frame_hashes.size() >= 4U &&
+                platform.bottom_hashes[2] == platform.bottom_hashes[3] &&
+                platform.compact_hashes[2] != platform.compact_hashes[3],
+            "RPG opcode 14 rebuilt the map instead of modifying the dialogue page");
+}
+
 void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
     const auto prepare = [&]() {
         auto database = std::make_shared<swd2::MapDatabase>(
@@ -7719,6 +7764,7 @@ int main(int argc, char** argv) {
         test_rpg_automatic_entity_event(argv[1]);
         test_rpg_event_voice(argv[1]);
         test_rpg_compact_money_overlay(argv[1]);
+        test_rpg_dialogue_then_money_overlay(argv[1]);
         test_rpg_shop_confirmation(argv[1]);
         test_rpg_cutscene_presentation(argv[1]);
         test_rpg_opcode55_cutscene(argv[1]);

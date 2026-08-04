@@ -736,10 +736,14 @@ public:
                         std::span<const std::uint8_t, 768>(shown.palette)});
                     const auto action = platform_.poll_input();
                     if (action == InputAction::quit) {
+                        direct_event_page_ = std::move(shown);
                         quit_requested_ = true;
                         return;
                     }
-                    if (action != InputAction::none) break;
+                    if (action != InputAction::none) {
+                        direct_event_page_ = std::move(shown);
+                        break;
+                    }
                     platform_.delay_for(std::chrono::milliseconds(20));
                 }
             } else if (opcode != 18) {
@@ -760,10 +764,14 @@ public:
                         std::span<const std::uint8_t, 768>(shown.palette)});
                     const auto action = platform_.poll_input();
                     if (action == InputAction::quit) {
+                        direct_event_page_ = std::move(shown);
                         quit_requested_ = true;
                         return;
                     }
-                    if (action != InputAction::none) break;
+                    if (action != InputAction::none) {
+                        direct_event_page_ = std::move(shown);
+                        break;
+                    }
                     platform_.delay_for(std::chrono::milliseconds(20));
                     ++indicator;
                     if (indicator == 153U) indicator = 149U;
@@ -772,6 +780,7 @@ public:
                 platform_.present({
                     320, 200, frame.pixels,
                     std::span<const std::uint8_t, 768>(frame.palette)});
+                direct_event_page_ = std::move(frame);
             }
             offset = page.next_offset;
             if (!page.has_more) return;
@@ -854,10 +863,15 @@ public:
             present(event_scene());
             return true;
         case 14:
-            compact_money_overlay_ = true;
             // RPG:5596 only calls 22cf. It writes the money card directly and
             // returns; the configurable 5a59 frame interval is not consumed.
-            present(event_scene());
+            {
+                auto frame = event_scene();
+                draw_compact_money_overlay(
+                    frame, menu_sprites_, state_.u16(0x104));
+                direct_event_page_ = frame;
+                present(std::move(frame));
+            }
             return true;
         case 22:
             reset_direct_page_layers();
@@ -925,8 +939,14 @@ public:
             // planes to an inverse-luminance ramp. Keep the transformed page
             // active for the following positioned text/fade until a new DE
             // background overwrites it.
-            monochrome_event_page_ = true;
-            present(event_scene());
+            {
+                auto frame = event_scene();
+                apply_rpg_event_monochrome_filter(
+                    frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette));
+                direct_event_page_ = frame;
+                present(std::move(frame));
+            }
             return true;
         case 56:
             platform_.stop_music();
@@ -943,9 +963,16 @@ public:
 
     bool show_positioned_text(std::uint16_t x_byte, std::uint16_t y,
                               std::span<const std::uint8_t> text) override {
-        positioned_text_.push_back(
-            {x_byte, y, std::vector<std::uint8_t>(text.begin(), text.end())});
-        present(event_scene());
+        auto frame = event_scene();
+        // 5c07 temporarily changes DATA:6ae5 to 0fh and writes directly into
+        // the currently displayed page; it does not reconstruct the map or
+        // discard a preceding dialogue panel.
+        draw_legacy_text(frame, font_, text,
+                         static_cast<int>(x_byte) * 4, y,
+                         320 - static_cast<int>(x_byte) * 4,
+                         200 - static_cast<int>(y), 15);
+        direct_event_page_ = frame;
+        present(std::move(frame));
         // RPG.EXE:5c15 calls its DOS hundredth timer with CL=3.
         platform_.delay_for(std::chrono::milliseconds(30));
         return true;
@@ -3178,13 +3205,11 @@ private:
     }
 
     void reset_direct_page_layers() {
-        // Opcode 14/53/55 modify the already displayed VGA page. Any later
-        // dd6/219 full-page rebuild overwrites those pixels; retaining them as
-        // durable scene state makes money cards, captions or monochrome pages
-        // leak into unrelated map/entity frames.
-        compact_money_overlay_ = false;
-        positioned_text_.clear();
-        monochrome_event_page_ = false;
+        // Dialogue and opcodes 14/53/55 modify the already displayed VGA
+        // page. Any later dd6/219 full-page rebuild overwrites those pixels;
+        // retaining the snapshot beyond that boundary makes panels, money
+        // cards, captions or monochrome pages leak into unrelated frames.
+        direct_event_page_.reset();
     }
 
     void advance_event_palette() {
@@ -3250,9 +3275,7 @@ private:
         // RPG:5a5e (opcode 35) installs a new full-page RAP layout using the
         // dictionary most recently chosen by opcode 29/43. This overwrites
         // the in-place opcode-55 conversion and any text drawn on the old page.
-        monochrome_event_page_ = false;
-        compact_money_overlay_ = false;
-        positioned_text_.clear();
+        direct_event_page_.reset();
         auto layout = de_sprite_path(game_root_, number);
         auto rap = layout;
         rap.replace_extension(".RAP");
@@ -3280,6 +3303,7 @@ private:
     }
 
     Viewport event_scene() {
+        if (direct_event_page_) return *direct_event_page_;
         auto frame = [&]() {
             if (!relocated_map_ || relocated_area_ == nullptr ||
                 !relocated_actors_) {
@@ -3299,20 +3323,6 @@ private:
             const auto left = (320 - static_cast<int>(source.width)) / 2;
             const auto top = (200 - static_cast<int>(source.height)) / 2;
             blit(frame, source.pixels, source.width, source.height, left, top);
-        }
-        if (compact_money_overlay_) {
-            draw_compact_money_overlay(frame, menu_sprites_, state_.u16(0x104));
-        }
-        for (const auto& layer : positioned_text_) {
-            draw_legacy_text(frame, font_, layer.text,
-                             static_cast<int>(layer.x_byte) * 4,
-                             layer.y, 320 - static_cast<int>(layer.x_byte) * 4,
-                             200 - static_cast<int>(layer.y), 15);
-        }
-        if (monochrome_event_page_) {
-            apply_rpg_event_monochrome_filter(
-                frame.pixels,
-                std::span<const std::uint8_t, 768>(frame.palette));
         }
         return frame;
     }
@@ -3397,16 +3407,9 @@ private:
     std::optional<std::uint16_t> cutscene_dictionary_id_;
     std::optional<std::uint16_t> cutscene_id_;
     std::size_t cutscene_frame_index_{};
-    struct PositionedText {
-        std::uint16_t x_byte{};
-        std::uint16_t y{};
-        std::vector<std::uint8_t> text;
-    };
-    std::vector<PositionedText> positioned_text_;
+    std::optional<Viewport> direct_event_page_;
     std::uint16_t frame_delay_ticks_{};
-    bool compact_money_overlay_{};
     bool palette_dark_{};
-    bool monochrome_event_page_{};
     bool quit_requested_{};
     const MapAreaRecord* relocated_area_{};
     std::optional<MapResource> relocated_map_;
