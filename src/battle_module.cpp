@@ -2814,7 +2814,8 @@ void present_round_events(
             event.block_reason == AbilityBlockReason::resistance &&
             !event.target_is_monster;
         const auto show_physical_zero =
-            event.kind == BattleEventKind::player_attack &&
+            (event.kind == BattleEventKind::player_attack ||
+             event.kind == BattleEventKind::ally_attack) &&
             event.damage == 0 && !event.evaded;
         const auto show_monster_status_zero =
             event.kind == BattleEventKind::status_damage &&
