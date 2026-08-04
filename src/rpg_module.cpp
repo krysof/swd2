@@ -748,8 +748,15 @@ public:
         case 31:
         case 32:
         case 33:
-        case 36:
         case 39:
+            present_timed(event_scene());
+            return true;
+        case 36:
+            // The VM advances SAVE+411 after this presentation, matching
+            // RPG:5a98. Keep the page that was actually copied to VGA as a
+            // separate frontend value: opcode 55 and positioned text operate
+            // on that last page, not on the next selector now held in SAVE.
+            cutscene_frame_index_ = state_.u16(0x411);
             present_timed(event_scene());
             return true;
         case 29:
@@ -3029,6 +3036,7 @@ private:
         cutscene_id_ = number;
         // The RAP loader at 0d84 resets SAVE+411 before rendering frame zero.
         state_.set_u16(0x411, 0);
+        cutscene_frame_index_ = 0;
     }
 
     void play_event_music(std::uint16_t number) {
@@ -3059,8 +3067,7 @@ private:
         }();
         if (cutscene_) {
             frame.palette = cutscene_->palette();
-            const auto frame_index = static_cast<std::size_t>(state_.u16(0x411)) %
-                                     cutscene_->frame_count();
+            const auto frame_index = cutscene_frame_index_ % cutscene_->frame_count();
             const auto& source = cutscene_->frame(frame_index);
             const auto left = (320 - static_cast<int>(source.width)) / 2;
             const auto top = (200 - static_cast<int>(source.height)) / 2;
@@ -3160,6 +3167,7 @@ private:
     std::map<std::uint16_t, SpriteArchive> item_preview_cache_;
     std::optional<std::uint16_t> cutscene_dictionary_id_;
     std::optional<std::uint16_t> cutscene_id_;
+    std::size_t cutscene_frame_index_{};
     struct PositionedText {
         std::uint16_t x_byte{};
         std::uint16_t y{};

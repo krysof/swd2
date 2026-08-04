@@ -4730,6 +4730,9 @@ public:
     void delay(std::uint16_t ticks) override { delayed_ticks += ticks; }
     bool present_event_command(std::uint16_t,
                                std::span<const std::uint16_t>) override {
+        if (observed_state != nullptr) {
+            observed_layout_frames.push_back(observed_state->u16(0x411));
+        }
         ++presentations;
         return accept_presentations;
     }
@@ -4772,6 +4775,8 @@ public:
     std::size_t inventories{};
     std::size_t map_relocations{};
     std::size_t relocated_entity_count{};
+    const swd2::SharedState* observed_state{};
+    std::vector<std::uint16_t> observed_layout_frames;
     std::optional<swd2::InventoryUiResult> inventory_result{
         swd2::InventoryUiResult::cancelled};
 };
@@ -4904,6 +4909,26 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                 moving.u16(0x40d) == 796 && moving.actor_direction() == 9 &&
                 host.presentations - before_presentations == 10,
             "event presentation and scripted movement opcodes did not execute");
+
+    const std::vector<std::vector<std::uint8_t>> layout_records = {
+        event_words({36, 3, 0xffff}),
+    };
+    const auto layout_archive = swd2::ScriptArchive::from_records(layout_records);
+    auto layout_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    layout_state.set_u16(0x40d, 0x7777);
+    layout_state.set_u16(0x40f, 0x1234);
+    layout_state.set_u16(0x411, 0);
+    host.observed_state = &layout_state;
+    host.observed_layout_frames.clear();
+    const auto layout = swd2::execute_event(
+        layout_archive, 2, layout_state, nullptr, 0, host);
+    host.observed_state = nullptr;
+    require(layout.status == swd2::EventVmStatus::completed &&
+                layout_state.u16(0x40d) == 0x1234 &&
+                layout_state.u16(0x411) == 3 &&
+                host.observed_layout_frames ==
+                    std::vector<std::uint16_t>({0, 1, 2}),
+            "event opcode 36 skipped the current RAP frame before presenting it");
 
     const std::vector<std::vector<std::uint8_t>> entity_frame_records = {
         event_words({39, 0, 7, 0xffff}),

@@ -419,16 +419,19 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 36:
                 // Cycles the loaded RAP layout pointer. The DOS renderer sets
                 // the viewport cell pointer back to the layout base for every
-                // frame and advances its layout selector at SAVE+0x411.
+                // frame. RPG 5a85..5a98 renders with the current SAVE+0x411
+                // selector and advances it only after the page has been
+                // presented; incrementing first skips frame zero and leaves
+                // every scripted sequence one frame ahead.
                 for (std::uint16_t i = 0; i < arg(0); ++i) {
                     state.set_u16(0x40d, state.u16(0x40f));
-                    state.set_u16(0x411,
-                                  static_cast<std::uint16_t>(state.u16(0x411) + 1U));
                     constexpr std::array<std::uint16_t, 1> one_frame{1};
                     if (!host.present_event_command(command.opcode, one_frame)) {
                         result.status = EventVmStatus::unsupported_opcode;
                         return result;
                     }
+                    state.set_u16(0x411,
+                                  static_cast<std::uint16_t>(state.u16(0x411) + 1U));
                 }
                 break;
             case 37:
