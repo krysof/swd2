@@ -704,6 +704,16 @@ public:
     }
 
     void map_relocated(const MapAreaRecord& area) override {
+        // RPG:edc/10fd replaces the active graphics/layout and palette. A DE
+        // page plus its direct VGA annotations belongs to the old resource
+        // set and cannot remain composited over the destination map while the
+        // same event continues after opcode 37.
+        cutscene_.reset();
+        cutscene_id_.reset();
+        cutscene_dictionary_id_.reset();
+        cutscene_frame_index_ = 0;
+        reset_direct_page_layers();
+        palette_dark_ = false;
         relocated_area_ = &area;
         auto graphics = normalize_dos_asset_path(state_.area_graphics_path());
         auto layout = normalize_dos_asset_path(state_.area_collision_path());
