@@ -1047,6 +1047,14 @@ public:
     }
 
     bool present_battle_transition(std::uint16_t opcode) override {
+        // A native DOS child could not receive a window-close event, but the
+        // portable host must not turn a close during this fixed transition
+        // into an unintended FIG launch. Poll only the dedicated frontend
+        // channel so queued gameplay actions remain untouched.
+        if (platform_.poll_frontend_quit()) {
+            quit_requested_ = true;
+            return false;
+        }
         // 208f treats the second digit in its FI00.RIX template as both a
         // selector and a sentinel. Ordinary 28/48 and random encounters keep
         // '0'; 58/59 write '2'; 60 writes 'F' and deliberately skips this
@@ -1067,9 +1075,17 @@ public:
             present(frame);
             // 704f synchronizes every iteration with the 70 Hz VGA refresh.
             platform_.delay_for(std::chrono::milliseconds(15));
+            if (platform_.poll_frontend_quit()) {
+                quit_requested_ = true;
+                return false;
+            }
         }
         // 2114 calls the DOS hundredth timer with CL=1 after the final page.
         platform_.delay_for(std::chrono::milliseconds(10));
+        if (platform_.poll_frontend_quit()) {
+            quit_requested_ = true;
+            return false;
+        }
         direct_event_page_ = std::move(frame);
         return true;
     }
@@ -4609,7 +4625,11 @@ Marker RpgModule::run(GameContext& context, Marker) {
         }
         if (world_step.random_encounter) {
             auto host = make_event_host(event_font);
-            static_cast<void>(host.present_battle_transition(28U));
+            if (!host.present_battle_transition(28U) ||
+                host.quit_requested()) {
+                context.platform.stop_audio();
+                return Marker::none;
+            }
             context.platform.stop_audio();
             return Marker::open_figure;
         }

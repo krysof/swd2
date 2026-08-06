@@ -5207,6 +5207,21 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                 std::vector<std::uint16_t>({58, 59, 60}),
             "event battle transitions lost their FI00/FI02/F sentinel opcode");
 
+    TestEventHost battle_abort_host;
+    battle_abort_host.abort = true;
+    battle_abort_host.accept_presentations = false;
+    auto battle_abort_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const std::vector<std::vector<std::uint8_t>> battle_abort_records = {
+        event_words({58, 444, 0xffff}),
+    };
+    const auto battle_abort_archive =
+        swd2::ScriptArchive::from_records(battle_abort_records);
+    const auto battle_abort = swd2::execute_event(
+        battle_abort_archive, 2, battle_abort_state, nullptr, 0,
+        battle_abort_host);
+    require(battle_abort.status == swd2::EventVmStatus::host_abort,
+            "event battle transition misreported a frontend abort as unsupported");
+
     const std::vector<std::vector<std::uint8_t>> movement_records = {
         event_words({5, 22, 30, 2, 31, 1, 32, 3, 33, 1, 45, 0xffff}),
     };
@@ -7316,6 +7331,7 @@ void test_rpg_random_encounter(const std::filesystem::path& game_root) {
                 swd2::Marker::open_figure &&
                 platform.cursor == platform.actions.size() &&
                 platform.poll_calls == 75U && platform.presented == 115U &&
+                platform.frontend_quit_poll_calls == 42U &&
                 platform.stop_calls == 1U && platform.music_calls == 2U &&
                 platform.frame_hashes[75] != platform.frame_hashes[74] &&
                 platform.frame_hashes[114] == black_hash &&
@@ -7324,6 +7340,34 @@ void test_rpg_random_encounter(const std::filesystem::path& game_root) {
                 context.shared_state.u16(0x49c) == 0x1018U &&
                 context.shared_state.u16(0x4a0) == 0U,
             "RPG 1fa8 code-window gate did not enter an in-process random FIG battle");
+
+    ScriptedPlatform quit_platform;
+    quit_platform.actions = platform.actions;
+    quit_platform.frontend_actions = {swd2::InputAction::quit};
+    auto quit_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    quit_state.set_u16(0x10, 1U);
+    quit_state.set_u16(0x102, 0U);
+    quit_state.set_viewport_x(static_cast<std::uint16_t>(start_x - 20U));
+    quit_state.set_viewport_y(static_cast<std::uint16_t>(start_y - 12U));
+    quit_state.set_actor_screen_x(38U);
+    quit_state.set_actor_screen_y(80U);
+    quit_state.set_actor_direction(9U);
+    quit_state.set_u16(0x40f, 8U);
+    quit_state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + ((start_y - 12U) * map.layout().width + start_x - 20U) * 2U));
+    quit_state.set_u16(0x49c, 0x1000U);
+    quit_state.set_u16(0x4a0, 0x1234U);
+    swd2::GameContext quit_context{game_root, quit_state, quit_platform};
+    quit_context.map_database = database;
+    require(swd2::RpgModule().run(
+                quit_context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none &&
+                quit_platform.cursor == quit_platform.actions.size() &&
+                quit_platform.presented == 75U &&
+                quit_platform.frontend_quit_poll_calls == 1U &&
+                quit_platform.music_calls == 1U &&
+                quit_platform.stop_calls == 1U,
+            "RPG random battle wipe ignored frontend quit and launched FIG");
 }
 
 void test_rpg_automatic_entity_event(const std::filesystem::path& game_root) {

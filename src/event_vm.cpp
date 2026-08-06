@@ -338,7 +338,9 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 28:
                 request_battle(state, result, arg(0));
                 if (!host.present_battle_transition(command.opcode)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host.abort_requested()
+                        ? EventVmStatus::host_abort
+                        : EventVmStatus::unsupported_opcode;
                 }
                 return result;
             case 29:
@@ -520,7 +522,9 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 state.set_u16(0x51c, arg(0));
                 request_battle(state, result, arg(1));
                 if (!host.present_battle_transition(command.opcode)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host.abort_requested()
+                        ? EventVmStatus::host_abort
+                        : EventVmStatus::unsupported_opcode;
                 }
                 return result;
             case 49:
@@ -582,7 +586,9 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 58:
                 request_battle(state, result, arg(0));
                 if (!host.present_battle_transition(command.opcode)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host.abort_requested()
+                        ? EventVmStatus::host_abort
+                        : EventVmStatus::unsupported_opcode;
                 }
                 return result;
             case 59:
@@ -590,7 +596,9 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 state.set_u16(0x51c, arg(0));
                 request_battle(state, result, arg(1));
                 if (!host.present_battle_transition(command.opcode)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host.abort_requested()
+                        ? EventVmStatus::host_abort
+                        : EventVmStatus::unsupported_opcode;
                 }
                 return result;
             case 61:
