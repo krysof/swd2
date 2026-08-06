@@ -91,6 +91,10 @@ struct EventVmResult {
     // RPG.EXE returned to SWD2.EXE when opcodes 28/48 requested FIG.EXE.
     // The rewrite exposes that transition without launching a child process.
     Marker requested_marker{Marker::none};
+    // Opcode 52 calls RPG.EXE's normal shutdown routine and terminates the
+    // DOS child without writing a launcher marker. Keep this distinct from a
+    // host/window quit so the portable module can preserve the script result.
+    bool requested_program_exit{};
     // Map-changing commands are reloaded by the in-process RPG module rather
     // than terminating and re-executing RPG.EXE.
     bool requested_map_reload{};

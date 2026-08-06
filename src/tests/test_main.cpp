@@ -5394,6 +5394,22 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 state.u16(0x4a0) == 68,
             "event opcode 48 did not preserve both FIG launch arguments");
 
+    const std::vector<std::vector<std::uint8_t>> exit_records = {
+        event_words({52, 41, 99, 0xffff}),
+    };
+    const auto exit_archive = swd2::ScriptArchive::from_records(exit_records);
+    const auto money_before_exit = state.u16(0x104);
+    const auto program_exit = swd2::execute_event(
+        exit_archive, 2, state, &area, 1, host);
+    require(program_exit.status == swd2::EventVmStatus::completed &&
+                program_exit.requested_program_exit &&
+                !program_exit.requested_map_reload &&
+                program_exit.requested_marker == swd2::Marker::none &&
+                program_exit.commands_executed == 1 &&
+                program_exit.last_opcode == 52 &&
+                state.u16(0x104) == money_before_exit,
+            "event opcode 52 reloaded the map instead of exiting RPG.EXE");
+
     const auto mixed = swd2::execute_event(archive, 15 * 2, state, &area, 1, host);
     require(mixed.status == swd2::EventVmStatus::unsupported_opcode &&
                 mixed.last_opcode == 34 && area.entity_fields[3][1] == 3,

@@ -4160,6 +4160,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
     struct EntityEventOutcome {
         Marker marker{Marker::none};
         bool quit{};
+        bool program_exit{};
         bool map_reload{};
         std::optional<MapAreaRecord> relocated_area;
     };
@@ -4218,6 +4219,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
         location.area.entity_fields[1][entity_index] = old_direction;
         return EntityEventOutcome{result.requested_marker,
                                   host.quit_requested(),
+                                  result.requested_program_exit,
                                   result.requested_map_reload,
                                   std::move(result.relocated_area)};
     };
@@ -4328,7 +4330,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                     if (event_entity &&
                         *event_entity < location.area.entity_count()) {
                         auto outcome = run_entity_event(*event_entity);
-                        if (outcome.quit) {
+                        if (outcome.quit || outcome.program_exit) {
                             context.platform.stop_audio();
                             return Marker::none;
                         }
@@ -4373,7 +4375,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
             if (const auto entity = interaction_entity(
                     location, context.shared_state, map)) {
                 auto outcome = run_entity_event(*entity);
-                if (outcome.quit) {
+                if (outcome.quit || outcome.program_exit) {
                     context.platform.stop_audio();
                     return Marker::none;
                 }
@@ -4444,7 +4446,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
                     location.area.entity_fields[3][*entity] = 3U;
                 } else if ((encountered.flags & 0x8000U) != 0U) {
                     auto outcome = run_entity_event(*entity);
-                    if (outcome.quit) {
+                    if (outcome.quit || outcome.program_exit) {
                         context.platform.stop_audio();
                         return Marker::none;
                     }

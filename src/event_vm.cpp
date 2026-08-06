@@ -539,7 +539,10 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 }
                 break;
             case 52:
-                result.requested_map_reload = true;
+                // RPG:5bfc calls 01c9, whose final instruction is DOS
+                // INT 21h/AH=4ch. Unlike opcode 37 this does not install or
+                // reload a map; the child exits without a transfer marker.
+                result.requested_program_exit = true;
                 return result;
             case 53:
                 if (!host.show_positioned_text(arg(0), arg(1), command.text)) {
