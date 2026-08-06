@@ -5706,6 +5706,34 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
             "RPG did not present dialogue and manage map music in-process");
 }
 
+void test_rpg_event_program_exit(const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(8);
+    // CHNA1 entry 176 shows one timed dialogue and then executes opcode 52.
+    // The trailing queued Quit must remain unread: 52 terminates RPG.EXE
+    // immediately rather than restarting the map loop for another poll.
+    location.area.entity_fields[9][1] = 176U * 2U;
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::confirm,  // interact with the entity
+        swd2::InputAction::confirm,  // close opcode-20 dialogue
+        swd2::InputAction::quit,     // must not reach the world loop
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_viewport_x(118);
+    state.set_viewport_y(99);
+    state.set_actor_direction(9);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none &&
+                platform.cursor == 2U && platform.poll_calls == 2U &&
+                platform.presented == 3U && platform.stop_calls == 1U,
+            "RPG opcode 52 returned to the map loop instead of exiting the module");
+}
+
 void test_rpg_idle_world_ticks(const std::filesystem::path& game_root) {
     auto database = std::make_shared<swd2::MapDatabase>(
         swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
@@ -8313,6 +8341,7 @@ int main(int argc, char** argv) {
         test_stateful_event_opcodes(argv[1]);
         test_monolithic_runtime(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
+        test_rpg_event_program_exit(argv[1]);
         test_rpg_idle_world_ticks(argv[1]);
         test_rpg_map_portal(argv[1]);
         test_rpg_map_special_event(argv[1]);

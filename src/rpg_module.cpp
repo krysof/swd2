@@ -4107,7 +4107,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
     // the behavior-stream cursor, delays and roam counters beside it are BSS
     // scratch, not save data. Reusing a runtime merely because two successive
     // areas happen to have the same entity count carries movement state across
-    // opcode 37/52 and travel boundaries.
+    // opcode 37 and travel boundaries.
     entity_runtime = {};
     auto graphics_relative = normalize_dos_asset_path(context.shared_state.area_graphics_path());
     auto layout_relative = normalize_dos_asset_path(context.shared_state.area_collision_path());
