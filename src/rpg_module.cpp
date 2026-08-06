@@ -1068,6 +1068,8 @@ public:
             // 704f synchronizes every iteration with the 70 Hz VGA refresh.
             platform_.delay_for(std::chrono::milliseconds(15));
         }
+        // 2114 calls the DOS hundredth timer with CL=1 after the final page.
+        platform_.delay_for(std::chrono::milliseconds(10));
         direct_event_page_ = std::move(frame);
         return true;
     }

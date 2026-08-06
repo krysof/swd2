@@ -71,7 +71,7 @@ ScriptArchive ScriptArchive::from_records(
     }
 
     const auto directory_bytes = (records.size() + 1U) * 2U;
-    std::size_t image_size = directory_bytes + 1U;  // trailing sentinel byte
+    std::size_t image_size = directory_bytes + 2U;  // trailing 0xffff record
     for (const auto& record : records) {
         if (record.size() < 2 || record[record.size() - 2] != 0xff ||
             record.back() != 0xff) {
@@ -93,6 +93,7 @@ ScriptArchive ScriptArchive::from_records(
         cursor += records[i].size();
     }
     result.offsets_[0] = static_cast<std::uint16_t>(cursor);
+    result.image_.push_back(0xff);
     result.image_.push_back(0xff);
     for (std::size_t i = 0; i < result.offsets_.size(); ++i) {
         result.image_[i * 2] = static_cast<std::uint8_t>(result.offsets_[i]);

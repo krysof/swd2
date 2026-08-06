@@ -273,9 +273,9 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 if (!*completed) break;
                 // RPG.EXE reloads the current entity's event after leaving
                 // the combined sell/buy UI. Command 2 commonly changes this
-                // field immediately before opcode 17.
-                if (area && current_entity < area->entity_count() &&
-                    area->entity_fields[9][current_entity] != 0) {
+                // field immediately before opcode 17. Directory offset zero
+                // is the valid empty first CHNA entry, not a null pointer.
+                if (area && current_entity < area->entity_count()) {
                     target = area->entity_fields[9][current_entity];
                     branched = true;
                 }

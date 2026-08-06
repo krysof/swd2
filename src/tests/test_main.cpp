@@ -5376,6 +5376,26 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                 host.inventories == 0 &&
                 host.shop_items == std::vector<std::uint16_t>({117, 118}),
             "event opcode 17 did not run its shop list and reload the entity event");
+
+    // RPG 569b passes field 9 straight to 53b1 after either shop closes.
+    // Offset zero selects CHNA's terminating empty record; it is not a null
+    // event pointer. Reloading it must skip the remainder of this record.
+    const std::vector<std::vector<std::uint8_t>> zero_shop_records = {
+        event_words({17, 2, 117, 118, 58, 444, 0xffff}),
+    };
+    const auto zero_shop_archive =
+        swd2::ScriptArchive::from_records(zero_shop_records);
+    shop_area.entity_fields[9][0] = 0;
+    auto zero_shop_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto zero_shop = swd2::execute_event(
+        zero_shop_archive, 2, zero_shop_state, &shop_area, 0, host);
+    require(zero_shop.status == swd2::EventVmStatus::completed &&
+                zero_shop.requested_marker == swd2::Marker::none &&
+                zero_shop.commands_executed == 1 &&
+                zero_shop_archive.event_stream(0).size() == 2 &&
+                zero_shop_archive.event_stream(0)[0] == 0xff &&
+                zero_shop_archive.event_stream(0)[1] == 0xff,
+            "event opcode 17 treated the zero-offset CHNA record as no reload");
 }
 
 void test_event_vm(const std::filesystem::path& game_root) {
