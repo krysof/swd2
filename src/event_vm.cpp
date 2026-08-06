@@ -419,11 +419,13 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                     return result;
                 }
                 const auto position_only = (arg(0) & 0x8000U) != 0U;
-                // Clearing the old music path forces RPG.EXE's loader to
-                // compare unequal before it installs a full destination area.
-                // edc's 8000h form sets SAVE+426; 10fd then returns at 1160
-                // after placement/direction and never replaces paths/entities.
-                if (!position_only) state.set_u8(0x459, 0);
+                // 5aa7 clears the old music path before calling edc for both
+                // forms. This forces a full destination load to compare
+                // unequal. edc's 8000h form sets SAVE+426 and 10fd returns at
+                // 1160 without copying a replacement, so its observable
+                // result is deliberately an empty SAVE+459 string even while
+                // the already-playing RIX continues.
+                state.set_u8(0x459, 0);
                 install_map_location(state, *map_database, arg(0));
                 if (position_only) break;
                 result.relocated_area = map_database->location_at_directory_offset(

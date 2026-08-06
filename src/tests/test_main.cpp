@@ -5511,10 +5511,9 @@ void test_event_vm(const std::filesystem::path& game_root) {
                     original_location.area.graphics_path &&
                 position_state.area_collision_path() ==
                     original_location.area.layout_path &&
-                position_state.music_path() ==
-                    original_location.area.music_path &&
+                position_state.music_path().empty() &&
                 position_state.u16(0x104) == position_money + 3U,
-            "event opcode 37 position-only form reloaded destination resources");
+            "event opcode 37 position-only form did not preserve its music clear quirk");
     for (std::size_t i = 0; i < 12; ++i) {
         require(
             position_state.u16(0x12 + i * 2) ==
