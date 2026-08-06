@@ -5006,8 +5006,9 @@ public:
         ++presentations;
         return accept_presentations;
     }
-    bool present_battle_transition() override {
+    bool present_battle_transition(std::uint16_t opcode) override {
         ++battle_transitions;
+        battle_transition_opcodes.push_back(opcode);
         return accept_presentations;
     }
     bool show_positioned_text(std::uint16_t x, std::uint16_t y,
@@ -5050,6 +5051,7 @@ public:
     std::uint64_t delayed_ticks{};
     std::size_t presentations{};
     std::size_t battle_transitions{};
+    std::vector<std::uint16_t> battle_transition_opcodes;
     std::size_t positioned_calls{};
     std::uint16_t positioned_x{};
     std::uint16_t positioned_y{};
@@ -5134,7 +5136,9 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
     const auto result = swd2::execute_event(archive, 2, state, nullptr, 0, host);
     require(result.status == swd2::EventVmStatus::completed &&
                 result.requested_marker == swd2::Marker::open_figure &&
-                state.u16(0x4a0) == 222,
+                state.u16(0x4a0) == 222 &&
+                host.battle_transition_opcodes ==
+                    std::vector<std::uint16_t>({58}),
             "event opcode 58 did not request the FIG module");
     require(state.u16(0x106 + 0x2d) == 100,
             "event opcode 10 did not saturate at the adjacent maximum");
@@ -5199,6 +5203,9 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                     battle_state.u16(0x51c) == 7 && battle_state.u16(0x4a0) == 444,
                 "event opcode 59/60 did not preserve the FIG launch fields");
     }
+    require(host.battle_transition_opcodes ==
+                std::vector<std::uint16_t>({58, 59, 60}),
+            "event battle transitions lost their FI00/FI02/F sentinel opcode");
 
     const std::vector<std::vector<std::uint8_t>> movement_records = {
         event_words({5, 22, 30, 2, 31, 1, 32, 3, 33, 1, 45, 0xffff}),
@@ -7289,7 +7296,7 @@ void test_rpg_random_encounter(const std::filesystem::path& game_root) {
                 swd2::Marker::open_figure &&
                 platform.cursor == platform.actions.size() &&
                 platform.poll_calls == 75U && platform.presented == 115U &&
-                platform.stop_calls == 1U &&
+                platform.stop_calls == 1U && platform.music_calls == 2U &&
                 platform.frame_hashes[75] != platform.frame_hashes[74] &&
                 platform.frame_hashes[114] == black_hash &&
                 context.shared_state.world_x() == start_x + 1U &&
@@ -7463,7 +7470,8 @@ void test_rpg_dialogue_then_money_overlay(
     const auto result = swd2::RpgModule().run(
         context, swd2::Marker::menu_ready);
     require(result == swd2::Marker::open_figure &&
-                platform.cursor == platform.actions.size(),
+                platform.cursor == platform.actions.size() &&
+                platform.music_calls == 2U,
             "RPG dialogue-to-money event did not terminate normally");
     std::uint64_t black_hash = 1469598103934665603ULL;
     for (std::size_t pixel = 0; pixel < 320U * 200U; ++pixel) {

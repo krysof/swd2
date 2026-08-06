@@ -43,7 +43,7 @@ public:
     // Every transition to FIG runs RPG.EXE:208f's forty-frame centre-out
     // screen wipe before the child terminates. Headless hosts may accept it
     // as a no-op; visual hosts override this to submit the legacy frames.
-    virtual bool present_battle_transition() { return true; }
+    virtual bool present_battle_transition(std::uint16_t) { return true; }
     // Opcode 53 stores two mode-X coordinates followed by inline Big5 text.
     // Unlike dialogue it draws in-place, waits three DOS hundredths, and does
     // not wait for input.

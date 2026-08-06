@@ -337,7 +337,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 break;
             case 28:
                 request_battle(state, result, arg(0));
-                if (!host.present_battle_transition()) {
+                if (!host.present_battle_transition(command.opcode)) {
                     result.status = EventVmStatus::unsupported_opcode;
                 }
                 return result;
@@ -519,7 +519,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 48:
                 state.set_u16(0x51c, arg(0));
                 request_battle(state, result, arg(1));
-                if (!host.present_battle_transition()) {
+                if (!host.present_battle_transition(command.opcode)) {
                     result.status = EventVmStatus::unsupported_opcode;
                 }
                 return result;
@@ -581,7 +581,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 break;
             case 58:
                 request_battle(state, result, arg(0));
-                if (!host.present_battle_transition()) {
+                if (!host.present_battle_transition(command.opcode)) {
                     result.status = EventVmStatus::unsupported_opcode;
                 }
                 return result;
@@ -589,7 +589,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 60:
                 state.set_u16(0x51c, arg(0));
                 request_battle(state, result, arg(1));
-                if (!host.present_battle_transition()) {
+                if (!host.present_battle_transition(command.opcode)) {
                     result.status = EventVmStatus::unsupported_opcode;
                 }
                 return result;

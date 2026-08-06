@@ -1046,7 +1046,21 @@ public:
         }
     }
 
-    bool present_battle_transition() override {
+    bool present_battle_transition(std::uint16_t opcode) override {
+        // 208f treats the second digit in its FI00.RIX template as both a
+        // selector and a sentinel. Ordinary 28/48 and random encounters keep
+        // '0'; 58/59 write '2'; 60 writes 'F' and deliberately skips this
+        // non-looping transition cue while the current map music continues.
+        if (opcode != 60U && music_enabled_) {
+            const auto number = opcode == 58U || opcode == 59U ? 2U : 0U;
+            const auto relative = std::filesystem::path("RX") /
+                ("FI0" + std::to_string(number) + ".RIX");
+            const auto path = game_root_ / relative;
+            if (std::filesystem::is_regular_file(path)) {
+                platform_.play_music(read_file(path), false);
+                if (playing_music_) *playing_music_ = relative;
+            }
+        }
         auto frame = event_scene();
         for (std::size_t step = 0; step < 40U; ++step) {
             frame = advance_battle_wipe(std::move(frame));
@@ -4593,7 +4607,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
         }
         if (world_step.random_encounter) {
             auto host = make_event_host(event_font);
-            static_cast<void>(host.present_battle_transition());
+            static_cast<void>(host.present_battle_transition(28U));
             context.platform.stop_audio();
             return Marker::open_figure;
         }
