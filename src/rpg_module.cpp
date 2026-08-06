@@ -4246,10 +4246,18 @@ Marker RpgModule::run(GameContext& context, Marker) {
 
         auto host = make_event_host(event_font);
         const auto entity = map_entity(location.area, entity_index);
-        const auto result = execute_event(
+        auto result = execute_event(
             event_archive, entity.event_directory_offset, context.shared_state,
             &location.area, entity_index, host, 10'000, &map_database);
-        location.area.entity_fields[1][entity_index] = old_direction;
+        // 52b4 saves only the entity byte offset. If opcode 37 replaced the
+        // eleven BSS arrays, its final direction write therefore targets the
+        // destination area's entity at that same offset, not the now-detached
+        // source arrays. The 8000h position-only form does not replace them.
+        auto* facing_area = result.relocated_area
+            ? &*result.relocated_area : &location.area;
+        if (entity_index < facing_area->entity_count()) {
+            facing_area->entity_fields[1][entity_index] = old_direction;
+        }
         return EntityEventOutcome{result.requested_marker,
                                   host.quit_requested(),
                                   result.requested_program_exit,
