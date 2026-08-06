@@ -16,6 +16,9 @@
 python3 -m http.server 8000 --directory build-wasm/site
 ```
 
+构建脚本会自动调用 `scripts/verify-wasm.sh`，检查四个发布文件、WASM magic/version、
+JS 对 `.wasm/.data` 的引用，并在可用时通过 Binaryen 重新解析模块。
+
 然后访问 <http://localhost:8000/>。浏览器产物为 `index.html`、`index.js`、
 `index.wasm` 与 `index.data`，资源使用相对 URL，既可部署在域名根目录，也可部署到
 GitHub Pages 的 `/swd2/` 子路径。存档挂载在 IDBFS 中，保留于当前浏览器；系统菜单

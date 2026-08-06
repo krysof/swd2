@@ -22,6 +22,7 @@ emcmake cmake -S "$root" -B "$build_dir" -G Ninja \
   -DSWD2_GAME_DIR="$root/game"
 cmake --build "$build_dir" --parallel
 touch "$build_dir/site/.nojekyll"
+"$root/scripts/verify-wasm.sh" "$build_dir/site"
 
 printf 'Web build: %s\n' "$build_dir/site/index.html"
 du -sh "$build_dir/site"
