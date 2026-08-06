@@ -196,6 +196,10 @@ opcode 3/34 会写回 MAPZ。Opcode 3 的 `53ef` 并不只改 BSS：它重新打
 `area+6+field*entity_count*2+current_entity_byte_offset` 写当前实体，再经 `7cb6`
 重写文件；因此换图后紧接的 opcode 3 也必须更新目的地源记录。Opcode 28/58 请求普通战斗；
 48 和 59/60 还先写辅助遇敌字再转交 `BattleModule`。
+所有这些入口以及随机遇敌都会先经过 `208f` 的四十帧退场：每帧把 Mode-X 左右半页各向
+外移动两个 byte（屏幕八像素），再清空中央两个 byte，黑缝因此逐帧扩展直到整页为空。
+现代 RPG host 在当前实际 VGA 快照（包括对话、钱框或 DE 页）上执行同一变换后才返回
+`IF`，而不是从完整场景直接切换到 FIG。
 
 Opcode 19 的物品列表是变长记录；购买价格来自 ITEM 记录非对齐偏移 `+0x0b`，物品
 68..72 共用状态 `+0x3e6` 的五个数量计数器。Opcode 13 的 `54b8` 清除 `DATA:3cd7`

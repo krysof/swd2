@@ -5006,6 +5006,10 @@ public:
         ++presentations;
         return accept_presentations;
     }
+    bool present_battle_transition() override {
+        ++battle_transitions;
+        return accept_presentations;
+    }
     bool show_positioned_text(std::uint16_t x, std::uint16_t y,
                               std::span<const std::uint8_t> text) override {
         positioned_x = x;
@@ -5045,6 +5049,7 @@ public:
     std::uint16_t last_text_opcode{};
     std::uint64_t delayed_ticks{};
     std::size_t presentations{};
+    std::size_t battle_transitions{};
     std::size_t positioned_calls{};
     std::uint16_t positioned_x{};
     std::uint16_t positioned_y{};
@@ -7248,11 +7253,17 @@ void test_rpg_random_encounter(const std::filesystem::path& game_root) {
     context.map_database = database;
     const auto encounter_result = swd2::RpgModule().run(
         context, swd2::Marker::menu_ready);
+    std::uint64_t black_hash = 1469598103934665603ULL;
+    for (std::size_t pixel = 0; pixel < 320U * 200U; ++pixel) {
+        black_hash *= 1099511628211ULL;
+    }
     require(encounter_result ==
                 swd2::Marker::open_figure &&
                 platform.cursor == platform.actions.size() &&
-                platform.poll_calls == 75U && platform.presented == 75U &&
+                platform.poll_calls == 75U && platform.presented == 115U &&
                 platform.stop_calls == 1U &&
+                platform.frame_hashes[75] != platform.frame_hashes[74] &&
+                platform.frame_hashes[114] == black_hash &&
                 context.shared_state.world_x() == start_x + 1U &&
                 context.shared_state.world_y() == start_y &&
                 context.shared_state.u16(0x49c) == 0x1018U &&
@@ -7426,12 +7437,18 @@ void test_rpg_dialogue_then_money_overlay(
     require(result == swd2::Marker::open_figure &&
                 platform.cursor == platform.actions.size(),
             "RPG dialogue-to-money event did not terminate normally");
-    require(platform.frame_hashes.size() == 7U &&
+    std::uint64_t black_hash = 1469598103934665603ULL;
+    for (std::size_t pixel = 0; pixel < 320U * 200U; ++pixel) {
+        black_hash *= 1099511628211ULL;
+    }
+    require(platform.frame_hashes.size() == 47U &&
                 platform.frame_hashes[2] == 14975520895473487793ULL &&
                 platform.frame_hashes[3] == 9227892872998872915ULL &&
                 platform.frame_hashes[4] == 14733256452010803915ULL &&
                 platform.frame_hashes[5] == platform.frame_hashes[3] &&
                 platform.frame_hashes[6] == 16679286118639561275ULL &&
+                platform.frame_hashes[7] != platform.frame_hashes[6] &&
+                platform.frame_hashes[46] == black_hash &&
                 platform.bottom_hashes[2] == platform.bottom_hashes[5] &&
                 platform.compact_hashes[2] != platform.compact_hashes[3],
             "RPG opcode 13/14 did not preserve and restore the dialogue VGA page");

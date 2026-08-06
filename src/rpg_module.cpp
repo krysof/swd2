@@ -41,6 +41,27 @@ struct Viewport {
     std::array<std::uint8_t, 768> palette{};
 };
 
+Viewport advance_battle_wipe(Viewport source) {
+    // RPG:20a8..2112 performs the same two-byte move in every Mode-X plane.
+    // In packed frontend pixels that moves each 156-pixel half eight pixels
+    // outward and clears the central eight pixels. Repeating it forty times
+    // expands the black centre until the 320-pixel page is empty.
+    auto result = source;
+    for (std::size_t y = 0; y < 200U; ++y) {
+        const auto row = y * 320U;
+        std::copy_n(source.pixels.begin() + static_cast<std::ptrdiff_t>(row + 8U),
+                    156U,
+                    result.pixels.begin() + static_cast<std::ptrdiff_t>(row));
+        std::fill_n(result.pixels.begin() +
+                        static_cast<std::ptrdiff_t>(row + 156U),
+                    8U, 0U);
+        std::copy_n(source.pixels.begin() + static_cast<std::ptrdiff_t>(row + 156U),
+                    156U,
+                    result.pixels.begin() + static_cast<std::ptrdiff_t>(row + 164U));
+    }
+    return result;
+}
+
 // RPG stores these menu cursors in DATA rather than on the stack. 37fd/37ff
 // retain the normal inventory row/window across openings, while 35e6 retains
 // the last directional item-action choice for the whole RPG invocation.
@@ -1023,6 +1044,18 @@ public:
         default:
             return false;
         }
+    }
+
+    bool present_battle_transition() override {
+        auto frame = event_scene();
+        for (std::size_t step = 0; step < 40U; ++step) {
+            frame = advance_battle_wipe(std::move(frame));
+            present(frame);
+            // 704f synchronizes every iteration with the 70 Hz VGA refresh.
+            platform_.delay_for(std::chrono::milliseconds(15));
+        }
+        direct_event_page_ = std::move(frame);
+        return true;
     }
 
     bool show_positioned_text(std::uint16_t x_byte, std::uint16_t y,
@@ -4551,6 +4584,8 @@ Marker RpgModule::run(GameContext& context, Marker) {
             context.platform.delay_for(std::chrono::milliseconds(15));
         }
         if (world_step.random_encounter) {
+            auto host = make_event_host(event_font);
+            static_cast<void>(host.present_battle_transition());
             context.platform.stop_audio();
             return Marker::open_figure;
         }
