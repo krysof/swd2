@@ -944,7 +944,7 @@ void draw_battle_media(BattleSurface& surface,
     }
 }
 
-void present_story_battle_setup(GameContext& context,
+bool present_story_battle_setup(GameContext& context,
                                 const BattleSurface& background,
                                 std::uint16_t encounter_directory_offset) {
     if (encounter_directory_offset == 0x42) {
@@ -957,9 +957,9 @@ void present_story_battle_setup(GameContext& context,
             throw std::runtime_error(
                 "FIG directory-42 story action archive is empty");
         }
-        return;
+        return true;
     }
-    if (encounter_directory_offset != 0x30) return;
+    if (encounter_directory_offset != 0x30) return true;
     struct Step {
         std::uint16_t sprite;
         std::size_t frame;
@@ -989,8 +989,12 @@ void present_story_battle_setup(GameContext& context,
             320, 200, frame.pixels,
             std::span<const std::uint8_t, 768>(frame.palette),
         });
-        context.platform.delay_for(std::chrono::milliseconds(43));
+        if (!delay_for_or_frontend_quit(
+                context.platform, std::chrono::milliseconds(43))) {
+            return false;
+        }
     }
+    return true;
 }
 
 void draw_fighter_pose(BattleSurface& surface, const SpriteArchive& fighters,
@@ -1502,7 +1506,7 @@ void present_event_frame(
     present_battle_surface(context, frame);
 }
 
-void present_fig_page_wipe(GameContext& context,
+bool present_fig_page_wipe(GameContext& context,
                            const BattleSurface& previous,
                            const BattleSurface& next,
                            std::chrono::milliseconds tick) {
@@ -1516,9 +1520,10 @@ void present_fig_page_wipe(GameContext& context,
                   next.pixels.begin() + static_cast<std::ptrdiff_t>(last),
                   frame.pixels.begin() + static_cast<std::ptrdiff_t>(first));
         present_battle_surface(context, frame);
-        context.platform.delay_for(tick);
+        if (!delay_for_or_frontend_quit(context.platform, tick)) return false;
         first_line = line_end;
     }
+    return true;
 }
 
 void present_player_status_card(
@@ -1814,7 +1819,7 @@ void present_missing_medium_card(
     });
 }
 
-void present_medium_summon_animation(
+bool present_medium_summon_animation(
     GameContext& context, const BattleSurface& base_surface,
     const BattleEncounter& encounter, const ScriptArchive& items,
     const SpriteArchive& menu_sprites, const LegacyFont& font,
@@ -1825,10 +1830,10 @@ void present_medium_summon_animation(
     if ((!summoned_source && event.source >= visual.monsters.size()) ||
         (summoned_source && event.source >= visual.summoned_ally_present.size()) ||
         event.target >= visual.media.size()) {
-        return;
+        return true;
     }
     const auto sprite_frame = 174U + event.target;
-    if (sprite_frame >= menu_sprites.sprites().size()) return;
+    if (sprite_frame >= menu_sprites.sprites().size()) return true;
 
     const auto destination = fig_medium_placement(event.target);
     auto current_x = std::uint16_t{};
@@ -1875,7 +1880,10 @@ void present_medium_summon_animation(
             320, 200, frame.pixels,
             std::span<const std::uint8_t, 768>(frame.palette),
         });
-        context.platform.delay_for(std::chrono::milliseconds(14));
+        if (!delay_for_or_frontend_quit(
+                context.platform, std::chrono::milliseconds(14))) {
+            return false;
+        }
 
         if (current_x < target_x) {
             const auto next = static_cast<std::uint16_t>(
@@ -1893,7 +1901,7 @@ void present_medium_summon_animation(
             const auto next = static_cast<std::uint16_t>(current_y - 8U);
             current_y = next > 60000U || next <= target_y ? target_y : next;
         }
-        if (current_x == target_x && current_y == target_y) return;
+        if (current_x == target_x && current_y == target_y) return true;
     }
     throw std::runtime_error("FIG mediator summon animation did not converge");
 }
@@ -1920,12 +1928,18 @@ bool present_round_events(
     constexpr auto summon_install_delay =
         std::chrono::milliseconds(143); // 10/70 s
     std::map<std::uint16_t, SpriteArchive> effect_cache;
+    auto frontend_abort = false;
+    const auto delay = [&](std::chrono::milliseconds duration) {
+        if (delay_for_or_frontend_quit(context.platform, duration)) return true;
+        frontend_abort = true;
+        return false;
+    };
     for (std::size_t event_index = 0; event_index < result.events.size();
          ++event_index) {
         // A resolved round can contain a long multi-target presentation. Its
         // rules are already committed atomically, but a closed frontend need
         // not render every remaining DOS animation before the process exits.
-        if (context.platform.poll_frontend_quit()) return false;
+        if (frontend_abort || context.platform.poll_frontend_quit()) return false;
         const auto& event = result.events[event_index];
         const auto action_first =
             event_index == 0 ||
@@ -1951,18 +1965,18 @@ bool present_round_events(
             monster_action_event && !next_continues_monster_action &&
             !next_is_death_reaction;
         const auto present_monster_turn_tail =
-            [&](const BattleSessionEvent& shown) {
+            [&](const BattleSessionEvent& shown) -> bool {
                 // Every normal enemy action rejoins 22e0: retain the handler's
                 // last page for five ticks, redraw the clean battlefield, then
                 // retain that page for three. Death-reaction cards reach this
                 // same tail after their own five-tick wait.
-                context.platform.delay_for(ward_card_delay);
+                if (!delay(ward_card_delay)) return false;
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, shown,
                     std::nullopt, {}, std::nullopt,
                     encounter_directory_offset);
-                context.platform.delay_for(action_delay);
+                return delay(action_delay);
             };
         // Captured allies return from physical resolution or the player-side
         // effect table to the same 0fb9/1039 epilogue: rebuild the clean
@@ -1976,7 +1990,7 @@ bool present_round_events(
             (event.kind == BattleEventKind::missing_medium &&
              event.source_is_summoned_ally);
         ScopeExit captured_ally_tail([&] {
-            if (!captured_ally_dispatch) return;
+            if (frontend_abort || !captured_ally_dispatch) return;
             if (event_index + 1U < result.events.size() &&
                 fig_same_presented_action(
                     event, result.events[event_index + 1U])) {
@@ -1986,7 +2000,7 @@ bool present_round_events(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt,
                 {}, std::nullopt, encounter_directory_offset);
-            context.platform.delay_for(ward_card_delay);
+            static_cast<void>(delay(ward_card_delay));
         });
         if (event.kind == BattleEventKind::skipped) {
             // 0694/0c11/0c1f/0c2d jump straight back to the initiative loop.
@@ -2001,7 +2015,7 @@ bool present_round_events(
                     font, fallback, visual, event,
                     abilities.summoned_ally_ability_text(),
                     encounter_directory_offset);
-                context.platform.delay_for(summoned_action_card_delay);
+                if (!delay(summoned_action_card_delay)) return false;
             } else if (!event.source_is_monster &&
                        event.source < visual.party_count) {
                 // Player abilities/items already pass 4338 before their
@@ -2014,7 +2028,7 @@ bool present_round_events(
                         context, base_surface, encounter, items, fighters,
                         menu_sprites, font, fallback, visual, pose_event, pose,
                         {}, std::nullopt, encounter_directory_offset);
-                    context.platform.delay_for(action_delay);
+                    if (!delay(action_delay)) return false;
                 }
             }
             present_missing_medium_card(
@@ -2025,7 +2039,7 @@ bool present_round_events(
             // exactly nine timer ticks before returning past the effect body.
             play_voice_cue(context, {FigVoiceFile::sp, 2,
                                      FigVoiceTiming::before_action});
-            context.platform.delay_for(summoned_action_card_delay);
+            if (!delay(summoned_action_card_delay)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::medium_summoned) {
@@ -2039,7 +2053,7 @@ bool present_round_events(
                     font, fallback, visual, event,
                     abilities.summoned_ally_ability_text(),
                     encounter_directory_offset);
-                context.platform.delay_for(summoned_action_card_delay);
+                if (!delay(summoned_action_card_delay)) return false;
             } else {
                 present_monster_ability_name_card(
                     context, base_surface, encounter, items, menu_sprites,
@@ -2048,9 +2062,13 @@ bool present_round_events(
             }
             play_voice_cue(context, {FigVoiceFile::sp, 0x31,
                                      FigVoiceTiming::before_action});
-            present_medium_summon_animation(
-                context, base_surface, encounter, items, menu_sprites,
-                font, fallback, visual, event, encounter_directory_offset);
+            if (!present_medium_summon_animation(
+                    context, base_surface, encounter, items, menu_sprites,
+                    font, fallback, visual, event,
+                    encounter_directory_offset)) {
+                frontend_abort = true;
+                return false;
+            }
             apply_visual_event(visual, event, abilities);
             present_event_frame(
                 context, base_surface, encounter, items, fighters,
@@ -2059,9 +2077,9 @@ bool present_round_events(
             if (event.source_is_summoned_ally) {
                 // The captured-ally caller 0fb9 redraws the newly persistent
                 // mediator and holds that clean page for five ticks.
-                context.platform.delay_for(ward_card_delay);
+                if (!delay(ward_card_delay)) return false;
             } else if (finish_monster_action_here) {
-                present_monster_turn_tail(event);
+                if (!present_monster_turn_tail(event)) return false;
             }
             continue;
         }
@@ -2077,9 +2095,9 @@ bool present_round_events(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
                 encounter_directory_offset);
-            context.platform.delay_for(immunity_card_delay); // eight ticks
+            if (!delay(immunity_card_delay)) return false; // eight ticks
             if (finish_monster_action_here) {
-                present_monster_turn_tail(event);
+                if (!present_monster_turn_tail(event)) return false;
             }
             continue;
         }
@@ -2097,13 +2115,13 @@ bool present_round_events(
             }
             // 212a/214c hold the card for three ticks, then flow through
             // 22e0's additional five-tick pause before the clean redraw.
-            context.platform.delay_for(immunity_card_delay);
+            if (!delay(immunity_card_delay)) return false;
             if (succeeded) apply_visual_event(visual, event, abilities);
             present_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
                 encounter_directory_offset);
-            context.platform.delay_for(action_delay);
+            if (!delay(action_delay)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::death_reaction) {
@@ -2112,8 +2130,8 @@ bool present_round_events(
                 font, fallback, visual, event,
                 abilities.death_reaction_text(),
                 encounter_directory_offset, 2, 0x6b);
-            context.platform.delay_for(ward_card_delay);
-            present_monster_turn_tail(event);
+            if (!delay(ward_card_delay)) return false;
+            if (!present_monster_turn_tail(event)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::monster_captured ||
@@ -2134,16 +2152,13 @@ bool present_round_events(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, abilities,
                 encounter_directory_offset, false);
-            if (!delay_for_or_frontend_quit(
-                    context.platform, capture_action_card_delay)) {
-                return false;
-            }
+            if (!delay(capture_action_card_delay)) return false;
             if (event.kind == BattleEventKind::capture_failed) {
                 present_capture_action_card(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event, abilities,
                     encounter_directory_offset, true);
-                context.platform.delay_for(ward_card_delay);
+                if (!delay(ward_card_delay)) return false;
                 continue;
             }
             apply_visual_event(visual, event, abilities);
@@ -2156,7 +2171,7 @@ bool present_round_events(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, 0, {}, std::nullopt,
                 encounter_directory_offset);
-            context.platform.delay_for(summoned_action_card_delay);
+            if (!delay(summoned_action_card_delay)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::ally_summoned) {
@@ -2171,7 +2186,7 @@ bool present_round_events(
                 std::nullopt, encounter_directory_offset);
             play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
                                      FigVoiceTiming::before_action});
-            context.platform.delay_for(summon_install_delay);
+            if (!delay(summon_install_delay)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::status_expired) {
@@ -2191,10 +2206,7 @@ bool present_round_events(
                         font, fallback, visual, event,
                         abilities.monster_removed_buff_text(slot),
                         encounter_directory_offset);
-                    if (!delay_for_or_frontend_quit(
-                            context.platform, status_card_delay)) {
-                        return false;
-                    }
+                    if (!delay(status_card_delay)) return false;
                 }
             } else {
                 // FIG 0c41..0d98 reports five expiring party buffs followed
@@ -2214,10 +2226,7 @@ bool present_round_events(
                         font, fallback, visual, event,
                         abilities.player_removed_buff_text(slot),
                         encounter_directory_offset, 4, 0x00, 0, 2);
-                    if (!delay_for_or_frontend_quit(
-                            context.platform, status_card_delay)) {
-                        return false;
-                    }
+                    if (!delay(status_card_delay)) return false;
                 }
                 for (std::size_t slot = 0; slot < 4U; ++slot) {
                     if ((event.recovered_player_status_mask & (1U << slot)) == 0) {
@@ -2233,16 +2242,13 @@ bool present_round_events(
                         font, fallback, visual, event,
                         abilities.recovered_player_status_text(slot),
                         encounter_directory_offset, 4, 0x00, 0, 2);
-                    if (!delay_for_or_frontend_quit(
-                            context.platform, status_card_delay)) {
-                        return false;
-                    }
+                    if (!delay(status_card_delay)) return false;
                 }
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
                     encounter_directory_offset);
-                context.platform.delay_for(ward_card_delay);
+                if (!delay(ward_card_delay)) return false;
             }
             continue;
         }
@@ -2257,7 +2263,7 @@ bool present_round_events(
                 font, fallback, visual, attacker_event,
                 abilities.monster_attack_text(),
                 encounter_directory_offset, 2, 0x00, 8);
-            context.platform.delay_for(monster_action_card_delay);
+            if (!delay(monster_action_card_delay)) return false;
             if (event.damage == 0 && !event.evaded) {
                 // Physical immunity or the retry-zero branch redraws that
                 // card and overlays a second colour-6b "失 敗" card below.
@@ -2267,9 +2273,9 @@ bool present_round_events(
                     abilities.monster_attack_text(),
                     abilities.physical_failure_text(),
                     encounter_directory_offset);
-                context.platform.delay_for(monster_action_card_delay);
+                if (!delay(monster_action_card_delay)) return false;
                 if (finish_monster_action_here) {
-                    present_monster_turn_tail(event);
+                    if (!present_monster_turn_tail(event)) return false;
                 }
                 continue;
             }
@@ -2280,9 +2286,9 @@ bool present_round_events(
                     context, base_surface, encounter, items, menu_sprites,
                     font, fallback, visual, event, abilities.evasion_text(),
                     encounter_directory_offset, 2, 0x6b);
-                context.platform.delay_for(immunity_card_delay);
+                if (!delay(immunity_card_delay)) return false;
                 if (finish_monster_action_here) {
-                    present_monster_turn_tail(event);
+                    if (!present_monster_turn_tail(event)) return false;
                 }
                 continue;
             }
@@ -2303,7 +2309,7 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, text,
                 encounter_directory_offset, color);
-            context.platform.delay_for(summoned_action_card_delay);
+            if (!delay(summoned_action_card_delay)) return false;
         }
         if (event.kind == BattleEventKind::ally_fled) {
             // 0eef..0f18 starts SV3 immediately after the nine-tick colour-6b
@@ -2320,7 +2326,7 @@ bool present_round_events(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt,
                 {}, std::nullopt, encounter_directory_offset);
-            context.platform.delay_for(monster_action_card_delay);
+            if (!delay(monster_action_card_delay)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::ally_attack && event.evaded) {
@@ -2337,7 +2343,7 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, abilities.evasion_text(),
                 encounter_directory_offset, 2, 0x6b, 8);
-            context.platform.delay_for(immunity_card_delay);
+            if (!delay(immunity_card_delay)) return false;
             continue;
         }
         const auto monster_named_action = action_first &&
@@ -2386,7 +2392,7 @@ bool present_round_events(
             }
         }
         if (monster_named_action) {
-            context.platform.delay_for(std::chrono::milliseconds(100)); // 7/70 s
+            if (!delay(std::chrono::milliseconds(100))) return false; // 7/70 s
             if (event.monster_generic_path) {
                 // 2464/2485 replace the compact ability-name page with a clean
                 // battle page (one selected card or the full party) before
@@ -2417,8 +2423,8 @@ bool present_round_events(
             !event.target_is_monster &&
             event.ability_id < abilities.abilities().size() &&
             (abilities.ability(event.ability_id).target_flags & 0x2000U) == 0;
-        const auto delay_monster_all_target_slots = [&] {
-            if (!monster_all_target_action) return;
+        const auto delay_monster_all_target_slots = [&]() -> bool {
+            if (!monster_all_target_action) return true;
             std::optional<std::size_t> next_target;
             if (event_index + 1U < result.events.size() &&
                 fig_same_effect_phase(event, result.events[event_index + 1U])) {
@@ -2426,8 +2432,7 @@ bool present_round_events(
             }
             const auto slots = fig_all_target_slot_span(
                 event.target, next_target, visual.party_count);
-            context.platform.delay_for(
-                action_delay * static_cast<int>(slots));
+            return delay(action_delay * static_cast<int>(slots));
         };
         const auto dispatcher_immediate_return =
             effect_first && dispatcher_event &&
@@ -2461,7 +2466,7 @@ bool present_round_events(
             if (event.kind != BattleEventKind::monster_attack &&
                 event.kind != BattleEventKind::ally_attack &&
                 event.kind != BattleEventKind::status_damage) {
-                context.platform.delay_for(action_delay);
+                if (!delay(action_delay)) return false;
             }
         } else {
             for (std::size_t phase = 0; phase < pose_count; ++phase) {
@@ -2490,7 +2495,7 @@ bool present_round_events(
                 if (event.kind == BattleEventKind::player_attack && phase != 0) {
                     pose_delay = effect_delay;
                 }
-                context.platform.delay_for(pose_delay);
+                if (!delay(pose_delay)) return false;
             }
         }
         for (const auto& cue : non_effect_voices) {
@@ -2514,7 +2519,7 @@ bool present_round_events(
             // four-byte stack discard into the battle-exit/turn-loop path.
             // It has no SV3 sample, effect archive, result frame, or failure
             // panel of its own.
-            context.platform.delay_for(ward_card_delay);
+            if (!delay(ward_card_delay)) return false;
             continue;
         }
         if (normal_escape_action) {
@@ -2523,7 +2528,7 @@ bool present_round_events(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event, abilities,
                     encounter_directory_offset);
-                context.platform.delay_for(ward_card_delay); // five ticks
+                if (!delay(ward_card_delay)) return false; // five ticks
             }
             continue;
         }
@@ -2546,7 +2551,7 @@ bool present_round_events(
                  step < fig_monster_ability_flash_steps(); ++step) {
                 present_battle_surface(
                     context, (step & 1U) == 0 ? solid_frame : clean_frame);
-                context.platform.delay_for(effect_delay);
+                if (!delay(effect_delay)) return false;
             }
         }
         if (action_first && event.kind == BattleEventKind::player_attack &&
@@ -2569,15 +2574,23 @@ bool present_round_events(
                     menu_sprites, font, fallback, visual, event, weapon_pose,
                     {}, std::nullopt, encounter_directory_offset, animation,
                     false);
-                present_fig_page_wipe(
-                    context, prior_weapon_frame, overlay_frame, effect_delay);
+                if (!present_fig_page_wipe(
+                        context, prior_weapon_frame, overlay_frame,
+                        effect_delay)) {
+                    frontend_abort = true;
+                    return false;
+                }
                 const auto reaction_frame = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event, weapon_pose,
                     {}, std::nullopt, encounter_directory_offset, std::nullopt,
                     event.damage != 0 && !event.evaded);
-                present_fig_page_wipe(
-                    context, overlay_frame, reaction_frame, effect_delay);
+                if (!present_fig_page_wipe(
+                        context, overlay_frame, reaction_frame,
+                        effect_delay)) {
+                    frontend_abort = true;
+                    return false;
+                }
                 prior_weapon_frame = reaction_frame;
             }
         }
@@ -2587,7 +2600,7 @@ bool present_round_events(
                                 fighters, menu_sprites, font, fallback, visual, event, std::nullopt,
                                 effect.layers, std::nullopt,
                                 encounter_directory_offset);
-            context.platform.delay_for(effect_delay);
+            if (!delay(effect_delay)) return false;
         }
         if (event.kind == BattleEventKind::monster_attack &&
             event.damage != 0 && !event.evaded) {
@@ -2613,14 +2626,15 @@ bool present_round_events(
                  step < fig_monster_attack_shake_steps(); ++step) {
                 present_battle_surface(
                     context, (step & 1U) == 0 ? shifted_frame : clean_frame);
-                context.platform.delay_for(effect_delay);
+                if (!delay(effect_delay)) return false;
             }
         }
         if (monster_all_target_action && effect_first && event.target != 0) {
             // 24ca still waits three ticks for each dead slot skipped before
             // the first emitted living-target event.
-            context.platform.delay_for(
-                action_delay * static_cast<int>(event.target));
+            if (!delay(action_delay * static_cast<int>(event.target))) {
+                return false;
+            }
         }
         if (dispatcher_immediate_return &&
             !event.resulting_player_support_state) {
@@ -2628,7 +2642,7 @@ bool present_round_events(
             // setup/SP001 path. Entries 28/29 are handled below when their
             // unchanged support snapshots are present.
             if (finish_monster_action_here) {
-                present_monster_turn_tail(event);
+                if (!present_monster_turn_tail(event)) return false;
             }
             continue;
         }
@@ -2657,10 +2671,12 @@ bool present_round_events(
             }
 
             present_support_frame(event);
-            context.platform.delay_for(
-                presentation == FigSupportPresentation::all_targets
-                    ? summoned_action_card_delay
-                    : action_delay);
+            if (!delay(
+                    presentation == FigSupportPresentation::all_targets
+                        ? summoned_action_card_delay
+                        : action_delay)) {
+                return false;
+            }
 
             if (presentation == FigSupportPresentation::all_targets) {
                 // 452a/45c7 redraw every party card, wait nine ticks, mutate
@@ -2680,7 +2696,7 @@ bool present_round_events(
                     apply_visual_event(visual, result.events[index], abilities);
                 }
                 present_support_frame(event);
-                context.platform.delay_for(summoned_action_card_delay);
+                if (!delay(summoned_action_card_delay)) return false;
                 event_index = group_end;
                 continue;
             }
@@ -2694,7 +2710,7 @@ bool present_round_events(
                 continue;
             }
             present_support_frame(event);
-            context.platform.delay_for(summoned_action_card_delay);
+            if (!delay(summoned_action_card_delay)) return false;
             continue;
         }
         if (effect_code && fig_effect_tail_hold_ticks(*effect_code) != 0 &&
@@ -2703,7 +2719,7 @@ bool present_round_events(
             // 55fd's learned/item barrier handler presents four SP338 frames,
             // holds the last for four ticks, and returns without a clean page.
             apply_visual_event(visual, event, abilities);
-            context.platform.delay_for(monster_action_card_delay);
+            if (!delay(monster_action_card_delay)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::player_attack && event.evaded) {
@@ -2713,7 +2729,7 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, abilities.evasion_text(),
                 encounter_directory_offset, 2, 0x6b, 8);
-            context.platform.delay_for(immunity_card_delay);
+            if (!delay(immunity_card_delay)) return false;
             // 130d tail-jumps into 2a28; that card's RET returns from the
             // entire physical handler. There is no zero number or additional
             // clean action frame after a successful monster dodge.
@@ -2738,14 +2754,14 @@ bool present_round_events(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, shield_event, std::nullopt,
                     effect.layers, std::nullopt, encounter_directory_offset);
-                context.platform.delay_for(effect_delay);
+                if (!delay(effect_delay)) return false;
             }
             // 2513 returns immediately after the fourth 49c1 frame. Unlike
             // learned selector 62, shield consumption has no four-tick tail
             // and does not redraw a clean result page.
-            delay_monster_all_target_slots();
+            if (!delay_monster_all_target_slots()) return false;
             if (finish_monster_action_here) {
-                present_monster_turn_tail(event);
+                if (!present_monster_turn_tail(event)) return false;
             }
             continue;
         }
@@ -2758,11 +2774,11 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, abilities.magic_ward_text(),
                 encounter_directory_offset, 2, 0x6b);
-            context.platform.delay_for(ward_card_delay);
+            if (!delay(ward_card_delay)) return false;
             // 2512 returns with the ward card still visible.
-            delay_monster_all_target_slots();
+            if (!delay_monster_all_target_slots()) return false;
             if (finish_monster_action_here) {
-                present_monster_turn_tail(event);
+                if (!present_monster_turn_tail(event)) return false;
             }
             continue;
         }
@@ -2775,7 +2791,7 @@ bool present_round_events(
                 font, fallback, visual, event,
                 abilities.monster_immunity_text(),
                 encounter_directory_offset, 2, 0x00, 8);
-            context.platform.delay_for(immunity_card_delay);
+            if (!delay(immunity_card_delay)) return false;
         }
         const auto status_text = abilities.player_status_text(event.effect_code);
         if (!status_text.empty() &&
@@ -2786,10 +2802,7 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, status_text,
                 encounter_directory_offset);
-            if (!delay_for_or_frontend_quit(
-                    context.platform, status_card_delay)) {
-                return false;
-            }
+            if (!delay(status_card_delay)) return false;
             // 57d6 returns with the 2338 status card still visible after its
             // 18 ticks; there is no clean recomposition or three-tick tail.
             apply_visual_event(visual, event, abilities);
@@ -2804,10 +2817,7 @@ bool present_round_events(
                 font, fallback, visual, event,
                 abilities.player_removed_buff_text(slot),
                 encounter_directory_offset);
-            if (!delay_for_or_frontend_quit(
-                    context.platform, status_card_delay)) {
-                return false;
-            }
+            if (!delay(status_card_delay)) return false;
         }
         // Player effect 61 similarly calls 55e4 for the monster's ward,
         // attack enhancement and evasion enhancement, preserving that order.
@@ -2818,10 +2828,7 @@ bool present_round_events(
                 font, fallback, visual, event,
                 abilities.monster_removed_buff_text(slot),
                 encounter_directory_offset);
-            if (!delay_for_or_frontend_quit(
-                    context.platform, status_card_delay)) {
-                return false;
-            }
+            if (!delay(status_card_delay)) return false;
         }
         if (event.removed_player_buff_mask != 0 ||
             event.removed_monster_buff_mask != 0) {
@@ -2829,9 +2836,9 @@ bool present_round_events(
             // final compact card still visible. Only the no-buff effect-61
             // path ends on the clean page prepared before these loops.
             apply_visual_event(visual, event, abilities);
-            delay_monster_all_target_slots();
+            if (!delay_monster_all_target_slots()) return false;
             if (finish_monster_action_here) {
-                present_monster_turn_tail(event);
+                if (!present_monster_turn_tail(event)) return false;
             }
             continue;
         }
@@ -2849,7 +2856,7 @@ bool present_round_events(
             // status page. They do not synthesize a zero result or an inner
             // clean frame; the shared 22e0 tail owns the eventual cleanup.
             if (finish_monster_action_here) {
-                present_monster_turn_tail(event);
+                if (!present_monster_turn_tail(event)) return false;
             }
             continue;
         }
@@ -2888,7 +2895,7 @@ bool present_round_events(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event, std::nullopt, {}, placement,
                     encounter_directory_offset);
-                context.platform.delay_for(effect_delay);
+                if (!delay(effect_delay)) return false;
             }
         }
         if (!event.target_is_monster && presented_result_number &&
@@ -2901,9 +2908,9 @@ bool present_round_events(
             if (result_value == 0) {
                 apply_visual_event(visual, event, abilities);
             }
-            delay_monster_all_target_slots();
+            if (!delay_monster_all_target_slots()) return false;
             if (finish_monster_action_here) {
-                present_monster_turn_tail(event);
+                if (!present_monster_turn_tail(event)) return false;
             }
             continue;
         }
@@ -2912,7 +2919,7 @@ bool present_round_events(
             // visible, waits five ticks, then commits HP and performs the
             // clean 2db8/137a redraw. The common three-tick post-frame hold is
             // not part of this physical path.
-            context.platform.delay_for(ward_card_delay);
+            if (!delay(ward_card_delay)) return false;
         }
         if (result_value == 0 || event.target_is_monster) {
             apply_visual_event(visual, event, abilities);
@@ -2921,20 +2928,20 @@ bool present_round_events(
                             menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
                             encounter_directory_offset);
         if (event.kind == BattleEventKind::status_damage) {
-            context.platform.delay_for(monster_action_card_delay);
+            if (!delay(monster_action_card_delay)) return false;
         } else if (monster_all_target_action) {
-            delay_monster_all_target_slots();
+            if (!delay_monster_all_target_slots()) return false;
         }
         if (finish_monster_action_here) {
-            present_monster_turn_tail(event);
+            if (!present_monster_turn_tail(event)) return false;
         } else if (!monster_action_event &&
                    event.kind != BattleEventKind::player_attack &&
                    event.kind != BattleEventKind::ally_attack &&
                    !dispatcher_event) {
-            context.platform.delay_for(action_delay);
+            if (!delay(action_delay)) return false;
         }
     }
-    return !context.platform.poll_frontend_quit();
+    return !frontend_abort && !context.platform.poll_frontend_quit();
 }
 
 void begin_battle_shared_state(SharedState& state) {
@@ -3293,7 +3300,12 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             initial_party_count));
     const auto fighters = load_sprites(context.game_root / "SW" / "FMAN.RSK");
 
-    present_story_battle_setup(context, base_surface, encounter_offset);
+    if (!present_story_battle_setup(
+            context, base_surface, encounter_offset)) {
+        context.platform.stop_audio();
+        finish_battle_shared_state(context.shared_state);
+        return Marker::none;
+    }
 
     std::ostringstream music;
     music << "FI0" << music_number << ".RIX";
@@ -3615,7 +3627,11 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 320, 200, surface.pixels,
                 std::span<const std::uint8_t, 768>(surface.palette),
             });
-            context.platform.delay_for(std::chrono::milliseconds(80));
+            if (!delay_for_or_frontend_quit(
+                    context.platform, std::chrono::milliseconds(80))) {
+                quit_battle = true;
+                break;
+            }
         }
         if (quit_battle) {
             context.platform.stop_audio();

@@ -8212,6 +8212,30 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 story_setup_context.shared_state.u16(0x4a0) == 0,
             "FIG directory-30 CD348/CD521/CD352 six-frame setup was not replayed");
 
+    ScriptedPlatform story_setup_quit_platform;
+    story_setup_quit_platform.actions = {swd2::InputAction::quit};
+    story_setup_quit_platform.frontend_actions = {
+        swd2::InputAction::none,
+        swd2::InputAction::quit,
+    };
+    auto story_setup_quit_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    story_setup_quit_state.set_u16(0x4a0, 0x30);
+    swd2::GameContext story_setup_quit_context{
+        game_root, story_setup_quit_state, story_setup_quit_platform};
+    require(swd2::BattleModule().run(
+                story_setup_quit_context, swd2::Marker::open_figure) ==
+                    swd2::Marker::none &&
+                story_setup_quit_platform.cursor == 0U &&
+                story_setup_quit_platform.frontend_cursor == 2U &&
+                story_setup_quit_platform.presented == 1U &&
+                story_setup_quit_platform.delay_calls == 1U &&
+                story_setup_quit_platform.delayed_milliseconds == 20U &&
+                story_setup_quit_platform.music_calls == 0U &&
+                story_setup_quit_platform.stop_calls == 1U &&
+                story_setup_quit_context.shared_state.u16(0x4a0) == 0U,
+            "FIG directory-30 fixed setup ignored frontend quit");
+
     ScriptedPlatform story_boss_platform;
     story_boss_platform.actions = {swd2::InputAction::quit};
     auto story_boss_state = swd2::SharedState::load(game_root / "SAVE.DA1");
@@ -8368,10 +8392,10 @@ void test_battle_module(const std::filesystem::path& game_root) {
         swd2::InputAction::confirm,
         swd2::InputAction::quit,
     };
-    status_card_quit_platform.frontend_actions = {
-        swd2::InputAction::none,
-        swd2::InputAction::quit,
-    };
+    status_card_quit_platform.frontend_actions.assign(
+        9U, swd2::InputAction::none);
+    status_card_quit_platform.frontend_actions.push_back(
+        swd2::InputAction::quit);
     auto status_card_quit_state =
         swd2::SharedState::load(game_root / "SAVE.DA1");
     status_card_quit_state.set_u16(0x4a0, 392);
@@ -8385,14 +8409,17 @@ void test_battle_module(const std::filesystem::path& game_root) {
     status_card_quit_state.set_u16(0x106 + 0x5d, 1000);
     swd2::GameContext status_card_quit_context{
         game_root, status_card_quit_state, status_card_quit_platform};
-    require(swd2::BattleModule().run(
-                status_card_quit_context, swd2::Marker::open_figure) ==
-                    swd2::Marker::none &&
+    const auto status_card_quit_result = swd2::BattleModule().run(
+        status_card_quit_context, swd2::Marker::open_figure);
+    require(status_card_quit_result == swd2::Marker::none &&
                 status_card_quit_platform.cursor == 3U &&
-                status_card_quit_platform.frontend_cursor == 2U &&
+                status_card_quit_platform.frontend_cursor == 10U &&
+                status_card_quit_platform.frontend_quit_poll_calls == 10U &&
                 status_card_quit_platform.frame_hashes.size() == 7U &&
                 status_card_quit_platform.frame_hashes.back() ==
                     2498598045570496996ULL &&
+                status_card_quit_platform.delay_calls == 6U &&
+                status_card_quit_platform.delayed_milliseconds == 86U &&
                 status_card_quit_platform.stop_calls == 1U &&
                 status_card_quit_context.shared_state.u16(0x4a0) == 0U,
             "FIG 57d6 fixed status-card hold ignored frontend quit");
