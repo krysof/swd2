@@ -7293,6 +7293,37 @@ void test_rpg_overworld_poison(const std::filesystem::path& game_root) {
                 platform.presented == 14U && platform.frame_hashes[11] == solid_hash &&
                 platform.frame_hashes[12] == platform.frame_hashes[13],
             "RPG poison dialogue/6b flash did not preserve the 1ffb/200f sequence");
+
+    ScriptedPlatform quit_platform;
+    quit_platform.actions.assign(10U, swd2::InputAction::right);
+    quit_platform.frontend_actions = {swd2::InputAction::quit};
+    auto quit_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    quit_state.set_u16(0x10, 1U);
+    quit_state.set_u16(0x102, 0U);
+    quit_state.set_u16(actor + 8U, 0x0200U);
+    quit_state.set_u16(actor + 0x2dU, 1U);
+    quit_state.set_viewport_x(static_cast<std::uint16_t>(start_x - 20U));
+    quit_state.set_viewport_y(static_cast<std::uint16_t>(start_y - 12U));
+    quit_state.set_actor_screen_x(38U);
+    quit_state.set_actor_screen_y(80U);
+    quit_state.set_actor_direction(9U);
+    quit_state.set_u16(0x40f, 8U);
+    quit_state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + ((start_y - 12U) * map.layout().width + start_x - 20U) * 2U));
+    swd2::GameContext quit_context{game_root, quit_state, quit_platform};
+    quit_context.map_database = database;
+    require(swd2::RpgModule().run(
+                quit_context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none &&
+                quit_platform.cursor == quit_platform.actions.size() &&
+                quit_platform.frontend_cursor == 1U &&
+                quit_platform.frontend_quit_poll_calls == 1U &&
+                quit_platform.stop_calls == 1U &&
+                quit_context.shared_state.u16(actor + 0x2dU) == 0U &&
+                std::find(quit_platform.frame_hashes.begin(),
+                          quit_platform.frame_hashes.end(), solid_hash) ==
+                    quit_platform.frame_hashes.end(),
+            "RPG forced opcode-20 text ignored frontend quit before poison flash");
 }
 
 void test_rpg_random_encounter(const std::filesystem::path& game_root) {

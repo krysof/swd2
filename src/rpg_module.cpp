@@ -760,6 +760,14 @@ public:
             auto skipped_delay = false;
             for (const auto glyph_end : page.glyph_end_offsets) {
                 if (skipped_delay) break;
+                // Opcode 20/46 deliberately bypass the DOS key probe after
+                // every glyph. The portable frontend-close channel remains
+                // independent of that keyboard quirk and must still be
+                // serviced during a long forced two-tick text sequence.
+                if (forced_timed_text && platform_.poll_frontend_quit()) {
+                    quit_requested_ = true;
+                    return;
+                }
                 const auto partial = render_dialogue_page(
                     font_, text.first(glyph_end), offset, 280, 64, 1,
                     &name_font_);
@@ -773,6 +781,11 @@ public:
                     platform_.delay_for(std::chrono::milliseconds(
                         (static_cast<std::uint64_t>(text_delay) * 1000U + 69U) /
                         70U));
+                }
+                if (forced_timed_text && platform_.poll_frontend_quit()) {
+                    direct_event_page_ = std::move(shown);
+                    quit_requested_ = true;
+                    return;
                 }
                 const auto action = forced_timed_text
                     ? InputAction::none : platform_.poll_text_input();
