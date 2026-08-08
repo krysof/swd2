@@ -7,7 +7,12 @@
 原生构建方法见 [`src/README.md`](src/README.md) 与
 [`src/architecture.md`](src/architecture.md)。
 
+运行时不包含、也不会调用 DOSBox：MEO、RPG、FIG、DEMO 与原启动器流程已合并进同一个
+C++ 程序。逆向记录中提到 DOSBox-X，只表示它被用作原版画面/音频的离线差分基准。
+
 ## WebAssembly
+
+在线构建：<https://krysof.github.io/swd2/>
 
 安装 Emscripten、CMake 与 Ninja 后运行：
 

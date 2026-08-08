@@ -750,6 +750,23 @@ void test_resource_decoder(const std::filesystem::path& game_root) {
     require(protection.input(swd2::MeoInput::confirm, 5) == swd2::MeoStatus::accepted,
             "patched MEO should accept any three confirmations");
 
+    swd2::MeoCopyProtection original_protection(false);
+    require(original_protection.input(swd2::MeoInput::confirm, 1) ==
+                swd2::MeoStatus::waiting &&
+                original_protection.input(swd2::MeoInput::confirm, 1) ==
+                swd2::MeoStatus::waiting &&
+                original_protection.input(swd2::MeoInput::confirm, 1) ==
+                swd2::MeoStatus::accepted,
+            "original MEO branch did not require three matching answers");
+    swd2::MeoCopyProtection original_rejection(false);
+    require(original_rejection.input(swd2::MeoInput::confirm, 2) ==
+                swd2::MeoStatus::waiting &&
+                original_rejection.input(swd2::MeoInput::confirm, 2) ==
+                swd2::MeoStatus::waiting &&
+                original_rejection.input(swd2::MeoInput::confirm, 2) ==
+                swd2::MeoStatus::rejected,
+            "original MEO branch accepted three wrong answers");
+
     const auto stored = swd2::decode_rsk_block(read_file(game_root / "ST" / "SP345.RSK"));
     require(!stored.compressed, "SP345.RSK should use stored storage");
     require(stored.data.size() == 15, "unexpected SP345.RSK output size");
