@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "completion_rule": "Every gate must be verified and every completion command must pass in the current worktree.",
+  "gates": [
+    {
+      "id": "single_process_architecture",
+      "title": "原版多执行文件合并为单进程可移植核心",
+      "status": "verified",
+      "acceptance": [
+        "MEO、RPG、FIG、DEMO 由同一 swd2_rewrite 进程调度",
+        "核心不启动 DOS 可执行文件或依赖 DOSBox 运行"
+      ],
+      "evidence": ["src/launcher.cpp", "src/runtime.cpp", "src/architecture.md", "src/tests/test_main.cpp"]
+    },
+    {
+      "id": "resource_formats",
+      "title": "发行版资源格式严格解码",
+      "status": "verified",
+      "acceptance": [
+        "所有发行资源可通过边界和格式校验",
+        "RSK、RAP/RRO、脚本、字体、地图和精灵格式具有回归测试"
+      ],
+      "evidence": ["src/rsk_decoder.cpp", "src/script_archive.cpp", "src/map_resource.cpp", "src/tests/test_main.cpp"]
+    },
+    {
+      "id": "meo_rewrite",
+      "title": "MEO 菜单与校验流程重写",
+      "status": "verified",
+      "acceptance": [
+        "画面、输入、三次校验和返回标记均由 C++ 实现",
+        "原始 75 04 与发行补丁 90 90 分支可区分并测试"
+      ],
+      "evidence": ["src/meo.cpp", "src/meo_module.cpp", "src/reverse-engineering.md", "src/tests/test_main.cpp"]
+    },
+    {
+      "id": "rpg_event_vm",
+      "title": "RPG 事件指令与跨地图状态机",
+      "status": "verified",
+      "acceptance": [
+        "发行版 62 个事件调度号均有明确实现路径",
+        "事件中止、地图重定位、战斗和过场切换具有回归测试"
+      ],
+      "evidence": ["src/event_vm.cpp", "src/event_program.cpp", "src/rpg_module.cpp", "src/tests/test_main.cpp"]
+    },
+    {
+      "id": "rpg_world_runtime",
+      "title": "RPG 世界循环、移动、实体与剧情完整性",
+      "status": "in_progress",
+      "acceptance": [
+        "全部地图移动、碰撞、实体行为和剧情触发与原版一致",
+        "完整通关轨迹中不存在状态分歧"
+      ],
+      "evidence": ["src/rpg_entity_system.cpp", "src/rpg_module.cpp", "src/tests/test_main.cpp"],
+      "remaining": ["扩展逐地图剧情轨迹", "由完整通关回放证明无状态分歧"]
+    },
+    {
+      "id": "rpg_ui_pixel_parity",
+      "title": "RPG 菜单与场景界面逐像素一致",
+      "status": "in_progress",
+      "acceptance": [
+        "背包、装备、奇术、旅行、商店、状态和存档槽全部状态逐像素通过",
+        "不存在通用居中框或近似画面"
+      ],
+      "evidence": ["src/rpg_presentation.cpp", "src/rpg_module.cpp", "src/reverse-engineering.md"],
+      "remaining": ["补齐背包/装备边界状态差分", "补齐奇术/旅行/存档槽全部选择状态差分"]
+    },
+    {
+      "id": "fig_rules",
+      "title": "FIG 战斗规则、AI、物品和能力语义",
+      "status": "verified",
+      "acceptance": [
+        "发行怪物、能力、效果和命令路径均可由确定性 C++ 规则执行",
+        "奖励、捕获、逃跑、死亡和持续状态具有回归测试"
+      ],
+      "evidence": ["src/battle_session.cpp", "src/battle_effects.cpp", "src/battle_ai.cpp", "src/tests/test_main.cpp"]
+    },
+    {
+      "id": "fig_pixel_parity",
+      "title": "FIG 全部战斗呈现逐像素与逐帧一致",
+      "status": "in_progress",
+      "acceptance": [
+        "全部信息卡、特殊状态、能力、物攻、结算和异常路径逐帧通过",
+        "帧顺序、停留 tick、调色板和音效提交点均与原版一致"
+      ],
+      "evidence": ["src/battle_presentation.cpp", "src/battle_module.cpp", "src/reverse-engineering.md"],
+      "remaining": ["完成剩余信息卡和特殊状态画面差分", "扩大到所有可达战斗组合"]
+    },
+    {
+      "id": "demo_timeline",
+      "title": "DEMO 时间线和标题尾声重写",
+      "status": "verified",
+      "acceptance": [
+        "960 帧主时间线和 SWORD8 尾声由平台无关状态机执行",
+        "原版未初始化输入的确定性替代有明确记录和测试"
+      ],
+      "evidence": ["src/demo_timeline.cpp", "src/demo_module.cpp", "src/reverse-engineering.md", "src/tests/test_main.cpp"]
+    },
+    {
+      "id": "audio_timing",
+      "title": "RIX/OPL 音乐、VOC 语音及全流程音画时序",
+      "status": "in_progress",
+      "acceptance": [
+        "所有 RIX/VOC 严格解码并在各路径正确启停",
+        "完整流程的音乐循环、语音叠加和画面提交时序通过长期差分"
+      ],
+      "evidence": ["src/rix_decoder.cpp", "src/voc_decoder.cpp", "src/ym3812_synth.cpp", "src/tests/test_main.cpp"],
+      "remaining": ["完成完整流程音画同步差分", "验证长时间循环和切换无漂移"]
+    },
+    {
+      "id": "portable_input",
+      "title": "所有 DOS 输入边界的平台无关替代",
+      "status": "in_progress",
+      "acceptance": [
+        "交互输入、非阻塞输入、跳字输入和前端关闭严格分离",
+        "桌面、WASM、手柄和触摸路径不丢失或误消费动作"
+      ],
+      "evidence": ["src/include/swd2/platform.hpp", "src/sdl_platform.cpp", "src/tests/test_main.cpp"],
+      "remaining": ["审计剩余直接等待/轮询边界", "完成浏览器、桌面和手柄交叉测试"]
+    },
+    {
+      "id": "save_roundtrips",
+      "title": "五槽 SAVE/MAPZ 与各平台持久化往返",
+      "status": "in_progress",
+      "acceptance": [
+        "五个槽位 SAVE 和 MAPZ 成对原子保存/读取",
+        "桌面文件系统与浏览器 IDBFS 重启往返均无字节或状态丢失"
+      ],
+      "evidence": ["src/save_slot.cpp", "src/main.cpp", "src/tests/test_main.cpp"],
+      "remaining": ["实现浏览器重启自动往返测试", "覆盖所有槽位和地图别名写回"]
+    },
+    {
+      "id": "native_and_wasm_builds",
+      "title": "原生与 WebAssembly 构建和发布产物",
+      "status": "verified",
+      "acceptance": [
+        "原生 C++ 测试通过",
+        "WASM、JS、data 和 HTML 可验证并从相对路径运行"
+      ],
+      "evidence": ["CMakeLists.txt", "src/CMakeLists.txt", "scripts/build-wasm.sh", "scripts/verify-wasm.sh"]
+    },
+    {
+      "id": "pixel_diff_suite",
+      "title": "可重复的原版逐场景像素差分套件",
+      "status": "in_progress",
+      "acceptance": [
+        "差分输入、原版基准、现代输出和容差规则可重复生成",
+        "所有登记场景零未解释差异"
+      ],
+      "evidence": ["src/tests/test_main.cpp", "src/reverse-engineering.md"],
+      "remaining": ["建立统一 verify-pixel-diffs.sh", "登记全部 RPG/FIG 场景和基准"]
+    },
+    {
+      "id": "full_playthrough",
+      "title": "从开始到结局的完整确定性通关回放",
+      "status": "pending",
+      "acceptance": [
+        "至少一条完整主线从新游戏运行到结局",
+        "关键状态、画面、战斗、存档和模块切换与原版基准一致"
+      ],
+      "evidence": [],
+      "remaining": ["录制原版完整输入/状态基准", "实现并通过 verify-playthrough.sh"]
+    },
+    {
+      "id": "placeholder_elimination",
+      "title": "消除占位、近似和未解释回退",
+      "status": "in_progress",
+      "acceptance": [
+        "可达流程不存在占位 UI、伪造帧或未解释的通用回退",
+        "静态审计和完整回放均未发现未实现路径"
+      ],
+      "evidence": ["src/reverse-engineering.md", "src/tests/test_main.cpp"],
+      "remaining": ["建立可执行静态审计", "随逐场景差分清除剩余近似行为"]
+    },
+    {
+      "id": "long_run_platform_matrix",
+      "title": "各平台长期运行稳定性矩阵",
+      "status": "pending",
+      "acceptance": [
+        "原生和主流浏览器长时间运行无崩溃、泄漏、漂移或存档损坏",
+        "平台矩阵结果由自动脚本和日志存档"
+      ],
+      "evidence": [],
+      "remaining": ["实现 verify-long-run.sh", "完成桌面与浏览器平台矩阵"]
+    }
+  ],
+  "completion_commands": [
+    "cmake --build build -j4",
+    "ctest --test-dir build --output-on-failure",
+    "./scripts/build-wasm.sh",
+    "./scripts/verify-wasm.sh build-wasm/site",
+    "./scripts/verify-pixel-diffs.sh",
+    "./scripts/verify-save-roundtrips.sh",
+    "./scripts/verify-playthrough.sh",
+    "./scripts/verify-long-run.sh"
+  ]
+}
+
