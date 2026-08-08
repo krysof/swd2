@@ -5775,6 +5775,24 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 all_facing_west,
             "dynamically installed CHNA5 opcode-51 story did not execute fully");
 
+    auto overflow_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto overflow_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(overflow_state, overflow_world, 144);
+    auto& overflow_area = overflow_world.location_at_directory_offset(144).area;
+    const auto chapter_zero =
+        swd2::ScriptArchive::load(game_root / "CHNA0.EXE");
+    const auto overflow_story = swd2::execute_event(
+        chapter_zero, 740, overflow_state, &overflow_area, 0,
+        installed_story_host, 10'000, &overflow_world);
+    require(overflow_story.status == swd2::EventVmStatus::completed &&
+                overflow_story.commands_executed == 105U &&
+                overflow_story.last_opcode == 34U &&
+                overflow_world.location_at_directory_offset(144)
+                        .area.entity_count() == 5U &&
+                overflow_world.location_at_directory_offset(144)
+                        .area.entity_fields[9][0] == 744U,
+            "CHNA0 five-entity scene rejected its invisible fixed-BSS choreography slots");
+
     const std::vector<std::vector<std::uint8_t>> relocation_records = {
         event_words({37, 10, 3, 3, 7, 41, 9, 0xffff}),
     };

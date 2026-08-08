@@ -25,11 +25,23 @@ void set_flag(SharedState& state, std::uint16_t flag) {
     state.set_u16(offset, static_cast<std::uint16_t>(state.u16(offset) | (0x8000U >> bit)));
 }
 
-std::size_t entity_index(const MapAreaRecord& area, std::uint16_t byte_offset) {
-    if ((byte_offset & 1U) != 0 || byte_offset / 2 >= area.entity_count()) {
-        throw std::runtime_error("event references an invalid MAPZ entity offset");
+std::optional<std::size_t> entity_index(const MapAreaRecord& area,
+                                        std::uint16_t byte_offset) {
+    if ((byte_offset & 1U) != 0) {
+        throw std::runtime_error("event references an unaligned entity offset");
     }
-    return byte_offset / 2;
+    const auto index = static_cast<std::size_t>(byte_offset / 2U);
+    if (index >= area.entity_count()) {
+        // The DOS arrays reserve 100 words apiece even though 10fd copies and
+        // renders only the current area's declared count. CHNA0 entry 370
+        // (directory target 740) deliberately runs generic choreography over
+        // byte offsets through 22 while its map declares five entities. Those
+        // extra BSS writes are outside dd6's visible entity loop. Ignore their
+        // typed-area projection rather than treating valid released data as a
+        // fatal vector bounds error.
+        return std::nullopt;
+    }
+    return index;
 }
 
 void restore_party(SharedState& state) {
@@ -321,8 +333,9 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 26:
                 if (area) {
                     const auto index = entity_index(*area, arg(0));
-                    auto& cell = area->entity_fields[2][index];
-                    auto& direction = area->entity_fields[1][index];
+                    if (!index) break;
+                    auto& cell = area->entity_fields[2][*index];
+                    auto& direction = area->entity_fields[1][*index];
                     if (command.opcode == 23) {
                         cell = static_cast<std::uint16_t>(cell - state.map_width() * 2U);
                         direction = 3;
@@ -336,12 +349,16 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                         cell = static_cast<std::uint16_t>(cell + 2U);
                         direction = 9;
                     }
-                    area->entity_fields[10][index] =
-                        static_cast<std::uint16_t>((area->entity_fields[10][index] + 1U) & 3U);
+                    area->entity_fields[10][*index] =
+                        static_cast<std::uint16_t>(
+                            (area->entity_fields[10][*index] + 1U) & 3U);
                 }
                 break;
             case 27:
-                if (area) area->entity_fields[3][entity_index(*area, arg(0))] = arg(1);
+                if (area) {
+                    const auto index = entity_index(*area, arg(0));
+                    if (index) area->entity_fields[3][*index] = arg(1);
+                }
                 break;
             case 28:
                 request_battle(state, result, arg(0));
@@ -454,7 +471,8 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 break;
             case 39:
                 if (area) {
-                    area->entity_fields[0][entity_index(*area, arg(0))] = arg(1);
+                    const auto index = entity_index(*area, arg(0));
+                    if (index) area->entity_fields[0][*index] = arg(1);
                 }
                 // RPG 5ac7 rebuilds the off-screen map, waits the event frame
                 // interval and flips pages after changing the entity sprite.

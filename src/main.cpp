@@ -651,6 +651,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     std::size_t map_mutations = 0;
     std::size_t runtime_validated_mutations = 0;
     std::size_t event_pointer_mutations = 0;
+    std::set<std::tuple<std::string, std::uint16_t, std::uint16_t,
+                        std::size_t>> dynamic_entity_contexts;
     while (!pending.empty()) {
         auto state = std::move(pending.front());
         pending.pop();
@@ -787,11 +789,16 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                     throw std::runtime_error(
                         "reachable opcode 34 installs a dynamic/odd event pointer");
                 }
+                const auto entity = static_cast<std::size_t>(
+                    (relative - event_field_begin) / 2);
                 // Opcode 34 patches every directory alias of the same area.
                 // Enqueue each alias path even though this release happens to
                 // keep all aliases inside one CHNA archive.
                 for (const auto& alias : world.locations()) {
                     if (alias.area_offset == destination.area_offset) {
+                        dynamic_entity_contexts.emplace(
+                            alias.area.event_archive_path, value,
+                            alias.directory_offset, entity);
                         enqueue(alias.area.event_archive_path, value,
                                 alias.area.event_archive_path);
                     }
@@ -872,41 +879,61 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         std::size_t combined_shop_calls_{};
     };
 
-    std::array<std::size_t, 2> executed_contexts{};
-    std::array<std::size_t, 2> executed_commands{};
-    for (std::size_t scenario = 0; scenario < executed_contexts.size(); ++scenario) {
+    const auto execute_context = [&](const std::string& archive_name,
+                                     std::uint16_t target,
+                                     std::uint16_t location_offset,
+                                     std::size_t entity,
+                                     bool affirmative) {
+        auto execution_world = swd2::MapDatabase::load(map_database_path);
+        auto execution_state =
+            swd2::SharedState::load(game_root / "SAVE.DA1");
+        swd2::install_map_location(
+            execution_state, execution_world, location_offset);
+        auto& execution_area = execution_world.location_at_directory_offset(
+            location_offset).area;
+        EventExecutionAuditHost host(affirmative);
+        const auto result = swd2::execute_event(
+            audit_for(archive_name).archive, target, execution_state,
+            &execution_area, entity, host, 10'000, &execution_world);
+        if (result.status != swd2::EventVmStatus::completed) {
+            throw std::runtime_error(
+                archive_name + ":" + std::to_string(target) +
+                " failed deterministic entity-context execution");
+        }
+        return result.commands_executed;
+    };
+
+    std::array<std::size_t, 2> initial_contexts{};
+    std::array<std::size_t, 2> initial_context_commands{};
+    for (std::size_t scenario = 0; scenario < initial_contexts.size(); ++scenario) {
         const auto affirmative = scenario != 0;
         for (const auto& location : world.locations()) {
             for (std::size_t entity = 0;
                  entity < location.area.entity_count(); ++entity) {
                 const auto target = location.area.entity_fields[9][entity];
                 if (target == 0) continue;
-                auto execution_world =
-                    swd2::MapDatabase::load(map_database_path);
-                auto execution_state =
-                    swd2::SharedState::load(game_root / "SAVE.DA1");
-                swd2::install_map_location(
-                    execution_state, execution_world, location.directory_offset);
-                auto& execution_area = execution_world.location_at_directory_offset(
-                    location.directory_offset).area;
-                EventExecutionAuditHost host(affirmative);
-                const auto result = swd2::execute_event(
-                    audit_for(location.area.event_archive_path).archive,
-                    target, execution_state, &execution_area, entity, host,
-                    10'000, &execution_world);
-                if (result.status != swd2::EventVmStatus::completed) {
-                    throw std::runtime_error(
-                        location.area.event_archive_path + ":" +
-                        std::to_string(target) +
-                        " failed deterministic entity-context execution");
-                }
-                ++executed_contexts[scenario];
-                executed_commands[scenario] += result.commands_executed;
+                initial_context_commands[scenario] += execute_context(
+                    location.area.event_archive_path, target,
+                    location.directory_offset, entity, affirmative);
+                ++initial_contexts[scenario];
             }
         }
     }
-    if (executed_contexts != std::array<std::size_t, 2>{3376U, 3376U} ||
-        executed_commands != std::array<std::size_t, 2>{16900U, 17275U}) {
+    std::array<std::size_t, 2> dynamic_context_commands{};
+    for (std::size_t scenario = 0;
+         scenario < dynamic_context_commands.size(); ++scenario) {
+        for (const auto& [archive_name, target, location_offset, entity] :
+             dynamic_entity_contexts) {
+            dynamic_context_commands[scenario] += execute_context(
+                archive_name, target, location_offset, entity, scenario != 0);
+        }
+    }
+    if (initial_contexts != std::array<std::size_t, 2>{3376U, 3376U} ||
+        initial_context_commands !=
+            std::array<std::size_t, 2>{16900U, 17275U} ||
+        dynamic_entity_contexts.size() != 80U ||
+        dynamic_context_commands !=
+            std::array<std::size_t, 2>{2091U, 2096U}) {
         throw std::runtime_error(
             "deterministic RPG entity-context execution differs from the audit");
     }
@@ -918,9 +945,11 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << " runtime-validated MAPZ mutations (" << event_pointer_mutations
               << " event-pointer writes); " << inert_odd_targets
               << " documented inert odd target; "
-              << executed_contexts[0] + executed_contexts[1]
+              << initial_contexts[0] + initial_contexts[1] +
+                     dynamic_entity_contexts.size() * 2U
               << " entity-context executions, "
-              << executed_commands[0] + executed_commands[1]
+              << initial_context_commands[0] + initial_context_commands[1] +
+                     dynamic_context_commands[0] + dynamic_context_commands[1]
               << " VM commands completed\n";
 }
 
