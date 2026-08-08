@@ -1,6 +1,7 @@
 #include "swd2/meo_module.hpp"
 
 #include "swd2/meo.hpp"
+#include "swd2/mz_executable.hpp"
 #include "swd2/rsk_decoder.hpp"
 #include "swd2/sprite_archive.hpp"
 
@@ -26,7 +27,18 @@ std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
 Marker MeoModule::run(GameContext& context, Marker) {
     auto decoded = decode_rsk_block(read_file(context.game_root / "MEO.RSK"));
     const auto archive = SpriteArchive::parse(std::move(decoded.data));
-    MeoCopyProtection protection(true);
+    const auto executable_path = context.game_root / "MEO.EXE";
+    const auto executable = dos::MzExecutable::load(executable_path);
+    const auto executable_bytes = read_file(executable_path);
+    const auto image_start = static_cast<std::size_t>(executable.header_size());
+    const auto image_size = static_cast<std::size_t>(executable.load_image_size());
+    if (image_start > executable_bytes.size() ||
+        image_size > executable_bytes.size() - image_start) {
+        throw std::runtime_error("MEO executable load image is truncated");
+    }
+    MeoCopyProtection protection(meo_copy_protection_is_patched(
+        std::span<const std::uint8_t>(executable_bytes)
+            .subspan(image_start, image_size)));
 
     while (true) {
         const auto time = context.platform.clock_time();

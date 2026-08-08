@@ -710,6 +710,29 @@ void test_resource_decoder(const std::filesystem::path& game_root) {
     require(frame.pixels[3 * 320 + 3] == sprites.pixels(0)[0],
             "MEO background was not placed at 3,3");
 
+    const auto meo_mz = swd2::dos::MzExecutable::load(game_root / "MEO.EXE");
+    const auto meo_file = read_file(game_root / "MEO.EXE");
+    auto meo_image = std::span<const std::uint8_t>(meo_file).subspan(
+        meo_mz.header_size(), meo_mz.load_image_size());
+    require(swd2::meo_copy_protection_is_patched(meo_image),
+            "shipped MEO NOP copy-protection patch was not detected");
+    auto unpatched_meo = std::vector<std::uint8_t>(
+        meo_image.begin(), meo_image.end());
+    unpatched_meo[0x160] = 0x75;
+    unpatched_meo[0x161] = 0x04;
+    require(!swd2::meo_copy_protection_is_patched(unpatched_meo),
+            "original MEO JNE copy-protection branch was not detected");
+    auto unknown_meo = unpatched_meo;
+    unknown_meo[0x160] = 0xeb;
+    auto unknown_rejected = false;
+    try {
+        static_cast<void>(swd2::meo_copy_protection_is_patched(unknown_meo));
+    } catch (const std::runtime_error&) {
+        unknown_rejected = true;
+    }
+    require(unknown_rejected,
+            "unknown MEO copy-protection patch was silently accepted");
+
     swd2::MeoCopyProtection protection;
     require(protection.input(swd2::MeoInput::confirm, 5) == swd2::MeoStatus::waiting,
             "MEO accepted before three confirmations");

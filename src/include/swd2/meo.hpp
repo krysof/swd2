@@ -38,6 +38,13 @@ private:
     std::size_t correct_{};
 };
 
+// MEO load-image offsets 0160h..0161h are either the original `JNE +4`
+// (75 04) which gates the correct-answer counter, or two NOPs in the shipped
+// patched release. Reject unknown bytes instead of silently choosing the
+// wrong copy-protection behavior for a different executable.
+[[nodiscard]] bool meo_copy_protection_is_patched(
+    std::span<const std::uint8_t> load_image);
+
 struct IndexedFrame {
     static constexpr std::size_t width = 320;
     static constexpr std::size_t height = 200;

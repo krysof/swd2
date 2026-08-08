@@ -6,6 +6,25 @@
 
 namespace swd2 {
 
+bool meo_copy_protection_is_patched(
+    std::span<const std::uint8_t> load_image) {
+    constexpr auto branch_offset = std::size_t{0x160};
+    if (load_image.size() < branch_offset + 2U) {
+        throw std::runtime_error(
+            "MEO executable is truncated before its copy-protection branch");
+    }
+    if (load_image[branch_offset] == 0x90U &&
+        load_image[branch_offset + 1U] == 0x90U) {
+        return true;
+    }
+    if (load_image[branch_offset] == 0x75U &&
+        load_image[branch_offset + 1U] == 0x04U) {
+        return false;
+    }
+    throw std::runtime_error(
+        "MEO executable has an unknown copy-protection branch");
+}
+
 MeoStatus MeoCopyProtection::input(MeoInput input_value, std::uint8_t expected_color) {
     if (input_value == MeoInput::up) {
         choice_ = choice_ == 0 ? 4 : choice_ - 1;
