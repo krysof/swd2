@@ -5706,6 +5706,46 @@ void test_event_vm(const std::filesystem::path& game_root) {
                         .area.entity_fields[3][1] == 0x0800U,
             "real CHNA5 opcode 34 did not preserve its unaligned MAPZ word write");
 
+    // The global MAPZ closure makes these two records live even though no
+    // original MAPA entity points at them. Exercise the actual released
+    // streams, not merely synthetic opcode 49/51 commands.
+    TestEventHost installed_story_host;
+    auto quake_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto quake_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    auto& quake_area = quake_world.location_at_directory_offset(604).area;
+    const auto chapter_four =
+        swd2::ScriptArchive::load(game_root / "CHNA4.EXE");
+    const auto quake_story = swd2::execute_event(
+        chapter_four, 24, quake_state, &quake_area, 0,
+        installed_story_host, 10'000, &quake_world);
+    require(quake_story.status == swd2::EventVmStatus::completed &&
+                quake_story.commands_executed == 38U &&
+                installed_story_host.presentations == 32U &&
+                installed_story_host.dialogues == 3U &&
+                installed_story_host.map_relocations == 1U,
+            "dynamically installed CHNA4 opcode-49 story did not execute fully");
+
+    TestEventHost direction_story_host;
+    auto direction_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto direction_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    auto& direction_area =
+        direction_world.location_at_directory_offset(758).area;
+    const auto direction_story = swd2::execute_event(
+        chapter_five, 30, direction_state, &direction_area, 0,
+        direction_story_host, 10'000, &direction_world);
+    bool all_facing_west = true;
+    for (std::size_t index = 0; index < 12; ++index) {
+        all_facing_west = all_facing_west &&
+            direction_state.u16(0xa2 + index * 2U) == 6U;
+    }
+    require(direction_story.status == swd2::EventVmStatus::completed &&
+                direction_story.commands_executed == 125U &&
+                direction_story.last_opcode == 48U &&
+                direction_story.requested_marker == swd2::Marker::open_figure &&
+                direction_story_host.battle_transitions == 1U &&
+                all_facing_west,
+            "dynamically installed CHNA5 opcode-51 story did not execute fully");
+
     const std::vector<std::vector<std::uint8_t>> relocation_records = {
         event_words({37, 10, 3, 3, 7, 41, 9, 0xffff}),
     };
