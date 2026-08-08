@@ -38,6 +38,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <vector>
 #include <set>
 #include <memory>
@@ -615,10 +616,16 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         std::size_t commands{};
     };
 
-    using EventTarget = std::pair<std::string, std::uint16_t>;
-    std::queue<EventTarget> pending;
+    struct EventState {
+        std::string archive_name;
+        std::uint16_t target{};
+        std::string active_area_archive;
+    };
+    std::queue<EventState> pending;
     for (const auto& [archive_name, roots] : roots_by_archive) {
-        for (const auto root : roots) pending.emplace(archive_name, root);
+        for (const auto root : roots) {
+            pending.push({archive_name, root, archive_name});
+        }
     }
     std::map<std::string, std::unique_ptr<ArchiveAudit>> audits;
     const auto audit_for = [&](const std::string& archive_name) -> ArchiveAudit& {
@@ -632,20 +639,28 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         return *found->second;
     };
     const auto enqueue = [&](const std::string& archive_name,
-                             std::uint16_t target) {
-        pending.emplace(archive_name, target);
+                             std::uint16_t target,
+                             const std::string& active_area_archive) {
+        pending.push({archive_name, target, active_area_archive});
     };
 
     std::set<std::uint16_t> all_opcodes;
+    std::set<std::tuple<std::string, std::uint16_t, std::string>> visited_states;
     std::size_t inert_odd_targets = 0;
     std::size_t map_mutations = 0;
     std::size_t runtime_validated_mutations = 0;
     std::size_t event_pointer_mutations = 0;
     while (!pending.empty()) {
-        const auto [archive_name, target] = pending.front();
+        auto state = std::move(pending.front());
         pending.pop();
+        if (!visited_states.emplace(state.archive_name, state.target,
+                                    state.active_area_archive).second) {
+            continue;
+        }
+        const auto& archive_name = state.archive_name;
+        const auto target = state.target;
         auto& audit = audit_for(archive_name);
-        if (!audit.visited.insert(target).second) continue;
+        const auto first_record_visit = audit.visited.insert(target).second;
         if ((target & 1U) != 0 || target / 2U >= audit.archive.entry_count()) {
             throw std::runtime_error(
                 archive_name + " has a reachable branch outside its directory: " +
@@ -653,11 +668,13 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         }
         const auto record = swd2::decode_event_record(
             audit.archive.event_stream(target / 2U));
-        audit.commands += record.commands.size();
-        auto active_area_archive = archive_name;
+        if (first_record_visit) audit.commands += record.commands.size();
+        auto active_area_archive = state.active_area_archive;
         for (const auto& command : record.commands) {
-            audit.opcodes.insert(command.opcode);
-            all_opcodes.insert(command.opcode);
+            if (first_record_visit) {
+                audit.opcodes.insert(command.opcode);
+                all_opcodes.insert(command.opcode);
+            }
 
             const auto enqueue_branch = [&](std::uint16_t next) {
                 if ((next & 1U) != 0) {
@@ -666,10 +683,10 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                     // inventory slot on that path, so the malformed target is
                     // inert in the original as well. Count it explicitly so
                     // another unexplained odd target cannot be introduced.
-                    ++inert_odd_targets;
+                    if (first_record_visit) ++inert_odd_targets;
                     return;
                 }
-                enqueue(archive_name, next);
+                enqueue(archive_name, next, active_area_archive);
             };
 
             if (command.opcode == 2 && !command.arguments.empty()) {
@@ -677,11 +694,13 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                 // already-open archive. It also remains live on a relocated
                 // area's future interactions, whose CHNA path may differ.
                 enqueue_branch(command.arguments[0]);
-                enqueue(active_area_archive, command.arguments[0]);
+                enqueue(active_area_archive, command.arguments[0],
+                        active_area_archive);
             } else if (command.opcode == 3 &&
                        command.arguments.size() >= 2U &&
                        command.arguments[0] == 9U) {
-                enqueue(active_area_archive, command.arguments[1]);
+                enqueue(active_area_archive, command.arguments[1],
+                        active_area_archive);
             } else if ((command.opcode == 4 || command.opcode == 15 ||
                         command.opcode == 21 || command.opcode == 40) &&
                        command.arguments.size() >= 2U) {
@@ -723,17 +742,19 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                     }
                     value = command.arguments[cursor++];
                 }
-                ++map_mutations;
+                if (first_record_visit) ++map_mutations;
 
                 // Validate every released write against the real runtime
                 // mutator in isolation. This catches typed-area assumptions,
                 // invalid path-pointer reparses and unaligned writes without
                 // inventing a story order for mutually exclusive records.
-                auto mutation_probe =
-                    swd2::MapDatabase::load(map_database_path);
-                mutation_probe.mutate_area_word(location_offset, field,
-                                                byte_offset, value, additive);
-                ++runtime_validated_mutations;
+                if (first_record_visit) {
+                    auto mutation_probe =
+                        swd2::MapDatabase::load(map_database_path);
+                    mutation_probe.mutate_area_word(location_offset, field,
+                                                    byte_offset, value, additive);
+                    ++runtime_validated_mutations;
+                }
 
                 const auto& destination =
                     world.location_at_directory_offset(location_offset);
@@ -741,12 +762,26 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                     destination.area.entity_count());
                 const auto relative = static_cast<std::int64_t>(6) +
                     static_cast<std::int64_t>(field) * count * 2 + byte_offset;
-                if (count == 0 || relative < 6 || ((relative - 6) & 1) != 0) {
+                const auto event_archive_pointer =
+                    static_cast<std::int64_t>(6) + 11 * count * 2 + 3 * 2;
+                if (relative < event_archive_pointer + 2 &&
+                    relative + 2 > event_archive_pointer) {
+                    throw std::runtime_error(
+                        "reachable opcode 34 dynamically changes a CHNA path");
+                }
+                const auto event_field_begin =
+                    static_cast<std::int64_t>(6) + 9 * count * 2;
+                const auto event_field_end = event_field_begin + count * 2;
+                if (relative >= event_field_end || relative + 2 <= event_field_begin) {
                     continue;
                 }
-                const auto flat = (relative - 6) / 2;
-                if (flat / count != 9) continue;
-                ++event_pointer_mutations;
+                if (count == 0 || relative < event_field_begin ||
+                    relative + 2 > event_field_end ||
+                    ((relative - event_field_begin) & 1) != 0) {
+                    throw std::runtime_error(
+                        "reachable opcode 34 partially overwrites an event pointer");
+                }
+                if (first_record_visit) ++event_pointer_mutations;
                 if (additive || (value & 1U) != 0) {
                     throw std::runtime_error(
                         "reachable opcode 34 installs a dynamic/odd event pointer");
@@ -756,7 +791,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                 // keep all aliases inside one CHNA archive.
                 for (const auto& alias : world.locations()) {
                     if (alias.area_offset == destination.area_offset) {
-                        enqueue(alias.area.event_archive_path, value);
+                        enqueue(alias.area.event_archive_path, value,
+                                alias.area.event_archive_path);
                     }
                 }
             }

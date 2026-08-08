@@ -55,6 +55,7 @@
 #include <optional>
 #include <queue>
 #include <set>
+#include <tuple>
 
 namespace {
 
@@ -4964,12 +4965,18 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
         std::set<std::uint16_t> visited;
         std::size_t commands{};
     };
-    using Target = std::pair<std::string, std::uint16_t>;
-    std::queue<Target> pending;
+    struct TargetState {
+        std::string archive_name;
+        std::uint16_t target{};
+        std::string active_area_archive;
+    };
+    std::queue<TargetState> pending;
     std::size_t root_count = 0;
     for (const auto& [name, archive_roots] : roots) {
         root_count += archive_roots.size();
-        for (const auto target : archive_roots) pending.emplace(name, target);
+        for (const auto target : archive_roots) {
+            pending.push({name, target, name});
+        }
     }
     std::map<std::string, std::unique_ptr<Coverage>> coverage;
     const auto coverage_for = [&](const std::string& name) -> Coverage& {
@@ -4982,37 +4989,47 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
         return *found->second;
     };
     std::set<std::uint16_t> reachable_opcodes;
+    std::set<std::tuple<std::string, std::uint16_t, std::string>> visited_states;
     std::size_t inert_odd_targets = 0;
     std::size_t map_mutations = 0;
     std::size_t event_pointer_mutations = 0;
     while (!pending.empty()) {
-        const auto [name, target] = pending.front();
+        auto target_state = std::move(pending.front());
         pending.pop();
+        if (!visited_states.emplace(target_state.archive_name,
+                                    target_state.target,
+                                    target_state.active_area_archive).second) {
+            continue;
+        }
+        const auto& name = target_state.archive_name;
+        const auto target = target_state.target;
         auto& current = coverage_for(name);
-        if (!current.visited.insert(target).second) continue;
+        const auto first_record_visit = current.visited.insert(target).second;
         require((target & 1U) == 0 && target / 2 < current.archive.entry_count(),
                 "reachable event target is outside its CHNA directory");
         const auto record = swd2::decode_event_record(
             current.archive.event_stream(target / 2));
-        current.commands += record.commands.size();
-        auto active_area_archive = name;
+        if (first_record_visit) current.commands += record.commands.size();
+        auto active_area_archive = target_state.active_area_archive;
         for (const auto& command : record.commands) {
-            reachable_opcodes.insert(command.opcode);
+            if (first_record_visit) reachable_opcodes.insert(command.opcode);
             const auto branch = [&](std::uint16_t next) {
                 if ((next & 1U) != 0) {
-                    ++inert_odd_targets;
+                    if (first_record_visit) ++inert_odd_targets;
                 } else {
-                    pending.emplace(name, next);
+                    pending.push({name, next, active_area_archive});
                 }
             };
             if (command.opcode == 2 && !command.arguments.empty()) {
                 branch(command.arguments[0]);
                 if ((command.arguments[0] & 1U) == 0) {
-                    pending.emplace(active_area_archive, command.arguments[0]);
+                    pending.push({active_area_archive, command.arguments[0],
+                                  active_area_archive});
                 }
             } else if (command.opcode == 3 && command.arguments.size() >= 2 &&
                        command.arguments[0] == 9) {
-                pending.emplace(active_area_archive, command.arguments[1]);
+                pending.push({active_area_archive, command.arguments[1],
+                              active_area_archive});
             } else if ((command.opcode == 4 || command.opcode == 15 ||
                         command.opcode == 21 || command.opcode == 40) &&
                        command.arguments.size() >= 2) {
@@ -5049,23 +5066,35 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
                             "reachable additive opcode 34 mutation is truncated");
                     value = command.arguments[cursor++];
                 }
-                ++map_mutations;
+                if (first_record_visit) ++map_mutations;
                 const auto& destination =
                     world.location_at_directory_offset(location_offset);
                 const auto count = static_cast<std::int64_t>(
                     destination.area.entity_count());
                 const auto relative = static_cast<std::int64_t>(6) +
                     static_cast<std::int64_t>(field) * count * 2 + byte_offset;
-                if (count == 0 || relative < 6 || ((relative - 6) & 1) != 0 ||
-                    ((relative - 6) / 2) / count != 9) {
+                const auto event_archive_pointer =
+                    static_cast<std::int64_t>(6) + 11 * count * 2 + 3 * 2;
+                require(relative >= event_archive_pointer + 2 ||
+                            relative + 2 <= event_archive_pointer,
+                        "opcode 34 dynamically changed a CHNA path");
+                const auto event_field_begin =
+                    static_cast<std::int64_t>(6) + 9 * count * 2;
+                const auto event_field_end = event_field_begin + count * 2;
+                if (relative >= event_field_end || relative + 2 <= event_field_begin) {
                     continue;
                 }
-                ++event_pointer_mutations;
+                require(count != 0 && relative >= event_field_begin &&
+                            relative + 2 <= event_field_end &&
+                            ((relative - event_field_begin) & 1) == 0,
+                        "opcode 34 partially overwrote an event pointer");
+                if (first_record_visit) ++event_pointer_mutations;
                 require(!additive && (value & 1U) == 0,
                         "dynamic MAPZ event-pointer mutation is not statically auditable");
                 for (const auto& alias : world.locations()) {
                     if (alias.area_offset == destination.area_offset) {
-                        pending.emplace(alias.area.event_archive_path, value);
+                        pending.push({alias.area.event_archive_path, value,
+                                      alias.area.event_archive_path});
                     }
                 }
             }
