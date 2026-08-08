@@ -61,6 +61,9 @@ std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
 
+bool delay_for_or_frontend_quit(
+    PlatformBackend& platform, std::chrono::milliseconds duration);
+
 std::uint16_t span_word(std::span<const std::uint8_t> bytes, std::size_t offset) {
     if (offset + 2U > bytes.size()) return 0;
     return static_cast<std::uint16_t>(bytes[offset]) |
@@ -2131,7 +2134,10 @@ bool present_round_events(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, abilities,
                 encounter_directory_offset, false);
-            context.platform.delay_for(capture_action_card_delay);
+            if (!delay_for_or_frontend_quit(
+                    context.platform, capture_action_card_delay)) {
+                return false;
+            }
             if (event.kind == BattleEventKind::capture_failed) {
                 present_capture_action_card(
                     context, base_surface, encounter, items, fighters,
@@ -2185,7 +2191,10 @@ bool present_round_events(
                         font, fallback, visual, event,
                         abilities.monster_removed_buff_text(slot),
                         encounter_directory_offset);
-                    context.platform.delay_for(status_card_delay);
+                    if (!delay_for_or_frontend_quit(
+                            context.platform, status_card_delay)) {
+                        return false;
+                    }
                 }
             } else {
                 // FIG 0c41..0d98 reports five expiring party buffs followed
@@ -2205,7 +2214,10 @@ bool present_round_events(
                         font, fallback, visual, event,
                         abilities.player_removed_buff_text(slot),
                         encounter_directory_offset, 4, 0x00, 0, 2);
-                    context.platform.delay_for(status_card_delay);
+                    if (!delay_for_or_frontend_quit(
+                            context.platform, status_card_delay)) {
+                        return false;
+                    }
                 }
                 for (std::size_t slot = 0; slot < 4U; ++slot) {
                     if ((event.recovered_player_status_mask & (1U << slot)) == 0) {
@@ -2221,7 +2233,10 @@ bool present_round_events(
                         font, fallback, visual, event,
                         abilities.recovered_player_status_text(slot),
                         encounter_directory_offset, 4, 0x00, 0, 2);
-                    context.platform.delay_for(status_card_delay);
+                    if (!delay_for_or_frontend_quit(
+                            context.platform, status_card_delay)) {
+                        return false;
+                    }
                 }
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
@@ -2771,7 +2786,10 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, status_text,
                 encounter_directory_offset);
-            context.platform.delay_for(status_card_delay);
+            if (!delay_for_or_frontend_quit(
+                    context.platform, status_card_delay)) {
+                return false;
+            }
             // 57d6 returns with the 2338 status card still visible after its
             // 18 ticks; there is no clean recomposition or three-tick tail.
             apply_visual_event(visual, event, abilities);
@@ -2786,7 +2804,10 @@ bool present_round_events(
                 font, fallback, visual, event,
                 abilities.player_removed_buff_text(slot),
                 encounter_directory_offset);
-            context.platform.delay_for(status_card_delay);
+            if (!delay_for_or_frontend_quit(
+                    context.platform, status_card_delay)) {
+                return false;
+            }
         }
         // Player effect 61 similarly calls 55e4 for the monster's ward,
         // attack enhancement and evasion enhancement, preserving that order.
@@ -2797,7 +2818,10 @@ bool present_round_events(
                 font, fallback, visual, event,
                 abilities.monster_removed_buff_text(slot),
                 encounter_directory_offset);
-            context.platform.delay_for(status_card_delay);
+            if (!delay_for_or_frontend_quit(
+                    context.platform, status_card_delay)) {
+                return false;
+            }
         }
         if (event.removed_player_buff_mask != 0 ||
             event.removed_monster_buff_mask != 0) {
@@ -3056,8 +3080,8 @@ bool delay_for_or_frontend_quit(
     // DOS has no window-close event, but the merged frontend must not remain
     // trapped in an uninterruptible replacement for FIG's timer wait. Poll in
     // short slices while preserving the exact total duration when no quit is
-    // pending. Other keys are deliberately consumed: the original 0643
-    // defeat page is timed rather than dismissible.
+    // pending. Only the dedicated frontend channel is sampled: the original
+    // timer is not dismissible, so direction/confirmation keys remain queued.
     constexpr auto slice = std::chrono::milliseconds(20);
     while (duration.count() > 0) {
         if (platform.poll_frontend_quit()) return false;
@@ -3065,7 +3089,7 @@ bool delay_for_or_frontend_quit(
         platform.delay_for(current);
         duration -= current;
     }
-    return true;
+    return !platform.poll_frontend_quit();
 }
 
 BattleSurface compose_settlement_scene(

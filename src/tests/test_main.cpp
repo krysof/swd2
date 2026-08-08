@@ -5695,6 +5695,10 @@ public:
     }
     void stop_audio() override { ++stop_calls; }
     void stop_music() override { ++music_stop_calls; }
+    void delay_for(std::chrono::milliseconds duration) override {
+        ++delay_calls;
+        delayed_milliseconds += static_cast<std::uint64_t>(duration.count());
+    }
     std::size_t presented{};
     std::size_t music_calls{};
     std::size_t voice_calls{};
@@ -5706,6 +5710,8 @@ public:
     std::size_t direct_updates{};
     std::size_t text_poll_calls{};
     std::size_t frontend_quit_poll_calls{};
+    std::size_t delay_calls{};
+    std::uint64_t delayed_milliseconds{};
     std::vector<std::uint64_t> frame_hashes;
     std::vector<std::uint64_t> compact_hashes;
     std::vector<std::uint64_t> bottom_hashes;
@@ -7861,6 +7867,56 @@ void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
                 quit_platform.presented == 2U &&
                 quit_platform.stop_calls == 1U,
             "RPG cutscene fade ignored frontend quit and continued the event");
+
+    // Entry 32 performs two complete 21-step fades before its first opcode-36
+    // frame, with opcode 44 having selected a four-tick hold. Deliver the
+    // close after the 44 fade polls: the frame itself remains observable, but
+    // its replacement timer must abort before sleeping or executing opcode 8.
+    auto timed_quit_database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& timed_quit_location =
+        timed_quit_database->location_at_directory_offset(12);
+    timed_quit_location.area.entity_fields[9][5] = 32;
+    ScriptedPlatform timed_quit_platform;
+    timed_quit_platform.actions = {swd2::InputAction::right};
+    timed_quit_platform.frontend_actions.assign(
+        44U, swd2::InputAction::none);
+    timed_quit_platform.frontend_actions.push_back(
+        swd2::InputAction::quit);
+    auto timed_quit_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    timed_quit_state.set_u16(0x424, 12);
+    timed_quit_state.set_u16(0x40f, 8);
+    timed_quit_state.set_viewport_x(59);
+    timed_quit_state.set_viewport_y(57);
+    timed_quit_state.set_actor_screen_x(38);
+    timed_quit_state.set_actor_screen_y(80);
+    timed_quit_state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 59U) * 2U));
+    timed_quit_state.set_dos_string(
+        0x42d, 22, timed_quit_location.area.graphics_path);
+    timed_quit_state.set_dos_string(
+        0x443, 22, timed_quit_location.area.layout_path);
+    timed_quit_state.set_dos_string(
+        0x459, 22, timed_quit_location.area.music_path);
+    timed_quit_state.set_dos_string(
+        0x46f, 22, timed_quit_location.area.event_archive_path);
+    timed_quit_state.set_dos_string(
+        0x485, 24, timed_quit_location.area.event_font_path);
+    swd2::GameContext timed_quit_context{
+        game_root, timed_quit_state, timed_quit_platform};
+    timed_quit_context.map_database = timed_quit_database;
+    const auto timed_quit_result = swd2::RpgModule().run(
+        timed_quit_context, swd2::Marker::menu_ready);
+    require(timed_quit_result == swd2::Marker::none &&
+                timed_quit_platform.cursor ==
+                    timed_quit_platform.actions.size() &&
+                timed_quit_platform.frontend_cursor == 45U &&
+                timed_quit_platform.frontend_quit_poll_calls == 45U &&
+                timed_quit_platform.presented == 45U &&
+                timed_quit_platform.delay_calls == 43U &&
+                timed_quit_platform.delayed_milliseconds == 659U &&
+                timed_quit_platform.stop_calls == 1U,
+            "RPG opcode-36 fixed hold ignored frontend quit or ran opcode 8");
 }
 
 void test_rpg_opcode55_cutscene(const std::filesystem::path& game_root) {
@@ -8300,6 +8356,46 @@ void test_battle_module(const std::filesystem::path& game_root) {
                         test.card_hash,
                 "FIG 57d6 player-status information card run failed");
     }
+
+    // A frontend close is distinct from a DOS acknowledgement and may arrive
+    // during 57d6's fixed 18-tick information-card hold. Keep the queued Quit
+    // untouched, stop on the already-presented defence card, and still let
+    // BattleModule perform its normal shared-state cleanup.
+    ScriptedPlatform status_card_quit_platform;
+    status_card_quit_platform.actions = {
+        swd2::InputAction::left,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,
+    };
+    status_card_quit_platform.frontend_actions = {
+        swd2::InputAction::none,
+        swd2::InputAction::quit,
+    };
+    auto status_card_quit_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    status_card_quit_state.set_u16(0x4a0, 392);
+    status_card_quit_state.set_u16(0x10, 1);
+    status_card_quit_state.set_u8(0x106 + 0x6d, 35);
+    status_card_quit_state.set_u16(0x106 + 0x35, 1000);
+    status_card_quit_state.set_u16(0x106 + 0x55, 1000);
+    status_card_quit_state.set_u16(0x106 + 0x57, 1000);
+    status_card_quit_state.set_u16(0x106 + 0x2d, 1000);
+    status_card_quit_state.set_u16(0x106 + 0x2f, 1000);
+    status_card_quit_state.set_u16(0x106 + 0x5d, 1000);
+    swd2::GameContext status_card_quit_context{
+        game_root, status_card_quit_state, status_card_quit_platform};
+    require(swd2::BattleModule().run(
+                status_card_quit_context, swd2::Marker::open_figure) ==
+                    swd2::Marker::none &&
+                status_card_quit_platform.cursor == 3U &&
+                status_card_quit_platform.frontend_cursor == 2U &&
+                status_card_quit_platform.frame_hashes.size() == 7U &&
+                status_card_quit_platform.frame_hashes.back() ==
+                    2498598045570496996ULL &&
+                status_card_quit_platform.stop_calls == 1U &&
+                status_card_quit_context.shared_state.u16(0x4a0) == 0U,
+            "FIG 57d6 fixed status-card hold ignored frontend quit");
 
     ScriptedPlatform target_overlay_platform;
     target_overlay_platform.actions = {

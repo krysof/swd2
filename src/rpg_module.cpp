@@ -878,18 +878,9 @@ public:
         // that timing without the original busy loop. A host window close is
         // not a DOS key, so it can interrupt the replacement sleep without
         // consuming any queued story/menu input.
-        auto remaining = std::chrono::milliseconds(
+        const auto duration = std::chrono::milliseconds(
             (static_cast<std::uint64_t>(ticks) * 1000U + 69U) / 70U);
-        constexpr auto slice = std::chrono::milliseconds(20);
-        while (remaining.count() > 0) {
-            if (platform_.poll_frontend_quit()) {
-                quit_requested_ = true;
-                return;
-            }
-            const auto current = std::min(remaining, slice);
-            platform_.delay_for(current);
-            remaining -= current;
-        }
+        static_cast<void>(delay_for_or_frontend_quit(duration));
     }
 
     void map_relocated(const MapAreaRecord& area) override {
@@ -970,25 +961,25 @@ public:
             return true;
         case 22:
             reset_direct_page_layers();
-            present_timed(event_scene());
-            return true;
+            return present_timed(event_scene());
         case 30:
         case 31:
         case 32:
         case 33:
             advance_event_palette();
             reset_direct_page_layers();
-            present_timed(event_scene());
-            return true;
+            return present_timed(event_scene());
         case 39:
             // Unlike opcode 22/36, RPG:5ac7 renders the changed entity to the
             // back page, waits at 5ec0 while the old page is still visible,
             // and only then flips at 6e14. Preserve that pre-flip hold rather
             // than delaying on the newly exposed animation frame.
             if (frame_delay_ticks_ != 0) {
-                platform_.delay_for(std::chrono::milliseconds(
-                    (static_cast<std::uint64_t>(frame_delay_ticks_) * 1000U + 69U) /
-                    70U));
+                if (!delay_for_or_frontend_quit(std::chrono::milliseconds(
+                        (static_cast<std::uint64_t>(frame_delay_ticks_) * 1000U +
+                         69U) / 70U))) {
+                    return false;
+                }
             }
             reset_direct_page_layers();
             present(event_scene());
@@ -1000,8 +991,7 @@ public:
             // on that last page, not on the next selector now held in SAVE.
             cutscene_frame_index_ = state_.u16(0x411);
             reset_direct_page_layers();
-            present_timed(event_scene());
-            return true;
+            return present_timed(event_scene());
         case 29:
             if (arguments.empty()) return false;
             select_cutscene_dictionary(arguments[0]);
@@ -1026,8 +1016,7 @@ public:
         case 49:
             if (arguments.empty()) return false;
             reset_direct_page_layers();
-            present_timed(shifted_scene(event_scene(), arguments[0]));
-            return true;
+            return present_timed(shifted_scene(event_scene(), arguments[0]));
         case 55:
             // RPG:5c35 snapshots DS:5a5c into a private palette table, then
             // 0dbf:0314 rewrites palette indices 10h..1fh on all four VGA
@@ -1113,8 +1102,7 @@ public:
         direct_event_page_ = frame;
         present(std::move(frame));
         // RPG.EXE:5c15 calls its DOS hundredth timer with CL=3.
-        platform_.delay_for(std::chrono::milliseconds(30));
-        return true;
+        return delay_for_or_frontend_quit(std::chrono::milliseconds(30));
     }
 
     std::optional<bool> confirm_event_branch(SharedState&) override {
@@ -2120,6 +2108,29 @@ public:
     }
 
 private:
+    bool delay_for_or_frontend_quit(std::chrono::milliseconds duration) {
+        // A DOS timer cannot observe a host window close, but every fixed
+        // wait in the merged frontend must. Poll only the dedicated close
+        // channel so direction/confirmation keys remain queued for the next
+        // event command. The final poll catches a close delivered during the
+        // last sleep rather than deferring it to a later VM side effect.
+        constexpr auto slice = std::chrono::milliseconds(20);
+        while (duration.count() > 0) {
+            if (platform_.poll_frontend_quit()) {
+                quit_requested_ = true;
+                return false;
+            }
+            const auto current = std::min(duration, slice);
+            platform_.delay_for(current);
+            duration -= current;
+        }
+        if (platform_.poll_frontend_quit()) {
+            quit_requested_ = true;
+            return false;
+        }
+        return true;
+    }
+
     [[nodiscard]] std::optional<std::uint16_t> inventory_row_value(
         const SharedState& state, std::uint16_t item_id) const {
         if (item_id >= items_.size()) return std::nullopt;
@@ -2874,8 +2885,10 @@ private:
                     state_.set_u16(
                         0x3e4U, static_cast<std::uint16_t>(id + 0x8cU));
                     InventorySystem(state_, items_).compact();
-                    platform_.delay_for(std::chrono::milliseconds(
-                        (13U * 1000U + 69U) / 70U));
+                    if (!delay_for_or_frontend_quit(std::chrono::milliseconds(
+                            (13U * 1000U + 69U) / 70U))) {
+                        return false;
+                    }
                 }
                 if (action_cancelled) continue;
 
@@ -3645,12 +3658,14 @@ private:
         }
     }
 
-    void present_timed(Viewport scene) {
+    bool present_timed(Viewport scene) {
         present(std::move(scene));
         if (frame_delay_ticks_ != 0) {
-            platform_.delay_for(std::chrono::milliseconds(
-                (static_cast<std::uint64_t>(frame_delay_ticks_) * 1000U + 69U) / 70U));
+            return delay_for_or_frontend_quit(std::chrono::milliseconds(
+                (static_cast<std::uint64_t>(frame_delay_ticks_) * 1000U + 69U) /
+                70U));
         }
+        return true;
     }
 
     bool fade_out() {
