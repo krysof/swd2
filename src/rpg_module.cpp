@@ -1222,7 +1222,7 @@ public:
             if (!run_shop(item_ids, state)) return std::nullopt;
         } else {
             const auto inventory = run_inventory(state, InventoryUiMode::sell);
-            if (!inventory) return std::nullopt;
+            if (!inventory || quit_requested_) return std::nullopt;
         }
         // 569b performs one final dd6/6e14 rebuild before 53b1 reloads the
         // current entity's event record.
@@ -1293,7 +1293,7 @@ public:
             const auto action = platform_.wait_for_input();
             if (action == InputAction::quit) {
                 quit_requested_ = true;
-                return true;
+                return false;
             }
             if (action == InputAction::cancel) return true;
             const auto selection = rpg_list_selection_input(
@@ -1308,7 +1308,7 @@ public:
             if (item_id == 0 || item_id >= items_.size()) continue;
             const auto& definition = items_.at(item_id);
             if (definition.price > state.u16(0x104)) {
-                if (!show_bottom_message(frame, shop_money_error_)) return true;
+                if (!show_bottom_message(frame, shop_money_error_)) return false;
                 continue;
             }
 
@@ -1318,7 +1318,7 @@ public:
                     0x3e6U + (item_id - 0x44U) * 2U);
                 if (quantity >= 20U) {
                     if (!show_bottom_message(frame, shop_quantity_error_)) {
-                        return true;
+                        return false;
                     }
                     continue;
                 }
@@ -1329,7 +1329,7 @@ public:
             // full-list predicate rather than a host-side capacity guess.
             if (needs_inventory_slot && inventory.item(49) != 0) {
                 if (!show_bottom_message(frame, shop_inventory_error_)) {
-                    return true;
+                    return false;
                 }
                 continue;
             }
@@ -1339,7 +1339,7 @@ public:
             auto confirmation_source = frame;
             if (!reveal_bottom_message(
                     confirmation_source, shop_confirmation_prompt_)) {
-                return true;
+                return false;
             }
             while (!finished_confirmation) {
                 auto confirmation = confirmation_source;
@@ -1366,7 +1366,7 @@ public:
                 const auto confirmation_action = platform_.wait_for_input();
                 if (confirmation_action == InputAction::quit) {
                     quit_requested_ = true;
-                    return true;
+                    return false;
                 }
                 if (confirmation_action == InputAction::cancel) {
                     present(confirmation_source);

@@ -7768,6 +7768,28 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 sell_platform.frame_hashes[17] == sell_platform.frame_hashes[15] &&
                 sell_platform.frame_hashes[18] == sell_platform.frame_hashes[0],
             "RPG opcode-17 Buy/Sell, empty feedback or reload frames changed");
+
+    auto [combined_quit_database, combined_quit_state] = prepare();
+    combined_quit_database->location_at_directory_offset(46)
+        .area.entity_fields[9][0] = 56U;
+    ScriptedPlatform combined_quit_platform;
+    combined_quit_platform.actions = {
+        swd2::InputAction::confirm,  // interact with opcode 17
+        swd2::InputAction::confirm,  // choose Buy
+        swd2::InputAction::quit,     // close from the purchase list
+    };
+    swd2::GameContext combined_quit_context{
+        game_root, combined_quit_state, combined_quit_platform};
+    combined_quit_context.map_database = combined_quit_database;
+    const auto combined_quit_result = swd2::RpgModule().run(
+        combined_quit_context, swd2::Marker::menu_ready);
+    require(combined_quit_result ==
+                swd2::Marker::none &&
+                combined_quit_platform.cursor ==
+                    combined_quit_platform.actions.size() &&
+                combined_quit_platform.presented == 7U &&
+                combined_quit_platform.stop_calls == 1U,
+            "RPG opcode-17 quit redrew/reloaded the shop event after frontend close");
 }
 
 void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
