@@ -620,12 +620,18 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     struct EventState {
         std::string archive_name;
         std::uint16_t target{};
-        std::string active_area_archive;
+        std::uint16_t active_location_offset{};
+        std::size_t entity{};
     };
     std::queue<EventState> pending;
-    for (const auto& [archive_name, roots] : roots_by_archive) {
-        for (const auto root : roots) {
-            pending.push({archive_name, root, archive_name});
+    for (const auto& location : world.locations()) {
+        for (std::size_t entity = 0;
+             entity < location.area.entity_count(); ++entity) {
+            const auto target = location.area.entity_fields[9][entity];
+            if (target != 0) {
+                pending.push({location.area.event_archive_path, target,
+                              location.directory_offset, entity});
+            }
         }
     }
     std::map<std::string, std::unique_ptr<ArchiveAudit>> audits;
@@ -641,12 +647,14 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     };
     const auto enqueue = [&](const std::string& archive_name,
                              std::uint16_t target,
-                             const std::string& active_area_archive) {
-        pending.push({archive_name, target, active_area_archive});
+                             std::uint16_t active_location_offset,
+                             std::size_t entity) {
+        pending.push({archive_name, target, active_location_offset, entity});
     };
 
     std::set<std::uint16_t> all_opcodes;
-    std::set<std::tuple<std::string, std::uint16_t, std::string>> visited_states;
+    std::set<std::tuple<std::string, std::uint16_t, std::uint16_t,
+                        std::size_t>> visited_states;
     std::size_t inert_odd_targets = 0;
     std::size_t map_mutations = 0;
     std::size_t runtime_validated_mutations = 0;
@@ -657,7 +665,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         auto state = std::move(pending.front());
         pending.pop();
         if (!visited_states.emplace(state.archive_name, state.target,
-                                    state.active_area_archive).second) {
+                                    state.active_location_offset,
+                                    state.entity).second) {
             continue;
         }
         const auto& archive_name = state.archive_name;
@@ -672,7 +681,9 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         const auto record = swd2::decode_event_record(
             audit.archive.event_stream(target / 2U));
         if (first_record_visit) audit.commands += record.commands.size();
-        auto active_area_archive = state.active_area_archive;
+        auto active_location_offset = state.active_location_offset;
+        auto active_area_archive = world.location_at_directory_offset(
+            active_location_offset).area.event_archive_path;
         for (const auto& command : record.commands) {
             if (first_record_visit) {
                 audit.opcodes.insert(command.opcode);
@@ -689,7 +700,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                     if (first_record_visit) ++inert_odd_targets;
                     return;
                 }
-                enqueue(archive_name, next, active_area_archive);
+                enqueue(archive_name, next, active_location_offset,
+                        state.entity);
             };
 
             if (command.opcode == 2 && !command.arguments.empty()) {
@@ -698,12 +710,12 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                 // area's future interactions, whose CHNA path may differ.
                 enqueue_branch(command.arguments[0]);
                 enqueue(active_area_archive, command.arguments[0],
-                        active_area_archive);
+                        active_location_offset, state.entity);
             } else if (command.opcode == 3 &&
                        command.arguments.size() >= 2U &&
                        command.arguments[0] == 9U) {
                 enqueue(active_area_archive, command.arguments[1],
-                        active_area_archive);
+                        active_location_offset, state.entity);
             } else if ((command.opcode == 4 || command.opcode == 15 ||
                         command.opcode == 21 || command.opcode == 40) &&
                        command.arguments.size() >= 2U) {
@@ -716,6 +728,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                 (command.arguments[0] & 0x8000U) == 0U) {
                 const auto& destination = world.location_at_directory_offset(
                     static_cast<std::uint16_t>(command.arguments[0] & 0x1fffU));
+                active_location_offset = destination.directory_offset;
                 active_area_archive = destination.area.event_archive_path;
             }
 
@@ -800,7 +813,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                             alias.area.event_archive_path, value,
                             alias.directory_offset, entity);
                         enqueue(alias.area.event_archive_path, value,
-                                alias.area.event_archive_path);
+                                alias.directory_offset, entity);
                     }
                 }
             }
@@ -903,37 +916,17 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         return result.commands_executed;
     };
 
-    std::array<std::size_t, 2> initial_contexts{};
-    std::array<std::size_t, 2> initial_context_commands{};
-    for (std::size_t scenario = 0; scenario < initial_contexts.size(); ++scenario) {
-        const auto affirmative = scenario != 0;
-        for (const auto& location : world.locations()) {
-            for (std::size_t entity = 0;
-                 entity < location.area.entity_count(); ++entity) {
-                const auto target = location.area.entity_fields[9][entity];
-                if (target == 0) continue;
-                initial_context_commands[scenario] += execute_context(
-                    location.area.event_archive_path, target,
-                    location.directory_offset, entity, affirmative);
-                ++initial_contexts[scenario];
-            }
-        }
-    }
-    std::array<std::size_t, 2> dynamic_context_commands{};
-    for (std::size_t scenario = 0;
-         scenario < dynamic_context_commands.size(); ++scenario) {
+    std::array<std::size_t, 2> context_commands{};
+    for (std::size_t scenario = 0; scenario < context_commands.size(); ++scenario) {
         for (const auto& [archive_name, target, location_offset, entity] :
-             dynamic_entity_contexts) {
-            dynamic_context_commands[scenario] += execute_context(
+             visited_states) {
+            context_commands[scenario] += execute_context(
                 archive_name, target, location_offset, entity, scenario != 0);
         }
     }
-    if (initial_contexts != std::array<std::size_t, 2>{3376U, 3376U} ||
-        initial_context_commands !=
-            std::array<std::size_t, 2>{16900U, 17275U} ||
+    if (visited_states.size() != 6862U ||
         dynamic_entity_contexts.size() != 80U ||
-        dynamic_context_commands !=
-            std::array<std::size_t, 2>{2091U, 2096U}) {
+        context_commands != std::array<std::size_t, 2>{30811U, 31321U}) {
         throw std::runtime_error(
             "deterministic RPG entity-context execution differs from the audit");
     }
@@ -945,11 +938,9 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << " runtime-validated MAPZ mutations (" << event_pointer_mutations
               << " event-pointer writes); " << inert_odd_targets
               << " documented inert odd target; "
-              << initial_contexts[0] + initial_contexts[1] +
-                     dynamic_entity_contexts.size() * 2U
+              << visited_states.size() * 2U
               << " entity-context executions, "
-              << initial_context_commands[0] + initial_context_commands[1] +
-                     dynamic_context_commands[0] + dynamic_context_commands[1]
+              << context_commands[0] + context_commands[1]
               << " VM commands completed\n";
 }
 
