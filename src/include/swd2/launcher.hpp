@@ -16,6 +16,7 @@ constexpr std::uint16_t dos_tag(char first_byte, char second_byte) noexcept {
 // These are the literal byte pairs stored at DOS address 4000:0000.
 enum class Marker : std::uint16_t {
     none = 0,
+    menu_rejected = 1,
     menu_ready = dos_tag('M', 'T'),
     open_figure = dos_tag('I', 'F'),
     open_demo = dos_tag('E', 'D'),

@@ -88,6 +88,16 @@ void test_launcher() {
     require(calls == expected, "launcher module sequence differs from SWD2.EXE");
     require(result.reason == swd2::StopReason::module_requested_exit, "unexpected launcher stop reason");
     require(result.final_marker == Marker::none, "unexpected final marker");
+
+    const auto rejected = swd2::Launcher().run(
+        [](Module, Marker) {
+            return swd2::ModuleResult{true, Marker::menu_rejected};
+        });
+    require(rejected.reason == swd2::StopReason::menu_rejected &&
+                rejected.final_marker == Marker::menu_rejected &&
+                rejected.transitions.size() == 1U &&
+                swd2::marker_name(rejected.final_marker) == "01",
+            "launcher did not preserve MEO's literal rejection marker");
 }
 
 void test_paths() {

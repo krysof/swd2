@@ -75,6 +75,7 @@ swd2::Marker parse_marker(std::string value) {
         return static_cast<char>(std::toupper(c));
     });
     if (value == "--" || value == "NONE" || value == "00") return swd2::Marker::none;
+    if (value == "01" || value == "REJECTED") return swd2::Marker::menu_rejected;
     if (value == "MT") return swd2::Marker::menu_ready;
     if (value == "IF") return swd2::Marker::open_figure;
     if (value == "ED") return swd2::Marker::open_demo;

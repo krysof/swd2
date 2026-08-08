@@ -85,6 +85,7 @@ std::string_view module_name(Module module) noexcept {
 std::string_view marker_name(Marker marker) noexcept {
     switch (marker) {
     case Marker::none: return "--";
+    case Marker::menu_rejected: return "01";
     case Marker::menu_ready: return "MT";
     case Marker::open_figure: return "IF";
     case Marker::open_demo: return "ED";

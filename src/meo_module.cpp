@@ -71,7 +71,7 @@ Marker MeoModule::run(GameContext& context, Marker) {
                                                    time.second, true);
             context.platform.present({IndexedFrame::width, IndexedFrame::height, rejected.pixels,
                                       std::span<const std::uint8_t, 768>(rejected.palette)});
-            return static_cast<Marker>(1);
+            return Marker::menu_rejected;
         }
     }
 }
