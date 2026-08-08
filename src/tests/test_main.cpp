@@ -7747,6 +7747,40 @@ void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
     require(platform.presented >= 80 && platform.music_calls >= 3 &&
                 palettes.size() > 10 && frames.size() > 2,
             "RPG cutscene opcodes did not render DE frames, RI music, and palette ramps");
+
+    auto quit_database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& quit_location = quit_database->location_at_directory_offset(12);
+    quit_location.area.entity_fields[9][5] = 32;
+    ScriptedPlatform quit_platform;
+    quit_platform.actions = {swd2::InputAction::right};
+    quit_platform.frontend_actions = {swd2::InputAction::quit};
+    auto quit_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    quit_state.set_u16(0x424, 12);
+    quit_state.set_u16(0x40f, 8);
+    quit_state.set_viewport_x(59);
+    quit_state.set_viewport_y(57);
+    quit_state.set_actor_screen_x(38);
+    quit_state.set_actor_screen_y(80);
+    quit_state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + (57U * 180U + 59U) * 2U));
+    quit_state.set_dos_string(0x42d, 22, quit_location.area.graphics_path);
+    quit_state.set_dos_string(0x443, 22, quit_location.area.layout_path);
+    quit_state.set_dos_string(0x459, 22, quit_location.area.music_path);
+    quit_state.set_dos_string(
+        0x46f, 22, quit_location.area.event_archive_path);
+    quit_state.set_dos_string(0x485, 24, quit_location.area.event_font_path);
+    swd2::GameContext quit_context{game_root, quit_state, quit_platform};
+    quit_context.map_database = quit_database;
+    require(swd2::RpgModule().run(
+                quit_context, swd2::Marker::menu_ready) ==
+                swd2::Marker::none &&
+                quit_platform.cursor == quit_platform.actions.size() &&
+                quit_platform.frontend_cursor == 1U &&
+                quit_platform.frontend_quit_poll_calls == 1U &&
+                quit_platform.presented == 2U &&
+                quit_platform.stop_calls == 1U,
+            "RPG cutscene fade ignored frontend quit and continued the event");
 }
 
 void test_rpg_opcode55_cutscene(const std::filesystem::path& game_root) {

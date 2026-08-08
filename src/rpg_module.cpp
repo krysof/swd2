@@ -933,15 +933,12 @@ public:
                                std::span<const std::uint16_t> arguments) override {
         switch (opcode) {
         case 5:
-            fade_out();
-            return true;
+            return fade_out();
         case 6:
             reset_direct_page_layers();
-            fade_in();
-            return true;
+            return fade_in();
         case 45:
-            fade_in();
-            return true;
+            return fade_in();
         case 7:
             reset_direct_page_layers();
             palette_dark_ = false;
@@ -1006,7 +1003,7 @@ public:
             return true;
         case 43:
             if (arguments.empty()) return false;
-            fade_out();
+            if (!fade_out()) return false;
             select_cutscene_dictionary(arguments[0]);
             return true;
         case 44:
@@ -3643,7 +3640,11 @@ private:
         }
     }
 
-    void fade_out() {
+    bool fade_out() {
+        if (platform_.poll_frontend_quit()) {
+            quit_requested_ = true;
+            return false;
+        }
         auto scene = event_scene();
         for (std::uint16_t amount = 3; amount <= 63; amount += 3) {
             auto frame = scene;
@@ -3654,11 +3655,20 @@ private:
             platform_.present({320, 200, frame.pixels,
                                std::span<const std::uint8_t, 768>(frame.palette)});
             platform_.delay_for(std::chrono::milliseconds(15));
+            if (platform_.poll_frontend_quit()) {
+                quit_requested_ = true;
+                return false;
+            }
         }
         palette_dark_ = true;
+        return true;
     }
 
-    void fade_in() {
+    bool fade_in() {
+        if (platform_.poll_frontend_quit()) {
+            quit_requested_ = true;
+            return false;
+        }
         const auto scene = event_scene();
         for (std::uint16_t ceiling = 3; ceiling <= 63; ceiling += 3) {
             auto frame = scene;
@@ -3669,8 +3679,13 @@ private:
             platform_.present({320, 200, frame.pixels,
                                std::span<const std::uint8_t, 768>(frame.palette)});
             platform_.delay_for(std::chrono::milliseconds(15));
+            if (platform_.poll_frontend_quit()) {
+                quit_requested_ = true;
+                return false;
+            }
         }
         palette_dark_ = false;
+        return true;
     }
 
     void select_cutscene_dictionary(std::uint16_t number) {
