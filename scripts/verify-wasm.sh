@@ -57,6 +57,12 @@ for key in Escape Enter; do
     exit 1
   }
 done
+for label in ESC 回车; do
+  grep -Fq ">$label</button>" "$site/index.html" || {
+    echo "error: index.html is missing the $label button label" >&2
+    exit 1
+  }
+done
 if grep -Eq 'data-key=("Arrow(Up|Down|Left|Right)"|Arrow(Up|Down|Left|Right))([[:space:]>])|id=("fullscreen"|fullscreen)([[:space:]>])' "$site/index.html"; then
   echo "error: index.html exposes controls other than ESC and Enter" >&2
   exit 1

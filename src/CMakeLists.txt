@@ -105,6 +105,11 @@ if(EMSCRIPTEN)
         "SHELL:-lidbfs.js"
         "--shell-file" "${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html"
     )
+    # CMake passes --shell-file to Emscripten but does not infer that the HTML
+    # is a link input. Track it explicitly so UI-only edits cannot leave a
+    # stale index.html in an otherwise up-to-date Ninja build or deployment.
+    set_property(TARGET swd2_rewrite APPEND PROPERTY LINK_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/web/shell.html")
     if(SWD2_WEB_PRELOAD_GAME_DATA)
         target_link_options(swd2_rewrite PRIVATE
             "--preload-file" "${SWD2_GAME_DIR}@/game"
