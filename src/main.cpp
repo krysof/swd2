@@ -592,7 +592,8 @@ void verify_legacy_program_data(const std::filesystem::path& game_root) {
 }
 
 void verify_reachable_events(const std::filesystem::path& game_root) {
-    const auto world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    const auto map_database_path = game_root / "MAPA.EXE";
+    const auto world = swd2::MapDatabase::load(map_database_path);
     std::map<std::string, std::set<std::uint16_t>> roots_by_archive;
     for (const auto& location : world.locations()) {
         for (const auto target : location.area.entity_fields[9]) {
@@ -638,6 +639,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     std::set<std::uint16_t> all_opcodes;
     std::size_t inert_odd_targets = 0;
     std::size_t map_mutations = 0;
+    std::size_t runtime_validated_mutations = 0;
     std::size_t event_pointer_mutations = 0;
     while (!pending.empty()) {
         const auto [archive_name, target] = pending.front();
@@ -723,6 +725,16 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                 }
                 ++map_mutations;
 
+                // Validate every released write against the real runtime
+                // mutator in isolation. This catches typed-area assumptions,
+                // invalid path-pointer reparses and unaligned writes without
+                // inventing a story order for mutually exclusive records.
+                auto mutation_probe =
+                    swd2::MapDatabase::load(map_database_path);
+                mutation_probe.mutate_area_word(location_offset, field,
+                                                byte_offset, value, additive);
+                ++runtime_validated_mutations;
+
                 const auto& destination =
                     world.location_at_directory_offset(location_offset);
                 const auto count = static_cast<std::int64_t>(
@@ -775,7 +787,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     if (roots_by_archive.size() != 7U || total_roots != 684U ||
         total_records != 1065U || total_commands != 6380U ||
         all_opcodes != expected_opcodes || inert_odd_targets != 1U ||
-        map_mutations != 235U || event_pointer_mutations != 37U) {
+        map_mutations != 235U || runtime_validated_mutations != map_mutations ||
+        event_pointer_mutations != 37U) {
         throw std::runtime_error(
             "reachable RPG event graph differs from the audited release");
     }
@@ -784,7 +797,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << " roots, " << total_records << " records, "
               << total_commands << " commands, " << all_opcodes.size()
               << "/62 dispatch opcodes; " << map_mutations
-              << " MAPZ mutations (" << event_pointer_mutations
+              << " runtime-validated MAPZ mutations (" << event_pointer_mutations
               << " event-pointer writes); " << inert_odd_targets
               << " documented inert odd target\n";
 }
