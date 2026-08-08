@@ -258,7 +258,7 @@ SdlPlatform::SdlPlatform() : impl_(std::make_unique<Impl>()) {
                  SDL_INIT_GAMECONTROLLER) != 0) {
         fail_sdl("SDL_Init");
     }
-    impl_->window = SDL_CreateWindow("SWD2 portable rewrite", SDL_WINDOWPOS_CENTERED,
+    impl_->window = SDL_CreateWindow("轩辕剑2 · SWD2", SDL_WINDOWPOS_CENTERED,
                                      SDL_WINDOWPOS_CENTERED, 960, 600,
                                      SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!impl_->window) fail_sdl("SDL_CreateWindow");

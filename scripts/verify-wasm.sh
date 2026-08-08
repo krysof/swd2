@@ -37,6 +37,31 @@ grep -Fq 'index.data' "$site/index.js" || {
   exit 1
 }
 
+grep -Fq '轩辕剑2' "$site/index.html" || {
+  echo "error: index.html does not identify the game as 轩辕剑2" >&2
+  exit 1
+}
+if grep -Eq '水浒|水滸' "$site/index.html"; then
+  echo "error: index.html contains an incorrect game title" >&2
+  exit 1
+fi
+
+button_count="$(grep -o '<button' "$site/index.html" | wc -l | tr -d '[:space:]')"
+if [[ "$button_count" != "2" ]]; then
+  echo "error: index.html must contain exactly the ESC and Enter buttons (found $button_count)" >&2
+  exit 1
+fi
+for key in Escape Enter; do
+  grep -Eq "data-key=(\"$key\"|'$key'|$key)([[:space:]>])" "$site/index.html" || {
+    echo "error: index.html is missing the $key control" >&2
+    exit 1
+  }
+done
+if grep -Eq 'data-key=("Arrow(Up|Down|Left|Right)"|Arrow(Up|Down|Left|Right))([[:space:]>])|id=("fullscreen"|fullscreen)([[:space:]>])' "$site/index.html"; then
+  echo "error: index.html exposes controls other than ESC and Enter" >&2
+  exit 1
+fi
+
 # Parsing and rewriting with Binaryen provides an additional structural check
 # when the Emscripten installation exposes wasm-opt. Emscripten emits bulk
 # memory and other standardized features, so enable its complete feature set

@@ -10,7 +10,7 @@ deploy="$root/build/pages-deploy"
 
 if ! gh repo view "$repository" >/dev/null 2>&1; then
   gh repo create "$repository" --public \
-    --description "SWD2 portable rewrite — WebAssembly build" \
+    --description "轩辕剑2（SWD2）可移植重写 — WebAssembly build" \
     --disable-issues --disable-wiki
 fi
 

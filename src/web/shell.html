@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#100b08">
-  <meta name="description" content="《水浒传 2》可移植 C++ 重写版 WebAssembly 构建">
-  <title>水浒传 2 · SWD2</title>
+  <meta name="description" content="《轩辕剑2》可移植 C++ 重写版 WebAssembly 构建">
+  <title>轩辕剑2 · SWD2</title>
   <style>
     :root { color-scheme: dark; font-family: system-ui, -apple-system, "PingFang SC", sans-serif; }
     * { box-sizing: border-box; }
@@ -30,29 +30,24 @@
     #status-wrap.ready { opacity: 0; }
     #status { font-weight: 650; }
     progress { width: min(65vw, 420px); accent-color: #b8823e; }
-    .toolbar { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; align-items: center; }
-    .hint { margin: 0; color: #cab995; text-align: left; font-size: 14px; }
+    .toolbar { margin-top: 10px; }
+    .hint { margin: 0; color: #cab995; text-align: center; font-size: 14px; }
     button {
       color: inherit; background: #2a1d13; border: 1px solid #876438; border-radius: 7px;
       min-width: 44px; min-height: 40px; padding: 8px 12px; font: inherit; touch-action: none;
     }
     button:active { background: #8b632f; transform: translateY(1px); }
-    .touch { display: none; justify-content: space-between; align-items: end; margin: 16px auto 0; max-width: 620px; }
-    .dpad { display: grid; grid-template: repeat(3, 46px) / repeat(3, 46px); gap: 4px; }
-    .dpad [data-key="ArrowUp"] { grid-area: 1 / 2; }
-    .dpad [data-key="ArrowLeft"] { grid-area: 2 / 1; }
-    .dpad [data-key="ArrowDown"] { grid-area: 2 / 2; }
-    .dpad [data-key="ArrowRight"] { grid-area: 2 / 3; }
+    .touch { display: flex; justify-content: center; margin: 16px auto 0; }
     .actions { display: flex; gap: 14px; }
-    .actions button { width: 62px; height: 62px; border-radius: 50%; font-weight: 800; }
+    .actions button { min-width: 92px; font-weight: 800; }
     #error { min-height: 1.4em; margin: 8px 0 0; color: #ff9b8f; font-size: 13px; }
-    @media (hover: none), (pointer: coarse) { .touch { display: flex; } .hint { font-size: 12px; } }
+    @media (hover: none), (pointer: coarse) { .hint { font-size: 12px; } }
     @media (max-width: 520px) { main { align-self: start; } h1 { margin-top: 2px; } }
   </style>
 </head>
 <body>
   <main>
-    <h1>水浒传 2</h1>
+    <h1>轩辕剑2</h1>
     <section class="stage" id="stage">
       <canvas id="canvas" tabindex="0" aria-label="SWD2 游戏画面" oncontextmenu="event.preventDefault()"></canvas>
       <div id="status-wrap">
@@ -61,19 +56,12 @@
       </div>
     </section>
     <div class="toolbar">
-      <p class="hint">方向键移动 · Enter / Z 确认 · Esc / X 取消 · 存档保存在当前浏览器</p>
-      <button id="fullscreen" type="button">全屏</button>
+      <p class="hint">键盘方向键移动 · Enter 确认 · Esc 取消 · 存档保存在当前浏览器</p>
     </div>
     <div class="touch" aria-label="触摸控制">
-      <div class="dpad">
-        <button data-key="ArrowUp" aria-label="上">▲</button>
-        <button data-key="ArrowLeft" aria-label="左">◀</button>
-        <button data-key="ArrowDown" aria-label="下">▼</button>
-        <button data-key="ArrowRight" aria-label="右">▶</button>
-      </div>
       <div class="actions">
-        <button data-key="Escape" aria-label="取消">B</button>
-        <button data-key="Enter" aria-label="确认">A</button>
+        <button data-key="Escape" aria-label="取消">ESC</button>
+        <button data-key="Enter" aria-label="确认">Enter</button>
       </div>
     </div>
     <p id="error" role="alert"></p>
@@ -114,7 +102,7 @@
       onAbort(reason) { errorText.textContent = `启动失败：${reason}`; }
     };
 
-    const keyCodes = { ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39, Enter: 13, Escape: 27 };
+    const keyCodes = { Enter: 13, Escape: 27 };
     function emitKey(type, key) {
       canvas.focus();
       const event = new KeyboardEvent(type, { key, code: key, bubbles: true, cancelable: true });
@@ -131,10 +119,6 @@
       });
       button.addEventListener('pointerup', release);
       button.addEventListener('pointercancel', release);
-    });
-    document.getElementById('fullscreen').addEventListener('click', async () => {
-      try { await document.getElementById('stage').requestFullscreen(); canvas.focus(); }
-      catch (_) { errorText.textContent = '浏览器未允许进入全屏。'; }
     });
     document.addEventListener('swd2-save-sync', event => {
       if (event.detail) errorText.textContent = '浏览器存档写入失败：' + event.detail;
