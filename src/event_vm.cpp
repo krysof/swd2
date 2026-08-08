@@ -132,6 +132,10 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                             std::size_t instruction_limit,
                             MapDatabase* map_database) {
     EventVmResult result;
+    const auto host_failure_status = [&host] {
+        return host.abort_requested() ? EventVmStatus::host_abort
+                                      : EventVmStatus::unsupported_opcode;
+    };
     auto target = directory_offset;
     while (true) {
         if ((target & 1U) != 0 || target / 2 >= archive.entry_count()) {
@@ -191,7 +195,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 6:
             case 7:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -225,7 +229,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 13: {
                 const auto accepted = host.confirm_event_branch(state);
                 if (!accepted) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 if (*accepted) {
@@ -236,7 +240,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             }
             case 14:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -267,7 +271,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                     std::span<const std::uint16_t>(command.arguments).subspan(1),
                     state);
                 if (!completed) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 if (!*completed) break;
@@ -282,10 +286,14 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 break;
             }
             case 19:
-                if (command.arguments.empty() ||
-                    !host.run_shop(std::span<const std::uint16_t>(command.arguments).subspan(1),
-                                   state)) {
+                if (command.arguments.empty()) {
                     result.status = EventVmStatus::unsupported_opcode;
+                    return result;
+                }
+                if (!host.run_shop(
+                        std::span<const std::uint16_t>(command.arguments).subspan(1),
+                        state)) {
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -303,7 +311,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             }
             case 22:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -338,14 +346,12 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 28:
                 request_battle(state, result, arg(0));
                 if (!host.present_battle_transition(command.opcode)) {
-                    result.status = host.abort_requested()
-                        ? EventVmStatus::host_abort
-                        : EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                 }
                 return result;
             case 29:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -360,7 +366,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                     move_scripted_actor(state, command.opcode, 1);
                     constexpr std::array<std::uint16_t, 1> one_step{1};
                     if (!host.present_event_command(command.opcode, one_step)) {
-                        result.status = EventVmStatus::unsupported_opcode;
+                        result.status = host_failure_status();
                         return result;
                     }
                 }
@@ -396,7 +402,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             }
             case 35:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -411,7 +417,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                     state.set_u16(0x40d, state.u16(0x40f));
                     constexpr std::array<std::uint16_t, 1> one_frame{1};
                     if (!host.present_event_command(command.opcode, one_frame)) {
-                        result.status = EventVmStatus::unsupported_opcode;
+                        result.status = host_failure_status();
                         return result;
                     }
                     state.set_u16(0x411,
@@ -442,7 +448,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             }
             case 38:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -456,7 +462,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 // it is not merely a state mutation awaiting a later opcode22.
                 if (!host.present_event_command(command.opcode,
                                                 command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -507,7 +513,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 44:
             case 45:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -522,14 +528,12 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 state.set_u16(0x51c, arg(0));
                 request_battle(state, result, arg(1));
                 if (!host.present_battle_transition(command.opcode)) {
-                    result.status = host.abort_requested()
-                        ? EventVmStatus::host_abort
-                        : EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                 }
                 return result;
             case 49:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -558,7 +562,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 return result;
             case 53:
                 if (!host.show_positioned_text(arg(0), arg(1), command.text)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
@@ -579,16 +583,14 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
             case 56:
             case 57:
                 if (!host.present_event_command(command.opcode, command.arguments)) {
-                    result.status = EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                     return result;
                 }
                 break;
             case 58:
                 request_battle(state, result, arg(0));
                 if (!host.present_battle_transition(command.opcode)) {
-                    result.status = host.abort_requested()
-                        ? EventVmStatus::host_abort
-                        : EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                 }
                 return result;
             case 59:
@@ -596,9 +598,7 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 state.set_u16(0x51c, arg(0));
                 request_battle(state, result, arg(1));
                 if (!host.present_battle_transition(command.opcode)) {
-                    result.status = host.abort_requested()
-                        ? EventVmStatus::host_abort
-                        : EventVmStatus::unsupported_opcode;
+                    result.status = host_failure_status();
                 }
                 return result;
             case 61:

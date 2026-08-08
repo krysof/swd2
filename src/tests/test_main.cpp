@@ -5108,6 +5108,33 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
                 aborted_state.u16(0x104) == aborted_money,
             "event VM continued mutating state after a frontend text abort");
 
+    const std::vector<std::vector<std::uint8_t>> presentation_records = {
+        event_words({5, 0xffff}),
+    };
+    const auto presentation_archive =
+        swd2::ScriptArchive::from_records(presentation_records);
+    TestEventHost presentation_abort_host;
+    presentation_abort_host.abort = true;
+    presentation_abort_host.accept_presentations = false;
+    auto presentation_abort_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto presentation_abort = swd2::execute_event(
+        presentation_archive, 2, presentation_abort_state, nullptr, 0,
+        presentation_abort_host);
+    require(presentation_abort.status == swd2::EventVmStatus::host_abort,
+            "event VM misreported a presentation frontend abort as unsupported");
+
+    TestEventHost unsupported_presentation_host;
+    unsupported_presentation_host.accept_presentations = false;
+    auto unsupported_presentation_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    const auto unsupported_presentation = swd2::execute_event(
+        presentation_archive, 2, unsupported_presentation_state, nullptr, 0,
+        unsupported_presentation_host);
+    require(unsupported_presentation.status ==
+                swd2::EventVmStatus::unsupported_opcode,
+            "event VM confused an unimplemented presentation with frontend abort");
+
     // The first generated record exercises the state-only handlers in their
     // native word-stream representation. Record two is the missing-item
     // branch target of opcode 40.
