@@ -3,6 +3,7 @@
 #include "swd2/battle_database.hpp"
 #include "swd2/battle_module.hpp"
 #include "swd2/event_program.hpp"
+#include "swd2/event_vm.hpp"
 #include "swd2/demo_module.hpp"
 #include "swd2/launcher.hpp"
 #include "swd2/legacy_font.hpp"
@@ -828,6 +829,87 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         throw std::runtime_error(
             "reachable RPG event graph differs from the audited release");
     }
+
+    class EventExecutionAuditHost final : public swd2::EventVmHost {
+    public:
+        explicit EventExecutionAuditHost(bool affirmative)
+            : affirmative_(affirmative) {}
+
+        void show_dialogue(std::uint16_t,
+                           std::span<const std::uint8_t>) override {}
+        void delay(std::uint16_t) override {}
+        bool present_event_command(
+            std::uint16_t, std::span<const std::uint16_t>) override {
+            return true;
+        }
+        bool show_positioned_text(
+            std::uint16_t, std::uint16_t,
+            std::span<const std::uint8_t>) override {
+            return true;
+        }
+        bool run_shop(std::span<const std::uint16_t>,
+                      swd2::SharedState&) override {
+            return true;
+        }
+        std::optional<bool> run_combined_shop(
+            std::span<const std::uint16_t>, swd2::SharedState&) override {
+            // Exercise one successful event-pointer reload in the affirmative
+            // scenario, then cancel the reopened selector so shop cycles are
+            // finite just as they are under real player input.
+            return affirmative_ && combined_shop_calls_++ == 0U;
+        }
+        std::optional<bool> confirm_event_branch(
+            swd2::SharedState&) override {
+            return affirmative_;
+        }
+        std::optional<swd2::InventoryUiResult> run_inventory(
+            swd2::SharedState&) override {
+            return swd2::InventoryUiResult::cancelled;
+        }
+
+    private:
+        bool affirmative_{};
+        std::size_t combined_shop_calls_{};
+    };
+
+    std::array<std::size_t, 2> executed_contexts{};
+    std::array<std::size_t, 2> executed_commands{};
+    for (std::size_t scenario = 0; scenario < executed_contexts.size(); ++scenario) {
+        const auto affirmative = scenario != 0;
+        for (const auto& location : world.locations()) {
+            for (std::size_t entity = 0;
+                 entity < location.area.entity_count(); ++entity) {
+                const auto target = location.area.entity_fields[9][entity];
+                if (target == 0) continue;
+                auto execution_world =
+                    swd2::MapDatabase::load(map_database_path);
+                auto execution_state =
+                    swd2::SharedState::load(game_root / "SAVE.DA1");
+                swd2::install_map_location(
+                    execution_state, execution_world, location.directory_offset);
+                auto& execution_area = execution_world.location_at_directory_offset(
+                    location.directory_offset).area;
+                EventExecutionAuditHost host(affirmative);
+                const auto result = swd2::execute_event(
+                    audit_for(location.area.event_archive_path).archive,
+                    target, execution_state, &execution_area, entity, host,
+                    10'000, &execution_world);
+                if (result.status != swd2::EventVmStatus::completed) {
+                    throw std::runtime_error(
+                        location.area.event_archive_path + ":" +
+                        std::to_string(target) +
+                        " failed deterministic entity-context execution");
+                }
+                ++executed_contexts[scenario];
+                executed_commands[scenario] += result.commands_executed;
+            }
+        }
+    }
+    if (executed_contexts != std::array<std::size_t, 2>{3376U, 3376U} ||
+        executed_commands != std::array<std::size_t, 2>{16900U, 17275U}) {
+        throw std::runtime_error(
+            "deterministic RPG entity-context execution differs from the audit");
+    }
     std::cout << "verified reachable RPG event graph: "
               << roots_by_archive.size() << " archives, " << total_roots
               << " roots, " << total_records << " records, "
@@ -835,7 +917,11 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << "/62 dispatch opcodes; " << map_mutations
               << " runtime-validated MAPZ mutations (" << event_pointer_mutations
               << " event-pointer writes); " << inert_odd_targets
-              << " documented inert odd target\n";
+              << " documented inert odd target; "
+              << executed_contexts[0] + executed_contexts[1]
+              << " entity-context executions, "
+              << executed_commands[0] + executed_commands[1]
+              << " VM commands completed\n";
 }
 
 void usage(const char* program) {
