@@ -186,6 +186,7 @@
   "completion_commands": [
     "cmake --build build -j4",
     "ctest --test-dir build --output-on-failure",
+    "build/src/swd2_rewrite --game game --verify-events",
     "./scripts/build-wasm.sh",
     "./scripts/verify-wasm.sh build-wasm/site",
     "./scripts/verify-pixel-diffs.sh",
@@ -194,4 +195,3 @@
     "./scripts/verify-long-run.sh"
   ]
 }
-

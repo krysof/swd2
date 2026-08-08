@@ -32,6 +32,9 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
+#include <optional>
+#include <queue>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -588,6 +591,97 @@ void verify_legacy_program_data(const std::filesystem::path& game_root) {
               << " event records, " << decoded_commands << " commands decoded\n";
 }
 
+void verify_reachable_events(const std::filesystem::path& game_root) {
+    const auto world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    std::map<std::string, std::set<std::uint16_t>> roots_by_archive;
+    for (const auto& location : world.locations()) {
+        for (const auto target : location.area.entity_fields[9]) {
+            // A zero in an area's initial entity table means no interaction.
+            // Zero reached later through opcode 2/3 remains a valid empty
+            // CHNA directory slot and is handled by the queue below.
+            if (target != 0) {
+                roots_by_archive[location.area.event_archive_path].insert(target);
+            }
+        }
+    }
+
+    std::set<std::uint16_t> all_opcodes;
+    std::size_t total_roots = 0;
+    std::size_t total_records = 0;
+    std::size_t total_commands = 0;
+    std::size_t inert_odd_targets = 0;
+    for (const auto& [archive_name, roots] : roots_by_archive) {
+        const auto archive = swd2::ScriptArchive::load(
+            game_root / swd2::normalize_dos_asset_path(archive_name));
+        std::queue<std::uint16_t> pending;
+        for (const auto root : roots) pending.push(root);
+        std::set<std::uint16_t> visited;
+        std::set<std::uint16_t> archive_opcodes;
+        std::size_t command_count = 0;
+        while (!pending.empty()) {
+            const auto target = pending.front();
+            pending.pop();
+            if (!visited.insert(target).second) continue;
+            if ((target & 1U) != 0 || target / 2U >= archive.entry_count()) {
+                throw std::runtime_error(
+                    archive_name + " has a reachable branch outside its directory: " +
+                    std::to_string(target));
+            }
+            const auto record = swd2::decode_event_record(
+                archive.event_stream(target / 2U));
+            command_count += record.commands.size();
+            for (const auto& command : record.commands) {
+                archive_opcodes.insert(command.opcode);
+                all_opcodes.insert(command.opcode);
+                std::optional<std::uint16_t> next;
+                if (command.opcode == 2 && !command.arguments.empty()) {
+                    next = command.arguments[0];
+                } else if (command.opcode == 3 &&
+                           command.arguments.size() >= 2U &&
+                           command.arguments[0] == 9U) {
+                    next = command.arguments[1];
+                } else if ((command.opcode == 4 || command.opcode == 15 ||
+                            command.opcode == 21 || command.opcode == 40) &&
+                           command.arguments.size() >= 2U) {
+                    next = command.arguments[1];
+                } else if (command.opcode == 13 && !command.arguments.empty()) {
+                    next = command.arguments[0];
+                }
+                if (!next) continue;
+                if ((*next & 1U) != 0) {
+                    // CHNA1 entry 189 contains opcode 40 (item zero, odd
+                    // target 287). Item zero necessarily matches an empty
+                    // inventory slot on that path, so the malformed target is
+                    // inert in the original as well. Count it explicitly so
+                    // another unexplained odd target cannot be introduced.
+                    ++inert_odd_targets;
+                    continue;
+                }
+                pending.push(*next);
+            }
+        }
+        total_roots += roots.size();
+        total_records += visited.size();
+        total_commands += command_count;
+        std::cout << archive_name << ": roots=" << roots.size()
+                  << ", reachable records=" << visited.size()
+                  << ", commands=" << command_count
+                  << ", opcodes=" << archive_opcodes.size() << '\n';
+    }
+    if (roots_by_archive.size() != 7U || total_roots != 684U ||
+        total_records != 1023U || total_commands != 5957U ||
+        all_opcodes.size() != 58U || inert_odd_targets != 1U) {
+        throw std::runtime_error(
+            "reachable RPG event graph differs from the audited release");
+    }
+    std::cout << "verified reachable RPG event graph: "
+              << roots_by_archive.size() << " archives, " << total_roots
+              << " roots, " << total_records << " records, "
+              << total_commands << " commands, " << all_opcodes.size()
+              << "/62 dispatch opcodes; " << inert_odd_targets
+              << " documented inert odd target\n";
+}
+
 void usage(const char* program) {
     std::cout << "Usage:\n"
               << "  " << program << " [--game DIR] --inspect\n"
@@ -595,6 +689,7 @@ void usage(const char* program) {
               << "  " << program << " [--game DIR] --verify-maps\n"
               << "  " << program << " [--game DIR] --verify-battles\n"
               << "  " << program << " [--game DIR] --verify-legacy-program-data\n"
+              << "  " << program << " [--game DIR] --verify-events\n"
               << "  " << program << " --extract INPUT OUTPUT\n"
               << "  " << program << " --render INPUT INDEX OUTPUT.ppm\n"
               << "  " << program << " [--game DIR] --render-meo OUTPUT.ppm\n"
@@ -618,7 +713,8 @@ int main(int argc, char** argv) {
         std::filesystem::path save_root;
         std::uint8_t slot_number = 1;
         bool write_save = true;
-        enum class Mode { inspect, trace, verify, verify_maps, verify_battles, verify_legacy, extract, render,
+        enum class Mode { inspect, trace, verify, verify_maps, verify_battles, verify_legacy,
+                          verify_events, extract, render,
                           render_meo, render_map, render_planar, run, play } mode = Mode::inspect;
         std::string trace;
         std::filesystem::path extract_input;
@@ -652,6 +748,8 @@ int main(int argc, char** argv) {
                 mode = Mode::verify_battles;
             } else if (argument == "--verify-legacy-program-data") {
                 mode = Mode::verify_legacy;
+            } else if (argument == "--verify-events") {
+                mode = Mode::verify_events;
             } else if (argument == "--extract" && i + 2 < argc) {
                 mode = Mode::extract;
                 extract_input = argv[++i];
@@ -698,6 +796,8 @@ int main(int argc, char** argv) {
             verify_battles(game_root);
         } else if (mode == Mode::verify_legacy) {
             verify_legacy_program_data(game_root);
+        } else if (mode == Mode::verify_events) {
+            verify_reachable_events(game_root);
         } else if (mode == Mode::extract) {
             extract_resource(extract_input, extract_output);
         } else if (mode == Mode::render) {

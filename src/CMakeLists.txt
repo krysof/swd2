@@ -136,4 +136,8 @@ if(BUILD_TESTING)
     add_executable(swd2_tests tests/test_main.cpp)
     target_link_libraries(swd2_tests PRIVATE swd2_core)
     add_test(NAME swd2_tests COMMAND swd2_tests "${PROJECT_SOURCE_DIR}/game")
+    add_test(
+        NAME reachable_event_audit
+        COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-events
+    )
 endif()
