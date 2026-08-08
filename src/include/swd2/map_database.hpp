@@ -78,10 +78,12 @@ public:
     [[nodiscard]] std::size_t unique_area_count() const noexcept { return unique_area_count_; }
     [[nodiscard]] bool has_trailing_sentinel() const noexcept { return has_trailing_sentinel_; }
 
-    // RPG event opcode 34 addresses a word as
-    // area+6 + field*entity_count*2 + signed_byte_offset.  Shared area
-    // pointers are represented as copies in this class, so this mutator also
-    // propagates the write to every location that aliases the same area.
+    // RPG event opcode 34 addresses an unaligned-capable word as
+    // area+6 + field*entity_count*2 + signed_byte_offset. Shipped events may
+    // deliberately reach the resource-pointer words after the eleven entity
+    // arrays. Shared area pointers are represented as copies in this class,
+    // so this mutator reparses the payload and propagates the write to every
+    // location that aliases the same area.
     void mutate_area_word(std::uint16_t location_directory_offset,
                           std::uint16_t field, std::int16_t byte_offset,
                           std::uint16_t value, bool additive);

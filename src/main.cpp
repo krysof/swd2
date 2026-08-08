@@ -605,72 +605,177 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         }
     }
 
-    std::set<std::uint16_t> all_opcodes;
-    std::size_t total_roots = 0;
-    std::size_t total_records = 0;
-    std::size_t total_commands = 0;
-    std::size_t inert_odd_targets = 0;
-    for (const auto& [archive_name, roots] : roots_by_archive) {
-        const auto archive = swd2::ScriptArchive::load(
-            game_root / swd2::normalize_dos_asset_path(archive_name));
-        std::queue<std::uint16_t> pending;
-        for (const auto root : roots) pending.push(root);
+    struct ArchiveAudit {
+        explicit ArchiveAudit(swd2::ScriptArchive loaded)
+            : archive(std::move(loaded)) {}
+        swd2::ScriptArchive archive;
         std::set<std::uint16_t> visited;
-        std::set<std::uint16_t> archive_opcodes;
-        std::size_t command_count = 0;
-        while (!pending.empty()) {
-            const auto target = pending.front();
-            pending.pop();
-            if (!visited.insert(target).second) continue;
-            if ((target & 1U) != 0 || target / 2U >= archive.entry_count()) {
-                throw std::runtime_error(
-                    archive_name + " has a reachable branch outside its directory: " +
-                    std::to_string(target));
-            }
-            const auto record = swd2::decode_event_record(
-                archive.event_stream(target / 2U));
-            command_count += record.commands.size();
-            for (const auto& command : record.commands) {
-                archive_opcodes.insert(command.opcode);
-                all_opcodes.insert(command.opcode);
-                std::optional<std::uint16_t> next;
-                if (command.opcode == 2 && !command.arguments.empty()) {
-                    next = command.arguments[0];
-                } else if (command.opcode == 3 &&
-                           command.arguments.size() >= 2U &&
-                           command.arguments[0] == 9U) {
-                    next = command.arguments[1];
-                } else if ((command.opcode == 4 || command.opcode == 15 ||
-                            command.opcode == 21 || command.opcode == 40) &&
-                           command.arguments.size() >= 2U) {
-                    next = command.arguments[1];
-                } else if (command.opcode == 13 && !command.arguments.empty()) {
-                    next = command.arguments[0];
-                }
-                if (!next) continue;
-                if ((*next & 1U) != 0) {
+        std::set<std::uint16_t> opcodes;
+        std::size_t commands{};
+    };
+
+    using EventTarget = std::pair<std::string, std::uint16_t>;
+    std::queue<EventTarget> pending;
+    for (const auto& [archive_name, roots] : roots_by_archive) {
+        for (const auto root : roots) pending.emplace(archive_name, root);
+    }
+    std::map<std::string, std::unique_ptr<ArchiveAudit>> audits;
+    const auto audit_for = [&](const std::string& archive_name) -> ArchiveAudit& {
+        auto found = audits.find(archive_name);
+        if (found == audits.end()) {
+            found = audits.emplace(
+                archive_name,
+                std::make_unique<ArchiveAudit>(swd2::ScriptArchive::load(
+                    game_root / swd2::normalize_dos_asset_path(archive_name)))).first;
+        }
+        return *found->second;
+    };
+    const auto enqueue = [&](const std::string& archive_name,
+                             std::uint16_t target) {
+        pending.emplace(archive_name, target);
+    };
+
+    std::set<std::uint16_t> all_opcodes;
+    std::size_t inert_odd_targets = 0;
+    std::size_t map_mutations = 0;
+    std::size_t event_pointer_mutations = 0;
+    while (!pending.empty()) {
+        const auto [archive_name, target] = pending.front();
+        pending.pop();
+        auto& audit = audit_for(archive_name);
+        if (!audit.visited.insert(target).second) continue;
+        if ((target & 1U) != 0 || target / 2U >= audit.archive.entry_count()) {
+            throw std::runtime_error(
+                archive_name + " has a reachable branch outside its directory: " +
+                std::to_string(target));
+        }
+        const auto record = swd2::decode_event_record(
+            audit.archive.event_stream(target / 2U));
+        audit.commands += record.commands.size();
+        auto active_area_archive = archive_name;
+        for (const auto& command : record.commands) {
+            audit.opcodes.insert(command.opcode);
+            all_opcodes.insert(command.opcode);
+
+            const auto enqueue_branch = [&](std::uint16_t next) {
+                if ((next & 1U) != 0) {
                     // CHNA1 entry 189 contains opcode 40 (item zero, odd
                     // target 287). Item zero necessarily matches an empty
                     // inventory slot on that path, so the malformed target is
                     // inert in the original as well. Count it explicitly so
                     // another unexplained odd target cannot be introduced.
                     ++inert_odd_targets;
+                    return;
+                }
+                enqueue(archive_name, next);
+            };
+
+            if (command.opcode == 2 && !command.arguments.empty()) {
+                // Opcode 17 can immediately reload this pointer from the
+                // already-open archive. It also remains live on a relocated
+                // area's future interactions, whose CHNA path may differ.
+                enqueue_branch(command.arguments[0]);
+                enqueue(active_area_archive, command.arguments[0]);
+            } else if (command.opcode == 3 &&
+                       command.arguments.size() >= 2U &&
+                       command.arguments[0] == 9U) {
+                enqueue(active_area_archive, command.arguments[1]);
+            } else if ((command.opcode == 4 || command.opcode == 15 ||
+                        command.opcode == 21 || command.opcode == 40) &&
+                       command.arguments.size() >= 2U) {
+                enqueue_branch(command.arguments[1]);
+            } else if (command.opcode == 13 && !command.arguments.empty()) {
+                enqueue_branch(command.arguments[0]);
+            }
+
+            if (command.opcode == 37 && !command.arguments.empty() &&
+                (command.arguments[0] & 0x8000U) == 0U) {
+                const auto& destination = world.location_at_directory_offset(
+                    static_cast<std::uint16_t>(command.arguments[0] & 0x1fffU));
+                active_area_archive = destination.area.event_archive_path;
+            }
+
+            if (command.opcode != 34) continue;
+            std::size_t cursor = 0;
+            bool terminated = false;
+            while (cursor < command.arguments.size()) {
+                const auto location_offset = command.arguments[cursor++];
+                if (location_offset == 0xf800U) {
+                    terminated = true;
+                    break;
+                }
+                if (cursor + 3U > command.arguments.size()) {
+                    throw std::runtime_error(
+                        "reachable opcode 34 MAPZ mutation is truncated");
+                }
+                const auto field = command.arguments[cursor++];
+                const auto byte_offset = static_cast<std::int16_t>(
+                    command.arguments[cursor++]);
+                const auto operation = command.arguments[cursor++];
+                const auto additive = operation == 0x4144U;
+                auto value = operation;
+                if (additive) {
+                    if (cursor == command.arguments.size()) {
+                        throw std::runtime_error(
+                            "reachable additive opcode 34 mutation is truncated");
+                    }
+                    value = command.arguments[cursor++];
+                }
+                ++map_mutations;
+
+                const auto& destination =
+                    world.location_at_directory_offset(location_offset);
+                const auto count = static_cast<std::int64_t>(
+                    destination.area.entity_count());
+                const auto relative = static_cast<std::int64_t>(6) +
+                    static_cast<std::int64_t>(field) * count * 2 + byte_offset;
+                if (count == 0 || relative < 6 || ((relative - 6) & 1) != 0) {
                     continue;
                 }
-                pending.push(*next);
+                const auto flat = (relative - 6) / 2;
+                if (flat / count != 9) continue;
+                ++event_pointer_mutations;
+                if (additive || (value & 1U) != 0) {
+                    throw std::runtime_error(
+                        "reachable opcode 34 installs a dynamic/odd event pointer");
+                }
+                // Opcode 34 patches every directory alias of the same area.
+                // Enqueue each alias path even though this release happens to
+                // keep all aliases inside one CHNA archive.
+                for (const auto& alias : world.locations()) {
+                    if (alias.area_offset == destination.area_offset) {
+                        enqueue(alias.area.event_archive_path, value);
+                    }
+                }
+            }
+            if (!terminated) {
+                throw std::runtime_error(
+                    "reachable opcode 34 mutation has no f800 terminator");
             }
         }
-        total_roots += roots.size();
-        total_records += visited.size();
-        total_commands += command_count;
-        std::cout << archive_name << ": roots=" << roots.size()
-                  << ", reachable records=" << visited.size()
-                  << ", commands=" << command_count
-                  << ", opcodes=" << archive_opcodes.size() << '\n';
+    }
+
+    std::size_t total_roots = 0;
+    std::size_t total_records = 0;
+    std::size_t total_commands = 0;
+    for (const auto& [archive_name, audit] : audits) {
+        const auto root_count = roots_by_archive.at(archive_name).size();
+        total_roots += root_count;
+        total_records += audit->visited.size();
+        total_commands += audit->commands;
+        std::cout << archive_name << ": roots=" << root_count
+                  << ", reachable records=" << audit->visited.size()
+                  << ", commands=" << audit->commands
+                  << ", opcodes=" << audit->opcodes.size() << '\n';
+    }
+    std::set<std::uint16_t> expected_opcodes;
+    for (std::uint16_t opcode = 0; opcode < 62U; ++opcode) {
+        if (opcode != 10U && opcode != 11U) expected_opcodes.insert(opcode);
     }
     if (roots_by_archive.size() != 7U || total_roots != 684U ||
-        total_records != 1023U || total_commands != 5957U ||
-        all_opcodes.size() != 58U || inert_odd_targets != 1U) {
+        total_records != 1065U || total_commands != 6380U ||
+        all_opcodes != expected_opcodes || inert_odd_targets != 1U ||
+        map_mutations != 235U || event_pointer_mutations != 37U) {
         throw std::runtime_error(
             "reachable RPG event graph differs from the audited release");
     }
@@ -678,7 +783,9 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << roots_by_archive.size() << " archives, " << total_roots
               << " roots, " << total_records << " records, "
               << total_commands << " commands, " << all_opcodes.size()
-              << "/62 dispatch opcodes; " << inert_odd_targets
+              << "/62 dispatch opcodes; " << map_mutations
+              << " MAPZ mutations (" << event_pointer_mutations
+              << " event-pointer writes); " << inert_odd_targets
               << " documented inert odd target\n";
 }
 

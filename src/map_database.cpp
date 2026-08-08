@@ -208,82 +208,59 @@ void MapDatabase::mutate_area_word(std::uint16_t location_directory_offset,
                                    std::uint16_t value, bool additive) {
     const auto area_offset =
         location_at_directory_offset(location_directory_offset).area_offset;
-
-    const auto apply = [&](MapAreaRecord& area) {
-        const auto relative = static_cast<std::int64_t>(6) +
-            static_cast<std::int64_t>(field) *
-                static_cast<std::int64_t>(area.entity_count()) * 2 +
-            byte_offset;
-        std::uint16_t* target = nullptr;
-        if (relative == 0) {
-            target = &area.flags;
-        } else if (relative == 2) {
-            target = &area.auxiliary;
-        } else if (relative == 4) {
-            // The original word is the entity count. Resizing eleven
-            // structure-of-arrays fields at runtime is not used by any known
-            // event record and would invalidate all following offsets.
-            const auto next = additive
-                ? static_cast<std::uint16_t>(area.entity_count() + value)
-                : value;
-            if (next != area.entity_count()) {
-                throw std::runtime_error("event attempts to change a MAPZ entity count");
-            }
-            return;
-        } else {
-            if (relative < 6 || ((relative - 6) & 1) != 0 || area.entity_count() == 0) {
-                throw std::runtime_error("event MAPZ mutation is not word-aligned");
-            }
-            const auto flat = static_cast<std::size_t>((relative - 6) / 2);
-            const auto target_field = flat / area.entity_count();
-            const auto entity = flat % area.entity_count();
-            if (target_field >= area.entity_fields.size()) {
-                throw std::runtime_error("event MAPZ mutation is outside the area record");
-            }
-            target = &area.entity_fields[target_field][entity];
-        }
-        *target = additive ? static_cast<std::uint16_t>(*target + value) : value;
-    };
-
-    bool found = false;
-    for (auto& location : locations_) {
-        if (location.area_offset != area_offset) continue;
-        apply(location.area);
-        found = true;
-    }
-    if (!found) throw std::runtime_error("event references an unknown MAPZ area");
-
-    // Keep the source image synchronized so SaveSlot can persist mutations
-    // without rebuilding unknown MAPZ records. Every alias has the same area
-    // payload, so read the resulting value from the addressed location once.
-    const auto& area =
-        location_at_directory_offset(location_directory_offset).area;
+    const auto& area = location_at_directory_offset(location_directory_offset).area;
     const auto relative = static_cast<std::int64_t>(6) +
         static_cast<std::int64_t>(field) *
             static_cast<std::int64_t>(area.entity_count()) * 2 +
         byte_offset;
-    if (relative < 0 || (relative & 1) != 0) {
+    if (relative < 0 ||
+        static_cast<std::uint64_t>(area_offset) +
+                static_cast<std::uint64_t>(relative) + 2U >
+            image_end_) {
         throw std::runtime_error("event MAPZ mutation has an invalid image offset");
     }
-    std::uint16_t patched{};
-    if (relative == 0) {
-        patched = area.flags;
-    } else if (relative == 2) {
-        patched = area.auxiliary;
-    } else if (relative == 4) {
-        patched = static_cast<std::uint16_t>(area.entity_count());
-    } else {
-        const auto flat = static_cast<std::size_t>((relative - 6) / 2);
-        const auto patched_field = flat / area.entity_count();
-        const auto entity = flat % area.entity_count();
-        patched = area.entity_fields.at(patched_field).at(entity);
-    }
+
+    // 5a1f writes a 16-bit word to the computed ES:DI address without an
+    // alignment or entity-field bounds check.  Shipped, reachable records use
+    // both behaviours that the typed-only implementation used to reject:
+    // CHNA2 advances the two RAP string pointers just after field 10, while
+    // CHNA5 writes across the byte boundary between two field-3 words.
+    // Patch the preserved image first, then parse the complete area payload
+    // again so entity fields and resource paths stay synchronized.
     const auto image_offset = static_cast<std::size_t>(area_offset) +
                               static_cast<std::size_t>(relative);
-    if (image_offset + 2 > image_end_) {
-        throw std::runtime_error("event MAPZ mutation lies past the image end");
+    const auto file_offset = header_size_ + image_offset;
+    const auto previous = u16(file_bytes_, file_offset);
+    const auto patched = additive
+        ? static_cast<std::uint16_t>(previous + value)
+        : value;
+    set_u16(file_bytes_, file_offset, patched);
+
+    MapAreaRecord reparsed;
+    try {
+        const auto image = std::span<const std::uint8_t>(file_bytes_).subspan(
+            header_size_, image_end_);
+        reparsed = parse_area(image, area_offset);
+        // No released event changes this word.  Letting it resize the eleven
+        // arrays would also reinterpret every following byte and path pointer.
+        if (reparsed.entity_count() != area.entity_count()) {
+            throw std::runtime_error("event attempts to change a MAPZ entity count");
+        }
+    } catch (...) {
+        set_u16(file_bytes_, file_offset, previous);
+        throw;
     }
-    set_u16(file_bytes_, header_size_ + image_offset, patched);
+
+    bool found = false;
+    for (auto& location : locations_) {
+        if (location.area_offset != area_offset) continue;
+        location.area = reparsed;
+        found = true;
+    }
+    if (!found) {
+        set_u16(file_bytes_, file_offset, previous);
+        throw std::runtime_error("event references an unknown MAPZ area");
+    }
 }
 
 MapEntityRecord map_entity(const MapAreaRecord& area, std::size_t index) {

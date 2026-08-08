@@ -1704,6 +1704,9 @@ void test_save_slot(const std::filesystem::path& game_root) {
         const auto before =
             map->location_at_directory_offset(location_offset).area.entity_fields[3][38];
         map->mutate_area_word(location_offset, field, byte_offset, 1, true);
+        map->mutate_area_word(338, 10, 2, 19, true);
+        map->mutate_area_word(338, 10, 4, 19, true);
+        map->mutate_area_word(636, 3, 3, 8, false);
         slot.save(state);
 
         auto reopened = swd2::SaveSlot::open(game_root, temporary, 4);
@@ -1711,7 +1714,13 @@ void test_save_slot(const std::filesystem::path& game_root) {
                     reopened.map_database()
                             ->location_at_directory_offset(location_offset)
                             .area.entity_fields[3][38] ==
-                        static_cast<std::uint16_t>(before + 1U),
+                        static_cast<std::uint16_t>(before + 1U) &&
+                    reopened.map_database()
+                            ->location_at_directory_offset(338)
+                            .area.graphics_path == "\\SWD2\\T4\\AREA7.RAP" &&
+                    reopened.map_database()
+                            ->location_at_directory_offset(636)
+                            .area.entity_fields[3][1] == 0x0800U,
                 "portable save slot did not persist both SAVE and MAPZ mutations");
 
         state.set_u16(0x104, 9876);
@@ -1721,7 +1730,13 @@ void test_save_slot(const std::filesystem::path& game_root) {
                     copied.map_database()
                             ->location_at_directory_offset(location_offset)
                             .area.entity_fields[3][38] ==
-                        static_cast<std::uint16_t>(before + 1U),
+                        static_cast<std::uint16_t>(before + 1U) &&
+                    copied.map_database()
+                            ->location_at_directory_offset(338)
+                            .area.layout_path == "\\SWD2\\T4\\AREA7.RAP" &&
+                    copied.map_database()
+                            ->location_at_directory_offset(636)
+                            .area.entity_fields[3][1] == 0x0800U,
                 "RPG save-item callback could not atomically write a chosen SAVE/MAPZ pair");
 
         bool rejected = false;
@@ -4930,9 +4945,10 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
                     chapter_six.event_stream(45).size(),
             "CHNA6 packed west-step story command was not recovered");
 
-    // Start with every MAPA entity event, then conservatively follow every
-    // static branch and every event-pointer rewrite. This covers all shipped
-    // story interactions that can become live, including CHNA6 entry 45.
+    // Start with every MAPA entity event, then conservatively follow static
+    // branches, current-area rewrites and opcode 34 writes into MAPZ field 9.
+    // The latter cross CHNA boundaries and install the released opcode 49/51
+    // scenes, so a separate per-archive walk would silently miss them.
     const auto world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
     std::map<std::string, std::set<std::uint16_t>> roots;
     for (const auto& location : world.locations()) {
@@ -4940,54 +4956,139 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
             if (target != 0) roots[location.area.event_archive_path].insert(target);
         }
     }
+
+    struct Coverage {
+        explicit Coverage(swd2::ScriptArchive loaded)
+            : archive(std::move(loaded)) {}
+        swd2::ScriptArchive archive;
+        std::set<std::uint16_t> visited;
+        std::size_t commands{};
+    };
+    using Target = std::pair<std::string, std::uint16_t>;
+    std::queue<Target> pending;
     std::size_t root_count = 0;
+    for (const auto& [name, archive_roots] : roots) {
+        root_count += archive_roots.size();
+        for (const auto target : archive_roots) pending.emplace(name, target);
+    }
+    std::map<std::string, std::unique_ptr<Coverage>> coverage;
+    const auto coverage_for = [&](const std::string& name) -> Coverage& {
+        auto found = coverage.find(name);
+        if (found == coverage.end()) {
+            found = coverage.emplace(
+                name, std::make_unique<Coverage>(
+                          swd2::ScriptArchive::load(game_root / name))).first;
+        }
+        return *found->second;
+    };
+    std::set<std::uint16_t> reachable_opcodes;
+    std::size_t inert_odd_targets = 0;
+    std::size_t map_mutations = 0;
+    std::size_t event_pointer_mutations = 0;
+    while (!pending.empty()) {
+        const auto [name, target] = pending.front();
+        pending.pop();
+        auto& current = coverage_for(name);
+        if (!current.visited.insert(target).second) continue;
+        require((target & 1U) == 0 && target / 2 < current.archive.entry_count(),
+                "reachable event target is outside its CHNA directory");
+        const auto record = swd2::decode_event_record(
+            current.archive.event_stream(target / 2));
+        current.commands += record.commands.size();
+        auto active_area_archive = name;
+        for (const auto& command : record.commands) {
+            reachable_opcodes.insert(command.opcode);
+            const auto branch = [&](std::uint16_t next) {
+                if ((next & 1U) != 0) {
+                    ++inert_odd_targets;
+                } else {
+                    pending.emplace(name, next);
+                }
+            };
+            if (command.opcode == 2 && !command.arguments.empty()) {
+                branch(command.arguments[0]);
+                if ((command.arguments[0] & 1U) == 0) {
+                    pending.emplace(active_area_archive, command.arguments[0]);
+                }
+            } else if (command.opcode == 3 && command.arguments.size() >= 2 &&
+                       command.arguments[0] == 9) {
+                pending.emplace(active_area_archive, command.arguments[1]);
+            } else if ((command.opcode == 4 || command.opcode == 15 ||
+                        command.opcode == 21 || command.opcode == 40) &&
+                       command.arguments.size() >= 2) {
+                branch(command.arguments[1]);
+            } else if (command.opcode == 13 && !command.arguments.empty()) {
+                branch(command.arguments[0]);
+            }
+
+            if (command.opcode == 37 && !command.arguments.empty() &&
+                (command.arguments[0] & 0x8000U) == 0U) {
+                active_area_archive = world.location_at_directory_offset(
+                    static_cast<std::uint16_t>(command.arguments[0] & 0x1fffU))
+                                          .area.event_archive_path;
+            }
+            if (command.opcode != 34) continue;
+            std::size_t cursor = 0;
+            bool terminated = false;
+            while (cursor < command.arguments.size()) {
+                const auto location_offset = command.arguments[cursor++];
+                if (location_offset == 0xf800U) {
+                    terminated = true;
+                    break;
+                }
+                require(cursor + 3U <= command.arguments.size(),
+                        "reachable opcode 34 mutation is truncated");
+                const auto field = command.arguments[cursor++];
+                const auto byte_offset = static_cast<std::int16_t>(
+                    command.arguments[cursor++]);
+                const auto operation = command.arguments[cursor++];
+                const auto additive = operation == 0x4144U;
+                auto value = operation;
+                if (additive) {
+                    require(cursor < command.arguments.size(),
+                            "reachable additive opcode 34 mutation is truncated");
+                    value = command.arguments[cursor++];
+                }
+                ++map_mutations;
+                const auto& destination =
+                    world.location_at_directory_offset(location_offset);
+                const auto count = static_cast<std::int64_t>(
+                    destination.area.entity_count());
+                const auto relative = static_cast<std::int64_t>(6) +
+                    static_cast<std::int64_t>(field) * count * 2 + byte_offset;
+                if (count == 0 || relative < 6 || ((relative - 6) & 1) != 0 ||
+                    ((relative - 6) / 2) / count != 9) {
+                    continue;
+                }
+                ++event_pointer_mutations;
+                require(!additive && (value & 1U) == 0,
+                        "dynamic MAPZ event-pointer mutation is not statically auditable");
+                for (const auto& alias : world.locations()) {
+                    if (alias.area_offset == destination.area_offset) {
+                        pending.emplace(alias.area.event_archive_path, value);
+                    }
+                }
+            }
+            require(terminated,
+                    "reachable opcode 34 mutation has no f800 terminator");
+        }
+    }
+
     std::size_t reachable_count = 0;
     std::size_t reachable_commands = 0;
-    std::set<std::uint16_t> reachable_opcodes;
-    for (const auto& [name, archive_roots] : roots) {
-        const auto event_archive = swd2::ScriptArchive::load(game_root / name);
-        root_count += archive_roots.size();
-        std::queue<std::uint16_t> pending;
-        for (const auto target : archive_roots) pending.push(target);
-        std::set<std::uint16_t> visited;
-        while (!pending.empty()) {
-            const auto target = pending.front();
-            pending.pop();
-            if (!visited.insert(target).second) continue;
-            require((target & 1U) == 0 && target / 2 < event_archive.entry_count(),
-                    "reachable event target is outside its CHNA directory");
-            const auto record = swd2::decode_event_record(
-                event_archive.event_stream(target / 2));
-            reachable_commands += record.commands.size();
-            for (const auto& command : record.commands) {
-                reachable_opcodes.insert(command.opcode);
-                std::uint16_t next = 0;
-                if (command.opcode == 2 && !command.arguments.empty()) {
-                    next = command.arguments[0];
-                } else if (command.opcode == 3 && command.arguments.size() >= 2 &&
-                           command.arguments[0] == 9) {
-                    next = command.arguments[1];
-                } else if (command.opcode == 4 && command.arguments.size() >= 2) {
-                    next = command.arguments[1];
-                } else if (command.opcode == 13 && !command.arguments.empty()) {
-                    next = command.arguments[0];
-                } else if (command.opcode == 15 && command.arguments.size() >= 2) {
-                    next = command.arguments[1];
-                } else if (command.opcode == 21 && command.arguments.size() >= 2) {
-                    next = command.arguments[1];
-                } else if (command.opcode == 40 && command.arguments.size() >= 2) {
-                    next = command.arguments[1];
-                }
-                // One item-zero fallback contains the inert odd placeholder
-                // 287. RPG only uses it if all fifty inventory slots are
-                // nonzero, which cannot coincide with searching for item 0.
-                if (next != 0 && (next & 1U) == 0) pending.push(next);
-            }
-        }
-        reachable_count += visited.size();
+    for (const auto& [name, current] : coverage) {
+        reachable_count += current->visited.size();
+        reachable_commands += current->commands;
     }
-    require(root_count == 684 && reachable_count == 1023 &&
-                reachable_commands == 5957 && reachable_opcodes.size() == 58,
+    std::set<std::uint16_t> expected_opcodes;
+    for (std::uint16_t opcode = 0; opcode < 62U; ++opcode) {
+        if (opcode != 10U && opcode != 11U) expected_opcodes.insert(opcode);
+    }
+    require(root_count == 684 && reachable_count == 1065 &&
+                reachable_commands == 6380 &&
+                reachable_opcodes == expected_opcodes &&
+                map_mutations == 235 && event_pointer_mutations == 37 &&
+                inert_odd_targets == 1,
             "reachable CHNA event graph coverage changed");
     require(!swd2::ScriptArchive::probe(game_root / "RPG.EXE"),
             "native RPG code was misclassified as a script archive");
@@ -5557,6 +5658,53 @@ void test_event_vm(const std::filesystem::path& game_root) {
                     "MAPZ mutation was not propagated across a shared area pointer");
         }
     }
+
+    // 5a1f deliberately has no alignment or eleven-field bounds check. The
+    // released story uses both consequences: CHNA2 entry 23 adds one complete
+    // string length to the two path-pointer words after field 10, changing
+    // AREA2.RAP into AREA7.RAP, and CHNA5 entry 44 writes a word starting at
+    // the high byte of one field-3 entity word.
+    TestEventHost raw_mutation_host;
+    auto raw_pointer_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto raw_pointer_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    auto& raw_pointer_area =
+        raw_pointer_world.location_at_directory_offset(430).area;
+    const auto chapter_two =
+        swd2::ScriptArchive::load(game_root / "CHNA2.EXE");
+    const auto path_pointer_mutation = swd2::execute_event(
+        chapter_two, 46, raw_pointer_state, &raw_pointer_area, 1,
+        raw_mutation_host,
+        10'000, &raw_pointer_world);
+    const auto& changed_paths =
+        raw_pointer_world.location_at_directory_offset(338).area;
+    require(path_pointer_mutation.status == swd2::EventVmStatus::completed &&
+                path_pointer_mutation.commands_executed == 22U &&
+                changed_paths.graphics_path == "\\SWD2\\T4\\AREA7.RAP" &&
+                changed_paths.layout_path == "\\SWD2\\T4\\AREA7.RAP" &&
+                raw_pointer_world.location_at_directory_offset(430)
+                        .area.entity_fields[9][1] == 48U,
+            "real CHNA2 opcode 34 did not mutate trailing MAPZ path pointers");
+
+    auto unaligned_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto unaligned_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    auto& unaligned_area =
+        unaligned_world.location_at_directory_offset(636).area;
+    const auto unaligned_mutation = swd2::execute_event(
+        chapter_five, 88, unaligned_state, &unaligned_area, 4,
+        raw_mutation_host,
+        10'000, &unaligned_world);
+    const auto& chapter_six_area =
+        unaligned_world.location_at_directory_offset(684).area;
+    require(unaligned_mutation.status == swd2::EventVmStatus::completed &&
+                unaligned_mutation.commands_executed == 2U &&
+                chapter_six_area.entity_fields[2][0] == 1820U &&
+                chapter_six_area.entity_fields[2][1] == 2206U &&
+                chapter_six_area.entity_fields[3][2] == 0U &&
+                chapter_six_area.entity_fields[9][0] == 72U &&
+                chapter_six_area.entity_fields[9][1] == 78U &&
+                unaligned_world.location_at_directory_offset(636)
+                        .area.entity_fields[3][1] == 0x0800U,
+            "real CHNA5 opcode 34 did not preserve its unaligned MAPZ word write");
 
     const std::vector<std::vector<std::uint8_t>> relocation_records = {
         event_words({37, 10, 3, 3, 7, 41, 9, 0xffff}),
