@@ -1,0 +1,12 @@
+# MEO: select RPG and load the staged slot one.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+# Enter combined Buy/Sell, interrupt its greeting, and choose Sell.
+POLL:CONFIRM
+TEXT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+# Capture all twelve staged rows and the four one-line scrolls.
+WAIT:DOWN*11
+WAIT:QUIT

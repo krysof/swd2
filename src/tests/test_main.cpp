@@ -9099,8 +9099,8 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 no_platform.text_cursor == no_platform.text_actions.size() &&
                 no_platform.direct_updates == 4U &&
                 no_platform.presented == 10U &&
-                no_platform.frame_hashes[4] == 6062648533265157386ULL &&
-                no_platform.frame_hashes[7] == 7826475264314421950ULL &&
+                no_platform.frame_hashes[4] == 18319745001343154578ULL &&
+                no_platform.frame_hashes[7] == 14722911982016071036ULL &&
                 no_platform.frame_hashes[8] == no_platform.frame_hashes[4] &&
                 no_platform.frame_hashes[9] == 3445820599633288345ULL,
             "RPG 5884 purchase confirmation did not preserve state on No");
@@ -9123,9 +9123,9 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 yes_context.shared_state.u16(0x382) == 117U &&
                 yes_platform.cursor == yes_platform.actions.size() &&
                 yes_platform.presented == 9U &&
-                yes_platform.frame_hashes[4] == 6062648533265157386ULL &&
-                yes_platform.frame_hashes[6] == 7826475264314421950ULL &&
-                yes_platform.frame_hashes[7] == 9841584038327432507ULL &&
+                yes_platform.frame_hashes[4] == 18319745001343154578ULL &&
+                yes_platform.frame_hashes[6] == 14722911982016071036ULL &&
+                yes_platform.frame_hashes[7] == 9839028895238085691ULL &&
                 yes_platform.frame_hashes[8] == 3445820599633288345ULL,
             "RPG 5884 purchase confirmation did not commit the default Yes");
 
@@ -9184,8 +9184,8 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 sell_platform.frame_hashes[4] == 15055269731696797642ULL &&
                 sell_platform.frame_hashes[5] == 6024300895331846812ULL &&
                 sell_platform.frame_hashes[6] == sell_platform.frame_hashes[3] &&
-                sell_platform.frame_hashes[8] == 9437141809607963950ULL &&
-                sell_platform.frame_hashes[9] == 10342911885711284032ULL &&
+                sell_platform.frame_hashes[8] == 11848788461908935046ULL &&
+                sell_platform.frame_hashes[9] == 10062924107582497096ULL &&
                 sell_platform.frame_hashes[10] ==
                     sell_platform.frame_hashes[12] &&
                 sell_platform.bottom_hashes[10] == 18064545685687686801ULL &&

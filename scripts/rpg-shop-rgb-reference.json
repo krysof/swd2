@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "Eight opaque 320x200 pages lock every CHNA1 entry-29 good and all three one-line purchase scrolls. DOSBox RGB cannot replace the registered rewrite's indexed VGA evidence.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "capture_video_sha256": "77ed453264ab320339984e281ae76f9d37960d724833365d588c60239177b3fc",
+  "capture_state": "SAVE.DAQ staged at SWRO7 world (46,11), MAPZ.DAQ copied byte-for-byte from release MAPZ.DA1, CHNA1 directory entry 29, 1000 money, empty inventory",
+  "rewrite_first_frame": 118,
+  "frames": [
+    {"selection": 0, "original": "000121.png", "original_sha256": "3fabe91ad9aa265e519db3cb4c95ab5f025000664759abedfae67c72e11e0b55", "rewrite_indexed_sha256": "d4c1667068035b08b9016614aaf9e3e2dc2fa4c0add84c379cbcd5f242f411be", "rewrite_palette_sha256": "07f5c561d7f94a95622c09dcaca3d761ca574af2373a03776a7659b53288b3bb", "matched_rgb_sha256": "01402dd1c9b648b2bb7e25b5966dd2bc35e333914051d1107de3b908a013d628"},
+    {"selection": 1, "original": "000123.png", "original_sha256": "7fe8502246eda21630f0a89f3f14d0fa1894ca9b2a65390ad3d8c3d426f86c5d", "rewrite_indexed_sha256": "cb0cf29d8951e7ccef26634039791bf9273ed9c40d3f3211c3b7bdb8a1880ad5", "rewrite_palette_sha256": "07f5c561d7f94a95622c09dcaca3d761ca574af2373a03776a7659b53288b3bb", "matched_rgb_sha256": "a686c1e067f5d03858d888b045f958bf1c3e41b78f0f5b37ea18448a4c4d58df"},
+    {"selection": 2, "original": "000143.png", "original_sha256": "a5eaae042a1e14128c93a10ce3d49d90ca694990408b2ec9f9eaa1205394477c", "rewrite_indexed_sha256": "678d799b6b6c90d63d9c9bfea6b2d85c01f81d953919a0bcd0b719946a50a3c0", "rewrite_palette_sha256": "07f5c561d7f94a95622c09dcaca3d761ca574af2373a03776a7659b53288b3bb", "matched_rgb_sha256": "f4da9b996e49cf6cd97731d2265c88a5933fd480b18ca1f32b46aed3f48b3086"},
+    {"selection": 3, "original": "000164.png", "original_sha256": "286d3639ef02f911a1af5053c34bd247a61d98a400977b94c638012d026550da0", "rewrite_indexed_sha256": "95482dcf922d95b4923f2361f305efc15936bc647485ed89f7a026d5c90d0ccd", "rewrite_palette_sha256": "07f5c561d7f94a95622c09dcaca3d761ca574af2373a03776a7659b53288b3bb", "matched_rgb_sha256": "6acb695afe99a2833e5c1c438282488761ffb769a90d6c0738e61ca31f8719b8"},
+    {"selection": 4, "original": "000184.png", "original_sha256": "28dd38d737aca7adc9580bebeca786fba8e19b19f8a8d45ed6e5e322cccb8da0", "rewrite_indexed_sha256": "0af94d18a51fcd73b39882c789e688daa372f4bd63b88510caf347f7af327666", "rewrite_palette_sha256": "07f5c561d7f94a95622c09dcaca3d761ca574af2373a03776a7659b53288b3bb", "matched_rgb_sha256": "5c1df3145a0860c718211db0bfd09f47dfc4bca8722b613c7a91dd911e0cdd77"},
+    {"selection": 5, "original": "000205.png", "original_sha256": "ad60e2f90e1ddededc2ff5372354c416fadfbc4e77b8e55a808b878cfebf8e7c", "rewrite_indexed_sha256": "42debc5c732a10e3fbfc244070064f67f1b840444e4e951a4bfa9166e0580f7e", "rewrite_palette_sha256": "07f5c561d7f94a95622c09dcaca3d761ca574af2373a03776a7659b53288b3bb", "matched_rgb_sha256": "9ffc467039f37e7b3faf529a05fc9aa503468c4a3208a55c3fa88657f4ad6402"},
+    {"selection": 6, "original": "000226.png", "original_sha256": "948957e0dfda692c863aadebdf610426f19363c739a5cda8a6c3904fe1a5e6be", "rewrite_indexed_sha256": "bdb3a561e32d229d72afd6d1df0ea1671151d89355b301a47cc70801c3707c71", "rewrite_palette_sha256": "07f5c561d7f94a95622c09dcaca3d761ca574af2373a03776a7659b53288b3bb", "matched_rgb_sha256": "bbfe9dfe1ed405131b577fb07fc7d1ed7e3846941c008ba6ca617f8940a1ee89"},
+    {"selection": 7, "original": "000246.png", "original_sha256": "493b164382946cef141229d9591c1f07815b86c42bbb0adc7a8753b83b2608ac", "rewrite_indexed_sha256": "c99a30fd126ff4f4ead250289e734106cc132a65b01990537586caff40abd1e6", "rewrite_palette_sha256": "07f5c561d7f94a95622c09dcaca3d761ca574af2373a03776a7659b53288b3bb", "matched_rgb_sha256": "e4b38538633bb95bd8acc429e93621b26d87e54a7f9247cc9a42685d3ce1bd6b"}
+  ]
+}

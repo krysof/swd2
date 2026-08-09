@@ -551,6 +551,72 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_travel_validation PROPERTIES
         DEPENDS rpg_travel_replay)
     add_test(
+        NAME rpg_shop_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-shop-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-shop-saves"
+    )
+    add_test(
+        NAME rpg_shop_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-shop-saves"
+                --slot 1
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-shop.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-shop-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-shop-frames.bin"
+    )
+    set_tests_properties(rpg_shop_replay PROPERTIES
+        DEPENDS rpg_shop_prepare)
+    add_test(
+        NAME rpg_shop_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-shop.py"
+                "${CMAKE_BINARY_DIR}/rpg-shop-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-shop-frames.bin"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-shop-rgb-reference.json"
+    )
+    set_tests_properties(rpg_shop_validation PROPERTIES
+        DEPENDS rpg_shop_replay)
+    add_test(
+        NAME rpg_sell_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-sell-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-sell-saves"
+    )
+    add_test(
+        NAME rpg_sell_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-sell-saves"
+                --slot 1
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-sell.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-sell-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-sell-frames.bin"
+    )
+    set_tests_properties(rpg_sell_replay PROPERTIES
+        DEPENDS rpg_sell_prepare)
+    add_test(
+        NAME rpg_sell_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-sell.py"
+                "${CMAKE_BINARY_DIR}/rpg-sell-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-sell-frames.bin"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-sell-rgb-reference.json"
+    )
+    set_tests_properties(rpg_sell_validation PROPERTIES
+        DEPENDS rpg_sell_replay)
+    add_test(
         NAME rpg_status_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

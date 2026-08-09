@@ -1,0 +1,10 @@
+# MEO: select RPG and load the staged slot one.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+# Confirm the adjacent merchant and interrupt its opcode-18 greeting delay.
+POLL:CONFIRM
+TEXT:CONFIRM
+# Capture every one of the eight goods, including all three one-line scrolls.
+WAIT:DOWN*7
+WAIT:QUIT

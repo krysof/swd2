@@ -1642,7 +1642,7 @@ public:
                 if (item_id < items_.size()) {
                     draw_menu_number(frame, menu_sprites_,
                                      items_.at(item_id).price,
-                                     47, top + 4, 111);
+                                     47, top + 4, 101);
                 }
             }
             if (menu_sprites_.sprites().size() > 1U) {
@@ -1832,9 +1832,14 @@ public:
                          (4 + static_cast<int>(definition.preview_x)) * 4,
                          18 + static_cast<int>(definition.preview_y));
                 }
-                const auto label = static_cast<std::size_t>(definition.type) * 4U;
-                if (selected_item != 0 &&
-                    label + 4U <= inventory_category_labels_.size()) {
+            }
+            // 3d52 skips only the CD/AD preview in the selling branch.  The
+            // MENU-frame-zero type card and DATA:299a label remain visible in
+            // both ordinary inventory and shop selling pages.
+            if (selected_item != 0 && selected_item < items_.size()) {
+                const auto label =
+                    static_cast<std::size_t>(items_.at(selected_item).type) * 4U;
+                if (label + 4U <= inventory_category_labels_.size()) {
                     draw_legacy_text(
                         frame, item_font_,
                         inventory_category_labels_.subspan(label, 4),
