@@ -935,4 +935,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_monster_target_validation PROPERTIES
         DEPENDS fig_monster_target_prepare)
+    add_test(
+        NAME fig_player_status_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-status-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-status-save"
+    )
+    add_test(
+        NAME fig_player_status_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-status.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-status-save"
+                "${CMAKE_BINARY_DIR}/fig-player-status"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-status-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_status_validation PROPERTIES
+        DEPENDS fig_player_status_prepare)
 endif()

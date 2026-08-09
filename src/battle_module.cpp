@@ -218,9 +218,10 @@ void draw_fig_party_card(BattleSurface& surface,
                               ? std::size_t{180}
                               : 76U + member.identity / 12U;
     if (portrait < menu_sprites.sprites().size()) {
-        // FIG 2bb5 uses 65fc, the opaque MENU path. During an actor action
-        // 137a first replaces the portrait with frame 180 at the same slot.
-        blit(surface, menu_sprites, portrait, left, top, false);
+        // Normal portraits use 65fc's opaque copy. During an actor action,
+        // 137a installs frame 180 through the masked path instead: its FE
+        // interior must retain the BA page, not become palette colour FE.
+        blit(surface, menu_sprites, portrait, left, top, action_background);
     }
 
     // FIG 2bd9 draws the same three direct Mode-X gauges as RPG 24b8.
@@ -1538,7 +1539,8 @@ void present_player_status_card(
     const BattleSessionEvent& event, std::span<const std::uint8_t> text,
     std::uint16_t encounter_directory_offset, int columns = 4,
     std::uint8_t color = 0x6b, int panel_left_offset = 6,
-    int text_left_offset = 8) {
+    int text_left_offset = 8, const SpriteArchive* fighters = nullptr,
+    std::optional<std::size_t> fighter_pose = std::nullopt) {
     if (event.target_is_monster || event.target >= visual.party_count || text.empty()) {
         return;
     }
@@ -1549,19 +1551,32 @@ void present_player_status_card(
     draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
                  visual.monsters,
                  std::nullopt, encounter_directory_offset);
-    draw_fig_party_cards(
-        frame, menu_sprites,
-        std::span<const BattlePartyMember>(visual.party).first(
-            visual.party_count));
+    const auto actor_column = static_cast<int>(event.target) * 18;
+    const auto action_status_card =
+        fighters != nullptr && fighter_pose && event.source < visual.party_count;
+    if (!action_status_card) {
+        draw_fig_party_cards(
+            frame, menu_sprites,
+            std::span<const BattlePartyMember>(visual.party).first(
+                visual.party_count));
+    }
 
     // FIG 57d6 -> 2338: after 2bb5 leaves x=party*18+8, the compact
     // four-column card starts two Mode-X columns to the left at y=120. The
     // four-glyph status label itself starts at x=party*18+8/y=129 in colour 6b.
-    const auto actor_column = static_cast<int>(event.target) * 18;
     draw_message_panel(frame, menu_sprites,
                        actor_column + panel_left_offset, 120, columns);
     draw_big5(frame, font, fallback, text,
               (actor_column + text_left_offset) * 4, 129, color);
+    if (action_status_card) {
+        // 57d6's compact panel is already on the page when 2bb5 redraws the
+        // acting card; the card's top two rows therefore cover the panel's
+        // overlapping bottom edge.  Finally 137a restores pose4 over that
+        // paid-resource card.
+        draw_fig_party_card(frame, menu_sprites, visual.party[event.source], false);
+        draw_fighter_pose(frame, *fighters, visual.party[event.source],
+                          *fighter_pose);
+    }
     context.platform.present({
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
@@ -1917,7 +1932,8 @@ bool present_round_events(
     const LegacyFont& fallback, const SpriteArchive& fighters,
     const SpriteArchive& menu_sprites,
     BattleVisualState& visual, const BattleRoundResult& result,
-    std::uint16_t encounter_directory_offset) {
+    std::uint16_t encounter_directory_offset,
+    const std::array<PlayerBattleCommand, 4>& commands) {
     constexpr auto action_delay = std::chrono::milliseconds(43);  // 3/70 s
     constexpr auto effect_delay = std::chrono::milliseconds(14);  // 1/70 s
     constexpr auto status_card_delay = std::chrono::milliseconds(257); // 18/70 s
@@ -1932,6 +1948,37 @@ bool present_round_events(
     constexpr auto summon_install_delay =
         std::chrono::milliseconds(143); // 10/70 s
     std::map<std::uint16_t, SpriteArchive> effect_cache;
+    std::array<bool, 4> player_resource_cost_presented{};
+    const auto present_player_resource_cost = [&](const BattleSessionEvent& event) {
+        if (event.source >= visual.party_count ||
+            event.source >= commands.size() ||
+            player_resource_cost_presented[event.source]) {
+            return;
+        }
+        const auto& command = commands[event.source];
+        if (command.kind != PlayerCommandKind::ability ||
+            command.ability_id >= abilities.abilities().size() ||
+            event.kind != BattleEventKind::player_ability) {
+            return;
+        }
+        const auto& ability = abilities.ability(command.ability_id);
+        if (ability.effect_code == 0x47U) return;
+        const auto resource_class = static_cast<std::uint8_t>(
+            (ability.target_flags >> 8U) & 0x0fU);
+        auto& member = visual.party[event.source];
+        if (resource_class == 1U || resource_class == 4U) {
+            member.ability_points = static_cast<std::uint16_t>(
+                ability.cost >= member.ability_points
+                    ? 0U
+                    : member.ability_points - ability.cost);
+        } else if (resource_class == 2U || resource_class == 3U) {
+            member.secondary_points = static_cast<std::uint16_t>(
+                ability.cost >= member.secondary_points
+                    ? 0U
+                    : member.secondary_points - ability.cost);
+        }
+        player_resource_cost_presented[event.source] = true;
+    };
     auto frontend_abort = false;
     const auto delay = [&](std::chrono::milliseconds duration) {
         if (delay_for_or_frontend_quit(context.platform, duration)) return true;
@@ -2507,6 +2554,14 @@ bool present_round_events(
                 play_voice_cue(context, cue);
             }
         }
+        if (action_first) {
+            // Learned abilities enter the selected handler only after FIG has
+            // completed the common pose0/pose4 pages and debited the pool
+            // selected by target_flags' resource class.  Keep those two pose
+            // pages on the pre-command gauges, then expose the paid pool to
+            // every handler/result card belonging to this action.
+            present_player_resource_cost(event);
+        }
         if (player_dispatcher_action) {
             if (const auto voice = fig_effect_voice_resource(*effect_code)) {
                 const auto path = effect_voice_path(context.game_root, *voice);
@@ -2805,7 +2860,7 @@ bool present_round_events(
             present_player_status_card(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, status_text,
-                encounter_directory_offset);
+                encounter_directory_offset, 4, 0x6b, 6, 8, &fighters, 4);
             if (!delay(status_card_delay)) return false;
             // 57d6 returns with the 2338 status card still visible after its
             // 18 ticks; there is no clean recomposition or three-tick tail.
@@ -3611,7 +3666,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                     context, base_surface, encounter, items,
                     abilities, command_font, command_name_font,
                     fighters, menu_sprites, visual, round_result,
-                    encounter_offset)) {
+                    encounter_offset, round_commands)) {
                 quit_battle = true;
                 break;
             }

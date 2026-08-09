@@ -9767,11 +9767,11 @@ void test_battle_module(const std::filesystem::path& game_root) {
     // installs its required mediator, hence its card occurs eight presents
     // later than the four direct class-three abilities.
     static constexpr std::array<StatusCardCase, 5> status_card_cases = {{
-        {86, 14, 12944436973162848075ULL},  // effect 63, speed
-        {35, 6, 2498598045570496996ULL},    // effect 66, defence
-        {38, 6, 4157160127829814172ULL},    // effect 67, attack
-        {33, 6, 2315349818278800257ULL},    // effect 68, evasion
-        {37, 6, 17274552217982981682ULL},   // effect 69, ward
+        {86, 14, 13171850719366371954ULL},  // effect 63, speed
+        {35, 6, 16231846622373325418ULL},   // effect 66, defence
+        {38, 6, 8595608823063091186ULL},    // effect 67, attack
+        {33, 6, 18118597621268180707ULL},   // effect 68, evasion
+        {37, 6, 3692402201310657212ULL},    // effect 69, ward
     }};
     for (const auto& test : status_card_cases) {
         ScriptedPlatform status_card_platform;
@@ -9784,11 +9784,15 @@ void test_battle_module(const std::filesystem::path& game_root) {
         auto status_card_state = swd2::SharedState::load(game_root / "SAVE.DA1");
         status_card_state.set_u16(0x4a0, 392);
         status_card_state.set_u16(0x10, 1);
+        for (std::size_t slot = 0; slot < 50; ++slot) {
+            status_card_state.set_u8(0x106 + 0x6d + slot, 0);
+        }
         status_card_state.set_u8(0x106 + 0x6d, test.ability_id);
         status_card_state.set_u16(0x106 + 0x55, 1000);
         if (test.ability_id != 86) {
             status_card_state.set_u16(0x106 + 0x35, 1000);
         }
+        status_card_state.set_u16(0x106 + 0x37, 1000);
         status_card_state.set_u16(0x106 + 0x57, 1000);
         status_card_state.set_u16(0x106 + 0x2d, 1000);
         status_card_state.set_u16(0x106 + 0x2f, 1000);
@@ -9825,6 +9829,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
     status_card_quit_state.set_u16(0x10, 1);
     status_card_quit_state.set_u8(0x106 + 0x6d, 35);
     status_card_quit_state.set_u16(0x106 + 0x35, 1000);
+    status_card_quit_state.set_u16(0x106 + 0x37, 1000);
     status_card_quit_state.set_u16(0x106 + 0x55, 1000);
     status_card_quit_state.set_u16(0x106 + 0x57, 1000);
     status_card_quit_state.set_u16(0x106 + 0x2d, 1000);
@@ -9840,7 +9845,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 status_card_quit_platform.frontend_quit_poll_calls == 10U &&
                 status_card_quit_platform.frame_hashes.size() == 7U &&
                 status_card_quit_platform.frame_hashes.back() ==
-                    2498598045570496996ULL &&
+                    16231846622373325418ULL &&
                 status_card_quit_platform.delay_calls == 6U &&
                 status_card_quit_platform.delayed_milliseconds == 86U &&
                 status_card_quit_platform.stop_calls == 1U &&
