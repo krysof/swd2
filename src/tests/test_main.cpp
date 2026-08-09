@@ -6676,6 +6676,9 @@ void test_rpg_name_editor(const std::filesystem::path& game_root) {
             swd2::InputAction::right,
             swd2::InputAction::erase,    // Ctrl/Insert clears (4,0)
             swd2::InputAction::cancel,   // leave bitmap editor
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::confirm,  // auto-advanced slot one gets bffa
             swd2::InputAction::cancel,   // leave name editor
         };
         swd2::GameContext context{
@@ -6686,9 +6689,49 @@ void test_rpg_name_editor(const std::filesystem::path& game_root) {
                 "RPG name bitmap-edit path did not return ED");
         const auto edited = swd2::LegacyFont::parse(context.name_font);
         const auto bitmap = edited.glyph(edited.codes()[0]);
+        const auto chain = swd2::LegacyFont::load(game_root / "CHAIN.DSK");
         require(bitmap[0] == 0xc0U && bitmap[1] == 0x00U &&
+                    std::equal(edited.glyph(edited.codes()[1]).begin(),
+                               edited.glyph(edited.codes()[1]).end(),
+                               chain.glyph(0xbffaU).begin()) &&
                     context.name_font.size() == 514U,
-                "RPG name bitmap editor did not persist its two pixels");
+                "RPG name bitmap editor or its right-arrow tail differs");
+    }
+
+    // Physical PageDown/PageUp use scan codes 51h/49h independently of the
+    // last-column page command cells. Keep the character cursor in column six
+    // and prove the two pages select different released Big5 bitmaps.
+    {
+        ScriptedPlatform platform;
+        platform.actions = {
+            swd2::InputAction::confirm,
+            swd2::InputAction::page_down,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::confirm,  // page one: a650 -> slot zero
+            swd2::InputAction::page_up,
+            swd2::InputAction::confirm,  // page zero: bffa -> slot one
+            swd2::InputAction::cancel,
+        };
+        swd2::GameContext context{
+            game_root, swd2::SharedState::load(game_root / "SAVE.DA1"),
+            platform};
+        require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+                    swd2::Marker::open_demo,
+                "RPG name page-key path did not return ED");
+        const auto edited = swd2::LegacyFont::parse(context.name_font);
+        const auto chain = swd2::LegacyFont::load(game_root / "CHAIN.DSK");
+        require(std::equal(edited.glyph(edited.codes()[0]).begin(),
+                           edited.glyph(edited.codes()[0]).end(),
+                           chain.glyph(0xa650U).begin()) &&
+                    std::equal(edited.glyph(edited.codes()[1]).begin(),
+                               edited.glyph(edited.codes()[1]).end(),
+                               chain.glyph(0xbffaU).begin()),
+                "RPG name PageDown/PageUp did not select their exact tables");
     }
 }
 

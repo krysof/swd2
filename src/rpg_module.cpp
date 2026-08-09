@@ -527,7 +527,13 @@ std::optional<Viewport> run_rpg_name_editor(
         const auto action = platform.wait_for_input();
         if (action == InputAction::quit) return std::nullopt;
         if (action == InputAction::cancel) return frame;
-        if (action == InputAction::up && character_row != 0U) {
+        // RPG:16b1/16cd expose physical PageUp/PageDown in addition to the
+        // a1b5/a1be cells embedded in the grid.
+        if (action == InputAction::page_up && page != 0U) {
+            --page;
+        } else if (action == InputAction::page_down && page != 2U) {
+            ++page;
+        } else if (action == InputAction::up && character_row != 0U) {
             --character_row;
         } else if (action == InputAction::down &&
                    character_row + 1U != page_rows) {
@@ -545,6 +551,10 @@ std::optional<Viewport> run_rpg_name_editor(
             case 0xa1f7U: if (name_column != 3U) ++name_column; break;
             case 0xa1b8U:
                 if (!edit_bitmap()) return std::nullopt;
+                // 1798 jumps into the same right-arrow tail at 177d used by
+                // ordinary character copies, so leaving the bitmap editor
+                // also advances to the next name column.
+                if (name_column != 3U) ++name_column;
                 break;
             case 0xa1beU: if (page != 2U) ++page; break;
             case 0xa1b5U: if (page != 0U) --page; break;
