@@ -79,7 +79,7 @@
       body { overflow: hidden; }
       main {
         width: 100svw; height: 100svh; padding: 5px;
-        display: grid; grid-template-columns: 154px minmax(0, 1fr) 100px;
+        display: grid; grid-template-columns: 154px minmax(0, 1fr) 206px;
         grid-template-rows: minmax(0, 1fr); gap: 8px; align-items: center;
       }
       h1, .toolbar, #error { display: none; }
@@ -93,7 +93,7 @@
       }
       .actions {
         grid-column: 3; grid-row: 1; justify-self: center; align-self: center;
-        flex-direction: column; gap: 8px;
+        flex-direction: row; gap: 14px;
       }
     }
     @media (orientation: portrait) and (pointer: coarse) {
@@ -117,7 +117,7 @@
       <button id="start-button" type="button">点击开始并开启声音</button>
     </div>
   </div>
-  <main>
+  <main data-mobile-layout="rotated-v3">
     <h1>轩辕剑2</h1>
     <section class="stage" id="stage">
       <canvas id="canvas" tabindex="0" aria-label="SWD2 游戏画面" oncontextmenu="event.preventDefault()"></canvas>

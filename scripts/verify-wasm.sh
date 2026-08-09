@@ -72,15 +72,36 @@ for pattern in \
   "width:100%!important" \
   "height:100%!important" \
   "aspect-ratio:8/5" \
+  "grid-template-columns:154px minmax(0,1fr) 206px" \
   "grid-column:1" \
   "grid-column:2" \
   "grid-column:3" \
+  "flex-direction:row" \
+  'data-mobile-layout=rotated-v3' \
   "user-select:none"; do
   grep -Fq "$pattern" "$site/index.html" || {
     echo "error: index.html is missing mobile start/orientation/wake behavior: $pattern" >&2
     exit 1
   }
 done
+python3 - "$site/index.html" <<'PY'
+import pathlib
+import re
+import sys
+
+html = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+actions = re.search(
+    r'<div class=(?:"actions"|\'actions\'|actions)>(.*?)</div>', html, re.S)
+if not actions:
+    raise SystemExit("error: index.html has no action control group")
+keys = re.findall(
+    r'data-key=(?:"([^"]+)"|\'([^\']+)\'|([^\s>]+))', actions.group(1))
+keys = [next(value for value in match if value) for match in keys]
+if keys != ["Escape", "Enter"]:
+    raise SystemExit(
+        "error: right-side controls must be horizontal ESC then Enter "
+        f"(found {keys})")
+PY
 for label in ▲ ▼ ◀ ▶ ESC 回车; do
   grep -Fq ">$label</button>" "$site/index.html" || {
     echo "error: index.html is missing the $label button label" >&2
