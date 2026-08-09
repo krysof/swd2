@@ -209,7 +209,8 @@ public:
 
     // After a victory, ORC's optional ## value has an exact one-in-three
     // chance to occupy inventory slot 49, provided that slot is empty. The
-    // normal FIG return compaction subsequently moves it into the first gap.
+    // FIG module's 058c caller compacts it into the first gap before waiting
+    // for acknowledgement of the capture-reward card.
     bool try_grant_encounter_capture(std::optional<std::uint16_t> definition_id,
                                      const BattleRandom& random);
 

@@ -19,7 +19,7 @@
   "rewrite_video_fnv1a64": "086de704db7b27fb",
   "rewrite_final_fnv1a64": "a78cae640e2d1a55",
   "rewrite_victory_ack_state_fnv1a64": "ba19229b77ab53f7",
-  "rewrite_reward_ack_state_fnv1a64": "89798b2db612cc96",
+  "rewrite_reward_ack_state_fnv1a64": "7d0248d991da888e",
   "rewrite_state_fnv1a64": "fff1874aa1886c02",
   "rewrite_indexed_sha256": "ef8c588478f7e085e014b3c561c8eb8584118d26895bbf866e1ac0c8d25f6228",
   "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",

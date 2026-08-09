@@ -3764,6 +3764,10 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 session.store(context.shared_state);
                 random.store(context.shared_state);
                 if (encounter_capture_granted) {
+                    // 0586 writes the special item to +3e4, then 058c runs
+                    // the stable 1a78 inventory compactor before 058f waits
+                    // on the already drawn reward card.
+                    compact_inventory(context.shared_state);
                     frontend_quit = !present_encounter_capture_reward(
                         context, std::move(*victory_frame), menu_sprites,
                         command_font, command_name_font, abilities);
