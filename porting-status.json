@@ -114,8 +114,8 @@
         "交互输入、非阻塞输入、跳字输入和前端关闭严格分离",
         "桌面、WASM、手柄和触摸路径不丢失或误消费动作"
       ],
-      "evidence": ["src/include/swd2/platform.hpp", "src/include/swd2/replay_input.hpp", "src/replay_input.cpp", "src/sdl_platform.cpp", "src/tests/test_main.cpp", "src/tests/test_sdl_platform.cpp"],
-      "remaining": ["在真实浏览器验证键盘与上下左右/ESC/回车触摸按钮", "在至少一个真实手柄和非 macOS 桌面后端完成交叉测试"]
+      "evidence": ["src/include/swd2/platform.hpp", "src/include/swd2/replay_input.hpp", "src/replay_input.cpp", "src/sdl_platform.cpp", "src/web/shell.html", "src/tests/test_main.cpp", "src/tests/test_sdl_platform.cpp", "scripts/verify-web-shell.mjs"],
+      "remaining": ["在真实手机浏览器验证竖屏旋转、声音解锁、Wake Lock 与上下左右/ESC/回车触摸按钮", "在至少一个真实手柄和非 macOS 桌面后端完成交叉测试"]
     },
     {
       "id": "save_roundtrips",
@@ -136,7 +136,7 @@
         "原生 C++ 测试通过",
         "WASM、JS、data 和 HTML 可验证并从相对路径运行"
       ],
-      "evidence": ["CMakeLists.txt", "src/CMakeLists.txt", "scripts/build-wasm.sh", "scripts/verify-wasm.sh"]
+      "evidence": ["CMakeLists.txt", "src/CMakeLists.txt", "scripts/build-wasm.sh", "scripts/verify-wasm.sh", "scripts/verify-web-shell.mjs"]
     },
     {
       "id": "pixel_diff_suite",

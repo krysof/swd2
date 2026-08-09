@@ -46,14 +46,31 @@ if grep -Eq '水浒|水滸' "$site/index.html"; then
   exit 1
 fi
 
-button_count="$(grep -o '<button' "$site/index.html" | wc -l | tr -d '[:space:]')"
+button_count="$(grep -oE '<button[^>]*data-key=' "$site/index.html" | wc -l | tr -d '[:space:]')"
 if [[ "$button_count" != "6" ]]; then
-  echo "error: index.html must contain four directions, ESC and Enter (found $button_count)" >&2
+  echo "error: index.html must contain exactly six game controls (found $button_count)" >&2
   exit 1
 fi
 for key in ArrowUp ArrowDown ArrowLeft ArrowRight Escape Enter; do
   grep -Eq "data-key=(\"$key\"|'$key'|$key)([[:space:]>])" "$site/index.html" || {
     echo "error: index.html is missing the $key control" >&2
+    exit 1
+  }
+done
+
+for pattern in \
+  "白河愁 破解移植" \
+  "http://www.ff18.com" \
+  "点击开始并开启声音" \
+  "swd2-user-start" \
+  "Module.SDL2" \
+  "navigator.wakeLock" \
+  "visibilitychange" \
+  "screen.orientation.lock" \
+  "rotate(90deg)" \
+  "user-select:none"; do
+  grep -Fq "$pattern" "$site/index.html" || {
+    echo "error: index.html is missing mobile start/orientation/wake behavior: $pattern" >&2
     exit 1
   }
 done
@@ -91,6 +108,23 @@ for pattern in \
     exit 1
   }
 done
+
+if command -v node >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  python3 - "$site/index.html" <<'PY' | node --check -
+import pathlib
+import sys
+
+html = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+marker = "<script>"
+if marker not in html:
+    raise SystemExit("error: index.html has no inline Web shell script")
+script = html.split(marker, 1)[1].split("</script>", 1)[0]
+if not script.strip():
+    raise SystemExit("error: index.html has an empty inline Web shell script")
+sys.stdout.write(script)
+PY
+  node "$root/scripts/verify-web-shell.mjs" "$site/index.html"
+fi
 
 # Parsing and rewriting with Binaryen provides an additional structural check
 # when the Emscripten installation exposes wasm-opt. Emscripten emits bulk

@@ -2,7 +2,7 @@
 <html lang="zh-Hans">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#100b08">
   <meta name="description" content="《轩辕剑2》可移植 C++ 重写版 WebAssembly 构建">
   <title>轩辕剑2 · SWD2</title>
@@ -15,7 +15,10 @@
         radial-gradient(circle at 50% 15%, #49311f 0, #1c130e 42%, #080706 100%);
       overscroll-behavior: none;
     }
-    main { width: min(100%, 1040px); padding: clamp(10px, 2vw, 24px); text-align: center; }
+    main {
+      width: min(100%, 1040px); padding: clamp(10px, 2vw, 24px); text-align: center;
+      backface-visibility: hidden;
+    }
     h1 { margin: 0 0 10px; font: 700 clamp(22px, 5vw, 38px)/1.1 Georgia, serif; letter-spacing: .12em; }
     .stage {
       position: relative; width: 100%; aspect-ratio: 8 / 5; overflow: hidden;
@@ -35,6 +38,8 @@
     button {
       color: inherit; background: #2a1d13; border: 1px solid #876438; border-radius: 7px;
       min-width: 44px; min-height: 40px; padding: 8px 12px; font: inherit; touch-action: none;
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
     }
     button:active { background: #8b632f; transform: translateY(1px); }
     .touch {
@@ -52,11 +57,58 @@
     .actions { display: flex; gap: 14px; }
     .actions button { min-width: 92px; font-weight: 800; }
     #error { min-height: 1.4em; margin: 8px 0 0; color: #ff9b8f; font-size: 13px; }
+    #start-gate {
+      position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+      padding: 24px; background: #080604ee; text-align: center;
+    }
+    #start-gate[hidden] { display: none; }
+    .start-card {
+      width: min(92vw, 430px); padding: 28px 22px; border: 2px solid #9a7140;
+      border-radius: 12px; background: #1d130d;
+      box-shadow: 0 20px 70px #000, inset 0 0 24px #9a714022;
+    }
+    .start-credit { margin: 0 0 9px; font-size: clamp(21px, 6vw, 30px); font-weight: 800; }
+    .start-site { display: block; margin: 0 0 22px; color: #e8bd76; }
+    #start-button { min-width: 230px; min-height: 52px; font-weight: 800; }
     @media (hover: none), (pointer: coarse) { .hint { font-size: 12px; } }
     @media (max-width: 520px) { main { align-self: start; } h1 { margin-top: 2px; } }
+    @media (pointer: coarse) {
+      body { overflow: hidden; }
+      main {
+        width: 100svw; height: 100svh; padding: 5px;
+        display: grid; grid-template-columns: minmax(0, 1fr) 154px;
+        grid-template-rows: minmax(0, 1fr); gap: 8px; align-items: center;
+      }
+      h1, .toolbar, #error { display: none; }
+      .stage {
+        width: min(100%, calc((100svh - 10px) * 8 / 5));
+        justify-self: center;
+      }
+      .touch {
+        width: 154px; margin: 0; flex-direction: column; gap: 10px;
+        justify-self: center;
+      }
+      .actions { flex-direction: column; gap: 8px; }
+    }
+    @media (orientation: portrait) and (pointer: coarse) {
+      main {
+        position: fixed; left: 50%; top: 50%;
+        width: 100svh; height: 100svw;
+        transform: translate(-50%, -50%) rotate(90deg);
+        transform-origin: center;
+      }
+      .stage { width: min(100%, calc((100svw - 10px) * 8 / 5)); }
+    }
   </style>
 </head>
 <body>
+  <div id="start-gate" role="dialog" aria-modal="true" aria-labelledby="start-credit">
+    <div class="start-card">
+      <p class="start-credit" id="start-credit">白河愁 破解移植</p>
+      <a class="start-site" href="http://www.ff18.com" target="_blank" rel="noopener noreferrer">http://www.ff18.com</a>
+      <button id="start-button" type="button">点击开始并开启声音</button>
+    </div>
+  </div>
   <main>
     <h1>轩辕剑2</h1>
     <section class="stage" id="stage">
@@ -89,9 +141,92 @@
     const statusText = document.getElementById('status');
     const progress = document.getElementById('progress');
     const errorText = document.getElementById('error');
+    const startGate = document.getElementById('start-gate');
+    const startButton = document.getElementById('start-button');
     const idbfsSelfTestToken = new URLSearchParams(location.search).get('idbfs-self-test');
     const idbfsSelfTestSessionKey = 'swd2-idbfs-self-test-token';
     const idbfsSelfTestPath = '/saves/.swd2-idbfs-restart-probe';
+    let startRequested = Boolean(idbfsSelfTestToken);
+    let startDependencyInstalled = false;
+    let wakeLock = null;
+
+    if (idbfsSelfTestToken) startGate.hidden = true;
+
+    function releaseStartDependency() {
+      if (!startRequested || !startDependencyInstalled) return;
+      startDependencyInstalled = false;
+      removeRunDependency('swd2-user-start');
+    }
+
+    function unlockWebAudio() {
+      try {
+        Module.SDL2 ||= {};
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!Module.SDL2.audioContext && AudioContextClass) {
+          // Create the exact context later reused by Emscripten SDL while the
+          // browser still considers this call part of the start-button gesture.
+          Module.SDL2.audioContext = new AudioContextClass();
+        }
+        const context = Module.SDL2.audioContext;
+        if (context && context.state !== 'running') {
+          const resumed = context.resume();
+          if (resumed && resumed.catch) resumed.catch(() => {});
+        }
+      } catch (_) {
+        // A later game/control gesture gets another chance to resume audio.
+      }
+    }
+
+    async function acquireWakeLock() {
+      if (!startRequested || document.visibilityState !== 'visible' ||
+          !navigator.wakeLock || wakeLock) return;
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        document.documentElement.dataset.wakeLock = 'active';
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          document.documentElement.dataset.wakeLock = 'released';
+        }, { once: true });
+      } catch (_) {
+        document.documentElement.dataset.wakeLock = 'unavailable';
+      }
+    }
+
+    function requestLandscapeOrientation() {
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          const locked = screen.orientation.lock('landscape');
+          if (locked && locked.catch) locked.catch(() => {});
+        }
+      } catch (_) {
+        // CSS rotation remains the fallback on iOS and non-fullscreen browsers.
+      }
+    }
+
+    function beginGame(event) {
+      event.preventDefault();
+      startRequested = true;
+      document.documentElement.dataset.started = 'true';
+      unlockWebAudio();
+      void acquireWakeLock();
+      requestLandscapeOrientation();
+      startGate.hidden = true;
+      releaseStartDependency();
+      canvas.focus();
+    }
+
+    startButton.addEventListener('click', beginGame);
+    document.addEventListener('pointerdown', unlockWebAudio, { capture: true });
+    document.addEventListener('keydown', unlockWebAudio, { capture: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && startRequested) {
+        unlockWebAudio();
+        void acquireWakeLock();
+      }
+    });
+    window.addEventListener('pageshow', () => {
+      if (startRequested) void acquireWakeLock();
+    });
 
     function finishIdbfsSelfTest(passed, message) {
       document.documentElement.dataset.idbfsSelfTest = passed ? 'pass' : 'fail';
@@ -147,6 +282,11 @@
       arguments: ['--game', '/game', '--save-dir', '/saves', '--play'],
       canvas,
       preRun: [function() {
+        if (!idbfsSelfTestToken) {
+          addRunDependency('swd2-user-start');
+          startDependencyInstalled = true;
+          releaseStartDependency();
+        }
         try { FS.mkdir('/saves'); } catch (_) {}
         FS.mount(IDBFS, {}, '/saves');
         addRunDependency('swd2-idbfs');
@@ -178,7 +318,11 @@
         if (left) this.setStatus(`正在载入游戏数据… (${this.totalDependencies - left}/${this.totalDependencies})`);
         else this.setStatus('正在启动游戏…');
       },
-      onRuntimeInitialized() { statusWrap.classList.add('ready'); canvas.focus(); },
+      onRuntimeInitialized() {
+        statusWrap.classList.add('ready');
+        unlockWebAudio();
+        canvas.focus();
+      },
       onAbort(reason) { errorText.textContent = `启动失败：${reason}`; }
     };
 
