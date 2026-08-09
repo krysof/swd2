@@ -7970,8 +7970,9 @@ void test_rpg_field_magic_travel_scroll(
     constexpr auto actor_base = 0x106U;
     state.set_u8(actor_base + 0x6dU, 99U);
     state.set_u16(actor_base + 0x55U, 100U);
-    // Include disabled nonzero values as well as zeros. 37b7 skips zeros to
-    // find candidates, while 37cd only counts and draws entries equal to one.
+    // Spread the twelve released-format values across the complete table so
+    // the selected visible ordinal must be mapped back across intervening
+    // zero entries. Values other than 0/1/0fh are not produced by the game.
     for (std::size_t index = 0; index < 35U; ++index) {
         state.set_u8(0x51eU + index, 0U);
     }
@@ -7979,8 +7980,6 @@ void test_rpg_field_magic_travel_scroll(
         0U, 2U, 3U, 5U, 7U, 8U, 11U, 13U, 17U, 20U, 27U, 33U,
     };
     for (const auto index : unlocked) state.set_u8(0x51eU + index, 1U);
-    state.set_u8(0x51eU + 1U, 2U);
-    state.set_u8(0x51eU + 6U, 0x80U);
     state.set_u8(0x51eU + 34U, 0x0fU);
     require((state.u16(0x408U) & 0x8000U) != 0U,
             "fixture no longer permits scrolling action-29h travel");
