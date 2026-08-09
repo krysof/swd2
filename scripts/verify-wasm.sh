@@ -68,6 +68,18 @@ if grep -Eq 'data-key=("Arrow(Up|Down|Left|Right)"|Arrow(Up|Down|Left|Right))([[
   exit 1
 fi
 
+for pattern in \
+  "idbfs-self-test" \
+  "FS.writeFile" \
+  "location.reload()" \
+  "FS.readFile" \
+  "dataset.idbfsSelfTest"; do
+  grep -Fq "$pattern" "$site/index.html" || {
+    echo "error: index.html is missing the IDBFS restart self-test: $pattern" >&2
+    exit 1
+  }
+done
+
 # Parsing and rewriting with Binaryen provides an additional structural check
 # when the Emscripten installation exposes wasm-opt. Emscripten emits bulk
 # memory and other standardized features, so enable its complete feature set

@@ -28,7 +28,18 @@ grep -Fq "'--save-dir', '/saves'" "$shell" || {
   echo 'error: browser runtime is not pointed at the persistent save mount' >&2
   exit 1
 }
+for pattern in \
+  "get('idbfs-self-test')" \
+  "FS.writeFile(idbfsSelfTestPath" \
+  "location.reload()" \
+  "FS.readFile(idbfsSelfTestPath" \
+  "dataset.idbfsSelfTest = passed ? 'pass' : 'fail'"; do
+  grep -Fq "$pattern" "$shell" || {
+    echo "error: browser IDBFS restart self-test is missing: $pattern" >&2
+    exit 1
+  }
+done
 
 printf '%s\n' \
-  'SAVE/MAPZ verification: native five-slot round trips passed; IDBFS restore/flush wiring is present.' \
-  'Note: automated real-browser restart persistence remains an unfinished completion gate.'
+  'SAVE/MAPZ verification: native five-slot round trips passed; automatic IDBFS reload probe is built in.' \
+  'Run the WASM site with ?idbfs-self-test=TOKEN in a real browser and require data-idbfs-self-test="pass".'

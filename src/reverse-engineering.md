@@ -982,8 +982,11 @@ SWORD8 标题尾声：装入/淡入调色板、揭示三个人物、等待五秒
 - 五槽持久化回归现逐槽建立独立 SAVE/MAPZ、修改共享 area word 与尾部 RAP 路径指针、
   关闭重开后核对，再把同一 pair `save_as` 到全部五槽并重复核对；缺少任意一半的孤立
   SAVE 或 MAPZ 也必须拒绝。`verify-save-roundtrips.sh` 同时锁定 Web 壳的 `/saves`
-  IDBFS mount、启动 `syncfs(true)` 和写后 `syncfs(false)` 接线，但真实浏览器 reload
-  后的 IndexedDB 字节比较尚未完成，因此完成门禁仍保持 `in_progress`。
+  IDBFS mount、启动 `syncfs(true)` 和写后 `syncfs(false)` 接线。Web 壳还提供
+  `?idbfs-self-test=TOKEN`：首次加载写入独立探针并 flush，自动 `location.reload()`，
+  第二次 restore 后逐字节读取、清理并把 `<html data-idbfs-self-test="pass">` 作为唯一
+  成功信号。当前环境没有可用的真实浏览器 runner，尚未把该信号登记到浏览器矩阵，
+  因此完成门禁仍保持 `in_progress`。
 - `39ed` 在普通背包中确认零值物理格并不会返回“空格”结果：`3a96/3b28` 会直接进入
   `3f53` 队员与装备页，以零值交换当前装备来完成卸下；随后调用者无条件执行 `3ced`
   压紧背包。装备页的 `3fc1..3fd3` 也总把 11 行选择器重置到第零行，原版从未根据传入

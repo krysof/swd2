@@ -72,6 +72,59 @@
     const statusText = document.getElementById('status');
     const progress = document.getElementById('progress');
     const errorText = document.getElementById('error');
+    const idbfsSelfTestToken = new URLSearchParams(location.search).get('idbfs-self-test');
+    const idbfsSelfTestSessionKey = 'swd2-idbfs-self-test-token';
+    const idbfsSelfTestPath = '/saves/.swd2-idbfs-restart-probe';
+
+    function finishIdbfsSelfTest(passed, message) {
+      document.documentElement.dataset.idbfsSelfTest = passed ? 'pass' : 'fail';
+      statusText.textContent = message;
+      progress.hidden = true;
+      errorText.textContent = passed ? '' : message;
+    }
+
+    function runIdbfsSelfTest() {
+      const payload = `SWD2-IDBFS:${idbfsSelfTestToken}`;
+      const restoredToken = sessionStorage.getItem(idbfsSelfTestSessionKey);
+      if (restoredToken !== idbfsSelfTestToken) {
+        try {
+          FS.writeFile(idbfsSelfTestPath, payload);
+        } catch (error) {
+          finishIdbfsSelfTest(false, `IDBFS 测试写入失败：${error}`);
+          return;
+        }
+        FS.syncfs(false, function(error) {
+          if (error) {
+            finishIdbfsSelfTest(false, `IDBFS 测试提交失败：${error}`);
+            return;
+          }
+          sessionStorage.setItem(idbfsSelfTestSessionKey, idbfsSelfTestToken);
+          location.reload();
+        });
+        return;
+      }
+
+      let restored = '';
+      try {
+        restored = FS.readFile(idbfsSelfTestPath, { encoding: 'utf8' });
+      } catch (error) {
+        finishIdbfsSelfTest(false, `IDBFS 重启读取失败：${error}`);
+        return;
+      }
+      if (restored !== payload) {
+        finishIdbfsSelfTest(false, 'IDBFS 重启后的存档探针字节不一致。');
+        return;
+      }
+      FS.unlink(idbfsSelfTestPath);
+      FS.syncfs(false, function(error) {
+        if (error) {
+          finishIdbfsSelfTest(false, `IDBFS 测试清理失败：${error}`);
+          return;
+        }
+        sessionStorage.removeItem(idbfsSelfTestSessionKey);
+        finishIdbfsSelfTest(true, 'IDBFS 写入、页面重启与字节恢复测试通过。');
+      });
+    }
 
     var Module = {
       arguments: ['--game', '/game', '--save-dir', '/saves', '--play'],
@@ -81,6 +134,16 @@
         FS.mount(IDBFS, {}, '/saves');
         addRunDependency('swd2-idbfs');
         FS.syncfs(true, function(error) {
+          if (idbfsSelfTestToken) {
+            if (error) {
+              finishIdbfsSelfTest(false, `IDBFS 初始读取失败：${error}`);
+            } else {
+              runIdbfsSelfTest();
+            }
+            // Keep the runtime dependency in test mode so the game cannot
+            // mutate the probe or replace the authoritative result message.
+            return;
+          }
           if (error) errorText.textContent = '读取浏览器存档失败，本次仍可继续游戏。';
           removeRunDependency('swd2-idbfs');
         });
