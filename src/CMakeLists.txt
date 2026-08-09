@@ -326,6 +326,7 @@ if(BUILD_TESTING)
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-toggles.py"
                 "${CMAKE_BINARY_DIR}/rpg-system-toggles-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-system-toggles-frames.bin"
     )
     set_tests_properties(rpg_system_toggles_validation PROPERTIES
         DEPENDS rpg_system_toggles_replay)

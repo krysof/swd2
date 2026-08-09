@@ -13,28 +13,68 @@
       "original": "000130.png",
       "sha256": "ab6844c24fe0b75e3fcb7a0a98a257d212ce98ce32121a57d7a630c32596559f",
       "rewrite_frame": 114,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "45f2fd56985e54a2150b68634db58ad32f3045aa4010b5d6857cbb1f3e78c5dc",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "fd9cd81af728198968f4997f061e356634c5f2f5cf63fe085aff719fb8d8fa01",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System music off selected",
       "original": "000150.png",
       "sha256": "495bc4d80f84991d969d78e718fd6492ca85107225b4e83bb4a7a4a4aa33551b",
       "rewrite_frame": 115,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "dcd31b26d008c7f75f58c85d73493dd8a5f9b36500b4c93d5ef66f1cb8f54177",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "52462877e8ee02d1f82e7865f09c39f54bc9e72526d3920b5dbed7abbe1bd746",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System sound on selected after music off",
       "original": "000170.png",
       "sha256": "6962e8f11be893b54192dc1464ae3c17e9733a4bbc8df22d146281f96746a1b3",
       "rewrite_frame": 116,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "5a4ee8d9722b9b40742f7df08806d089a308b61141581edc87d5f4a2dd163af8",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "e8e4702815551985d3d28a8e11b690145f8bfd0ac714d4f1ca893e4094b542af",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System sound off selected after music off",
       "original": "000190.png",
       "sha256": "f0cb168591c37d34fb6a962ecd360b3d0137ea4ce111a7fa126adfc852d8c991",
       "rewrite_frame": 117,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "91ec9a08420d5bbb581cf42a11a069290935299afd39da5eddab8370054b181c",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "0f0be6dd732547b0f84a41ee9b729e8c9d272a11a6512b7073bf0b812071f6e0",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     }
   ]
 }
