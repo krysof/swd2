@@ -13,21 +13,51 @@
       "original": "000180.png",
       "sha256": "ef6b4f45744d657357622bf36ffb28f8eb2cee50c080590d976dd5c48ec1412e",
       "rewrite_frame": 115,
-      "crop": [16, 16, 64, 96]
+      "crop": [
+        16,
+        16,
+        64,
+        96
+      ],
+      "rewrite_indexed_crop_sha256": "9bcb1bab325abc7a72a49dcdac8e0b38717d257b307158c44c369dc4d56d785b",
+      "rewrite_palette_sha256": "0aed89315649f14c1f64a4d2f2a701afc996fc08d9399875c159763af408ac03",
+      "matched_original_rgb_crop_sha256": "e3e4e366a10aeec19d842924887c3579445172042944ea01917c93d68d4cefde",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 6144
     },
     {
       "label": "RPG inventory category body",
       "original": "000180.png",
       "sha256": "ef6b4f45744d657357622bf36ffb28f8eb2cee50c080590d976dd5c48ec1412e",
       "rewrite_frame": 115,
-      "crop": [236, 12, 56, 24]
+      "crop": [
+        236,
+        12,
+        56,
+        24
+      ],
+      "rewrite_indexed_crop_sha256": "c34b669c588de4ceba511ff2afb18b8b895c9bbcee93029d8de92b2b91ec79e6",
+      "rewrite_palette_sha256": "0aed89315649f14c1f64a4d2f2a701afc996fc08d9399875c159763af408ac03",
+      "matched_original_rgb_crop_sha256": "fa3c9edc3e3010b1732a9d781bc84b6e9a0bb5de5bf83cd58e5e510837742600",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 1344
     },
     {
       "label": "RPG inventory unselected item rows",
       "original": "000180.png",
       "sha256": "ef6b4f45744d657357622bf36ffb28f8eb2cee50c080590d976dd5c48ec1412e",
       "rewrite_frame": 115,
-      "crop": [120, 68, 168, 112]
+      "crop": [
+        120,
+        68,
+        168,
+        112
+      ],
+      "rewrite_indexed_crop_sha256": "0bb9c09b23a949e60673af9854433f9e1f6c0353f44f45847019fd4f1c4c8c67",
+      "rewrite_palette_sha256": "0aed89315649f14c1f64a4d2f2a701afc996fc08d9399875c159763af408ac03",
+      "matched_original_rgb_crop_sha256": "16f2095d0a2c61fe2e786b327c94ad787329850318046e9ae77283309acf760f",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 18816
     }
   ]
 }

@@ -9,6 +9,8 @@ import json
 import struct
 from pathlib import Path
 
+from swd2_frame_capture import crop_indexed, expand_rgb
+
 
 MAGIC = b"SWD2FRM2"
 
@@ -141,6 +143,24 @@ def main() -> int:
             raise ValueError("inventory CD000 palette splice differs")
         if any(palette != inventory_palette for _, palette in frames[115:]):
             raise ValueError("inventory CD000 palette did not persist")
+        original_crops = [
+            ((16, 16, 64, 96),
+             "9bcb1bab325abc7a72a49dcdac8e0b38717d257b307158c44c369dc4d56d785b",
+             "e3e4e366a10aeec19d842924887c3579445172042944ea01917c93d68d4cefde"),
+            ((236, 12, 56, 24),
+             "c34b669c588de4ceba511ff2afb18b8b895c9bbcee93029d8de92b2b91ec79e6",
+             "fa3c9edc3e3010b1732a9d781bc84b6e9a0bb5de5bf83cd58e5e510837742600"),
+            ((120, 68, 168, 112),
+             "0bb9c09b23a949e60673af9854433f9e1f6c0353f44f45847019fd4f1c4c8c67",
+             "16f2095d0a2c61fe2e786b327c94ad787329850318046e9ae77283309acf760f"),
+        ]
+        for box, expected_indices, expected_rgb in original_crops:
+            indexed = crop_indexed(inventory_pixels, box)
+            if hashlib.sha256(indexed).hexdigest() != expected_indices:
+                raise ValueError(f"inventory indexed crop differs: {box}")
+            if hashlib.sha256(expand_rgb(indexed, inventory_palette)).hexdigest() != \
+                    expected_rgb:
+                raise ValueError(f"inventory original RGB crop differs: {box}")
         checked: set[int] = set()
         # These unobscured top and left strips remain the same world page
         # between the Item-selected diamond and the first inventory page.
@@ -159,7 +179,8 @@ def main() -> int:
 
         print(
             "RPG inventory checkpoint: 165 frames, all 50 rows locked, "
-            f"{len(checked)} grayscale world pixels exact")
+            f"{len(checked)} grayscale world pixels exact, and three "
+            "original-matched UI crops locked as indexed VGA")
         return 0
     except (OSError, ValueError, json.JSONDecodeError) as error:
         parser.exit(1, f"RPG inventory checkpoint: FAIL: {error}\n")
