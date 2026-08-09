@@ -11,5 +11,5 @@ WAIT:DOWN*3
 WAIT:CONFIRM
 WAIT:RIGHT*3
 WAIT:CONFIRM*2
-WAIT:CANCEL*2
+# RPG:4d50/4d55 exits System and the field diamond after the write.
 POLL:QUIT

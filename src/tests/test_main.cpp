@@ -303,6 +303,13 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 std::equal(oc_q_slot.begin(), oc_q_slot.end(),
                            image.begin() + 0x00b7U),
             "RPG OC entry no longer reloads the Q checkpoint through 4c16");
+    const std::array<std::uint8_t, 12> record_exit{
+        0x81, 0x06, 0xe1, 0x60, 0x00, 0x50,
+        0xc6, 0x06, 0x01, 0x38, 0x03, 0xc3};
+    require(image.size() >= 0x4d4aU + record_exit.size() &&
+                std::equal(record_exit.begin(), record_exit.end(),
+                           image.begin() + 0x4d4aU),
+            "RPG Record no longer exits System with DATA:3801=3");
     const auto shop_prompt = swd2::extract_rpg_embedded_text(
         image, entry, 0x3c32);
     require(shop_prompt == std::vector<std::uint8_t>({

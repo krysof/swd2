@@ -842,6 +842,12 @@ void draw_world_characters(
     }
 }
 
+enum class RpgSystemMenuResult {
+    back_to_field_menu,
+    leave_field_menu,
+    map_reload,
+};
+
 class RpgEventHost final : public EventVmHost {
 public:
     RpgEventHost(PlatformBackend& platform, const LegacyFont& font,
@@ -2492,8 +2498,12 @@ public:
                 if (quit_requested_) return false;
                 if (result == InventoryUiResult::map_reload) return true;
             } else if (action == InputAction::confirm && selected == 2U) {
-                if (run_system_menu()) return true;
+                const auto result = run_system_menu();
+                if (result == RpgSystemMenuResult::map_reload) return true;
                 if (quit_requested_) return false;
+                if (result == RpgSystemMenuResult::leave_field_menu) {
+                    return false;
+                }
             } else if (action == InputAction::confirm && selected == 3U) {
                 run_status_menu();
                 if (quit_requested_) return false;
@@ -3762,18 +3772,18 @@ private:
         return confirm_binary_choice(std::move(frame));
     }
 
-    void run_system_save(Viewport base) {
+    [[nodiscard]] bool run_system_save(Viewport base) {
         if ((state_.u16(0x408) & 0x2000U) == 0U) {
             // RPG 4cc3..4cd4 does not silently ignore Record on a map which
             // forbids saving. It routes DATA:3620 through the same 49d0
             // bottom-message renderer used by restricted field actions.
             static_cast<void>(show_bottom_message(
                 std::move(base), field_action_error_));
-            return;
+            return false;
         }
         if (map_database_ == nullptr || save_slot_ == nullptr ||
             !*save_slot_) {
-            return;
+            return false;
         }
         RpgSaveSlotSelector selector;
         while (true) {
@@ -3811,19 +3821,23 @@ private:
             const auto result = selector.input(platform_.wait_for_input());
             if (result == RpgSaveSelectorResult::quit) {
                 quit_requested_ = true;
-                return;
+                return false;
             }
-            if (result == RpgSaveSelectorResult::cancelled) return;
+            if (result == RpgSaveSelectorResult::cancelled) return false;
             if (result == RpgSaveSelectorResult::committed) {
                 (*save_slot_)(
                     static_cast<std::uint8_t>(selector.slot() + 1U),
                     state_, *map_database_, name_font_.serialize());
-                return;
+                // RPG:4d50 sets DATA:3801=3 and 4d55 returns from the whole
+                // 4b76 System routine.  A successful Record therefore closes
+                // both System and the field diamond instead of redrawing the
+                // System rows like a cancelled slot selector.
+                return true;
             }
         }
     }
 
-    [[nodiscard]] bool run_system_menu() {
+    [[nodiscard]] RpgSystemMenuResult run_system_menu() {
         std::size_t selected = 0;
         while (true) {
             auto frame = scene_provider_();
@@ -3863,9 +3877,11 @@ private:
             const auto action = platform_.wait_for_input();
             if (action == InputAction::quit) {
                 quit_requested_ = true;
-                return false;
+                return RpgSystemMenuResult::back_to_field_menu;
             }
-            if (action == InputAction::cancel) return false;
+            if (action == InputAction::cancel) {
+                return RpgSystemMenuResult::back_to_field_menu;
+            }
             if (action == InputAction::up && selected != 0U) {
                 --selected;
                 continue;
@@ -3893,7 +3909,9 @@ private:
                 state_.set_u8(0x3f5, sound_enabled_ ? 0U : 1U);
             } else if (selected == 2U) {
                 const auto slot = select_system_value(frame);
-                if (quit_requested_) return false;
+                if (quit_requested_) {
+                    return RpgSystemMenuResult::back_to_field_menu;
+                }
                 if (slot && load_slot_ != nullptr && *load_slot_ &&
                     live_map_database_ != nullptr) {
                     auto loaded = (*load_slot_)(
@@ -3926,18 +3944,26 @@ private:
                         }
                     }
                     music_enabled_ = loaded_music_enabled;
-                    return true;
+                    return RpgSystemMenuResult::map_reload;
                 }
             } else if (selected == 3U) {
-                run_system_save(frame);
-                if (quit_requested_) return false;
+                if (run_system_save(frame)) {
+                    return RpgSystemMenuResult::leave_field_menu;
+                }
+                if (quit_requested_) {
+                    return RpgSystemMenuResult::back_to_field_menu;
+                }
             } else if (selected == 4U) {
                 const auto value = select_system_value(frame);
-                if (quit_requested_) return false;
+                if (quit_requested_) {
+                    return RpgSystemMenuResult::back_to_field_menu;
+                }
                 if (value) state_.set_u16(0x3f2, static_cast<std::uint16_t>(*value));
             } else if (selected == 5U) {
                 const auto value = select_system_value(frame);
-                if (quit_requested_) return false;
+                if (quit_requested_) {
+                    return RpgSystemMenuResult::back_to_field_menu;
+                }
                 if (value) state_.set_u16(
                     0x406, static_cast<std::uint16_t>(*value + 1U));
             } else if (selected == 6U) {
@@ -3946,10 +3972,12 @@ private:
                 // like selecting No.  Propagate the separate host-abort flag
                 // before redrawing 4dbd, otherwise a close at this exact page
                 // falls through and consumes another input.
-                if (quit_requested_) return false;
+                if (quit_requested_) {
+                    return RpgSystemMenuResult::back_to_field_menu;
+                }
                 if (exit_confirmed) {
                     quit_requested_ = true;
-                    return false;
+                    return RpgSystemMenuResult::back_to_field_menu;
                 }
             }
         }

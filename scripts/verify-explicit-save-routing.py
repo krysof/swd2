@@ -28,6 +28,23 @@ def main() -> int:
     args = parser.parse_args()
 
     trace = json.loads(args.trace.read_text(encoding="utf-8"))
+    if trace.get("input") != {
+            "total": 20, "consumed": 20, "remaining": 0,
+            "implicit_quit_calls": 0} or trace.get("boundaries") != {
+                "wait": 18, "poll": 2, "text": 0, "frontend": 105}:
+        raise SystemExit("Record commit no longer exits directly to the world input boundary")
+    video = trace.get("video", {})
+    if video != {
+            "frames": 125, "direct_updates": 0, "last_width": 320,
+            "last_height": 200, "fnv1a64": "228666d146d4e3b8"}:
+        raise SystemExit("Record commit frame sequence changed")
+    hashes = trace.get("frame_fnv1a64", [])
+    if len(hashes) != 125 or hashes[-3:] != [
+            "99febf5e4bbdd03d",  # slot four
+            "7c78fde1b39562ae",  # default Yes
+            "8b16997976020881",  # world immediately after 4d55 RET
+    ]:
+        raise SystemExit("Record commit did not close System and the field diamond")
     expected_state = trace.get("state_fnv1a64")
     expected_map = trace.get("mapz_fnv1a64")
     expected_name = trace.get("name_fnv1a64")
@@ -54,7 +71,8 @@ def main() -> int:
         raise SystemExit("selected NAME4.DSK differs from replay final name font")
     print(
         "explicit Record routing matches replay: active=4, "
-        f"state={expected_state}, mapz={expected_map}, name={expected_name}"
+        f"state={expected_state}, mapz={expected_map}, name={expected_name}; "
+        "commit returned directly to world"
     )
     return 0
 
