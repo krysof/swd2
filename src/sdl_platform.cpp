@@ -83,7 +83,7 @@ InputAction direction_code_action(int direction) {
 #ifdef __EMSCRIPTEN__
 HeldDirectionRepeatState browser_direction;
 
-InputAction take_browser_direction_action() {
+InputAction take_browser_direction_action(bool every_frame) {
     // DOM callbacks only update ordinary JavaScript state. Polling it while
     // the game is already executing avoids re-entering WebAssembly during an
     // ASYNCIFY sleep, which Safari can reject. A short JS queue preserves a
@@ -95,6 +95,13 @@ InputAction take_browser_direction_action() {
     const auto held = EM_ASM_INT({
         return Module.swd2HeldDirection | 0;
     });
+    if (every_frame) {
+        // RPG's field loop samples the held keyboard level once per rendered
+        // frame. A held touch must therefore yield one direction on every
+        // poll, not desktop text-entry autorepeat at 180/85 ms. The queued
+        // value only preserves a tap that ended between two frame polls.
+        return direction_code_action(held != 0 ? held : queued);
+    }
     return browser_direction.sample(queued, held, SDL_GetTicks());
 }
 #endif
@@ -141,6 +148,7 @@ struct SdlPlatform::Impl {
     std::vector<SDL_GameController*> controllers;
     std::deque<InputAction> pending_actions;
     bool frontend_quit{};
+    InputAction held_keyboard_direction{};
     struct ControllerAxisState {
         int horizontal{};
         int vertical{};
@@ -226,13 +234,30 @@ struct SdlPlatform::Impl {
             }
             return InputAction::none;
         }
+        if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+            InputAction direction = InputAction::none;
+            switch (event.key.keysym.sym) {
+            case SDLK_UP: direction = InputAction::up; break;
+            case SDLK_DOWN: direction = InputAction::down; break;
+            case SDLK_LEFT: direction = InputAction::left; break;
+            case SDLK_RIGHT: direction = InputAction::right; break;
+            default: break;
+            }
+            if (direction != InputAction::none) {
+                if (event.type == SDL_KEYDOWN) {
+                    held_keyboard_direction = direction;
+                } else if (held_keyboard_direction == direction) {
+                    held_keyboard_direction = InputAction::none;
+                }
+            }
+        }
         return translate_event(event);
     }
 
-    InputAction take_pending_action() {
+    InputAction take_pending_action(bool every_frame_direction) {
         if (frontend_quit) return InputAction::quit;
 #ifdef __EMSCRIPTEN__
-        if (const auto action = take_browser_direction_action();
+        if (const auto action = take_browser_direction_action(every_frame_direction);
             action != InputAction::none) return action;
 #endif
         if (pending_actions.empty()) return InputAction::none;
@@ -362,7 +387,7 @@ void SdlPlatform::present(const IndexedSurfaceView& surface) {
 
 InputAction SdlPlatform::wait_for_input() {
     SDL_Event event{};
-    if (const auto pending = impl_->take_pending_action();
+    if (const auto pending = impl_->take_pending_action(false);
         pending != InputAction::none) {
         return pending;
     }
@@ -394,7 +419,7 @@ InputAction SdlPlatform::wait_for_input() {
 }
 
 InputAction SdlPlatform::poll_input() {
-    if (const auto pending = impl_->take_pending_action();
+    if (const auto pending = impl_->take_pending_action(true);
         pending != InputAction::none) {
         return pending;
     }
@@ -406,7 +431,7 @@ InputAction SdlPlatform::poll_input() {
             return action;
         }
     }
-    return InputAction::none;
+    return impl_->held_keyboard_direction;
 }
 
 bool SdlPlatform::poll_frontend_quit() {

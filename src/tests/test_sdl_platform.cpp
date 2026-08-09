@@ -165,6 +165,18 @@ int main() {
                     "SDL key release generated a portable input action");
         }
 
+        // RPG samples a held direction once per rendered world frame. Push a
+        // single keydown, perform 69 frame polls without any more key events,
+        // then push one keyup. Every one of those 69 polls must see RIGHT.
+        push(key(SDLK_RIGHT));
+        for (int frame = 0; frame < 69; ++frame) {
+            require(platform.poll_input() == swd2::InputAction::right,
+                    "one held direction did not remain active for all 69 frames");
+        }
+        push(key(SDLK_RIGHT, SDL_KEYUP));
+        require(platform.poll_input() == swd2::InputAction::none,
+                "held 69-frame direction did not stop on its one key release");
+
         // Repeated keydown events must not scroll DOS selectors. The blocking
         // boundary skips the repeat and returns the next fresh action.
         push(key(SDLK_DOWN, SDL_KEYDOWN, 1));
