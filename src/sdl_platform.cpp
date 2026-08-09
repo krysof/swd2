@@ -13,6 +13,7 @@
 #include <chrono>
 #include <ctime>
 #include <deque>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -150,11 +151,17 @@ struct SdlPlatform::Impl {
     std::deque<InputAction> pending_actions;
     bool frontend_quit{};
     InputAction held_keyboard_direction{};
-    struct ControllerAxisState {
+    struct ControllerDirectionState {
         int horizontal{};
         int vertical{};
+        std::array<bool, 4> dpad{};
+        InputAction last_direction{};
+        std::uint64_t serial{};
     };
-    std::unordered_map<SDL_JoystickID, ControllerAxisState> controller_axes;
+    std::unordered_map<SDL_JoystickID, ControllerDirectionState>
+        controller_directions;
+    std::uint64_t controller_direction_serial{};
+    InputAction held_controller_direction{};
 
     ~Impl() {
         for (auto* controller : controllers) {
@@ -182,6 +189,7 @@ struct SdlPlatform::Impl {
             SDL_GameControllerClose(controller);
         } else {
             controllers.push_back(controller);
+            controller_directions.try_emplace(instance);
         }
     }
 
@@ -194,7 +202,57 @@ struct SdlPlatform::Impl {
         if (found == controllers.end()) return;
         SDL_GameControllerClose(*found);
         controllers.erase(found);
-        controller_axes.erase(instance);
+        controller_directions.erase(instance);
+        recompute_held_controller_direction();
+    }
+
+    static std::optional<std::size_t> direction_index(
+        InputAction action) noexcept {
+        switch (action) {
+        case InputAction::up: return 0U;
+        case InputAction::down: return 1U;
+        case InputAction::left: return 2U;
+        case InputAction::right: return 3U;
+        default: return std::nullopt;
+        }
+    }
+
+    static bool direction_is_active(
+        const ControllerDirectionState& state,
+        InputAction action) noexcept {
+        const auto index = direction_index(action);
+        if (!index) return false;
+        if (state.dpad[*index]) return true;
+        if (action == InputAction::left) return state.horizontal < 0;
+        if (action == InputAction::right) return state.horizontal > 0;
+        if (action == InputAction::up) return state.vertical < 0;
+        return state.vertical > 0;
+    }
+
+    static InputAction active_controller_direction(
+        const ControllerDirectionState& state) noexcept {
+        if (direction_is_active(state, state.last_direction)) {
+            return state.last_direction;
+        }
+        for (const auto action : {InputAction::up, InputAction::down,
+                                  InputAction::left, InputAction::right}) {
+            if (direction_is_active(state, action)) return action;
+        }
+        return InputAction::none;
+    }
+
+    void recompute_held_controller_direction() noexcept {
+        held_controller_direction = InputAction::none;
+        auto newest = std::uint64_t{};
+        for (auto& [_, state] : controller_directions) {
+            const auto active = active_controller_direction(state);
+            if (active == InputAction::none) continue;
+            if (held_controller_direction == InputAction::none ||
+                state.serial >= newest) {
+                newest = state.serial;
+                held_controller_direction = active;
+            }
+        }
     }
 
     static InputAction update_axis_direction(
@@ -221,19 +279,65 @@ struct SdlPlatform::Impl {
             close_controller(event.cdevice.which);
             return InputAction::none;
         }
+        if (event.type == SDL_CONTROLLERBUTTONDOWN ||
+            event.type == SDL_CONTROLLERBUTTONUP) {
+            InputAction direction = InputAction::none;
+            switch (event.cbutton.button) {
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                direction = InputAction::up;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                direction = InputAction::down;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                direction = InputAction::left;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                direction = InputAction::right;
+                break;
+            default:
+                break;
+            }
+            if (const auto index = direction_index(direction)) {
+                auto& state = controller_directions[event.cbutton.which];
+                state.dpad[*index] = event.type == SDL_CONTROLLERBUTTONDOWN;
+                if (event.type == SDL_CONTROLLERBUTTONDOWN) {
+                    state.last_direction = direction;
+                    state.serial = ++controller_direction_serial;
+                }
+                recompute_held_controller_direction();
+            }
+            return translate_event(event);
+        }
         if (event.type == SDL_CONTROLLERAXISMOTION) {
-            auto& axes = controller_axes[event.caxis.which];
+            auto& state = controller_directions[event.caxis.which];
+            auto previous = 0;
+            InputAction action = InputAction::none;
             if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTX) {
-                return update_axis_direction(
-                    event.caxis.value, axes.horizontal,
+                previous = state.horizontal;
+                action = update_axis_direction(
+                    event.caxis.value, state.horizontal,
                     InputAction::left, InputAction::right);
-            }
-            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY) {
-                return update_axis_direction(
-                    event.caxis.value, axes.vertical,
+            } else if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY) {
+                previous = state.vertical;
+                action = update_axis_direction(
+                    event.caxis.value, state.vertical,
                     InputAction::up, InputAction::down);
+            } else {
+                return InputAction::none;
             }
-            return InputAction::none;
+            const auto current = event.caxis.axis ==
+                    SDL_CONTROLLER_AXIS_LEFTX
+                ? state.horizontal : state.vertical;
+            if (action != InputAction::none) {
+                state.last_direction = action;
+                state.serial = ++controller_direction_serial;
+            } else if (previous != current &&
+                       !direction_is_active(state, state.last_direction)) {
+                state.last_direction = active_controller_direction(state);
+            }
+            recompute_held_controller_direction();
+            return action;
         }
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             InputAction direction = InputAction::none;
@@ -444,7 +548,10 @@ InputAction SdlPlatform::poll_input() {
             return action;
         }
     }
-    return impl_->held_keyboard_direction;
+    if (impl_->held_keyboard_direction != InputAction::none) {
+        return impl_->held_keyboard_direction;
+    }
+    return impl_->held_controller_direction;
 }
 
 bool SdlPlatform::poll_frontend_quit() {

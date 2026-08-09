@@ -25,11 +25,25 @@ swd2::InputAction poll_controller_event(swd2::SdlPlatform& platform) {
     // naturally reaches it on the next tick; give the test the same bounded
     // opportunity without sleeping or changing the platform implementation.
     for (int attempt = 0; attempt < 4; ++attempt) {
+        // Pump before reading the held level. Otherwise a synthetic release
+        // can still be waiting in SDL's virtual joystick backend while the
+        // previous direction quite correctly remains latched.
+        SDL_PumpEvents();
         const auto action = platform.poll_input();
         if (action != swd2::InputAction::none) return action;
-        SDL_PumpEvents();
     }
     return swd2::InputAction::none;
+}
+
+bool poll_controller_release(swd2::SdlPlatform& platform) {
+    // Until SDL has converted the virtual-device change into a controller-up
+    // event, poll_input must still report the old held level. Consume bounded
+    // frame polls until that event is observed and the level becomes neutral.
+    for (int attempt = 0; attempt < 8; ++attempt) {
+        SDL_PumpEvents();
+        if (platform.poll_input() == swd2::InputAction::none) return true;
+    }
+    return false;
 }
 
 swd2::InputAction poll_text_event(swd2::SdlPlatform& platform) {
@@ -214,36 +228,62 @@ int main() {
             require(SDL_JoystickSetVirtualButton(
                         virtual_joystick, physical_button, SDL_RELEASED) == 0,
                     "SDL could not release a virtual controller button");
-            require(poll_controller_event(platform) == swd2::InputAction::none,
+            require(poll_controller_release(platform),
                     "SDL controller release generated a portable input action");
         }
 
-        // Analogue axes use engage/release hysteresis and emit exactly one
-        // action when a direction is crossed, including a direct side change.
+        // The RPG world reads a direction level on every rendered frame.
+        // A physical D-pad must therefore behave like the held keyboard and
+        // browser touch paths: one button-down, 69 frame polls, one release.
+        require(SDL_JoystickSetVirtualButton(
+                    virtual_joystick, 9, SDL_PRESSED) == 0,
+                "SDL could not hold the virtual controller D-pad");
+        for (int frame = 0; frame < 69; ++frame) {
+            require(poll_controller_event(platform) ==
+                        swd2::InputAction::right,
+                    "one held controller direction did not remain active for all 69 frames");
+        }
+        require(SDL_JoystickSetVirtualButton(
+                    virtual_joystick, 9, SDL_RELEASED) == 0,
+                "SDL could not release the held virtual controller D-pad");
+        require(poll_controller_release(platform),
+                "held controller direction did not stop on its one release");
+
+        // Analogue axes use engage/release hysteresis. They emit one fresh
+        // action when a direction is crossed and remain held on every world
+        // poll until the stick returns through the release threshold.
         require(SDL_JoystickSetVirtualAxis(virtual_joystick, 0, -17'000) == 0,
                 "SDL could not move a virtual controller axis");
         require(poll_controller_event(platform) == swd2::InputAction::left,
                 "SDL left analogue engage threshold failed");
         require(SDL_JoystickSetVirtualAxis(virtual_joystick, 0, -12'000) == 0,
                 "SDL could not hold a virtual controller axis");
-        require(poll_controller_event(platform) == swd2::InputAction::none,
-                "SDL analogue hysteresis repeated a held direction");
+        require(poll_controller_event(platform) == swd2::InputAction::left,
+                "SDL analogue hysteresis lost a held direction");
         require(SDL_JoystickSetVirtualAxis(virtual_joystick, 0, 17'000) == 0,
                 "SDL could not cross a virtual controller axis");
         require(poll_controller_event(platform) == swd2::InputAction::right,
                 "SDL analogue direct side change failed");
         require(SDL_JoystickSetVirtualAxis(virtual_joystick, 0, 0) == 0,
                 "SDL could not centre a virtual controller axis");
-        require(poll_controller_event(platform) == swd2::InputAction::none,
+        require(poll_controller_release(platform),
                 "SDL analogue centre release generated an action");
         require(SDL_JoystickSetVirtualAxis(virtual_joystick, 1, -17'000) == 0,
                 "SDL could not move a virtual controller vertical axis");
         require(poll_controller_event(platform) == swd2::InputAction::up,
                 "SDL vertical analogue mapping failed");
+        for (int frame = 0; frame < 68; ++frame) {
+            require(platform.poll_input() == swd2::InputAction::up,
+                    "held analogue direction did not remain active for 69 frames");
+        }
         require(SDL_JoystickSetVirtualAxis(virtual_joystick, 1, 17'000) == 0,
                 "SDL could not cross a virtual controller vertical axis");
         require(poll_controller_event(platform) == swd2::InputAction::down,
                 "SDL vertical analogue side change failed");
+        require(SDL_JoystickSetVirtualAxis(virtual_joystick, 1, 0) == 0,
+                "SDL could not centre the virtual controller vertical axis");
+        require(poll_controller_release(platform),
+                "SDL vertical analogue release remained held");
 
         // The typewriter polling boundary uses the same physical mapping but
         // remains a distinct virtual call in deterministic replay backends.
