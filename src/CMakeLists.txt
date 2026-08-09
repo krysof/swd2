@@ -242,7 +242,7 @@ if(BUILD_TESTING)
                 --require-module MEO.EXE
                 --require-module RPG.EXE
                 --require-module DEMO.EXE
-                --min-frames 140
+                --min-frames 200
     )
     set_tests_properties(new_game_startup_validation PROPERTIES
         DEPENDS new_game_startup_replay)

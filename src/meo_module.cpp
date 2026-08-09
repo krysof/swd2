@@ -5,6 +5,8 @@
 #include "swd2/rsk_decoder.hpp"
 #include "swd2/sprite_archive.hpp"
 
+#include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
@@ -40,6 +42,29 @@ Marker MeoModule::run(GameContext& context, Marker) {
         std::span<const std::uint8_t>(executable_bytes)
             .subspan(image_start, image_size)));
 
+    const auto fade_to_black = [&](IndexedFrame frame) {
+        // MEO:276 decrements every nonzero DAC component by exactly one,
+        // waits for one IRQ-0 tick, writes all 768 bytes, and repeats until
+        // the palette is black.  Keep host-close separate from DOS keys so a
+        // direction queued for RPG's title cannot disappear in this handoff.
+        std::uint64_t ticks = 0U;
+        while (std::any_of(frame.palette.begin(), frame.palette.end(),
+                           [](std::uint8_t value) { return value != 0U; })) {
+            if (context.platform.poll_frontend_quit()) return false;
+            for (auto& component : frame.palette) {
+                if (component != 0U) --component;
+            }
+            context.platform.present({
+                IndexedFrame::width, IndexedFrame::height, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto before = ticks * 1000U / 70U;
+            const auto after = ++ticks * 1000U / 70U;
+            context.platform.delay_for(
+                std::chrono::milliseconds(after - before));
+        }
+        return true;
+    };
+
     while (true) {
         const auto time = context.platform.clock_time();
         const auto frame = render_meo_frame(archive, protection.choice(), time.minute, time.second);
@@ -64,6 +89,7 @@ Marker MeoModule::run(GameContext& context, Marker) {
         const auto expected = meo_expected_color(frame, time.minute, time.second);
         const auto status = protection.input(meo_input, expected);
         if (status == MeoStatus::accepted) {
+            if (!fade_to_black(frame)) return Marker::none;
             return Marker::menu_ready;
         }
         if (status == MeoStatus::rejected) {
@@ -71,6 +97,7 @@ Marker MeoModule::run(GameContext& context, Marker) {
                                                    time.second, true);
             context.platform.present({IndexedFrame::width, IndexedFrame::height, rejected.pixels,
                                       std::span<const std::uint8_t, 768>(rejected.palette)});
+            if (!fade_to_black(rejected)) return Marker::none;
             return Marker::menu_rejected;
         }
     }

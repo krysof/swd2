@@ -6363,6 +6363,40 @@ public:
     std::size_t cursor{};
 };
 
+void test_meo_exit_fade(const std::filesystem::path& game_root) {
+    {
+        ScriptedPlatform platform;
+        swd2::GameContext context{
+            game_root, swd2::SharedState::load(game_root / "SAVE.DA1"),
+            platform};
+        require(swd2::MeoModule().run(context, swd2::Marker::none) ==
+                    swd2::Marker::menu_ready &&
+                    platform.presented == 66U && platform.wait_calls == 3U &&
+                    platform.frontend_quit_poll_calls == 63U &&
+                    platform.delay_calls == 63U &&
+                    platform.delayed_milliseconds == 900U &&
+                    platform.palette_hashes.back() ==
+                        17828133145641756547ULL,
+                "MEO accepted path did not perform its 63-tick DAC fade");
+    }
+
+    {
+        ScriptedPlatform platform;
+        platform.frontend_actions.assign(10U, swd2::InputAction::none);
+        platform.frontend_actions.push_back(swd2::InputAction::quit);
+        swd2::GameContext context{
+            game_root, swd2::SharedState::load(game_root / "SAVE.DA1"),
+            platform};
+        require(swd2::MeoModule().run(context, swd2::Marker::none) ==
+                    swd2::Marker::none &&
+                    platform.presented == 13U && platform.wait_calls == 3U &&
+                    platform.frontend_quit_poll_calls == 11U &&
+                    platform.delay_calls == 10U &&
+                    platform.delayed_milliseconds == 142U,
+                "MEO fade ignored frontend quit or consumed a DOS action");
+    }
+}
+
 void test_monolithic_runtime(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions.insert(platform.actions.end(), {
@@ -6384,7 +6418,7 @@ void test_monolithic_runtime(const std::filesystem::path& game_root) {
             "monolithic runtime did not begin with MEO");
     require(result.transitions[1].module == swd2::Module::rpg,
             "monolithic runtime did not continue in-process to RPG");
-    require(platform.presented == 29 && platform.music_calls == 2 &&
+    require(platform.presented == 92 && platform.music_calls == 2 &&
                 platform.stop_calls == 2,
             "MEO, RPG title/load and world did not remain in one process");
 }
@@ -9545,6 +9579,7 @@ int main(int argc, char** argv) {
         test_legacy_event_resources(argv[1]);
         test_event_vm(argv[1]);
         test_stateful_event_opcodes(argv[1]);
+        test_meo_exit_fade(argv[1]);
         test_monolithic_runtime(argv[1]);
         test_rpg_opening_menu(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
