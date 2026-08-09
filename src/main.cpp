@@ -659,6 +659,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     std::size_t map_mutations = 0;
     std::size_t runtime_validated_mutations = 0;
     std::size_t event_pointer_mutations = 0;
+    std::size_t invisible_fixed_bss_operations = 0;
     std::set<std::tuple<std::string, std::uint16_t, std::uint16_t,
                         std::size_t>> dynamic_entity_contexts;
     while (!pending.empty()) {
@@ -684,10 +685,34 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         auto active_location_offset = state.active_location_offset;
         auto active_area_archive = world.location_at_directory_offset(
             active_location_offset).area.event_archive_path;
-        for (const auto& command : record.commands) {
+        for (std::size_t command_index = 0;
+             command_index < record.commands.size(); ++command_index) {
+            const auto& command = record.commands[command_index];
             if (first_record_visit) {
                 audit.opcodes.insert(command.opcode);
                 all_opcodes.insert(command.opcode);
+            }
+
+            if (((command.opcode >= 23U && command.opcode <= 27U) ||
+                 command.opcode == 39U) && !command.arguments.empty() &&
+                (command.arguments[0] & 1U) == 0U) {
+                const auto entity_index =
+                    static_cast<std::size_t>(command.arguments[0] / 2U);
+                const auto entity_count = world.location_at_directory_offset(
+                    active_location_offset).area.entity_count();
+                if (entity_index >= entity_count) {
+                    const auto documented_release_slot =
+                        archive_name == "CHNA0.EXE" && target == 740U &&
+                        command_index == 75U && command.opcode == 25U &&
+                        command.arguments[0] == 22U &&
+                        active_location_offset == 144U &&
+                        entity_index == 11U && entity_count == 5U;
+                    if (!documented_release_slot) {
+                        throw std::runtime_error(
+                            "reachable event uses an unexplained fixed-BSS entity slot");
+                    }
+                    if (first_record_visit) ++invisible_fixed_bss_operations;
+                }
             }
 
             const auto enqueue_branch = [&](std::uint16_t next) {
@@ -845,7 +870,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         total_records != 1065U || total_commands != 6380U ||
         all_opcodes != expected_opcodes || inert_odd_targets != 1U ||
         map_mutations != 235U || runtime_validated_mutations != map_mutations ||
-        event_pointer_mutations != 37U) {
+        event_pointer_mutations != 37U || invisible_fixed_bss_operations != 1U) {
         throw std::runtime_error(
             "reachable RPG event graph differs from the audited release");
     }
@@ -937,7 +962,9 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << "/62 dispatch opcodes; " << map_mutations
               << " runtime-validated MAPZ mutations (" << event_pointer_mutations
               << " event-pointer writes); " << inert_odd_targets
-              << " documented inert odd target; "
+              << " documented inert odd target, "
+              << invisible_fixed_bss_operations
+              << " invisible fixed-BSS slot operation; "
               << visited_states.size() * 2U
               << " entity-context executions, "
               << context_commands[0] + context_commands[1]
