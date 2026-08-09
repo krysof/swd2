@@ -951,6 +951,12 @@ void verify_maps(const std::filesystem::path& game_root) {
     std::set<std::tuple<std::uint16_t, std::uint16_t, std::size_t,
                         std::uint16_t>> inert_entity_records;
     std::size_t inert_off_map_overlays = 0;
+    std::size_t transition_rows = 0;
+    std::size_t wrapped_transition_records = 0;
+    std::size_t transition_wrap_steps = 0;
+    std::size_t wrapped_transition_rows = 0;
+    std::size_t inverted_transition_rows = 0;
+    std::size_t in_map_transition_rows = 0;
     for (const auto& location : world.locations()) {
         if (seen_areas.insert(location.area_offset).second) {
             auto graphics = game_root / swd2::normalize_dos_asset_path(
@@ -973,10 +979,68 @@ void verify_maps(const std::filesystem::path& game_root) {
                 resource.cell_base(), resource.layout().width,
                 resource.layout().height, resource.cells().size()};
             for (const auto cell : resource.cells()) {
-                if (cell != 0xffffU &&
-                    (cell & 0x07ffU) >= resource.tile_count()) {
+                if ((cell & 0x07ffU) >= resource.tile_count()) {
                     throw std::runtime_error(
                         "MAPA RAP cell references a tile outside its dictionary");
+                }
+            }
+            for (const auto& transition :
+                 transitions.records(location.area.flags)) {
+                const auto cell_end = static_cast<std::size_t>(resource.cell_base()) +
+                    resource.cells().size() * 2U;
+                if (cell_end > 0x10000U ||
+                    (transition.first_cell & 1U) != 0U ||
+                    (transition.last_cell & 1U) != 0U) {
+                    throw std::runtime_error(
+                        "MAP0 trigger or referenced RAP exceeds its 16-bit word space");
+                }
+                auto first = transition.first_cell;
+                auto last = transition.last_cell;
+                const auto row_stride = static_cast<std::uint16_t>(
+                    resource.layout().width * 2U);
+                bool record_wrapped = false;
+                bool already_wrapped = false;
+                for (std::uint16_t row = 0; row < transition.row_count; ++row) {
+                    ++transition_rows;
+                    wrapped_transition_rows += already_wrapped;
+                    if (first > last) {
+                        // When only DX has wrapped, RPG:e94's unsigned pair of
+                        // comparisons makes this intermediate range empty.
+                        ++inverted_transition_rows;
+                    } else {
+                        const auto intersects_map =
+                            first < cell_end && last >= resource.cell_base();
+                        if (intersects_map) {
+                            ++in_map_transition_rows;
+                            if (first < resource.cell_base() || last >= cell_end) {
+                                throw std::runtime_error(
+                                    "MAP0 trigger row only partially overlaps its RAP");
+                            }
+                        }
+                    }
+                    const auto next_first = static_cast<std::uint16_t>(
+                        first + row_stride);
+                    const auto next_last = static_cast<std::uint16_t>(
+                        last + row_stride);
+                    if (row + 1U < transition.row_count) {
+                        const auto wrapped =
+                            next_first < first || next_last < last;
+                        transition_wrap_steps += wrapped;
+                        record_wrapped = record_wrapped || wrapped;
+                        already_wrapped = already_wrapped || wrapped;
+                    }
+                    first = next_first;
+                    last = next_last;
+                }
+                wrapped_transition_records += record_wrapped;
+                if (!transition.is_special()) {
+                    static_cast<void>(world.location_at_directory_offset(
+                        transition.destination_directory_offset()));
+                    if (transition.sets_travel_flag() &&
+                        transition.flag_index >= 34U) {
+                        throw std::runtime_error(
+                            "MAP0 trigger uses a travel flag outside DS:3a8a");
+                    }
                 }
             }
             for (std::size_t overlay_index = 0;
@@ -991,8 +1055,7 @@ void verify_maps(const std::filesystem::path& game_root) {
                     ++inert_off_map_overlays;
                     continue;
                 }
-                if (overlay.tile != 0xffffU &&
-                    (overlay.tile & 0x07ffU) >= resource.tile_count()) {
+                if ((overlay.tile & 0x07ffU) >= resource.tile_count()) {
                     throw std::runtime_error(
                         "MAPA RRO cell references a tile outside its dictionary: " +
                         graphics.string() + ", record " +
@@ -1008,11 +1071,12 @@ void verify_maps(const std::filesystem::path& game_root) {
             referenced_fonts.insert(location.area.event_font_path);
             for (std::size_t entity = 0; entity < location.area.entity_count();
                  ++entity) {
-                const auto cell = swd2::map_entity(location.area, entity).cell_offset;
+                const auto record = swd2::map_entity(location.area, entity);
+                const auto cell = record.cell_offset;
                 if (cell < resource.cell_base() ||
                     ((cell - resource.cell_base()) & 1U) != 0U ||
                     (cell - resource.cell_base()) / 2U >= resource.cells().size()) {
-                    if (swd2::map_entity(location.area, entity).behavior != 3U) {
+                    if (record.behavior != 3U) {
                         throw std::runtime_error(
                             "active MAPA entity cell is outside its referenced RAP layout: "
                             "location " + std::to_string(location.directory_offset) +
@@ -1025,6 +1089,15 @@ void verify_maps(const std::filesystem::path& game_root) {
                     inert_entity_records.emplace(
                         location.directory_offset, location.area_offset,
                         entity, cell);
+                } else if (record.behavior != 3U) {
+                    const auto cell_index = static_cast<std::size_t>(
+                        (cell - resource.cell_base()) / 2U);
+                    if (cell_index + 2U >= resource.cells().size() ||
+                        cell_index % resource.layout().width + 2U >=
+                            resource.layout().width) {
+                        throw std::runtime_error(
+                            "active MAPA entity three-cell footprint crosses RAP bounds");
+                    }
                 }
             }
         }
@@ -1074,6 +1147,9 @@ void verify_maps(const std::filesystem::path& game_root) {
         overlays != 71411U || animation_sets != 0U || de_sets != 37U ||
         de_frames != 971U || transitions.area_count() != 152U ||
         transitions.record_count() != 481U ||
+        transition_rows != 2835U || wrapped_transition_records != 7U ||
+        transition_wrap_steps != 10U || wrapped_transition_rows != 319U ||
+        inverted_transition_rows != 3U || in_map_transition_rows != 2761U ||
         world.locations().size() != 466U || seen_areas.size() != 152U ||
         referenced_entities != 822U || split_layouts != 2U ||
         inert_off_map_entities != 4U ||
@@ -1101,7 +1177,9 @@ void verify_maps(const std::filesystem::path& game_root) {
               << " non-map tile sets skipped; " << de_sets << " DE sprite sets, "
               << de_frames << " frames; " << transitions.area_count()
               << " MAP0 areas, " << transitions.record_count()
-              << " transition records; " << world.locations().size()
+              << " transition records/" << transition_rows << " expanded rows ("
+              << wrapped_transition_records << " wrapping); "
+              << world.locations().size()
               << " MAPA placements/" << seen_areas.size() << " unique areas/"
               << referenced_entities << " entities (" << inert_off_map_entities
               << " inert off-map), " << inert_off_map_overlays

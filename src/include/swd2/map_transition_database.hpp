@@ -11,7 +11,8 @@ namespace swd2 {
 
 // MAP0.EXE is a data-only MZ image used by RPG.EXE:e94.  Each area flag's
 // low twelve bits address a pointer-directory entry whose list describes one
-// or more rectangular (row-expanded) trigger ranges.
+// or more row-expanded trigger ranges. Endpoint advances use the original
+// 16-bit wrapping arithmetic.
 struct MapTransitionRecord {
     std::uint8_t row_count{};
     std::uint8_t flag_index{};

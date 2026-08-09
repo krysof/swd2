@@ -51,7 +51,7 @@
         "完整通关轨迹中不存在状态分歧"
       ],
       "evidence": ["src/rpg_entity_system.cpp", "src/rpg_module.cpp", "src/map_database.cpp", "src/main.cpp", "src/tests/test_main.cpp"],
-      "remaining": ["把 1,065 条静态可达记录扩展成逐场景执行轨迹", "由完整通关回放证明无状态分歧"]
+      "remaining": ["把 6,862 个可执行地点/实体上下文逐一与原版场景帧和状态基准对照", "由完整通关回放证明无状态分歧"]
     },
     {
       "id": "rpg_ui_pixel_parity",

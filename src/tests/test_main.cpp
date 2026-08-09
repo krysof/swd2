@@ -1594,6 +1594,18 @@ void test_map_transition_database(const std::filesystem::path& game_root) {
                                    static_cast<std::uint16_t>(last_row + 0x52U),
                                    180),
             "MAP0 multi-row special-trigger expansion differs from e94");
+
+    // AREA 0x2010 deliberately advances its 180-row portal past 0xffff.
+    // RPG:e94 wraps AX/DX, making row 126 cover 000c..0124; the former
+    // uint32_t rewrite silently made this released portal row unreachable.
+    const auto wrapped = transitions.match(0x2010U, 0x000cU, 180U);
+    require(wrapped && wrapped->row_count == 180U &&
+                wrapped->first_cell == 0x4edcU &&
+                wrapped->last_cell == 0x4ff4U &&
+                wrapped->action == 0x0046U &&
+                wrapped->destination_directory_offset() == 0x0046U &&
+                !transitions.match(0x2010U, 0x000aU, 180U),
+            "MAP0 16-bit trigger-row wrapping differs from RPG:e94");
 }
 
 void test_rpg_entity_system(const std::filesystem::path& game_root) {

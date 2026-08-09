@@ -98,14 +98,17 @@ std::span<const MapTransitionRecord> MapTransitionDatabase::records(
 std::optional<MapTransitionRecord> MapTransitionDatabase::match(
     std::uint16_t area_flags, std::uint16_t actor_cell,
     std::uint16_t map_width) const {
-    const auto row_stride = static_cast<std::uint32_t>(map_width) * 2U;
+    // RPG.EXE:e94 keeps both endpoints in AX/DX and advances them with a
+    // 16-bit ADD.  Large released maps intentionally wrap at 10000h, so a
+    // wider host-side accumulator changes which portals can be entered.
+    const auto row_stride = static_cast<std::uint16_t>(map_width * 2U);
     for (const auto& record : records(area_flags)) {
-        auto first = static_cast<std::uint32_t>(record.first_cell);
-        auto last = static_cast<std::uint32_t>(record.last_cell);
+        auto first = record.first_cell;
+        auto last = record.last_cell;
         for (std::uint16_t row = 0; row < record.row_count; ++row) {
             if (actor_cell >= first && actor_cell <= last) return record;
-            first += row_stride;
-            last += row_stride;
+            first = static_cast<std::uint16_t>(first + row_stride);
+            last = static_cast<std::uint16_t>(last + row_stride);
         }
     }
     return std::nullopt;

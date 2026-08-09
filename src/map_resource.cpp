@@ -41,7 +41,6 @@ void draw_tile(std::span<std::uint8_t> destination,
                std::uint16_t tile_count, std::size_t tile_x,
                std::size_t tile_y, std::uint16_t encoded_tile,
                bool transparent) {
-    if (encoded_tile == 0xffffU) return;
     const auto tile = static_cast<std::size_t>(encoded_tile & 0x07ffU);
     if (tile >= tile_count) {
         throw std::runtime_error(
@@ -183,6 +182,18 @@ MapResource MapResource::load(const std::filesystem::path& graphics_base_path,
         }
         result.fixed_background_cells_ = std::move(records[1].cells);
     }
+    const auto validate_cells = [&](std::span<const std::uint16_t> cells,
+                                    const char* layer) {
+        for (const auto cell : cells) {
+            if ((cell & 0x07ffU) >= result.tile_count_) {
+                throw std::runtime_error(
+                    std::string("reachable RAP ") + layer +
+                    " cell is outside its graphics dictionary");
+            }
+        }
+    };
+    validate_cells(result.cells_, "primary");
+    validate_cells(result.fixed_background_cells_, "fixed-background");
 
     const auto overlay_path = with_extension(layout_base_path, ".RRO");
     if (std::filesystem::is_regular_file(overlay_path)) {
@@ -207,6 +218,14 @@ MapResource MapResource::load(const std::filesystem::path& graphics_base_path,
         }
         if (!terminated) {
             throw std::runtime_error("RRO overlay has no final sentinel");
+        }
+        for (const auto& overlay : result.overlays_) {
+            if (overlay.x < result.layout_.width &&
+                overlay.y < result.layout_.height &&
+                (overlay.tile & 0x07ffU) >= result.tile_count_) {
+                throw std::runtime_error(
+                    "reachable RRO tile is outside its graphics dictionary");
+            }
         }
     }
     return result;
