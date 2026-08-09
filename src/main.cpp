@@ -938,10 +938,18 @@ void verify_maps(const std::filesystem::path& game_root) {
     std::set<std::string> referenced_music;
     std::set<std::string> referenced_events;
     std::set<std::string> referenced_fonts;
-    std::map<std::uint16_t, std::pair<std::uint16_t, std::size_t>> area_cells;
+    struct AreaLayoutAudit {
+        std::uint16_t cell_base{};
+        std::uint16_t width{};
+        std::uint16_t height{};
+        std::size_t cell_count{};
+    };
+    std::map<std::uint16_t, AreaLayoutAudit> area_layouts;
     std::size_t referenced_entities = 0;
     std::size_t split_layouts = 0;
     std::size_t inert_off_map_entities = 0;
+    std::set<std::tuple<std::uint16_t, std::uint16_t, std::size_t,
+                        std::uint16_t>> inert_entity_records;
     std::size_t inert_off_map_overlays = 0;
     for (const auto& location : world.locations()) {
         if (seen_areas.insert(location.area_offset).second) {
@@ -961,8 +969,9 @@ void verify_maps(const std::filesystem::path& game_root) {
                     graphics.string() + " / " + layout.string() + "): " +
                     error.what());
             }
-            area_cells[location.area_offset] = {
-                resource.cell_base(), resource.cells().size()};
+            area_layouts[location.area_offset] = {
+                resource.cell_base(), resource.layout().width,
+                resource.layout().height, resource.cells().size()};
             for (const auto cell : resource.cells()) {
                 if (cell != 0xffffU &&
                     (cell & 0x07ffU) >= resource.tile_count()) {
@@ -1013,15 +1022,33 @@ void verify_maps(const std::filesystem::path& game_root) {
                             std::to_string(resource.cells().size() * 2U));
                     }
                     ++inert_off_map_entities;
+                    inert_entity_records.emplace(
+                        location.directory_offset, location.area_offset,
+                        entity, cell);
                 }
             }
         }
-        const auto [cell_base, cell_count] = area_cells.at(location.area_offset);
-        if (location.map_position < cell_base ||
-            ((location.map_position - cell_base) & 1U) != 0U ||
-            (location.map_position - cell_base) / 2U >= cell_count) {
+        const auto& layout = area_layouts.at(location.area_offset);
+        const auto viewport_end_x = static_cast<std::size_t>(location.viewport_x) + 40U;
+        const auto viewport_end_y = static_cast<std::size_t>(location.viewport_y) + 25U;
+        const auto actor_world_x = static_cast<std::size_t>(location.viewport_x) +
+            ((static_cast<std::size_t>(location.actor_screen_x) + 2U) >> 1U);
+        const auto actor_world_y = static_cast<std::size_t>(location.viewport_y) +
+            ((static_cast<std::size_t>(location.actor_screen_y) + 16U) >> 3U);
+        const auto expected_position = static_cast<std::size_t>(layout.cell_base) +
+            (static_cast<std::size_t>(location.viewport_y) * layout.width +
+             location.viewport_x) * 2U;
+        if (viewport_end_x > layout.width || viewport_end_y > layout.height ||
+            actor_world_x >= layout.width || actor_world_y >= layout.height ||
+            expected_position > 0xffffU ||
+            location.map_position != expected_position ||
+            location.map_position < layout.cell_base ||
+            ((location.map_position - layout.cell_base) & 1U) != 0U ||
+            (location.map_position - layout.cell_base) / 2U >=
+                layout.cell_count) {
             throw std::runtime_error(
-                "MAPA location placement is outside its referenced RAP layout");
+                "MAPA location placement/viewport is inconsistent with RAP: " +
+                std::to_string(location.directory_offset));
         }
     }
     for (const auto& path : referenced_music) {
@@ -1036,13 +1063,22 @@ void verify_maps(const std::filesystem::path& game_root) {
         static_cast<void>(swd2::LegacyFont::load(
             game_root / swd2::normalize_dos_asset_path(path)));
     }
+    const std::set<std::tuple<std::uint16_t, std::uint16_t, std::size_t,
+                              std::uint16_t>> expected_inert_entities{
+        {304U, 23807U, 0U, 10656U},
+        {316U, 24147U, 0U, 10656U},
+        {418U, 24717U, 0U, 9190U},
+        {490U, 25685U, 0U, 9190U},
+    };
     if (maps != 129U || tiles != 123958U || cells != 2140501U ||
         overlays != 71411U || animation_sets != 0U || de_sets != 37U ||
         de_frames != 971U || transitions.area_count() != 152U ||
         transitions.record_count() != 481U ||
         world.locations().size() != 466U || seen_areas.size() != 152U ||
         referenced_entities != 822U || split_layouts != 2U ||
-        inert_off_map_entities != 4U || inert_off_map_overlays != 2490U ||
+        inert_off_map_entities != 4U ||
+        inert_entity_records != expected_inert_entities ||
+        inert_off_map_overlays != 2490U ||
         referenced_music.size() != 22U || referenced_events.size() != 7U ||
         referenced_fonts.size() != 6U) {
         throw std::runtime_error(

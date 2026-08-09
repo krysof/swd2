@@ -44,8 +44,9 @@
 #include "swd2/sprite_archive.hpp"
 #include "swd2/voc_decoder.hpp"
 
-#include <cstdlib>
+#include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -1469,13 +1470,18 @@ void test_map_resource(const std::filesystem::path& game_root) {
             "RAP height,width words were transposed on a non-square map");
 
     const auto layered = swd2::MapResource::load(game_root / "T6" / "ZD");
+    const auto pre_actor_overlays = static_cast<std::size_t>(std::count_if(
+        layered.overlays().begin(), layered.overlays().end(),
+        [](const auto& overlay) { return (overlay.tile & 0x2000U) != 0U; }));
     require(layered.layout().directory_bytes == 6U &&
                 layered.layout().image_end == 0x1a08U &&
                 layered.layout().layer_count == 2U &&
                 layered.cell_base() == 10U && layered.layout().width == 93U &&
                 layered.layout().height == 25U &&
                 layered.cells().size() == 2325U &&
-                layered.has_fixed_background_layer(),
+                layered.has_fixed_background_layer() &&
+                layered.overlays().size() == 552U &&
+                pre_actor_overlays == 325U,
             "ZD two-record RAP directory was not decoded");
     const auto world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
     const auto& zd_left = world.location_at_directory_offset(498U);
@@ -1494,10 +1500,12 @@ void test_map_resource(const std::filesystem::path& game_root) {
         }
         return hash;
     };
+    const auto zd_left_bare = layered.render_viewport_background(0U, 0U, false);
     const auto zd_left_background = layered.render_viewport_background(0U, 0U);
     const auto zd_left_frame = layered.render_viewport(0U, 0U);
     const auto zd_right_frame = layered.render_viewport(50U, 0U);
     require(zd_left_frame.width == 320U && zd_left_frame.height == 200U &&
+                hash_pixels(zd_left_bare.pixels) == 2094815236618880533ULL &&
                 hash_pixels(zd_left_background.pixels) ==
                     17375729876272745673ULL &&
                 hash_pixels(zd_left_frame.pixels) == 3074925849497365130ULL &&
