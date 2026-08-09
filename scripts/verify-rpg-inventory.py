@@ -84,7 +84,7 @@ def main() -> int:
         if video.get("frames") != 165 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "2ab5fb8ab5eac3d0":
+                video.get("fnv1a64") != "e3ae95999f65f1b0":
             raise ValueError("inventory replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
         inventory_pages = [
@@ -92,27 +92,27 @@ def main() -> int:
             "baad37ae3f821bd6", "7f62ae2b4a2e3672",
             "d8db0ba139c62eb2", "c17e39e2890267ca",
             "0ac20eb1d3a2a066", "c7a03895f43673ed",
-            "bf211faeb8f93899", "652afd15db4bd6ad",
-            "2efe3a042901e915", "220486a992ac2a21",
-            "7a310c3a0998fe15", "7526a66ff19aedb9",
-            "2233023ccdfe4511", "86dd80381b339cd5",
-            "5a63a06abab9f641", "7e237a70f6b88b7d",
-            "205fd8733edcfd61", "b94e25016fa60871",
-            "d95a832b992e0c29", "fca7870230116a2d",
-            "aaf40db0f8c14165", "f933d936efc1f131",
-            "3e582eeaca129755", "bc36512644e54185",
-            "54bd3cfa3076578d", "3b31d75e28967ae5",
-            "e2e09ebf0a08c669", "95c4e3af40f2e311",
-            "41f29786f40d90b5", "31a40c86aee73781",
-            "47097801eedd26a1", "1e8856a3ef904f11",
-            "92084037ba586369", "c5f7e1fbbece4415",
-            "0ef3fb5674768ed9", "9da3954fe394d6c5",
-            "05063d85dee05ea5", "8198a284d2643bc9",
-            "0b6789eaae8d30d5", "1827c02f726be6dd",
-            "9b7d44a3dc56c831", "ec6e8d42908c1895",
-            "ac2f5ba206f68e59", "3ded9bfb24d435e9",
-            "b4130adceb9b5411", "1a46e3945cf2f74d",
-            "f4602a4eb4105235", "c737ae2763a734f5",
+            "5e0555c7c34f3689", "534ca6205e514f4d",
+            "a097243b8440e9b5", "d28c70cd5b3c6031",
+            "ebc9f67164d7feb5", "59c23761e1c18ea9",
+            "8fc580446601ed41", "bc194b8b30a96275",
+            "5c81ce1b4c82ff51", "c65a0044f1967b7d",
+            "1b162316f47a7771", "9e48426ac9c83e21",
+            "37d9a3b9f6e14879", "2a3aac105e164acd",
+            "ff0e46080195d665", "8a1abc5fd58b42e1",
+            "f82bd600c92da6f5", "10d459a55bb49385",
+            "32d6a87ac525612d", "0fc82d014ab717e5",
+            "fddf3d2c3181dfb9", "035761b6d8f68b41",
+            "0e47318347496cd5", "e1b527da254e3991",
+            "5008b03aae4b4ab1", "8c1ad4ab8793f741",
+            "ad06dea4e1d17cb9", "3790cc331a0d44b5",
+            "44ec2ba09d3339c9", "1a163fae2a9e0ec5",
+            "603fc37c677a6fa5", "f46be5b5611e2219",
+            "40a3553dc402f675", "11a0e1149694305d",
+            "2c6427ccc22019e1", "6cab157dfe8a5f35",
+            "1fdc091343b93149", "64e5d8c8dc8c1739",
+            "21a588e4839efc41", "51234b904453ebed",
+            "d7d9ddb409b75e55", "fbe2327bc1058915",
         ]
         if len(hashes) != 165 or hashes[113:115] != [
                 "1b0a18f362ed2cb2",  # System/Book-selected field diamond

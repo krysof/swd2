@@ -519,38 +519,23 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                     *thumb_opaque,
             "RPG 2907 scrollbar thumb was not based at panel top+20");
 
-    const auto differing_pixel = [&](std::size_t pressed,
-                                     std::size_t normal) {
-        const auto pressed_pixels = menu.pixels(pressed);
-        const auto normal_pixels = menu.pixels(normal);
-        auto offset = std::size_t{0};
-        while (offset < pressed_pixels.size() &&
-               (pressed_pixels[offset] == 0xfeU ||
-                pressed_pixels[offset] == normal_pixels[offset])) {
-            ++offset;
-        }
-        require(offset < pressed_pixels.size(),
-                "RPG scrollbar endpoint frames have no visible pressed delta");
-        return offset;
-    };
-    const auto top_delta = differing_pixel(95, 94);
+    const auto normal_scrollbar = surface;
     std::fill(surface.begin(), surface.end(), 0x55);
     swd2::draw_rpg_selector_scrollbar(
         surface, 320, 200, menu, 24, 36, 5, 8, 42, 0,
         swd2::RpgListSelection::ScrollCue::toward_start);
-    require(surface[(40U + top_delta / menu.sprites()[95].width) * 320U +
-                    296U + top_delta % menu.sprites()[95].width] ==
-                menu.pixels(95)[top_delta],
-            "RPG 2907 did not show MENU 95 for an upward scroll input");
-    const auto bottom_delta = differing_pixel(98, 97);
+    require(surface == normal_scrollbar,
+            "RPG visible page retained hidden MENU 95 scroll feedback");
+    std::fill(surface.begin(), surface.end(), 0x55);
+    swd2::draw_rpg_selector_scrollbar(
+        surface, 320, 200, menu, 24, 36, 5, 8, 42, 42);
+    const auto final_scrollbar = surface;
     std::fill(surface.begin(), surface.end(), 0x55);
     swd2::draw_rpg_selector_scrollbar(
         surface, 320, 200, menu, 24, 36, 5, 8, 42, 42,
         swd2::RpgListSelection::ScrollCue::toward_end);
-    require(surface[(168U + bottom_delta / menu.sprites()[98].width) * 320U +
-                    296U + bottom_delta % menu.sprites()[98].width] ==
-                menu.pixels(98)[bottom_delta],
-            "RPG 2907 did not show MENU 98 for a downward scroll input");
+    require(surface == final_scrollbar,
+            "RPG visible page retained hidden MENU 98 scroll feedback");
 
     std::fill(surface.begin(), surface.end(), 0x55);
     swd2::draw_rpg_compact_panel(surface, 320, 200, menu, 4, 0, 2, 1);
@@ -7655,9 +7640,9 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
                 platform.frame_hashes[4] == 13077362639740147185ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 11879928557357262611ULL &&
+                platform.frame_hashes[5] == 13311697900490550662ULL &&
                 platform.frame_hashes[6] != platform.frame_hashes[5] &&
-                platform.frame_hashes[6] == 8029418886458010572ULL &&
+                platform.frame_hashes[6] == 12266892908185081969ULL &&
                 platform.frame_hashes[7] == platform.frame_hashes[3] &&
                 platform.frame_hashes[8] == platform.frame_hashes[2] &&
                 platform.frame_hashes[9] == platform.frame_hashes[0],
@@ -7688,7 +7673,7 @@ void test_rpg_field_magic_menu(const std::filesystem::path& game_root) {
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
                 platform.frame_hashes[4] == 18106793398524205324ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 15442176735255148482ULL &&
+                platform.frame_hashes[5] == 3652824964822135482ULL &&
                 platform.frame_hashes[6] == platform.frame_hashes[3] &&
                 platform.frame_hashes[7] == platform.frame_hashes[2] &&
                 platform.frame_hashes[8] == platform.frame_hashes[0],

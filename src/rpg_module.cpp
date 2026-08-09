@@ -3429,18 +3429,22 @@ private:
 
                 // 26f3 switches to ME01.RSK, fixes the horizontal origin at
                 // mode-X column 22h (136 pixels), and walks all fourteen
-                // horizontal strips at y=48-first_visible*16. 653a clips by
-                // strip origin to the selector body, so scrolling reveals a
-                // different vertical slice of the original character art.
-                for (std::size_t strip = 0;
-                     strip < status_art_.sprites().size(); ++strip) {
-                    const auto top = 48 -
-                        static_cast<int>(first_visible) * 16 +
-                        static_cast<int>(strip) * 16;
-                    if (top < 48 || top > 160) continue;
-                    const auto& art = status_art_.sprites()[strip];
-                    blit_opaque(frame, status_art_.pixels(strip),
-                                art.width, art.height, 34 * 4, top);
+                // horizontal strips twice. The outer loop never restores the
+                // y coordinate: after the first 224-pixel pass, sprite zero
+                // follows sprite thirteen. This makes the artwork repeat when
+                // first_visible reaches 13 rather than disappearing below the
+                // selector. 653a only submits strips whose origin is 48..160.
+                auto art_top = 48 - static_cast<int>(first_visible) * 16;
+                for (int pass = 0; pass < 2; ++pass) {
+                    for (std::size_t strip = 0;
+                         strip < status_art_.sprites().size(); ++strip) {
+                        if (art_top >= 48 && art_top <= 160) {
+                            const auto& art = status_art_.sprites()[strip];
+                            blit_opaque(frame, status_art_.pixels(strip),
+                                        art.width, art.height, 34 * 4, art_top);
+                        }
+                        art_top += 16;
+                    }
                 }
 
                 const auto actor_base = 0x106U + actor * 0x9fU;

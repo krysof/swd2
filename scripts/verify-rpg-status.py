@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the RPG Status page and all three ME01 strip-scroll positions."""
+"""Lock every RPG Status row and both passes of the ME01 strip artwork."""
 
 from __future__ import annotations
 
@@ -70,35 +70,53 @@ def main() -> int:
         if data.get("schema_version") != 1:
             raise ValueError("unsupported trace schema")
         if data.get("input") != {
-            "total": 14,
-            "consumed": 14,
+            "total": 32,
+            "consumed": 32,
             "remaining": 0,
             "implicit_quit_calls": 0,
         }:
             raise ValueError("Status replay input accounting differs")
         if data.get("boundaries") != {
-            "wait": 13,
+            "wait": 31,
             "poll": 1,
             "text": 0,
             "frontend": 105,
         }:
             raise ValueError("Status replay input boundaries differ")
         video = data.get("video", {})
-        if video.get("frames") != 119 or \
+        if video.get("frames") != 137 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "b923f32764b54353":
+                video.get("fnv1a64") != "b422c081b4095cda":
             raise ValueError("Status replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
-        if len(hashes) != 119 or hashes[113:119] != [
+        if len(hashes) != 137 or hashes[113:137] != [
                 "1b0a18f362ed2cb2",  # System/Book-selected field diamond
                 "a2bc9fa38fe088af",  # down/Status-selected field diamond
                 "9926d3f4783f8138",  # actor-zero selector
-                "edebf73491c53a2a",  # rows 0..7 / ME01 top strips
-                "c354b5714d577d76",  # rows 8..15 / ME01 lower strips
-                "0d41b4774d768489",  # rows 16..23 / equipment values
+                "edebf73491c53a2a",  # selected row zero
+                "90cf2568ca25de08",
+                "f3ae5a3cece2fb27",
+                "d68cdcc4afd8bcbb",
+                "b37107ea503106df",
+                "ebb36141ed32213f",
+                "69d1882db3f99d24",
+                "9a5969f896f3a881",
+                "2f8af66f01a0f3b6",
+                "93597e411919ea7b",
+                "1fa3d601dc1859cb",
+                "e4636c688eae01c6",
+                "91b102027a51e845",
+                "4655d480ac9168cc",
+                "d0dc1264a3b373cc",  # first_visible=6
+                "f3fa21c2b23bb940",  # first_visible=7
+                "25cc949bbe0f8a64",  # first_visible=8
+                "d67714d5a4c9a433",
+                "486807874c144802",
+                "c35db70ba79014fe",  # second ME01 pass begins
+                "4b83cd5166b18ea1",  # selected row 20
         ]:
-            raise ValueError("Status selection/page frames differ")
+            raise ValueError("Status selection/row frames differ")
         if (data.get("state_fnv1a64"), data.get("mapz_fnv1a64"),
                 data.get("name_fnv1a64")) != (
                     "54098cf0ca14338b", "827f0f1b725a0958",
@@ -106,21 +124,30 @@ def main() -> int:
             raise ValueError("Status replay changed the loaded save triple")
 
         frames = load_indexed_frames(args.frames)
-        if len(frames) != 119:
+        if len(frames) != 137:
             raise ValueError("Status frame capture count differs")
         expected = [
-            (116, "40163683a334d336"),
-            (117, "01c6ea8a17af29ba"),
-            (118, "af41fb6401b133dd"),
+            "40163683a334d336", "957dca70bc6c8704",
+            "8140892ef2e02773", "140840122f3e51fb",
+            "48105bc941385147", "7a03090577be0247",
+            "1f0bf36a2e386980", "ffab5e35aff067f5",
+            "ada8baa3b2a54a6a", "8655f6b723fd93ab",
+            "a1a90f230d0b1977", "b7b7631851193992",
+            "2dd05d67893dd88d", "0a3bf04a76e4bdf8",
+            "8d4198c0abf65594", "6ebfe428a6e061d0",
+            "dfb031f965949688", "f9b273529dd9f637",
+            "dc657042456c03c6", "c350981ee0d139c6",
+            "a94aad1cb110f265",
         ]
         crop = (96, 40, 224, 144)
-        for frame, digest in expected:
+        for offset, digest in enumerate(expected):
+            frame = 116 + offset
             if crop_fnv(frames[frame], crop) != digest:
-                raise ValueError(f"Status indexed page differs: {frame}")
+                raise ValueError(f"Status indexed row differs: {offset}")
 
         print(
-            "RPG Status checkpoint: 119 frames, three list pages and "
-            "ME01 strip positions locked")
+            "RPG Status checkpoint: 137 frames, all 21 selected rows and "
+            "both ME01 strip passes locked")
         return 0
     except (OSError, ValueError, json.JSONDecodeError) as error:
         parser.exit(1, f"RPG Status checkpoint: FAIL: {error}\n")

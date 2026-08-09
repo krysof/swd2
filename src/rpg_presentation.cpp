@@ -436,14 +436,18 @@ void draw_rpg_selector_scrollbar(
 
     const auto track_x = left + columns * 8 + 10;
     auto y = top + 4;
-    sprite(cue == RpgListSelection::ScrollCue::toward_start ? 95U : 94U,
-           track_x, y);
+    // 2ae4 draws the normal 5eh/61h endpoints on the page which 6e14 then
+    // presents. 298d briefly draws 5fh/62h after toggling 60e5 to the other
+    // VGA page, but the following redraw returns to 5eh/61h before the next
+    // page presentation. A retained-frame backend therefore must not carry
+    // that hidden-page feedback into the next visible frame.
+    static_cast<void>(cue);
+    sprite(94U, track_x, y);
     y += 16;
     for (std::size_t row = 1; row < rows; ++row, y += 16) {
         sprite(96, track_x, y);
     }
-    sprite(cue == RpgListSelection::ScrollCue::toward_end ? 98U : 97U,
-           track_x, y);
+    sprite(97U, track_x, y);
 
     // 298d precomputes quotient/remainder from an extent of
     // (rows-1)*16-6; 2907 adds top+14h after distributing that remainder.

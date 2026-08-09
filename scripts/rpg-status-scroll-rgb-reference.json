@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The timed original session has 50 currency and 57 current experience while the released SAVE.DA1 has 40 and 49. Applying both observed values to the rewrite fixture makes the complete stable row-20 Status UI RGB-exact; the animated world remains outside the crop.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "rewrite_fixture": {
+    "base": "SAVE.DA1",
+    "u16_overrides": [
+      {"offset": 260, "value": 50, "reason": "currency observed in the timed original Status frame"},
+      {"offset": 319, "value": 57, "reason": "current experience recovered by exhaustive MENU-digit comparison against the timed original frame"}
+    ]
+  },
+  "frames": [
+    {
+      "label": "RPG Status row 20 and second-pass ME01 artwork",
+      "original": "frames/000220.png",
+      "sha256": "3e53ab9de164d5aba550e0385569754ad8eb5d209ba84d45129c6fbe3261e40c",
+      "rewrite_frame": 136,
+      "crop": [96, 40, 224, 144]
+    }
+  ]
+}
