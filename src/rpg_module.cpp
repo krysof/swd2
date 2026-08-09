@@ -3767,13 +3767,16 @@ private:
                         throw std::runtime_error(
                             "RPG system load returned no MAPZ database");
                     }
-                    state_ = std::move(loaded.state);
-                    *live_map_database_ = std::move(loaded.map_database);
                     if (loaded.name_font.empty() || live_name_font_ == nullptr) {
                         throw std::runtime_error(
                             "RPG system load returned no NAME font");
                     }
                     static_cast<void>(LegacyFont::parse(loaded.name_font));
+                    // Validate the complete triple before changing any live
+                    // component. A malformed NAME must not leave new
+                    // SAVE/MAPZ paired with the old active font.
+                    state_ = std::move(loaded.state);
+                    *live_map_database_ = std::move(loaded.map_database);
                     *live_name_font_ = std::move(loaded.name_font);
                     const auto loaded_music_enabled = state_.u8(0x3f4) == 0U;
                     sound_enabled_ = state_.u8(0x3f5) == 0U;
@@ -4723,24 +4726,27 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                         throw std::runtime_error(
                             "RPG opening load hook returned no MAPZ database");
                     }
-                    context.shared_state = std::move(loaded.state);
-                    context.map_database = std::move(loaded.map_database);
                     if (loaded.name_font.empty()) {
                         throw std::runtime_error(
                             "RPG opening load hook returned no NAME font");
                     }
                     static_cast<void>(LegacyFont::parse(loaded.name_font));
+                    context.shared_state = std::move(loaded.state);
+                    context.map_database = std::move(loaded.map_database);
                     context.name_font = std::move(loaded.name_font);
                 } else {
-                    context.shared_state = SharedState::load(
+                    auto loaded_state = SharedState::load(
                         context.game_root / ("SAVE.DA" + std::to_string(slot)));
-                    context.map_database = std::make_shared<MapDatabase>(
+                    auto loaded_map = std::make_shared<MapDatabase>(
                         MapDatabase::load(context.game_root /
                             ("MAPZ.DA" + std::to_string(slot))));
-                    context.name_font = read_file(
+                    auto loaded_name = read_file(
                         context.game_root /
                         ("NAME" + std::to_string(slot) + ".DSK"));
-                    static_cast<void>(LegacyFont::parse(context.name_font));
+                    static_cast<void>(LegacyFont::parse(loaded_name));
+                    context.shared_state = std::move(loaded_state);
+                    context.map_database = std::move(loaded_map);
+                    context.name_font = std::move(loaded_name);
                 }
                 context.platform.stop_audio();
                 opening_audio_stopped = true;

@@ -6593,6 +6593,44 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
 
     {
         ScriptedPlatform platform;
+        platform.actions = {
+            swd2::InputAction::down,
+            swd2::InputAction::confirm,
+            swd2::InputAction::confirm,
+            swd2::InputAction::confirm,
+        };
+        auto initial = swd2::SharedState::load(game_root / "SAVE.DAQ");
+        auto initial_map = std::make_shared<swd2::MapDatabase>(
+            swd2::MapDatabase::load(game_root / "MAPZ.DAQ"));
+        auto initial_name = read_file(game_root / "NAMEQ.DSK");
+        swd2::GameContext context{
+            game_root, initial, platform, initial_map, {}, {}, initial_name};
+        context.load_slot = [&](std::uint8_t) {
+            auto replacement = swd2::SharedState::load(game_root / "SAVE.DA1");
+            replacement.set_u16(
+                0x104, static_cast<std::uint16_t>(initial.u16(0x104) + 9U));
+            return swd2::LoadedSaveSlot{
+                std::move(replacement),
+                std::make_shared<swd2::MapDatabase>(
+                    swd2::MapDatabase::load(game_root / "MAPZ.DA1")),
+                {}};
+        };
+        auto rejected = false;
+        try {
+            static_cast<void>(swd2::RpgModule().run(
+                context, swd2::Marker::menu_ready));
+        } catch (const std::runtime_error&) {
+            rejected = true;
+        }
+        require(rejected &&
+                    context.shared_state.bytes() == initial.bytes() &&
+                    context.map_database == initial_map &&
+                    context.name_font == initial_name,
+                "RPG Continue exposed a partial SAVE/MAPZ update after invalid NAME");
+    }
+
+    {
+        ScriptedPlatform platform;
         platform.actions = {swd2::InputAction::quit};
         auto initial = swd2::SharedState::load(game_root / "SAVE.DA1");
         auto wrong_map = std::make_shared<swd2::MapDatabase>(
@@ -8165,6 +8203,48 @@ void test_rpg_system_menu_load(const std::filesystem::path& game_root) {
                 platform.presented == 9U && platform.music_calls == 1U &&
                 platform.stop_calls == 1U,
             "RPG system Read did not reload map resources before resuming");
+}
+
+void test_rpg_system_menu_load_rejects_partial_slot(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::confirm,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+    };
+    auto initial = swd2::SharedState::load(game_root / "SAVE.DA1");
+    auto initial_map = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto initial_name = read_file(game_root / "NAME1.DSK");
+    swd2::GameContext context{
+        game_root, initial, platform, initial_map, {}, {}, initial_name};
+    context.load_slot = [&](std::uint8_t) {
+        auto replacement = swd2::SharedState::load(game_root / "SAVE.DAQ");
+        replacement.set_u16(
+            0x104, static_cast<std::uint16_t>(initial.u16(0x104) + 11U));
+        return swd2::LoadedSaveSlot{
+            std::move(replacement),
+            std::make_shared<swd2::MapDatabase>(
+                swd2::MapDatabase::load(game_root / "MAPZ.DAQ")),
+            {}};
+    };
+    auto rejected = false;
+    try {
+        static_cast<void>(swd2::RpgModule().run(
+            context, swd2::Marker::continue_rpg));
+    } catch (const std::runtime_error&) {
+        rejected = true;
+    }
+    require(rejected &&
+                context.shared_state.bytes() == initial.bytes() &&
+                context.map_database == initial_map &&
+                context.name_font == initial_name,
+            "RPG system Read exposed a partial SAVE/MAPZ update after invalid NAME");
 }
 
 void test_rpg_system_audio_toggle(const std::filesystem::path& game_root) {
@@ -9852,6 +9932,7 @@ int main(int argc, char** argv) {
         test_rpg_system_menu_save(argv[1]);
         test_rpg_system_menu_save_restricted(argv[1]);
         test_rpg_system_menu_load(argv[1]);
+        test_rpg_system_menu_load_rejects_partial_slot(argv[1]);
         test_rpg_system_audio_toggle(argv[1]);
         test_rpg_entity_collision(argv[1]);
         test_rpg_behavior_six_collision(argv[1]);

@@ -35,10 +35,11 @@ struct GameContext {
     std::shared_ptr<MapDatabase> map_database;
     // Optional frontend persistence hook used by RPG's field-save item. It is
     // deliberately platform-neutral: the core chooses slot 1..5 and supplies
-    // both live halves of the DOS save pair.
+    // the live SAVE/MAPZ/NAME slot triple.
     SaveSlotWriter save_slot;
     // Optional matching load hook used by RPG's System/Read row. The core
-    // replaces both halves atomically at the next map-resource boundary.
+    // validates all three files before replacing the live slot atomically at
+    // the next map-resource boundary.
     SaveSlotLoader load_slot;
     // Active NAMEQ.DSK image. RPG's new-game editor changes its sixteen glyph
     // bitmaps, Continue replaces it from NAME<n>.DSK, and Record persists it
