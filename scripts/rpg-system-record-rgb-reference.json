@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The crops lock all five Record slots, right-edge wrap, and default-Yes confirmation over the fully covered bottom panel. They do not perform or validate a disk write in DOSBox.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG System Record slot one",
+      "original": "000170.png",
+      "sha256": "612bfdc4f26e47cb9424d97c194125b5b304820f9088faf73c988727a00e9944",
+      "rewrite_frame": 118,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Record slot two",
+      "original": "000180.png",
+      "sha256": "53d743022ba62956d4b67dc3d3c9ef3ca6c2a4d19a9df950bf638e5969bccfeb",
+      "rewrite_frame": 119,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Record slot three",
+      "original": "000195.png",
+      "sha256": "68fc1c8ac6a4194f400f41eccb257e9e9f2530d4fda6cdd33d7e2f62417a5601",
+      "rewrite_frame": 120,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Record slot four",
+      "original": "000205.png",
+      "sha256": "fa8afd0401e8fc0058e075f351d1517ba582d41a5ac97caa40bf6585f57cac11",
+      "rewrite_frame": 121,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Record slot five",
+      "original": "000220.png",
+      "sha256": "7198abdfa076d5d6907cac2e6866a7dbf0fe16b017cfe1daac399f21bbeceab0",
+      "rewrite_frame": 122,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Record Right wrap to slot one",
+      "original": "000235.png",
+      "sha256": "612bfdc4f26e47cb9424d97c194125b5b304820f9088faf73c988727a00e9944",
+      "rewrite_frame": 123,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Record slot one default Yes",
+      "original": "000250.png",
+      "sha256": "6a3012ce1cecf300c3d217db118ab0ea52895d2b16d36d8b01257503900840cf",
+      "rewrite_frame": 124,
+      "crop": [16, 116, 284, 80]
+    }
+  ]
+}

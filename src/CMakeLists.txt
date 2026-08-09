@@ -362,6 +362,27 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_system_exit_validation PROPERTIES
         DEPENDS rpg_system_exit_replay)
     add_test(
+        NAME rpg_system_record_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-system-record-saves"
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-system-record.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-system-record-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-system-record-frames.bin"
+    )
+    add_test(
+        NAME rpg_system_record_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-record.py"
+                "${CMAKE_BINARY_DIR}/rpg-system-record-trace.json"
+    )
+    set_tests_properties(rpg_system_record_validation PROPERTIES
+        DEPENDS rpg_system_record_replay)
+    add_test(
         NAME new_game_exit_checkpoint_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"
