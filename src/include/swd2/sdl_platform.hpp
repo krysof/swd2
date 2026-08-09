@@ -7,9 +7,10 @@
 
 namespace swd2 {
 
-// Deterministic DOS-style repeat policy used by the browser touch bridge.
-// It is public only so the SDL integration test can verify press, hold,
-// release, quick-tap preservation, and the 32-bit timer wrap boundary.
+// Deterministic DOS-style repeat policy used by blocking browser selectors.
+// The RPG world poll returns the held level on every frame instead. This is
+// public only so the SDL integration test can verify press, hold, release,
+// quick-tap preservation, and the 32-bit timer wrap boundary.
 class HeldDirectionRepeatState {
 public:
     InputAction sample(int queued_direction, int held_direction,

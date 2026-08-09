@@ -103,8 +103,8 @@
         "所有 RIX/VOC 严格解码并在各路径正确启停",
         "完整流程的音乐循环、语音叠加和画面提交时序通过长期差分"
       ],
-      "evidence": ["src/rix_decoder.cpp", "src/voc_decoder.cpp", "src/ym3812_synth.cpp", "src/main.cpp", "scripts/verify-replay-trace.py", "scripts/compare-replay-traces.py", "src/tests/test_main.cpp"],
-      "remaining": ["用统一音画/输入时间线完成完整流程同步差分", "验证长时间循环和切换无漂移"]
+      "evidence": ["src/rix_decoder.cpp", "src/voc_decoder.cpp", "src/ym3812_synth.cpp", "src/audio_loop_clock.cpp", "src/sdl_platform.cpp", "src/main.cpp", "scripts/verify-replay-trace.py", "scripts/compare-replay-traces.py", "src/tests/test_main.cpp"],
+      "remaining": ["用统一音画/输入时间线完成完整流程同步差分", "在真实平台长期验证循环、语音叠加和切换无漂移"]
     },
     {
       "id": "portable_input",

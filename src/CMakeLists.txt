@@ -14,6 +14,7 @@ endif()
 
 add_library(swd2_core
     asset_catalog.cpp
+    audio_loop_clock.cpp
     battle_ai.cpp
     battle_ability_database.cpp
     battle_composite_effect.cpp

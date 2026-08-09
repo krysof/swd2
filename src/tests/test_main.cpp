@@ -1,4 +1,5 @@
 #include "swd2/asset_catalog.hpp"
+#include "swd2/audio_loop_clock.hpp"
 #include "swd2/battle_ability_database.hpp"
 #include "swd2/battle_ai.hpp"
 #include "swd2/battle_composite_effect.hpp"
@@ -1104,6 +1105,25 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
     }
     require(captured_pairs == 175 && capture_hash == 0x2ec64712362b42bbULL,
             "RIX OPL writes differ from original DEMO.EXE DRO capture");
+
+    // A fixed, floored PCM body loses (ticks*rate)%70 sample units each time
+    // it loops. Verify that the portable rational clock carries those units
+    // indefinitely and never differs from the 70 Hz duration by one sample.
+    for (const auto rate : {8'000U, 44'100U, 48'000U}) {
+        swd2::AudioLoopClock loop(short_music.total_timer_ticks, rate);
+        const auto numerator =
+            static_cast<std::uint64_t>(short_music.total_timer_ticks) * rate;
+        require(loop.samples_per_loop() == numerator / 70U &&
+                    loop.sample_remainder() == numerator % 70U,
+                "RIX loop clock did not split its integer and fractional samples");
+        std::uint64_t emitted = 0;
+        for (std::uint64_t completed = 1; completed <= 100'000U; ++completed) {
+            emitted += loop.samples_per_loop();
+            if (loop.advance_loop_boundary()) ++emitted;
+            require(emitted == completed * numerator / 70U,
+                    "RIX loop clock accumulated long-run sample drift");
+        }
+    }
 }
 
 void test_shared_state(const std::filesystem::path& game_root) {

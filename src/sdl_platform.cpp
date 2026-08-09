@@ -1,4 +1,5 @@
 #include "swd2/sdl_platform.hpp"
+#include "swd2/audio_loop_clock.hpp"
 #include "swd2/rix_decoder.hpp"
 #include "swd2/voc_decoder.hpp"
 
@@ -144,6 +145,7 @@ struct SdlPlatform::Impl {
     std::vector<std::int16_t> voice_samples;
     std::size_t music_cursor{};
     std::size_t voice_cursor{};
+    AudioLoopClock music_loop_clock;
     bool loop_music{};
     std::vector<SDL_GameController*> controllers;
     std::deque<InputAction> pending_actions;
@@ -297,9 +299,21 @@ struct SdlPlatform::Impl {
             int mixed = 0;
             if (!self.music_samples.empty()) {
                 if (self.music_cursor >= self.music_samples.size()) {
-                    if (self.loop_music) self.music_cursor = 0;
+                    if (self.loop_music) {
+                        self.music_cursor = 0;
+                        // A RIX loop has timer_ticks * rate / 70 samples,
+                        // which is usually fractional. Repeating only the
+                        // floored PCM body loses that fraction on every loop.
+                        // Carry it across boundaries and hold the final sample
+                        // for one device period whenever it reaches 1.0.
+                        if (self.music_loop_clock.advance_loop_boundary()) {
+                            mixed += self.music_samples.back();
+                        } else {
+                            mixed += self.music_samples[self.music_cursor++];
+                        }
+                    }
                 }
-                if (self.music_cursor < self.music_samples.size()) {
+                else {
                     mixed += self.music_samples[self.music_cursor++];
                 }
             }
@@ -470,11 +484,17 @@ ClockTime SdlPlatform::clock_time() const {
 
 void SdlPlatform::play_music(std::span<const std::uint8_t> rix_data, bool loop) {
     impl_->ensure_audio();
-    auto music = synthesize_rix(decode_rix(rix_data),
-                                static_cast<std::uint32_t>(impl_->audio_rate));
+    const auto sequence = decode_rix(rix_data);
+    const auto rate = static_cast<std::uint32_t>(impl_->audio_rate);
+    auto music = synthesize_rix(sequence, rate);
+    AudioLoopClock loop_clock(sequence.total_timer_ticks, rate);
+    if (loop_clock.samples_per_loop() != music.mono_samples.size()) {
+        throw std::runtime_error("RIX PCM and loop clock duration disagree");
+    }
     SDL_LockAudioDevice(impl_->audio_device);
     impl_->music_samples = std::move(music.mono_samples);
     impl_->music_cursor = 0;
+    impl_->music_loop_clock = loop_clock;
     impl_->loop_music = loop;
     SDL_UnlockAudioDevice(impl_->audio_device);
 }
@@ -509,6 +529,7 @@ void SdlPlatform::stop_music() {
     SDL_LockAudioDevice(impl_->audio_device);
     impl_->music_samples.clear();
     impl_->music_cursor = 0;
+    impl_->music_loop_clock = {};
     impl_->loop_music = false;
     SDL_UnlockAudioDevice(impl_->audio_device);
 }
@@ -520,6 +541,7 @@ void SdlPlatform::stop_audio() {
     impl_->voice_samples.clear();
     impl_->music_cursor = 0;
     impl_->voice_cursor = 0;
+    impl_->music_loop_clock = {};
     impl_->loop_music = false;
     SDL_UnlockAudioDevice(impl_->audio_device);
 }
