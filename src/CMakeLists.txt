@@ -299,6 +299,27 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_system_menu_validation PROPERTIES
         DEPENDS rpg_system_menu_replay)
     add_test(
+        NAME rpg_system_toggles_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-system-toggles-saves"
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-system-toggles.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-system-toggles-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-system-toggles-frames.bin"
+    )
+    add_test(
+        NAME rpg_system_toggles_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-toggles.py"
+                "${CMAKE_BINARY_DIR}/rpg-system-toggles-trace.json"
+    )
+    set_tests_properties(rpg_system_toggles_validation PROPERTIES
+        DEPENDS rpg_system_toggles_replay)
+    add_test(
         NAME new_game_exit_checkpoint_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

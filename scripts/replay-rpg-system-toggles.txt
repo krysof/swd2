@@ -1,0 +1,12 @@
+# Reach the loaded world and open its default System item.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:CONFIRM
+# Disable music, select sound, then disable sound.
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+# Preserve the final disabled page for capture, then stop explicitly.
+WAIT:QUIT

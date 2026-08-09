@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "These crops lock the four visible music/sound toggle states of the fully covered RPG System panel. The animated world and uncovered field-diamond pixels remain outside this RGB check.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG System music on selected",
+      "original": "000130.png",
+      "sha256": "ab6844c24fe0b75e3fcb7a0a98a257d212ce98ce32121a57d7a630c32596559f",
+      "rewrite_frame": 114,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System music off selected",
+      "original": "000150.png",
+      "sha256": "495bc4d80f84991d969d78e718fd6492ca85107225b4e83bb4a7a4a4aa33551b",
+      "rewrite_frame": 115,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System sound on selected after music off",
+      "original": "000170.png",
+      "sha256": "6962e8f11be893b54192dc1464ae3c17e9733a4bbc8df22d146281f96746a1b3",
+      "rewrite_frame": 116,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System sound off selected after music off",
+      "original": "000190.png",
+      "sha256": "f0cb168591c37d34fb6a962ecd360b3d0137ea4ce111a7fa126adfc852d8c991",
+      "rewrite_frame": 117,
+      "crop": [80, 10, 186, 122]
+    }
+  ]
+}
