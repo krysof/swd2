@@ -4375,8 +4375,34 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                 std::chrono::milliseconds(after - before));
         }
 
+        const auto fade_opening_to_black = [&](Viewport frame) {
+            // RPG:5f4c uses DATA:5a52 (03h on this path) to lower every
+            // nonzero component before a 70-Hz palette write.  Both a New
+            // Game ED exit (through 1586) and Continue's 10fd resource load
+            // cross this same fade before the next module/world page.
+            std::uint64_t ticks = 0U;
+            while (std::any_of(
+                    frame.palette.begin(), frame.palette.end(),
+                    [](std::uint8_t value) { return value != 0U; })) {
+                if (context.platform.poll_frontend_quit()) return false;
+                for (auto& component : frame.palette) {
+                    component = component <= 3U
+                        ? 0U : static_cast<std::uint8_t>(component - 3U);
+                }
+                context.platform.present({
+                    320, 200, frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette)});
+                const auto before = ticks * 1000U / 70U;
+                const auto after = ++ticks * 1000U / 70U;
+                context.platform.delay_for(
+                    std::chrono::milliseconds(after - before));
+            }
+            return true;
+        };
+
         std::size_t opening_choice = 0U;
         bool enter_world = false;
+        bool opening_audio_stopped = false;
         while (!enter_world) {
             auto opening_frame = opening_base;
             draw_rpg_compact_panel(opening_frame.pixels, 320, 200,
@@ -4411,6 +4437,9 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
 
             if (opening_choice == 0U) {
                 context.platform.stop_audio();
+                if (!fade_opening_to_black(opening_frame)) {
+                    return Marker::none;
+                }
                 return Marker::open_demo;
             }
 
@@ -4477,11 +4506,16 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                         MapDatabase::load(context.game_root /
                             ("MAPZ.DA" + std::to_string(slot))));
                 }
+                context.platform.stop_audio();
+                opening_audio_stopped = true;
+                if (!fade_opening_to_black(slot_frame)) {
+                    return Marker::none;
+                }
                 enter_world = true;
                 break;
             }
         }
-        context.platform.stop_audio();
+        if (!opening_audio_stopped) context.platform.stop_audio();
     } else if (input_marker == Marker::returned_from_demo) {
         // RPG:b88 is the only new-game initializer.  DEMO returns OM, after
         // which RPG loads the Q template pair, forces location-directory byte

@@ -6418,7 +6418,7 @@ void test_monolithic_runtime(const std::filesystem::path& game_root) {
             "monolithic runtime did not begin with MEO");
     require(result.transitions[1].module == swd2::Module::rpg,
             "monolithic runtime did not continue in-process to RPG");
-    require(platform.presented == 92 && platform.music_calls == 2 &&
+    require(platform.presented == 113 && platform.music_calls == 2 &&
                 platform.stop_calls == 2,
             "MEO, RPG title/load and world did not remain in one process");
 }
@@ -6433,18 +6433,20 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
                     context, swd2::Marker::menu_ready) ==
                     swd2::Marker::open_demo &&
                     context.shared_state.bytes() == original.bytes() &&
-                    platform.presented == 22U && platform.wait_calls == 1U &&
+                    platform.presented == 43U && platform.wait_calls == 1U &&
                     platform.poll_calls == 0U &&
-                    platform.frontend_quit_poll_calls == 21U &&
-                    platform.delay_calls == 21U &&
-                    platform.delayed_milliseconds == 300U &&
+                    platform.frontend_quit_poll_calls == 42U &&
+                    platform.delay_calls == 42U &&
+                    platform.delayed_milliseconds == 600U &&
                     platform.music_calls == 1U && platform.stop_calls == 1U &&
                     platform.palette_hashes.front() !=
                         platform.palette_hashes.back() &&
-                    platform.frame_hashes.back() ==
+                    platform.frame_hashes[21] ==
                         6322980293999423254ULL &&
+                    platform.palette_hashes[21] ==
+                        3016666169878880281ULL &&
                     platform.palette_hashes.back() ==
-                        3016666169878880281ULL,
+                        17828133145641756547ULL,
                 "RPG MT path did not reproduce OP01 fade and default New Game");
     }
 
@@ -6480,7 +6482,7 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
                     context.map_database != nullptr &&
                     context.shared_state.u16(0x2c) == slot_one.u16(0x2c) &&
                     context.shared_state.u16(0x2c) != initial.u16(0x2c) &&
-                    platform.presented == 26U && platform.wait_calls == 4U &&
+                    platform.presented == 47U && platform.wait_calls == 4U &&
                     platform.poll_calls == 1U &&
                     platform.music_calls == 2U && platform.stop_calls == 2U,
                 "RPG Continue did not select and atomically install SAVE/MAPZ");

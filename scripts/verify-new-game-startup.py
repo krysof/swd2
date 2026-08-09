@@ -36,7 +36,7 @@ def main() -> int:
             ("boundaries", "wait"): 4,
             ("boundaries", "poll"): 2,
             ("boundaries", "text"): 0,
-            ("video", "frames"): 209,
+            ("video", "frames"): 230,
             ("video", "direct_updates"): 37,
             ("audio", "music_calls"): 4,
             ("audio", "stop_audio_calls"): 3,
@@ -47,7 +47,7 @@ def main() -> int:
                 raise ValueError(
                     f"startup {section}.{key} is {actual!r}, "
                     f"expected {expected_value}")
-        if data.get("delay_milliseconds") != 4648:
+        if data.get("delay_milliseconds") != 4948:
             raise ValueError("startup cumulative 70-Hz timing differs")
         if data.get("state_fnv1a64") != "1693cf52a3bbdad7":
             raise ValueError("startup final DAQ/shared-state digest differs")
