@@ -915,7 +915,21 @@ public:
           field_action_runtime_(field_action_runtime), state_(state),
           game_root_(std::move(game_root)), playing_music_(playing_music),
           music_enabled_(music_enabled), sound_enabled_(sound_enabled),
-          menu_runtime_(menu_runtime), frame_delay_ticks_(state.u16(0x406)) {}
+          menu_runtime_(menu_runtime), frame_delay_ticks_(state.u16(0x406)) {
+        // RPG:3a00 loads CD000.RSK, then 3a05 copies 168h words from
+        // resource+33h to DATA:5a8c before 3a56 writes the shared VGA
+        // palette.  The resource base points at its ffff sentinel, so this
+        // is precisely palette entries 10h..ffh; entries 00h..0fh remain
+        // those of the current map.  Keep the complete archive palette here
+        // and splice that same range into every reconstructed inventory page.
+        const auto item_palette_archive = SpriteArchive::parse(
+            decode_rsk_block(read_file(
+                rpg_item_preview_path(game_root_, 0))).data);
+        if (!item_palette_archive.has_palette()) {
+            throw std::runtime_error("CD000.RSK has no RPG item-menu palette");
+        }
+        item_menu_palette_ = item_palette_archive.palette();
+    }
 
     void show_dialogue(std::uint16_t opcode,
                        std::span<const std::uint8_t> text) override {
@@ -1725,6 +1739,15 @@ public:
                 apply_rpg_event_monochrome_filter(
                     frame.pixels,
                     std::span<const std::uint8_t, 768>(frame.palette));
+                // 3a56 installs CD000's colors 10h..ffh after the initial
+                // 3a48 grayscale conversion and before the item selector
+                // loop.  Our portable surfaces carry their own palette, so
+                // repeat that persistent hardware state after converting
+                // each fresh scene.  The 3cbe selling branch skips both the
+                // CD000 copy and grayscale conversion.
+                std::copy(item_menu_palette_.begin() + 0x10U * 3U,
+                          item_menu_palette_.end(),
+                          frame.palette.begin() + 0x10U * 3U);
             }
             // RPG.EXE:2ae4/3d1e uses the shared selector frame at mode-X
             // (24,36), not two invented packed-pixel rectangles.
@@ -2301,15 +2324,21 @@ public:
                                      80, 176, 0);
                     for (std::size_t slot = 0; slot < equipment_slot_count; ++slot) {
                         const auto equipped = state.u16(actor_base + 0x10 + slot * 2);
+                        // The row handlers at 490f..495b subtract 0ah from
+                        // the common 1ch text column before drawing the six
+                        // ITEM2 glyphs, so equipment names begin at mode-X
+                        // column 12h (72 pixels), not 1ch (112 pixels).
                         draw_item_text(equipment_frame, item_texts_, item_font_, equipped,
-                                       28 * 4, 13 + static_cast<int>(slot) * 16,
+                                       18 * 4, 13 + static_cast<int>(slot) * 16,
                                        96, 15, 0);
                     }
                     draw_rpg_actor_card(equipment_frame, menu_sprites_, state,
                                         actor, 52 * 4, 35);
                     // 4085..40af walks four adjacent $$ strings and the
                     // actor words +0c,+0e,+5d,+65. Text drawing advances X
-                    // from byte 48 to 64; the values then use MENU 111..120.
+                    // from byte 48 to 64.  This path never changes the shared
+                    // DATA:359c digit base established as 65h by 22cf, so the
+                    // values use green MENU frames 101..110 (not 111..120).
                     static constexpr std::array<std::size_t, 4> stat_offsets{
                         0x0c, 0x0e, 0x5d, 0x65};
                     std::size_t label_cursor = 0;
@@ -2329,9 +2358,12 @@ public:
                             48 * 4, stat_y, 64, 16, 0xbc);
                         draw_menu_number(equipment_frame, menu_sprites_,
                                          state.u16(actor_base + stat_offset),
-                                         64, stat_y + 3, 111);
+                                         64, stat_y + 3, 101);
                         label_cursor = label_end + 2U;
-                        stat_y += 22;
+                        // 42dd leaves the explicit +3 number offset in 60d7
+                        // and then advances another 16h, making adjacent
+                        // attribute baselines 25 rather than 22 pixels apart.
+                        stat_y += 25;
                     }
                     if (menu_sprites_.sprites().size() > 1U) {
                         const auto& cursor = menu_sprites_.sprites()[1];
@@ -4271,6 +4303,7 @@ private:
     bool& music_enabled_;
     bool& sound_enabled_;
     RpgMenuRuntime& menu_runtime_;
+    std::array<std::uint8_t, 768> item_menu_palette_{};
     std::optional<PlanarSpriteSet> cutscene_;
     std::map<std::uint16_t, SpriteArchive> item_preview_cache_;
     std::optional<std::uint16_t> cutscene_dictionary_id_;

@@ -7558,12 +7558,12 @@ void test_rpg_inventory_equipment_screen(
             "RPG 425b equipment page did not exchange the selected item");
     require(platform.frame_hashes.size() == 13U &&
                 platform.frame_hashes[3] == 18102794047462864801ULL &&
-                platform.frame_hashes[4] == 5402715592560165032ULL &&
-                platform.frame_hashes[5] == 17088231936202215769ULL &&
-                platform.frame_hashes[6] == 9311637984835600796ULL &&
-                platform.frame_hashes[7] == 6231935699410309078ULL &&
-                platform.frame_hashes[8] == 11352071759410708709ULL &&
-                platform.frame_hashes[9] == 4717610975269215518ULL &&
+                platform.frame_hashes[4] == 11447579102439488408ULL &&
+                platform.frame_hashes[5] == 7883898876595195962ULL &&
+                platform.frame_hashes[6] == 15682288588262002494ULL &&
+                platform.frame_hashes[7] == 17338694021800257403ULL &&
+                platform.frame_hashes[8] == 11251443929415272476ULL &&
+                platform.frame_hashes[9] == 17700304877529149720ULL &&
                 platform.frame_hashes[10] == 5771691628781634046ULL &&
                 platform.frame_hashes[11] == platform.frame_hashes[2] &&
                 platform.frame_hashes[12] == platform.frame_hashes[0],
@@ -7600,10 +7600,10 @@ void test_rpg_inventory_empty_slot_unequip(
             "RPG 3f53/425b did not move equipped item into an empty bag cell");
     require(platform.frame_hashes.size() == 11U &&
                 platform.frame_hashes[3] == 8424487085379264378ULL &&
-                platform.frame_hashes[4] == 13382026419227188667ULL &&
-                platform.frame_hashes[5] == 14597237047194030372ULL &&
-                platform.frame_hashes[6] == 9998340625524184542ULL &&
-                platform.frame_hashes[7] == 16205484673764535171ULL &&
+                platform.frame_hashes[4] == 9349045638147406944ULL &&
+                platform.frame_hashes[5] == 16766179865936320998ULL &&
+                platform.frame_hashes[6] == 9685238838437296931ULL &&
+                platform.frame_hashes[7] == 107939190809364433ULL &&
                 platform.frame_hashes[8] == 1907548772887907671ULL &&
                 platform.frame_hashes[9] == platform.frame_hashes[2] &&
                 platform.frame_hashes[10] == platform.frame_hashes[0],

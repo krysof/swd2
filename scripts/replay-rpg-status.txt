@@ -10,5 +10,5 @@ WAIT:CONFIRM*2
 # Move one row at a time through every first-visible position. This exercises
 # the 14-strip, two-pass ME01 wrap at first_visible 13 instead of checking only
 # three page-jump snapshots.
-WAIT:DOWN*20
+WAIT:DOWN*27
 WAIT:QUIT

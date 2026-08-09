@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import struct
 from pathlib import Path
@@ -84,35 +85,35 @@ def main() -> int:
         if video.get("frames") != 165 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "e3ae95999f65f1b0":
+                video.get("fnv1a64") != "40add277e364ebe8":
             raise ValueError("inventory replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
         inventory_pages = [
-            "b39e6c5808648ed7", "ee0161595a5de622",
-            "baad37ae3f821bd6", "7f62ae2b4a2e3672",
-            "d8db0ba139c62eb2", "c17e39e2890267ca",
-            "0ac20eb1d3a2a066", "c7a03895f43673ed",
-            "5e0555c7c34f3689", "534ca6205e514f4d",
-            "a097243b8440e9b5", "d28c70cd5b3c6031",
-            "ebc9f67164d7feb5", "59c23761e1c18ea9",
-            "8fc580446601ed41", "bc194b8b30a96275",
-            "5c81ce1b4c82ff51", "c65a0044f1967b7d",
-            "1b162316f47a7771", "9e48426ac9c83e21",
-            "37d9a3b9f6e14879", "2a3aac105e164acd",
-            "ff0e46080195d665", "8a1abc5fd58b42e1",
-            "f82bd600c92da6f5", "10d459a55bb49385",
-            "32d6a87ac525612d", "0fc82d014ab717e5",
-            "fddf3d2c3181dfb9", "035761b6d8f68b41",
-            "0e47318347496cd5", "e1b527da254e3991",
-            "5008b03aae4b4ab1", "8c1ad4ab8793f741",
-            "ad06dea4e1d17cb9", "3790cc331a0d44b5",
-            "44ec2ba09d3339c9", "1a163fae2a9e0ec5",
-            "603fc37c677a6fa5", "f46be5b5611e2219",
-            "40a3553dc402f675", "11a0e1149694305d",
-            "2c6427ccc22019e1", "6cab157dfe8a5f35",
-            "1fdc091343b93149", "64e5d8c8dc8c1739",
-            "21a588e4839efc41", "51234b904453ebed",
-            "d7d9ddb409b75e55", "fbe2327bc1058915",
+            "6fef253f12fc36a0", "6cbf439a2407111d",
+            "ff7d40657fcc8959", "9d750d9ad943ab4d",
+            "f6ed6b10c8dba38d", "d3c218c4f3783e55",
+            "4ab42a91492fcc89", "0a70790315cca256",
+            "5c5f90d2a1a7338a", "2bff2d80b19f0176",
+            "7805e862f5dc99ee", "0039c549698653e2",
+            "c338ba98d673aeee", "4233a7a9232b396a",
+            "00f47900d578a892", "93880fb2a24512ae",
+            "73b690263a8e29c2", "49102b5625f95346",
+            "48c3779302c46b22", "19f7d9a1098197b2",
+            "d430b1ec54bb555a", "02ed3370b163fcf6",
+            "7b5bb58d806adcbe", "05ca539615449c72",
+            "cf9a9a283ac9572e", "873144dc288f489e",
+            "75a6e8e7e6bb8f96", "8c159c86c98c1e3e",
+            "9a364b5e8f5bec9a", "74865a73486d4692",
+            "0c00d29609ac21ce", "f8e9e9e513596402",
+            "7db604b6bc953e62", "fd49cd67f70ab292",
+            "495decd73fab899a", "0eff905a8ba8f4ee",
+            "434666ab7b8b36ca", "90732ae4f778c3de",
+            "dc8d3301e64f75fe", "2de46925295155ba",
+            "18121965359ea6ae", "3285207c99cc40e6",
+            "a813bf0301d97372", "4419d9a570260f6e",
+            "1e36441e22112e4a", "013ce6fb3a66241a",
+            "92d481a0f315b792", "93f38bfd65ea1a56",
+            "d5937ec6cc1a134e", "f99bd38e83683e0e",
         ]
         if len(hashes) != 165 or hashes[113:115] != [
                 "1b0a18f362ed2cb2",  # System/Book-selected field diamond
@@ -130,8 +131,16 @@ def main() -> int:
             raise ValueError("inventory frame capture count differs")
         source_pixels, source_palette = frames[114]
         inventory_pixels, inventory_palette = frames[115]
-        if source_palette != inventory_palette:
-            raise ValueError("inventory unexpectedly changed the VGA palette")
+        # RPG:3a00/3a05 loads CD000.RSK and copies exactly palette entries
+        # 10h..ffh into DATA:5a8c after 3a48 has converted the world through
+        # the map palette.  The first sixteen entries stay map-owned and the
+        # resulting hardware palette persists for every 39ed item page.
+        if source_palette[:0x10 * 3] != inventory_palette[:0x10 * 3] or \
+                hashlib.sha256(inventory_palette[0x10 * 3:]).hexdigest() != \
+                "0a00f050f396a9fdf48cd10cb7ca5a7b5ec1d7d174470fcc244242667aeb9c29":
+            raise ValueError("inventory CD000 palette splice differs")
+        if any(palette != inventory_palette for _, palette in frames[115:]):
+            raise ValueError("inventory CD000 palette did not persist")
         checked: set[int] = set()
         # These unobscured top and left strips remain the same world page
         # between the Item-selected diamond and the first inventory page.

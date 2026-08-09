@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The crop covers the complete stable equipment UI from VGA rows 4 through 195. Only four transparent world rows above and below it are excluded because autonomous map animation differs at the original and rewrite capture instants.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG equipment page, CD000 palette and ME02 artwork",
+      "original": "frames/000220.png",
+      "sha256": "795f0f5e25bd22df4479d9ddd7f7897214bf516e098d607ac15767b16cb056b4",
+      "rewrite_frame": 117,
+      "crop": [0, 4, 320, 192]
+    }
+  ]
+}

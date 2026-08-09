@@ -1,0 +1,13 @@
+# MEO: select RPG and confirm twice.
+WAIT:CONFIRM*3
+# RPG: Continue, first slot, and confirm Yes.
+WAIT:DOWN
+WAIT:CONFIRM*3
+# In the world ESC opens the field diamond; choose Item.
+POLL:CANCEL
+WAIT:RIGHT
+# Enter Item, select the empty physical bag row zero (the original jumps
+# directly to 3f53), and choose actor zero.  The final frame is RPG:3feb's
+# stable equipment page before any slot is changed.
+WAIT:CONFIRM*3
+WAIT:QUIT

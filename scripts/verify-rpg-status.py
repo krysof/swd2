@@ -70,27 +70,27 @@ def main() -> int:
         if data.get("schema_version") != 1:
             raise ValueError("unsupported trace schema")
         if data.get("input") != {
-            "total": 32,
-            "consumed": 32,
+            "total": 39,
+            "consumed": 39,
             "remaining": 0,
             "implicit_quit_calls": 0,
         }:
             raise ValueError("Status replay input accounting differs")
         if data.get("boundaries") != {
-            "wait": 31,
+            "wait": 38,
             "poll": 1,
             "text": 0,
             "frontend": 105,
         }:
             raise ValueError("Status replay input boundaries differ")
         video = data.get("video", {})
-        if video.get("frames") != 137 or \
+        if video.get("frames") != 144 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "b422c081b4095cda":
+                video.get("fnv1a64") != "4012b59f129b4058":
             raise ValueError("Status replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
-        if len(hashes) != 137 or hashes[113:137] != [
+        if len(hashes) != 144 or hashes[113:144] != [
                 "1b0a18f362ed2cb2",  # System/Book-selected field diamond
                 "a2bc9fa38fe088af",  # down/Status-selected field diamond
                 "9926d3f4783f8138",  # actor-zero selector
@@ -115,6 +115,13 @@ def main() -> int:
                 "486807874c144802",
                 "c35db70ba79014fe",  # second ME01 pass begins
                 "4b83cd5166b18ea1",  # selected row 20
+                "672fe548de5e9630",
+                "8d8fda2ae4229489",
+                "b21128eee76e6e77",
+                "17d08b03cd86131f",
+                "6f017030c7d6fc13",
+                "d3334395a7280a27",
+                "e611fd66563ebb62",  # selected row 27 / maximum first
         ]:
             raise ValueError("Status selection/row frames differ")
         if (data.get("state_fnv1a64"), data.get("mapz_fnv1a64"),
@@ -124,7 +131,7 @@ def main() -> int:
             raise ValueError("Status replay changed the loaded save triple")
 
         frames = load_indexed_frames(args.frames)
-        if len(frames) != 137:
+        if len(frames) != 144:
             raise ValueError("Status frame capture count differs")
         expected = [
             "40163683a334d336", "957dca70bc6c8704",
@@ -137,7 +144,10 @@ def main() -> int:
             "8d4198c0abf65594", "6ebfe428a6e061d0",
             "dfb031f965949688", "f9b273529dd9f637",
             "dc657042456c03c6", "c350981ee0d139c6",
-            "a94aad1cb110f265",
+            "a94aad1cb110f265", "4fc1d2ed1064d014",
+            "4896c7fcb52bc8a1", "c96cec6c498f9db3",
+            "5cad67579be483eb", "e2e8105e0c953c6f",
+            "3b33c2a9545ffd4f", "2ccf920a18114ac2",
         ]
         crop = (96, 40, 224, 144)
         for offset, digest in enumerate(expected):
@@ -146,7 +156,7 @@ def main() -> int:
                 raise ValueError(f"Status indexed row differs: {offset}")
 
         print(
-            "RPG Status checkpoint: 137 frames, all 21 selected rows and "
+            "RPG Status checkpoint: 144 frames, all 28 selected rows and "
             "both ME01 strip passes locked")
         return 0
     except (OSError, ValueError, json.JSONDecodeError) as error:
