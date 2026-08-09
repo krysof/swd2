@@ -3604,13 +3604,16 @@ private:
                 return std::nullopt;
             }
             if (action == InputAction::cancel) return std::nullopt;
-            // 4e9d..4ead has the same asymmetric edge rule as the save-slot
-            // selector: Left from the first value jumps to the fifth, while
-            // Right at the fifth value remains clamped.
+            // 4e74..4ead wraps both edges: 4e83 jumps through 4e65 to reset
+            // 60d5=0eh when Right reaches 2eh, while 4ea0 writes 2eh when
+            // Left sees 0eh.  This differs from the clamp used by several
+            // other RPG lists.
             if (action == InputAction::left) {
                 selected = selected == 0U ? 4U : selected - 1U;
             }
-            else if (action == InputAction::right && selected != 4U) ++selected;
+            else if (action == InputAction::right) {
+                selected = selected == 4U ? 0U : selected + 1U;
+            }
             else if (action == InputAction::confirm) {
                 // 4ef7 preserves AX across 46cc and commits it only when the
                 // default-left Yes choice leaves DATA:35e8 at zero.

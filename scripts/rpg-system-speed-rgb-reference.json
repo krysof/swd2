@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The crops lock the fully covered five-value System speed panel and its right-edge wrap. They do not prove the later confirmation dialog or every underlying world pixel.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG System speed value one",
+      "original": "000190.png",
+      "sha256": "141ca9396e944c2be36660fbb4528eef266f54f884dd5ea0c5129702b17988ba",
+      "rewrite_frame": 119,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System speed value two",
+      "original": "000200.png",
+      "sha256": "8fad077066e7de09860fdcf339222b44347d9d576f08bc36ac38a9d647176d3e",
+      "rewrite_frame": 120,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System speed value three",
+      "original": "000215.png",
+      "sha256": "1003a0cecab14cb399bf0feeaf3bc277c9f59d6790607e4c7ab293ee9e865f64",
+      "rewrite_frame": 121,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System speed value four",
+      "original": "000230.png",
+      "sha256": "d40e76fde3f8e04a498b6fecdeb7a9ef2130e5dfd4465d4edd17b8d51a92736c",
+      "rewrite_frame": 122,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System speed value five",
+      "original": "000245.png",
+      "sha256": "6ae8bbd4428eb0f87da380ec5f1cfadaec52275999a7c9edaf8d2fe41c0a8fbb",
+      "rewrite_frame": 123,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System speed Right wrap to value one",
+      "original": "000260.png",
+      "sha256": "141ca9396e944c2be36660fbb4528eef266f54f884dd5ea0c5129702b17988ba",
+      "rewrite_frame": 124,
+      "crop": [16, 116, 284, 80]
+    }
+  ]
+}

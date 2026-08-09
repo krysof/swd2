@@ -190,10 +190,24 @@ def main() -> int:
                 "-c", f"dx-capture /v /-a /-d {args.program}",
                 "-c", "exit",
             ]
-            result = subprocess.run(
-                command, text=True, stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            )
+            try:
+                # DOSBox-X's emulated -time-limit is the primary boundary,
+                # but a malformed AUTOTYPE sequence must not leave evidence
+                # capture blocked forever if that in-guest boundary stalls.
+                result = subprocess.run(
+                    command, text=True, stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    timeout=args.time_limit + 30,
+                )
+            except subprocess.TimeoutExpired as error:
+                output = error.stdout or ""
+                if isinstance(output, bytes):
+                    output = output.decode("utf-8", errors="replace")
+                log_path.write_text(output, encoding="utf-8")
+                raise RuntimeError(
+                    "DOSBox-X exceeded the host-side capture timeout; "
+                    f"see {log_path}"
+                ) from error
             log_path.write_text(result.stdout, encoding="utf-8")
             if result.returncode != 0:
                 raise RuntimeError(

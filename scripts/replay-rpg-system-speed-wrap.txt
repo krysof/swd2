@@ -1,0 +1,11 @@
+# Reach the world System page and select message speed (row four).
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:CONFIRM
+WAIT:DOWN*4
+WAIT:CONFIRM
+# Visit values one through five, then prove Right wraps five back to one.
+WAIT:RIGHT*5
+WAIT:QUIT

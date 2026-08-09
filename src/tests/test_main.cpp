@@ -8115,6 +8115,41 @@ void test_rpg_system_value_left_wrap(
             "RPG 4e9d did not wrap Left from the first system value to the fifth");
 }
 
+void test_rpg_system_value_right_wrap(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::confirm,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,     // message speed
+        swd2::InputAction::confirm,
+        swd2::InputAction::right,
+        swd2::InputAction::right,
+        swd2::InputAction::right,
+        swd2::InputAction::right,    // fifth value
+        swd2::InputAction::right,    // fifth wraps to the first
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // default Yes
+        swd2::InputAction::cancel,
+        swd2::InputAction::cancel,
+        swd2::InputAction::quit,
+    };
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    require(state.u16(0x3f2) != 0U,
+            "fixture no longer distinguishes the first message speed");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
+                context.shared_state.u16(0x3f2) == 0U &&
+                platform.cursor == platform.actions.size() &&
+                platform.presented == 17U &&
+                platform.stop_calls == 1U,
+            "RPG 4e83 did not wrap Right from the fifth system value to the first");
+}
+
 void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
@@ -9960,6 +9995,7 @@ int main(int argc, char** argv) {
         test_rpg_system_menu_speed_and_exit(argv[1]);
         test_rpg_system_value_confirmation_escape(argv[1]);
         test_rpg_system_value_left_wrap(argv[1]);
+        test_rpg_system_value_right_wrap(argv[1]);
         test_rpg_system_menu_save(argv[1]);
         test_rpg_system_menu_save_restricted(argv[1]);
         test_rpg_system_menu_load(argv[1]);
