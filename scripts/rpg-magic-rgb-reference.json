@@ -13,28 +13,68 @@
       "original": "000155.png",
       "sha256": "e29e640a28cf8cb45694cdb281636957647b965f9c7af1bba02714845d17e362",
       "rewrite_frame": 116,
-      "crop": [32, 21, 48, 48]
+      "crop": [
+        32,
+        21,
+        48,
+        48
+      ],
+      "rewrite_indexed_crop_sha256": "58bf57cd0e83a831d46e1728c18dee26088eaac80794f3f59526855fc8ab7b7b",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "e2bb3ef8be503be6e044c6b6f5f7d1cacf212da50738a15e24ac43630a5a6741",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 2304
     },
     {
       "label": "RPG Magic editable actor name card",
       "original": "000155.png",
       "sha256": "e29e640a28cf8cb45694cdb281636957647b965f9c7af1bba02714845d17e362",
       "rewrite_frame": 116,
-      "crop": [16, 72, 80, 32]
+      "crop": [
+        16,
+        72,
+        80,
+        32
+      ],
+      "rewrite_indexed_crop_sha256": "e2b0a765e7cd02455001ed5e56ee84a59dc934dcf4097024d65e07ee2244cd2d",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "9cad1f83ef11dfb60c584a6dbc0cb2091042479c4a1659a3fac662cad02f535e",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 2560
     },
     {
       "label": "RPG Magic resource label and value",
       "original": "000155.png",
       "sha256": "e29e640a28cf8cb45694cdb281636957647b965f9c7af1bba02714845d17e362",
       "rewrite_frame": 116,
-      "crop": [16, 104, 80, 32]
+      "crop": [
+        16,
+        104,
+        80,
+        32
+      ],
+      "rewrite_indexed_crop_sha256": "b86e08eb137d336853dfc2fb5cf46f4f6c95dab63fcb63747560215f80e5ebcf",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "3ba69c191edc455c266dff9cafd7b9520bfaa308aaa5dea21bac1a781b8e589d",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 2560
     },
     {
       "label": "RPG Magic initial ability list",
       "original": "000155.png",
       "sha256": "e29e640a28cf8cb45694cdb281636957647b965f9c7af1bba02714845d17e362",
       "rewrite_frame": 116,
-      "crop": [96, 40, 224, 144]
+      "crop": [
+        96,
+        40,
+        224,
+        144
+      ],
+      "rewrite_indexed_crop_sha256": "d92e1082ac5ad43128079655a00f1f887f7da3746b3910f6d61d1888fed12409",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "280849e5811508a017c99a6c8406f309f8cea78d94c31f46dffbc28fb6b684b3",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 32256
     }
   ]
 }
