@@ -189,4 +189,14 @@ if(BUILD_TESTING)
     )
     set_tests_properties(replay_trace_validation PROPERTIES
         DEPENDS replay_trace_smoke)
+    add_test(
+        NAME replay_trace_comparison
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/compare-replay-traces.py"
+                "${CMAKE_BINARY_DIR}/replay-smoke-trace.json"
+                "${CMAKE_BINARY_DIR}/replay-smoke-trace.json"
+                --output "${CMAKE_BINARY_DIR}/replay-smoke-comparison.json"
+    )
+    set_tests_properties(replay_trace_comparison PROPERTIES
+        DEPENDS replay_trace_smoke)
 endif()

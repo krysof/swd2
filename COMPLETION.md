@@ -40,6 +40,8 @@ WASM 或发布 GitHub Pages 都只是阶段检查点，不等于移植完成。
 diff_report，通关至少含 input/original_trace/rewrite_trace/comparison，长期矩阵至少含
 native_log/browser_log/matrix_report。通关脚本会进一步解析现代回放 trace，拒绝未消费
 输入、隐式退出、空帧或没有实际进入 MEO/RPG/FIG/DEMO 四模块的伪“通关”证据。
+随后它会现场重算 original_trace 与 rewrite_trace 的输入检查点、每帧、音频、累计延时、
+最终 SAVE/MAPZ、停止状态和模块切换，并要求结果与带哈希的 comparison 报告完全一致。
 
 `scripts/audit-runtime-sources.py` 另外以失败封闭方式检查生产源码：所有平台无关翻译单元
 必须确实列入 `swd2_core`，四个原模块必须仍在单进程核心中，且源码不得重新出现显式
