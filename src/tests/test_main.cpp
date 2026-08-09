@@ -567,7 +567,7 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 selector.input(swd2::InputAction::left) ==
                     swd2::RpgSaveSelectorResult::waiting && selector.slot() == 4 &&
                 selector.input(swd2::InputAction::right) ==
-                    swd2::RpgSaveSelectorResult::waiting && selector.slot() == 4 &&
+                    swd2::RpgSaveSelectorResult::waiting && selector.slot() == 0 &&
                 selector.input(swd2::InputAction::confirm) ==
                     swd2::RpgSaveSelectorResult::waiting && selector.confirming() &&
                 selector.input(swd2::InputAction::up) ==

@@ -296,7 +296,10 @@ RpgSaveSelectorResult RpgSaveSlotSelector::input(InputAction action) noexcept {
             slot_ = slot_ == 0U ? 4U : static_cast<std::uint8_t>(slot_ - 1U);
             break;
         case InputAction::right:
-            if (slot_ < 4U) ++slot_;
+            // 4e83 jumps back through 4e65 at 2eh, so the fifth
+            // SAVE/MAPZ/NAME slot wraps to the first just like the shared
+            // read/speed selector in RPG.EXE.
+            slot_ = slot_ == 4U ? 0U : static_cast<std::uint8_t>(slot_ + 1U);
             break;
         case InputAction::confirm:
             confirming_ = true;
