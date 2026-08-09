@@ -5456,9 +5456,11 @@ public:
         ++inventories;
         return inventory_result;
     }
-    void map_relocated(const swd2::MapAreaRecord& area) override {
+    swd2::MapRelocationOutcome map_relocated(
+        swd2::MapAreaRecord& area) override {
         ++map_relocations;
         relocated_entity_count = area.entity_count();
+        return {};
     }
 
     std::size_t dialogues{};
@@ -6281,7 +6283,7 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
     // separate from the later key which dismisses the final cursor.
     platform.text_actions = {swd2::InputAction::confirm};
     platform.actions = {
-        swd2::InputAction::confirm,  // interact with DE068 entity
+        swd2::InputAction::confirm,  // interact with SA068 entity
         swd2::InputAction::confirm,  // close its CHNA1 dialogue
         swd2::InputAction::quit,
     };
@@ -6296,7 +6298,7 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
             "RPG entity-dialogue run did not terminate normally");
     require(platform.presented == 4 && platform.music_calls == 1 &&
                 platform.stop_calls == 1 && platform.frame_hashes.size() == 4 &&
-                platform.frame_hashes[2] == 3387064284277477342ULL &&
+                platform.frame_hashes[2] == 15418186358338427649ULL &&
                 platform.text_cursor == 1U && platform.text_poll_calls == 1U &&
                 platform.direct_updates == 2U,
             "RPG did not present dialogue and manage map music in-process");
@@ -6377,7 +6379,7 @@ void test_rpg_map_portal(const std::filesystem::path& game_root) {
     require(portal_marker == swd2::Marker::none &&
                 platform.presented == 2U && platform.poll_calls == 1U &&
                 platform.music_calls == 2U && platform.stop_calls == 1U &&
-                platform.frame_hashes[1] == 10119629112548560915ULL &&
+                platform.frame_hashes[1] == 15088074390453743917ULL &&
                 context.shared_state.map_location_directory_offset() == 12U &&
                 context.shared_state.u16(0x40a) == 1U &&
                 context.shared_state.u8(0x51f) == 1U &&
@@ -6399,6 +6401,111 @@ void test_rpg_map_portal(const std::filesystem::path& game_root) {
                     "RPG 136c did not install the BMAN vertical offsets");
         }
     }
+}
+
+void test_rpg_map_chained_spawn_trigger(
+    const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(state, *database, 180U);
+    const auto& source = database->location_at_directory_offset(180U);
+    auto graphics = swd2::normalize_dos_asset_path(source.area.graphics_path);
+    auto layout = swd2::normalize_dos_asset_path(source.area.layout_path);
+    graphics.replace_extension();
+    layout.replace_extension();
+    const auto map = swd2::MapResource::load(game_root / graphics,
+                                              game_root / layout);
+    const auto map_base = static_cast<std::uint16_t>(
+        source.map_position -
+        (source.viewport_y * map.layout().width + source.viewport_x) * 2U);
+    constexpr std::uint16_t portal_cell = 0xe16cU;
+    const auto portal_index =
+        static_cast<std::size_t>((portal_cell - map_base) / 2U);
+    const auto portal_x = portal_index % map.layout().width;
+    const auto portal_y = portal_index / map.layout().width;
+    require(map.layout().width == 180U && map.layout().height == 180U &&
+                portal_x == 50U && portal_y == 160U &&
+                (map.cells()[portal_index] & 0x1000U) != 0U,
+            "DAU2 chained MAP0 portal oracle changed");
+
+    // DAU2's normal action 00b8h loads location 184. Its destination spawn
+    // is itself on special action 4006h, so e94 must install BMAN2 before the
+    // first DAU3 page flip rather than exposing one intermediate BMAN1 frame.
+    state.set_u16(0x40f, map_base);
+    state.set_viewport_x(static_cast<std::uint16_t>(portal_x - 20U));
+    state.set_viewport_y(static_cast<std::uint16_t>(portal_y - 12U));
+    state.set_actor_screen_x(38U);
+    state.set_actor_screen_y(80U);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        map_base +
+        (state.viewport_y() * map.layout().width + state.viewport_x()) * 2U));
+    ScriptedPlatform platform;
+    platform.actions = {swd2::InputAction::quit};
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto marker = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(marker == swd2::Marker::none &&
+                platform.presented == 2U && platform.poll_calls == 1U &&
+                platform.frame_hashes.size() == 2U &&
+                platform.frame_hashes[0] == 16514004362969091039ULL &&
+                platform.frame_hashes[1] == 1559950284723583022ULL &&
+                context.shared_state.map_location_directory_offset() == 184U,
+            "RPG e94 exposed an intermediate frame before a spawn trigger");
+}
+
+void test_rpg_opcode37_chained_spawn_event(
+    const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& source = database->location_at_directory_offset(736U);
+    require(source.area.event_archive_path == "CHNA5.EXE" &&
+                source.area.entity_count() == 20U,
+            "CHNA5 opcode-37 chain oracle area changed");
+    // Run released CHNA5 entry 16 through nearby entity one. It relocates to
+    // location 756 whose spawn action 400fh immediately executes entity zero;
+    // that nested released event ends in opcode 59 and must prevent the outer
+    // entry's post-relocation fade/dialogue tail from running.
+    // Entry 16 changes its current entity's future event pointer. Using entity
+    // one preserves destination entity zero's released entry-14 battle event.
+    source.area.entity_fields[9][1] = 32U;
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(state, *database, 736U);
+    auto graphics = swd2::normalize_dos_asset_path(source.area.graphics_path);
+    auto layout = swd2::normalize_dos_asset_path(source.area.layout_path);
+    graphics.replace_extension();
+    layout.replace_extension();
+    const auto map = swd2::MapResource::load(game_root / graphics,
+                                              game_root / layout);
+    const auto map_base = static_cast<std::uint16_t>(
+        source.map_position -
+        (source.viewport_y * map.layout().width + source.viewport_x) * 2U);
+    require(map.layout().width == 180U && map.layout().height == 180U &&
+                map_base == 8U,
+            "SD01 opcode-37 chain RAP oracle changed");
+    state.set_u16(0x40f, map_base);
+    state.set_viewport_x(0U);
+    state.set_viewport_y(127U);
+    state.set_actor_screen_x(74U);  // world (38,139), immediately left of entity 1
+    state.set_actor_screen_y(80U);
+    state.set_actor_direction(9U);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        map_base +
+        (state.viewport_y() * map.layout().width + state.viewport_x()) * 2U));
+    ScriptedPlatform platform;
+    platform.actions.assign(64U, swd2::InputAction::confirm);
+    platform.actions.push_back(swd2::InputAction::quit);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto marker = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(marker == swd2::Marker::open_figure &&
+                platform.presented == 109U && platform.poll_calls == 33U &&
+                platform.cursor == 33U &&
+                context.shared_state.map_location_directory_offset() == 756U &&
+                (context.shared_state.u16(0x51a) & 0x0008U) != 0U,
+            "RPG opcode 37 did not dispatch its immediate MAP0 spawn event");
 }
 
 void test_rpg_map_special_event(const std::filesystem::path& game_root) {
@@ -6542,7 +6649,7 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
                 swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 platform.frame_hashes.size() == 12 &&
-                platform.frame_hashes[10] == 7490964090317885377ULL &&
+                platform.frame_hashes[10] == 8053114325420148260ULL &&
                 platform.text_poll_calls == ordinary_glyphs &&
                 platform.direct_updates == ordinary_glyphs + forced_glyphs,
             "RPG opcode-46 top-dialogue run did not terminate normally");
@@ -7589,7 +7696,7 @@ void test_rpg_entity_collision(const std::filesystem::path& game_root) {
         swd2::InputAction::quit,
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
-    // The same DE068 entity occupies three consecutive RAP cells beginning at
+    // The same SA068 entity occupies three consecutive RAP cells beginning at
     // world (139,111). Its automatic-event flag is clear, so walking right
     // must turn the actor without moving or opening the dialogue.
     state.set_viewport_x(118);
@@ -8131,11 +8238,11 @@ void test_rpg_dialogue_then_money_overlay(
         black_hash *= 1099511628211ULL;
     }
     require(platform.frame_hashes.size() == 47U &&
-                platform.frame_hashes[2] == 10867719380703706953ULL &&
-                platform.frame_hashes[3] == 2647477145100804958ULL &&
-                platform.frame_hashes[4] == 15292563328515264089ULL &&
+                platform.frame_hashes[2] == 1522698264658253850ULL &&
+                platform.frame_hashes[3] == 6615315919581820857ULL &&
+                platform.frame_hashes[4] == 13660947412412094554ULL &&
                 platform.frame_hashes[5] == platform.frame_hashes[3] &&
-                platform.frame_hashes[6] == 1343501415113929938ULL &&
+                platform.frame_hashes[6] == 6624625476138752861ULL &&
                 platform.frame_hashes[7] != platform.frame_hashes[6] &&
                 platform.frame_hashes[46] == black_hash &&
                 platform.bottom_hashes[2] == platform.bottom_hashes[5] &&
@@ -8213,10 +8320,10 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 no_platform.text_cursor == no_platform.text_actions.size() &&
                 no_platform.direct_updates == 4U &&
                 no_platform.presented == 10U &&
-                no_platform.frame_hashes[4] == 17904292883038007920ULL &&
-                no_platform.frame_hashes[7] == 1105031115086362084ULL &&
+                no_platform.frame_hashes[4] == 6062648533265157386ULL &&
+                no_platform.frame_hashes[7] == 7826475264314421950ULL &&
                 no_platform.frame_hashes[8] == no_platform.frame_hashes[4] &&
-                no_platform.frame_hashes[9] == 18126370724235322392ULL,
+                no_platform.frame_hashes[9] == 3445820599633288345ULL,
             "RPG 5884 purchase confirmation did not preserve state on No");
 
     auto [yes_database, yes_state] = prepare();
@@ -8237,10 +8344,10 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 yes_context.shared_state.u16(0x382) == 117U &&
                 yes_platform.cursor == yes_platform.actions.size() &&
                 yes_platform.presented == 9U &&
-                yes_platform.frame_hashes[4] == 17904292883038007920ULL &&
-                yes_platform.frame_hashes[6] == 1105031115086362084ULL &&
-                yes_platform.frame_hashes[7] == 9156100889548881369ULL &&
-                yes_platform.frame_hashes[8] == 18126370724235322392ULL,
+                yes_platform.frame_hashes[4] == 6062648533265157386ULL &&
+                yes_platform.frame_hashes[6] == 7826475264314421950ULL &&
+                yes_platform.frame_hashes[7] == 9841584038327432507ULL &&
+                yes_platform.frame_hashes[8] == 3445820599633288345ULL,
             "RPG 5884 purchase confirmation did not commit the default Yes");
 
     auto [error_database, error_state] = prepare();
@@ -8295,21 +8402,21 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 sell_context.shared_state.u16(0x382U) == 0U,
             "RPG opcode 17 did not select Sell, repeat its inventory or reload");
     require(sell_platform.frame_hashes.size() == 19U &&
-                sell_platform.frame_hashes[4] == 10580050217793672947ULL &&
-                sell_platform.frame_hashes[5] == 13164979860911474705ULL &&
+                sell_platform.frame_hashes[4] == 15055269731696797642ULL &&
+                sell_platform.frame_hashes[5] == 6024300895331846812ULL &&
                 sell_platform.frame_hashes[6] == sell_platform.frame_hashes[3] &&
-                sell_platform.frame_hashes[8] == 331949395885289681ULL &&
-                sell_platform.frame_hashes[9] == 7663978963988210671ULL &&
+                sell_platform.frame_hashes[8] == 9437141809607963950ULL &&
+                sell_platform.frame_hashes[9] == 10342911885711284032ULL &&
                 sell_platform.frame_hashes[10] ==
                     sell_platform.frame_hashes[12] &&
-                sell_platform.bottom_hashes[10] == 7573880064784883603ULL &&
-                sell_platform.bottom_hashes[11] == 6479326559611137947ULL &&
+                sell_platform.bottom_hashes[10] == 18064545685687686801ULL &&
+                sell_platform.bottom_hashes[11] == 15293909858239181191ULL &&
                 sell_platform.bottom_hashes[12] ==
                     sell_platform.bottom_hashes[10] &&
                 sell_platform.frame_hashes[13] == sell_platform.frame_hashes[0] &&
-                sell_platform.frame_hashes[16] == 8466292373318462143ULL &&
+                sell_platform.frame_hashes[16] == 6581974554223330126ULL &&
                 sell_platform.frame_hashes[17] == sell_platform.frame_hashes[15] &&
-                sell_platform.frame_hashes[18] == 18126370724235322392ULL,
+                sell_platform.frame_hashes[18] == 3445820599633288345ULL,
             "RPG opcode-17 Buy/Sell, empty feedback or reload frames changed");
 
     auto [combined_quit_database, combined_quit_state] = prepare();
@@ -9191,6 +9298,8 @@ int main(int argc, char** argv) {
         test_rpg_event_program_exit(argv[1]);
         test_rpg_idle_world_ticks(argv[1]);
         test_rpg_map_portal(argv[1]);
+        test_rpg_map_chained_spawn_trigger(argv[1]);
+        test_rpg_opcode37_chained_spawn_event(argv[1]);
         test_rpg_map_special_event(argv[1]);
         test_rpg_map_actor_variant(argv[1]);
         test_rpg_top_dialogue_panel(argv[1]);

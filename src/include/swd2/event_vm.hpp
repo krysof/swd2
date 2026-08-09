@@ -24,6 +24,21 @@ enum class InventoryUiMode {
     sell,
 };
 
+enum class EventVmStatus {
+    completed,
+    host_abort,
+    unsupported_opcode,
+    instruction_limit,
+};
+
+// RPG:0edc checks MAP0 again while opcode 37 is still executing. A spawn
+// event can therefore request FIG/exit before the caller's event resumes.
+struct MapRelocationOutcome {
+    EventVmStatus status{EventVmStatus::completed};
+    Marker requested_marker{Marker::none};
+    bool requested_program_exit{};
+};
+
 class EventVmHost {
 public:
     virtual ~EventVmHost() = default;
@@ -78,14 +93,8 @@ public:
     }
     // Opcode 37 replaces RPG.EXE's transient current-area arrays immediately;
     // later commands in the same event render and mutate the destination.
-    virtual void map_relocated(const MapAreaRecord&) {}
-};
-
-enum class EventVmStatus {
-    completed,
-    host_abort,
-    unsupported_opcode,
-    instruction_limit,
+    // The non-const reference also carries any immediate chained MAP0 load.
+    virtual MapRelocationOutcome map_relocated(MapAreaRecord&) { return {}; }
 };
 
 struct EventVmResult {

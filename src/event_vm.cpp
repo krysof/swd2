@@ -459,8 +459,17 @@ EventVmResult execute_event(const ScriptArchive& archive, std::uint16_t director
                 result.relocated_area = map_database->location_at_directory_offset(
                     static_cast<std::uint16_t>(arg(0) & 0x1fffU)).area;
                 area = &*result.relocated_area;
-                host.map_relocated(*area);
+                const auto relocation = host.map_relocated(*area);
                 result.requested_map_reload = true;
+                if (relocation.status != EventVmStatus::completed ||
+                    relocation.requested_marker != Marker::none ||
+                    relocation.requested_program_exit) {
+                    result.status = relocation.status;
+                    result.requested_marker = relocation.requested_marker;
+                    result.requested_program_exit =
+                        relocation.requested_program_exit;
+                    return result;
+                }
                 break;
             }
             case 38:

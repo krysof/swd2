@@ -931,6 +931,18 @@ void verify_maps(const std::filesystem::path& game_root) {
         ++de_sets;
         de_frames += animation.frame_count();
     }
+    std::size_t sa_sets = 0;
+    std::size_t sa_frames = 0;
+    for (const auto& entry :
+         std::filesystem::directory_iterator(game_root / "SA")) {
+        if (!entry.is_regular_file() || entry.path().extension() != ".RSK") {
+            continue;
+        }
+        const auto archive = swd2::SpriteArchive::parse(
+            swd2::decode_rsk_block(read_binary_file(entry.path())).data);
+        ++sa_sets;
+        sa_frames += archive.sprites().size();
+    }
     const auto transitions =
         swd2::MapTransitionDatabase::load(game_root / "MAP0.EXE");
     const auto world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
@@ -938,11 +950,13 @@ void verify_maps(const std::filesystem::path& game_root) {
     std::set<std::string> referenced_music;
     std::set<std::string> referenced_events;
     std::set<std::string> referenced_fonts;
+    std::set<std::uint16_t> referenced_sa;
     struct AreaLayoutAudit {
         std::uint16_t cell_base{};
         std::uint16_t width{};
         std::uint16_t height{};
         std::size_t cell_count{};
+        std::set<std::uint16_t> map0_cells;
     };
     std::map<std::uint16_t, AreaLayoutAudit> area_layouts;
     std::size_t referenced_entities = 0;
@@ -957,6 +971,10 @@ void verify_maps(const std::filesystem::path& game_root) {
     std::size_t wrapped_transition_rows = 0;
     std::size_t inverted_transition_rows = 0;
     std::size_t in_map_transition_rows = 0;
+    std::array<std::size_t, 22> special_transition_actions{};
+    std::size_t special_entity_contexts = 0;
+    std::size_t spawn_trigger_locations = 0;
+    std::size_t spawn_special_locations = 0;
     for (const auto& location : world.locations()) {
         if (seen_areas.insert(location.area_offset).second) {
             auto graphics = game_root / swd2::normalize_dos_asset_path(
@@ -975,15 +993,23 @@ void verify_maps(const std::filesystem::path& game_root) {
                     graphics.string() + " / " + layout.string() + "): " +
                     error.what());
             }
-            area_layouts[location.area_offset] = {
+            AreaLayoutAudit layout_audit{
                 resource.cell_base(), resource.layout().width,
-                resource.layout().height, resource.cells().size()};
-            for (const auto cell : resource.cells()) {
+                resource.layout().height, resource.cells().size(), {}};
+            for (std::size_t cell_index = 0;
+                 cell_index < resource.cells().size(); ++cell_index) {
+                const auto cell = resource.cells()[cell_index];
                 if ((cell & 0x07ffU) >= resource.tile_count()) {
                     throw std::runtime_error(
                         "MAPA RAP cell references a tile outside its dictionary");
                 }
+                if ((cell & 0x1000U) != 0U) {
+                    layout_audit.map0_cells.insert(
+                        static_cast<std::uint16_t>(
+                            resource.cell_base() + cell_index * 2U));
+                }
             }
+            area_layouts[location.area_offset] = std::move(layout_audit);
             for (const auto& transition :
                  transitions.records(location.area.flags)) {
                 const auto cell_end = static_cast<std::size_t>(resource.cell_base()) +
@@ -1033,7 +1059,32 @@ void verify_maps(const std::filesystem::path& game_root) {
                     last = next_last;
                 }
                 wrapped_transition_records += record_wrapped;
-                if (!transition.is_special()) {
+                if (transition.is_special()) {
+                    const auto action = transition.special_action();
+                    if (action == 0U ||
+                        action >= special_transition_actions.size()) {
+                        throw std::runtime_error(
+                            "MAP0 uses an unknown released special action");
+                    }
+                    ++special_transition_actions[action];
+                    std::optional<std::size_t> event_entity;
+                    switch (action) {
+                    case 1: case 3: case 10: case 12: case 14: case 15:
+                    case 16: case 18: case 19: case 20: case 21:
+                        event_entity = 0U;
+                        break;
+                    case 2: event_entity = 3U; break;
+                    case 4: case 13: case 17: event_entity = 1U; break;
+                    default: break;  // 5..9/11 only replace the BMAN archive.
+                    }
+                    if (event_entity) {
+                        ++special_entity_contexts;
+                        if (*event_entity >= location.area.entity_count()) {
+                            throw std::runtime_error(
+                                "MAP0 special action references a missing entity");
+                        }
+                    }
+                } else {
                     static_cast<void>(world.location_at_directory_offset(
                         transition.destination_directory_offset()));
                     if (transition.sets_travel_flag() &&
@@ -1072,6 +1123,10 @@ void verify_maps(const std::filesystem::path& game_root) {
             for (std::size_t entity = 0; entity < location.area.entity_count();
                  ++entity) {
                 const auto record = swd2::map_entity(location.area, entity);
+                if ((record.sprite >> 8U) != 0U) {
+                    referenced_sa.insert(
+                        static_cast<std::uint16_t>(record.sprite >> 8U));
+                }
                 const auto cell = record.cell_offset;
                 if (cell < resource.cell_base() ||
                     ((cell - resource.cell_base()) & 1U) != 0U ||
@@ -1123,6 +1178,19 @@ void verify_maps(const std::filesystem::path& game_root) {
                 "MAPA location placement/viewport is inconsistent with RAP: " +
                 std::to_string(location.directory_offset));
         }
+        const auto actor_cell = static_cast<std::uint16_t>(
+            layout.cell_base +
+            (actor_world_y * layout.width + actor_world_x) * 2U);
+        if (layout.map0_cells.contains(actor_cell)) {
+            ++spawn_trigger_locations;
+            const auto trigger = transitions.match(
+                location.area.flags, actor_cell, layout.width);
+            if (!trigger) {
+                throw std::runtime_error(
+                    "MAPA spawn has MAP0 bit 1000h without a matching trigger");
+            }
+            spawn_special_locations += trigger->is_special();
+        }
     }
     for (const auto& path : referenced_music) {
         static_cast<void>(swd2::decode_rix(read_binary_file(
@@ -1136,6 +1204,14 @@ void verify_maps(const std::filesystem::path& game_root) {
         static_cast<void>(swd2::LegacyFont::load(
             game_root / swd2::normalize_dos_asset_path(path)));
     }
+    for (const auto resource : referenced_sa) {
+        std::ostringstream name;
+        name << "SA" << std::setw(3) << std::setfill('0') << resource
+             << ".RSK";
+        static_cast<void>(swd2::SpriteArchive::parse(
+            swd2::decode_rsk_block(read_binary_file(
+                game_root / "SA" / name.str())).data));
+    }
     const std::set<std::tuple<std::uint16_t, std::uint16_t, std::size_t,
                               std::uint16_t>> expected_inert_entities{
         {304U, 23807U, 0U, 10656U},
@@ -1143,13 +1219,20 @@ void verify_maps(const std::filesystem::path& game_root) {
         {418U, 24717U, 0U, 9190U},
         {490U, 25685U, 0U, 9190U},
     };
+    const std::array<std::size_t, 22> expected_special_actions{
+        0U, 1U, 1U, 1U, 1U, 2U, 2U, 3U, 1U, 1U, 1U,
+        1U, 1U, 1U, 1U, 1U, 1U, 1U, 1U, 1U, 1U, 1U};
     if (maps != 129U || tiles != 123958U || cells != 2140501U ||
         overlays != 71411U || animation_sets != 0U || de_sets != 37U ||
-        de_frames != 971U || transitions.area_count() != 152U ||
+        de_frames != 971U || sa_sets != 84U || sa_frames != 896U ||
+        referenced_sa.size() != 77U || transitions.area_count() != 152U ||
         transitions.record_count() != 481U ||
         transition_rows != 2835U || wrapped_transition_records != 7U ||
         transition_wrap_steps != 10U || wrapped_transition_rows != 319U ||
         inverted_transition_rows != 3U || in_map_transition_rows != 2761U ||
+        special_transition_actions != expected_special_actions ||
+        special_entity_contexts != 15U || spawn_trigger_locations != 23U ||
+        spawn_special_locations != 23U ||
         world.locations().size() != 466U || seen_areas.size() != 152U ||
         referenced_entities != 822U || split_layouts != 2U ||
         inert_off_map_entities != 4U ||
@@ -1175,10 +1258,13 @@ void verify_maps(const std::filesystem::path& game_root) {
     std::cout << "verified " << maps << " maps: " << tiles << " tiles, " << cells
               << " cells, " << overlays << " overlay records; " << animation_sets
               << " non-map tile sets skipped; " << de_sets << " DE sprite sets, "
-              << de_frames << " frames; " << transitions.area_count()
+              << de_frames << " frames; " << sa_sets << " SA entity archives/"
+              << sa_frames << " frames (" << referenced_sa.size()
+              << " referenced); " << transitions.area_count()
               << " MAP0 areas, " << transitions.record_count()
               << " transition records/" << transition_rows << " expanded rows ("
-              << wrapped_transition_records << " wrapping); "
+              << wrapped_transition_records << " wrapping, "
+              << spawn_trigger_locations << " spawn-triggered); "
               << world.locations().size()
               << " MAPA placements/" << seen_areas.size() << " unique areas/"
               << referenced_entities << " entities (" << inert_off_map_entities
@@ -1321,6 +1407,8 @@ void verify_legacy_program_data(const std::filesystem::path& game_root) {
 void verify_reachable_events(const std::filesystem::path& game_root) {
     const auto map_database_path = game_root / "MAPA.EXE";
     const auto world = swd2::MapDatabase::load(map_database_path);
+    const auto map_transitions =
+        swd2::MapTransitionDatabase::load(game_root / "MAP0.EXE");
     std::map<std::string, std::set<std::uint16_t>> roots_by_archive;
     for (const auto& location : world.locations()) {
         for (const auto target : location.area.entity_fields[9]) {
@@ -1385,6 +1473,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     std::size_t runtime_validated_mutations = 0;
     std::size_t event_pointer_mutations = 0;
     std::size_t invisible_fixed_bss_operations = 0;
+    std::set<std::uint16_t> opcode37_destinations;
     std::set<std::tuple<std::string, std::uint16_t, std::uint16_t,
                         std::size_t>> dynamic_entity_contexts;
     while (!pending.empty()) {
@@ -1478,6 +1567,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                 (command.arguments[0] & 0x8000U) == 0U) {
                 const auto& destination = world.location_at_directory_offset(
                     static_cast<std::uint16_t>(command.arguments[0] & 0x1fffU));
+                opcode37_destinations.insert(destination.directory_offset);
                 active_location_offset = destination.directory_offset;
                 active_area_archive = destination.area.event_archive_path;
             }
@@ -1600,6 +1690,53 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
             "reachable RPG event graph differs from the audited release");
     }
 
+    // RPG:0edc performs the same immediate centre-cell MAP0 probe after an
+    // opcode-37 area load as e94 does after a normal portal. Lock every
+    // released opcode-37 destination whose spawn starts a special action;
+    // these nested events/resources run before the outer copied CHNA stream
+    // resumes and therefore cannot be deferred to the main map loop.
+    std::set<std::uint16_t> opcode37_spawn_special_destinations;
+    for (const auto destination_offset : opcode37_destinations) {
+        const auto& destination =
+            world.location_at_directory_offset(destination_offset);
+        auto graphics = game_root / swd2::normalize_dos_asset_path(
+            destination.area.graphics_path);
+        auto layout = game_root / swd2::normalize_dos_asset_path(
+            destination.area.layout_path);
+        graphics.replace_extension();
+        layout.replace_extension();
+        const auto resource = swd2::MapResource::load(graphics, layout);
+        const auto actor_x = static_cast<std::size_t>(destination.viewport_x) +
+            ((static_cast<std::size_t>(destination.actor_screen_x) + 2U) >> 1U);
+        const auto actor_y = static_cast<std::size_t>(destination.viewport_y) +
+            ((static_cast<std::size_t>(destination.actor_screen_y) + 16U) >> 3U);
+        if (actor_x >= resource.layout().width ||
+            actor_y >= resource.layout().height) {
+            throw std::runtime_error(
+                "opcode 37 destination spawn is outside its RAP layout");
+        }
+        const auto cell_index = actor_y * resource.layout().width + actor_x;
+        if ((resource.cells()[cell_index] & 0x1000U) == 0U) continue;
+        const auto actor_cell = static_cast<std::uint16_t>(
+            resource.cell_base() + cell_index * 2U);
+        const auto trigger = map_transitions.match(
+            destination.area.flags, actor_cell, resource.layout().width);
+        if (!trigger) {
+            throw std::runtime_error(
+                "opcode 37 destination has an unmatched MAP0 spawn cell");
+        }
+        if (trigger->is_special()) {
+            opcode37_spawn_special_destinations.insert(destination_offset);
+        }
+    }
+    const std::set<std::uint16_t> expected_opcode37_spawn_special{
+        376U, 510U, 756U};
+    if (opcode37_spawn_special_destinations !=
+        expected_opcode37_spawn_special) {
+        throw std::runtime_error(
+            "opcode 37 immediate MAP0 spawn contexts differ from the release");
+    }
+
     class EventExecutionAuditHost final : public swd2::EventVmHost {
     public:
         explicit EventExecutionAuditHost(bool affirmative)
@@ -1690,6 +1827,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << " documented inert odd target, "
               << invisible_fixed_bss_operations
               << " invisible fixed-BSS slot operation; "
+              << opcode37_spawn_special_destinations.size()
+              << " opcode-37 immediate MAP0 spawn contexts; "
               << visited_states.size() * 2U
               << " entity-context executions, "
               << context_commands[0] + context_commands[1]

@@ -104,6 +104,45 @@ SpriteArchive load_default_map_actors(const std::filesystem::path& game_root,
         game_root / (uses_man1 ? "MAN1.RSK" : "BMAN1.RSK"))).data);
 }
 
+std::optional<std::pair<std::uint8_t, std::uint8_t>>
+map_special_actor_resource(std::uint16_t action) {
+    switch (action) {
+    case 5: return std::pair<std::uint8_t, std::uint8_t>{0, 1};
+    case 6: return std::pair<std::uint8_t, std::uint8_t>{1, 2};
+    case 7: return std::pair<std::uint8_t, std::uint8_t>{2, 3};
+    case 8: return std::pair<std::uint8_t, std::uint8_t>{3, 4};
+    case 9: return std::pair<std::uint8_t, std::uint8_t>{4, 5};
+    case 11: return std::pair<std::uint8_t, std::uint8_t>{5, 5};
+    default: return std::nullopt;
+    }
+}
+
+std::optional<std::size_t> map_special_event_entity(std::uint16_t action) {
+    switch (action) {
+    case 1: case 3: case 10: case 12: case 14: case 15:
+    case 16: case 18: case 19: case 20: case 21:
+        return 0U;
+    case 2: return 3U;
+    case 4: case 13: case 17: return 1U;
+    default: return std::nullopt;
+    }
+}
+
+std::uint16_t map_special_once_flag(std::uint16_t action) {
+    switch (action) {
+    case 10: return 0x0001U;
+    case 13: return 0x0004U;
+    case 14: return 0x0002U;
+    case 15: return 0x0008U;
+    case 17: return 0x0010U;
+    case 18: return 0x0020U;
+    case 19: return 0x0040U;
+    case 20: return 0x0080U;
+    case 21: return 0x0100U;
+    default: return 0U;
+    }
+}
+
 std::vector<std::vector<std::uint8_t>> load_rpg_ability_descriptions(
     const std::filesystem::path& path) {
     const auto executable = dos::MzExecutable::load(path);
@@ -496,29 +535,21 @@ std::filesystem::path de_sprite_path(const std::filesystem::path& game_root,
     return game_root / "DE" / name.str();
 }
 
-PlanarSpriteSet load_de_sprite(const std::filesystem::path& game_root,
-                               std::uint16_t resource) {
-    const auto layout = de_sprite_path(game_root, resource);
-    auto dictionary_resource = resource;
-    auto dictionary = layout;
-    auto metadata = dictionary;
-    metadata.replace_extension(".RSK");
-    while (!std::filesystem::is_regular_file(metadata)) {
-        if (dictionary_resource == 0) {
-            throw std::runtime_error("DE sprite layout has no preceding dictionary: " +
-                                     layout.string());
-        }
-        dictionary = de_sprite_path(game_root, --dictionary_resource);
-        metadata = dictionary;
-        metadata.replace_extension(".RSK");
-    }
-    return PlanarSpriteSet::load(dictionary, layout);
+SpriteArchive load_map_entity_sprites(
+    const std::filesystem::path& game_root, std::uint16_t resource) {
+    // RPG:10fd converts the high byte of MAPZ field 0 to three decimal
+    // digits in its literal C:\SWD2\SA\SA000.RSK path. These are ordinary
+    // compact sprite archives, not the unrelated DE planar cutscene sets.
+    std::ostringstream name;
+    name << "SA" << std::setw(3) << std::setfill('0') << resource << ".RSK";
+    return SpriteArchive::parse(decode_rsk_block(read_file(
+        game_root / "SA" / name.str())).data);
 }
 
 void draw_world_characters(
     Viewport& viewport, const MapAreaRecord& area, const SharedState& state,
     const std::filesystem::path& game_root, const SpriteArchive& actors,
-    std::map<std::uint16_t, PlanarSpriteSet>& animation_sets) {
+    std::map<std::uint16_t, SpriteArchive>& animation_sets) {
     const auto cell_base = state.u16(0x40f);
     const auto map_width = state.map_width();
     const auto party_count = std::min<std::size_t>(
@@ -569,11 +600,13 @@ void draw_world_characters(
                 auto found = animation_sets.find(resource);
                 if (found == animation_sets.end()) {
                     found = animation_sets.emplace(
-                        resource, load_de_sprite(game_root, resource)).first;
+                        resource,
+                        load_map_entity_sprites(game_root, resource)).first;
                 }
-                if (frame_index >= found->second.frame_count()) continue;
-                const auto& frame = found->second.frame(frame_index);
-                blit(viewport, frame.pixels, frame.width, frame.height, left, top);
+                if (frame_index >= found->second.sprites().size()) continue;
+                const auto& frame = found->second.sprites()[frame_index];
+                blit(viewport, found->second.pixels(frame_index),
+                     frame.width, frame.height, left, top);
             }
         }
         for (std::size_t actor = party_count; actor != 0; --actor) {
@@ -632,7 +665,9 @@ public:
                  std::span<const std::uint8_t> equipment_stat_labels,
                  std::function<Viewport()> scene_provider,
                  std::function<void()> scene_palette_advance,
-                 MapDatabase* map_database, const SaveSlotWriter* save_slot,
+                 MapDatabase* map_database,
+                 const MapTransitionDatabase* map_transitions,
+                 const SaveSlotWriter* save_slot,
                  const SaveSlotLoader* load_slot,
                  std::shared_ptr<MapDatabase>* live_map_database,
                  FieldActionRuntime& field_action_runtime,
@@ -679,7 +714,8 @@ public:
           equipment_stat_labels_(equipment_stat_labels),
           scene_provider_(std::move(scene_provider)),
           scene_palette_advance_(std::move(scene_palette_advance)),
-          map_database_(map_database), save_slot_(save_slot),
+          map_database_(map_database), map_transitions_(map_transitions),
+          save_slot_(save_slot),
           load_slot_(load_slot), live_map_database_(live_map_database),
           field_action_runtime_(field_action_runtime), state_(state),
           game_root_(std::move(game_root)), playing_music_(playing_music),
@@ -700,7 +736,7 @@ public:
             // dialogue. Render a one-bit host mask first because an indexed
             // zero glyph cannot share the page buffer's zero background.
             const auto page = render_dialogue_page(
-                font_, text, offset, 280, 64, 1, &name_font_);
+                current_event_font(), text, offset, 280, 64, 1, &name_font_);
             const auto panel_top = opcode == 46 ? 0 : 112;
             const auto text_left = 10 * 4;
             const auto text_top = panel_top + 13;
@@ -746,7 +782,8 @@ public:
                     return;
                 }
                 const auto partial = render_dialogue_page(
-                    font_, text.first(glyph_end), offset, 280, 64, 1,
+                    current_event_font(), text.first(glyph_end), offset,
+                    280, 64, 1,
                     &name_font_);
                 auto shown = compose_page(partial);
                 platform_.present_direct_update({
@@ -860,54 +897,163 @@ public:
         static_cast<void>(delay_for_or_frontend_quit(duration));
     }
 
-    void map_relocated(const MapAreaRecord& area) override {
-        // RPG:edc/10fd replaces the active graphics/layout and palette. A DE
-        // page plus its direct VGA annotations belongs to the old resource
-        // set and cannot remain composited over the destination map while the
-        // same event continues after opcode 37.
-        cutscene_.reset();
-        cutscene_id_.reset();
-        cutscene_dictionary_id_.reset();
-        cutscene_frame_index_ = 0;
-        reset_direct_page_layers();
-        palette_dark_ = false;
-        relocated_area_ = &area;
-        auto graphics = normalize_dos_asset_path(state_.area_graphics_path());
-        auto layout = normalize_dos_asset_path(state_.area_collision_path());
-        graphics.replace_extension();
-        layout.replace_extension();
-        relocated_map_ = MapResource::load(game_root_ / graphics,
-                                           game_root_ / layout);
-        relocated_palette_ = relocated_map_->palette();
-        relocated_palette_animation_ = relocated_map_->animation_words();
-        const auto destination_music =
-            normalize_dos_asset_path(state_.music_path());
-        if (destination_music.empty()) {
-            platform_.stop_music();
-            if (playing_music_) playing_music_->clear();
-        } else {
-            const auto path = game_root_ / destination_music;
-            if (music_enabled_ && std::filesystem::is_regular_file(path)) {
-                // Opcode 37 clears SAVE+459 before edc specifically to force
-                // the loader's comparison unequal. Restart even when the two
-                // areas name the same RIX rather than deferring until the
-                // event eventually returns to the outer map loop.
-                platform_.play_music(read_file(path), true);
+    MapRelocationOutcome map_relocated(MapAreaRecord& area) override {
+        const auto load_destination = [&](bool force_music_restart) {
+            // RPG:edc/10fd replaces the active graphics/layout, font and
+            // palette while the current copied event stream keeps running.
+            cutscene_.reset();
+            cutscene_id_.reset();
+            cutscene_dictionary_id_.reset();
+            cutscene_frame_index_ = 0;
+            reset_direct_page_layers();
+            palette_dark_ = false;
+            relocated_area_ = &area;
+            auto graphics = normalize_dos_asset_path(
+                state_.area_graphics_path());
+            auto layout = normalize_dos_asset_path(
+                state_.area_collision_path());
+            graphics.replace_extension();
+            layout.replace_extension();
+            relocated_map_ = MapResource::load(game_root_ / graphics,
+                                               game_root_ / layout);
+            relocated_palette_ = relocated_map_->palette();
+            relocated_palette_animation_ = relocated_map_->animation_words();
+            relocated_font_ = LegacyFont::load(
+                game_root_ /
+                normalize_dos_asset_path(state_.event_data_path()));
+
+            const auto destination_music =
+                normalize_dos_asset_path(state_.music_path());
+            const auto music_changed = playing_music_ == nullptr ||
+                *playing_music_ != destination_music;
+            if (destination_music.empty()) {
+                if (force_music_restart || music_changed) platform_.stop_music();
+                if (playing_music_) playing_music_->clear();
+            } else {
+                const auto path = game_root_ / destination_music;
+                if (music_enabled_ && (force_music_restart || music_changed) &&
+                    std::filesystem::is_regular_file(path)) {
+                    platform_.play_music(read_file(path), true);
+                }
+                if (playing_music_) *playing_music_ = destination_music;
             }
-            if (playing_music_) *playing_music_ = destination_music;
+            relocated_actors_ = load_default_map_actors(game_root_, state_);
+            relocated_actor_resource_variant_ = 0;
+            state_.set_u16(0x417, relocated_map_->layout().width);
+            state_.set_u16(0x419, relocated_map_->layout().height);
+            const auto viewport_cells =
+                (static_cast<std::size_t>(state_.viewport_y()) *
+                     relocated_map_->layout().width +
+                 state_.viewport_x()) * 2U;
+            if (state_.u16(0x40d) >= viewport_cells) {
+                state_.set_u16(0x40f, static_cast<std::uint16_t>(
+                                          state_.u16(0x40d) - viewport_cells));
+            }
+            relocated_animation_sets_.clear();
+        };
+
+        // Opcode 37 clears SAVE+459 before 0edc, so even an equal RIX restarts
+        // on this first load. Any normal MAP0 chain after it uses 10fd's usual
+        // path comparison instead.
+        load_destination(true);
+        for (std::size_t chain = 0; chain < 64U; ++chain) {
+            if (map_database_ == nullptr || map_transitions_ == nullptr ||
+                !relocated_map_) {
+                return {};
+            }
+            const auto actor_x = state_.world_x();
+            const auto actor_y = state_.world_y();
+            if (actor_x >= relocated_map_->layout().width ||
+                actor_y >= relocated_map_->layout().height) {
+                return {};
+            }
+            const auto cell_index = static_cast<std::size_t>(actor_y) *
+                relocated_map_->layout().width + actor_x;
+            if ((relocated_map_->cells()[cell_index] & 0x1000U) == 0U) {
+                return {};
+            }
+            const auto actor_cell = static_cast<std::uint16_t>(
+                state_.u16(0x40f) + cell_index * 2U);
+            const auto transition = map_transitions_->match(
+                state_.u16(0x408), actor_cell,
+                relocated_map_->layout().width);
+            if (!transition) return {};
+
+            if (!transition->is_special()) {
+                if (transition->sets_travel_flag()) {
+                    state_.set_u16(0x40a, transition->flag_index);
+                    state_.set_u8(0x51eU + transition->flag_index, 1U);
+                }
+                const auto relative = transition->uses_relative_placement();
+                install_map_location(state_, *map_database_, transition->action);
+                if (!relative) {
+                    area = map_database_->location_at_directory_offset(
+                        transition->destination_directory_offset()).area;
+                }
+                load_destination(false);
+                continue;
+            }
+
+            const auto action = transition->special_action();
+            if (const auto resource = map_special_actor_resource(action)) {
+                if (relocated_actor_resource_variant_ != resource->first) {
+                    relocated_actor_resource_variant_ = resource->first;
+                    relocated_actors_ = SpriteArchive::parse(
+                        decode_rsk_block(read_file(
+                            game_root_ /
+                            ("BMAN" + std::to_string(resource->second) +
+                             ".RSK"))).data);
+                }
+            }
+            auto event_entity = map_special_event_entity(action);
+            const auto once_flag = map_special_once_flag(action);
+            if (event_entity && once_flag != 0U) {
+                const auto flags = state_.u16(0x51a);
+                if ((flags & once_flag) != 0U) {
+                    event_entity.reset();
+                } else {
+                    state_.set_u16(
+                        0x51a,
+                        static_cast<std::uint16_t>(flags | once_flag));
+                }
+            }
+            if (!event_entity || *event_entity >= area.entity_count()) {
+                return {};
+            }
+
+            // f19 enters the same 52b4 path as an ordinary entity: turn it,
+            // expose the faced destination frame, execute its destination
+            // archive event, then restore the saved byte offset even if that
+            // nested event relocated the area again.
+            const auto old_direction =
+                area.entity_fields[1][*event_entity];
+            const auto actor_direction = state_.actor_direction();
+            area.entity_fields[1][*event_entity] =
+                actor_direction == 0U ? 3U :
+                actor_direction == 9U ? 6U :
+                actor_direction == 6U ? 9U : 0U;
+            reset_direct_page_layers();
+            present(event_scene());
+            const auto entity = map_entity(area, *event_entity);
+            const auto archive = ScriptArchive::load(
+                game_root_ /
+                normalize_dos_asset_path(state_.event_executable_path()));
+            auto nested = execute_event(
+                archive, entity.event_directory_offset, state_, &area,
+                *event_entity, *this, 10'000, map_database_);
+            auto* facing_area = nested.relocated_area
+                ? &*nested.relocated_area : &area;
+            if (*event_entity < facing_area->entity_count()) {
+                facing_area->entity_fields[1][*event_entity] = old_direction;
+            }
+            if (nested.relocated_area) {
+                area = std::move(*nested.relocated_area);
+            }
+            relocated_area_ = &area;
+            return {nested.status, nested.requested_marker,
+                    nested.requested_program_exit};
         }
-        relocated_actors_ = load_default_map_actors(game_root_, state_);
-        state_.set_u16(0x417, relocated_map_->layout().width);
-        state_.set_u16(0x419, relocated_map_->layout().height);
-        const auto viewport_cells =
-            (static_cast<std::size_t>(state_.viewport_y()) *
-                 relocated_map_->layout().width +
-             state_.viewport_x()) * 2U;
-        if (state_.u16(0x40d) >= viewport_cells) {
-            state_.set_u16(0x40f, static_cast<std::uint16_t>(
-                                      state_.u16(0x40d) - viewport_cells));
-        }
-        relocated_animation_sets_.clear();
+        throw std::runtime_error("MAP0 relocation chain exceeds released bounds");
     }
 
     bool present_event_command(std::uint16_t opcode,
@@ -1072,7 +1218,7 @@ public:
         // 5c07 temporarily changes DATA:6ae5 to 0fh and writes directly into
         // the currently displayed page; it does not reconstruct the map or
         // discard a preceding dialogue panel.
-        draw_legacy_text(frame, font_, text,
+        draw_legacy_text(frame, current_event_font(), text,
                          static_cast<int>(x_byte) * 4, y,
                          320 - static_cast<int>(x_byte) * 4,
                          200 - static_cast<int>(y), 15);
@@ -1150,8 +1296,10 @@ public:
             // B6 52 / BD E6: Buy and Sell.
             constexpr std::array<std::uint8_t, 2> buy{0xb6, 0x52};
             constexpr std::array<std::uint8_t, 2> sell{0xbd, 0xe6};
-            draw_legacy_text(frame, font_, buy, 50 * 4, 99, 16, 16, 0);
-            draw_legacy_text(frame, font_, sell, 68 * 4, 99, 16, 16, 0);
+            draw_legacy_text(frame, current_event_font(), buy,
+                             50 * 4, 99, 16, 16, 0);
+            draw_legacy_text(frame, current_event_font(), sell,
+                             68 * 4, 99, 16, 16, 0);
             apply_rpg_binary_choice_highlight(
                 frame.pixels, 320, 200,
                 std::span<const std::uint8_t, 768>(frame.palette),
@@ -2085,6 +2233,10 @@ public:
     }
 
 private:
+    [[nodiscard]] const LegacyFont& current_event_font() const noexcept {
+        return relocated_font_ ? *relocated_font_ : font_;
+    }
+
     bool delay_for_or_frontend_quit(std::chrono::milliseconds duration) {
         // A DOS timer cannot observe a host window close, but every fixed
         // wait in the merged frontend must. Poll only the dedicated close
@@ -3829,6 +3981,7 @@ private:
     std::function<Viewport()> scene_provider_;
     std::function<void()> scene_palette_advance_;
     MapDatabase* map_database_{};
+    const MapTransitionDatabase* map_transitions_{};
     const SaveSlotWriter* save_slot_{};
     const SaveSlotLoader* load_slot_{};
     std::shared_ptr<MapDatabase>* live_map_database_{};
@@ -3853,7 +4006,9 @@ private:
     std::array<std::uint8_t, 768> relocated_palette_{};
     std::array<std::uint16_t, 24> relocated_palette_animation_{};
     std::optional<SpriteArchive> relocated_actors_;
-    std::map<std::uint16_t, PlanarSpriteSet> relocated_animation_sets_;
+    std::optional<LegacyFont> relocated_font_;
+    std::uint8_t relocated_actor_resource_variant_{};
+    std::map<std::uint16_t, SpriteArchive> relocated_animation_sets_;
 };
 
 std::optional<std::size_t> interaction_entity(const MapLocationRecord& location,
@@ -4156,6 +4311,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
     FieldActionRuntime field_action_runtime;
     RpgMenuRuntime menu_runtime;
     std::optional<MapAreaRecord> relocated_transient_area;
+    // RPG:e94 immediately probes a normal MAP0 destination and recursively
+    // dispatches its spawn trigger before any page flip. Keep the C++ area
+    // reload iterative while preserving that no-intermediate-frame boundary.
+    bool check_chained_transition_before_present = false;
     while (true) {
     // RPG:10fd installs a fresh transient entity array for every area load;
     // the behavior-stream cursor, delays and roam counters beside it are BSS
@@ -4206,6 +4365,10 @@ Marker RpgModule::run(GameContext& context, Marker) {
             0x40f, static_cast<std::uint16_t>(location.map_position - viewport_cells));
         context.shared_state.set_u16(0x40d, location.map_position);
         pending_map_reload_ = false;
+        // RPG:0edc is shared by event relocation, travel and related field
+        // loaders. Every one probes the destination MAP0 cell before its
+        // first ordinary world page, not only transitions entered from e94.
+        check_chained_transition_before_present = true;
     }
     const auto event_archive = ScriptArchive::load(
         context.game_root / normalize_dos_asset_path(context.shared_state.event_executable_path()));
@@ -4229,7 +4392,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
     auto actors = load_default_map_actors(context.game_root,
                                           context.shared_state);
     std::uint8_t actor_resource_variant = 0;
-    std::map<std::uint16_t, PlanarSpriteSet> animation_sets;
+    std::map<std::uint16_t, SpriteArchive> animation_sets;
     auto map_palette = map.palette();
     auto map_palette_animation = map.animation_words();
     const auto advance_scene_palette = [&]() {
@@ -4277,7 +4440,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
             inventory_category_labels, equipment_slot_labels,
             equipment_stat_labels,
             compose_scene, advance_scene_palette,
-            &map_database, &context.save_slot,
+            &map_database, &map_transitions, &context.save_slot,
             &context.load_slot, &context.map_database,
             field_action_runtime,
             context.shared_state, context.game_root, &playing_music,
@@ -4321,6 +4484,99 @@ Marker RpgModule::run(GameContext& context, Marker) {
                                   result.requested_map_reload,
                                   std::move(result.relocated_area)};
     };
+    struct MapTriggerOutcome {
+        Marker marker{Marker::none};
+        bool quit{};
+        bool reload{};
+    };
+    const auto dispatch_map_trigger = [&]() -> MapTriggerOutcome {
+        const auto actor_x = context.shared_state.world_x();
+        const auto actor_y = context.shared_state.world_y();
+        if (actor_x >= map.layout().width || actor_y >= map.layout().height) {
+            return {};
+        }
+        const auto cell_index =
+            static_cast<std::size_t>(actor_y) * map.layout().width + actor_x;
+        if ((map.cells()[cell_index] & 0x1000U) == 0U) return {};
+        const auto actor_cell = static_cast<std::uint16_t>(
+            context.shared_state.u16(0x40f) + cell_index * 2U);
+        const auto transition = map_transitions.match(
+            context.shared_state.u16(0x408), actor_cell,
+            map.layout().width);
+        if (!transition) return {};
+
+        if (!transition->is_special()) {
+            if (transition->sets_travel_flag()) {
+                context.shared_state.set_u16(0x40a, transition->flag_index);
+                context.shared_state.set_u8(
+                    0x51eU + transition->flag_index, 1U);
+            }
+            if (transition->uses_relative_placement()) {
+                relocated_transient_area = location.area;
+            }
+            install_map_location(context.shared_state, map_database,
+                                 transition->action);
+            pending_map_reload_ = true;
+            check_chained_transition_before_present = true;
+            return {.reload = true};
+        }
+
+        // Actions 5..9/11 replace the BMAN archive in the same buffer used
+        // by 506d. Action 11 keeps selector five while loading BMAN5, just as
+        // the shipped 0ff2h branch does (there is no BMAN6 resource name).
+        const auto actor_resource =
+            map_special_actor_resource(transition->special_action());
+        if (actor_resource &&
+            actor_resource_variant != actor_resource->first) {
+            actor_resource_variant = actor_resource->first;
+            const auto path = context.game_root /
+                ("BMAN" + std::to_string(actor_resource->second) + ".RSK");
+            actors = SpriteArchive::parse(
+                decode_rsk_block(read_file(path)).data);
+        }
+
+        // f19's non-location actions 1..4/10/12..21 call 52b4 for a fixed
+        // transient entity. Once-only variants set SAVE+51a first; an
+        // already-set bit makes the trigger a no-op.
+        auto event_entity =
+            map_special_event_entity(transition->special_action());
+        const auto once_flag =
+            map_special_once_flag(transition->special_action());
+        if (event_entity && once_flag != 0U) {
+            const auto flags = context.shared_state.u16(0x51a);
+            if ((flags & once_flag) != 0U) {
+                event_entity.reset();
+            } else {
+                context.shared_state.set_u16(
+                    0x51a, static_cast<std::uint16_t>(flags | once_flag));
+            }
+        }
+        if (!event_entity || *event_entity >= location.area.entity_count()) {
+            return {};
+        }
+        auto outcome = run_entity_event(*event_entity);
+        if (outcome.map_reload) {
+            relocated_transient_area = std::move(outcome.relocated_area);
+            pending_map_reload_ = true;
+        }
+        return {outcome.marker,
+                outcome.quit || outcome.program_exit,
+                outcome.map_reload};
+    };
+
+    if (check_chained_transition_before_present) {
+        check_chained_transition_before_present = false;
+        const auto trigger = dispatch_map_trigger();
+        if (trigger.quit) {
+            context.platform.stop_audio();
+            return Marker::none;
+        }
+        if (trigger.marker != Marker::none) {
+            context.platform.stop_audio();
+            return trigger.marker;
+        }
+        if (trigger.reload) continue;
+    }
     while (true) {
         // RPG's main loop calls 5e16 after composing pixels and before the
         // page flip. Apply one fixed-point palette-cycle step to the palette
@@ -4336,116 +4592,19 @@ Marker RpgModule::run(GameContext& context, Marker) {
                 (static_cast<std::uint64_t>(frame_ticks) * 1000U + 69U) / 70U));
         }
 
-        // RPG:1a26 probes the actor's centre RAP word after the world frame
-        // and dispatches MAP0.EXE through e94 whenever bit 1000h is present.
-        // Normal records install another MAPZ location before the next input
-        // sample.  The packed record's high row-count byte unlocks one of the
-        // 34 travel destinations when action bit 2000h is set.
-        const auto actor_x = context.shared_state.world_x();
-        const auto actor_y = context.shared_state.world_y();
-        if (actor_x < map.layout().width && actor_y < map.layout().height) {
-            const auto cell_index =
-                static_cast<std::size_t>(actor_y) * map.layout().width + actor_x;
-            if ((map.cells()[cell_index] & 0x1000U) != 0U) {
-                const auto actor_cell = static_cast<std::uint16_t>(
-                    context.shared_state.u16(0x40f) + cell_index * 2U);
-                if (const auto transition = map_transitions.match(
-                        context.shared_state.u16(0x408), actor_cell,
-                        map.layout().width)) {
-                    if (!transition->is_special()) {
-                        if (transition->sets_travel_flag()) {
-                            context.shared_state.set_u16(
-                                0x40a, transition->flag_index);
-                            context.shared_state.set_u8(
-                                0x51eU + transition->flag_index, 1U);
-                        }
-                        if (transition->uses_relative_placement()) {
-                            relocated_transient_area = location.area;
-                        }
-                        install_map_location(context.shared_state, map_database,
-                                             transition->action);
-                        pending_map_reload_ = true;
-                        break;
-                    }
-
-                    // Actions 5..9/11 replace the BMAN archive in the same
-                    // buffer used by 506d.  Action 11 deliberately gives the
-                    // runtime selector value five while reloading BMAN5, just
-                    // as the shipped 0ff2h branch does (BMAN6 is not named).
-                    std::optional<std::pair<std::uint8_t, std::uint8_t>>
-                        actor_resource;
-                    switch (transition->special_action()) {
-                    case 5: actor_resource = {{0, 1}}; break;
-                    case 6: actor_resource = {{1, 2}}; break;
-                    case 7: actor_resource = {{2, 3}}; break;
-                    case 8: actor_resource = {{3, 4}}; break;
-                    case 9: actor_resource = {{4, 5}}; break;
-                    case 11: actor_resource = {{5, 5}}; break;
-                    default: break;
-                    }
-                    if (actor_resource &&
-                        actor_resource_variant != actor_resource->first) {
-                        actor_resource_variant = actor_resource->first;
-                        const auto path = context.game_root /
-                            ("BMAN" +
-                             std::to_string(actor_resource->second) + ".RSK");
-                        actors = SpriteArchive::parse(
-                            decode_rsk_block(read_file(path)).data);
-                    }
-
-                    // f19's non-location actions 1..4/10/12..21 call 52b4
-                    // for a fixed transient entity.  The once-only variants
-                    // first set a bit in SAVE+51a; an already-set bit makes
-                    // the trigger a no-op. They all enter the same 52b4 event
-                    // path as an ordinary explicit/automatic interaction.
-                    std::optional<std::size_t> event_entity;
-                    std::uint16_t once_flag = 0;
-                    switch (transition->special_action()) {
-                    case 1: case 3: case 12: case 16: event_entity = 0; break;
-                    case 2: event_entity = 3; break;
-                    case 4: event_entity = 1; break;
-                    case 10: event_entity = 0; once_flag = 0x0001; break;
-                    case 13: event_entity = 1; once_flag = 0x0004; break;
-                    case 14: event_entity = 0; once_flag = 0x0002; break;
-                    case 15: event_entity = 0; once_flag = 0x0008; break;
-                    case 17: event_entity = 1; once_flag = 0x0010; break;
-                    case 18: event_entity = 0; once_flag = 0x0020; break;
-                    case 19: event_entity = 0; once_flag = 0x0040; break;
-                    case 20: event_entity = 0; once_flag = 0x0080; break;
-                    case 21: event_entity = 0; once_flag = 0x0100; break;
-                    default: break;
-                    }
-                    if (event_entity && once_flag != 0U) {
-                        const auto flags = context.shared_state.u16(0x51a);
-                        if ((flags & once_flag) != 0U) {
-                            event_entity.reset();
-                        } else {
-                            context.shared_state.set_u16(
-                                0x51a,
-                                static_cast<std::uint16_t>(flags | once_flag));
-                        }
-                    }
-                    if (event_entity &&
-                        *event_entity < location.area.entity_count()) {
-                        auto outcome = run_entity_event(*event_entity);
-                        if (outcome.quit || outcome.program_exit) {
-                            context.platform.stop_audio();
-                            return Marker::none;
-                        }
-                        if (outcome.marker != Marker::none) {
-                            context.platform.stop_audio();
-                            return outcome.marker;
-                        }
-                        if (outcome.map_reload) {
-                            relocated_transient_area =
-                                std::move(outcome.relocated_area);
-                            pending_map_reload_ = true;
-                            break;
-                        }
-                    }
-                }
-            }
+        // RPG:1a26 probes the actor's centre RAP word after the world frame.
+        // A normal MAP0 record then reloads and e94 probes the destination
+        // spawn before any intermediate page flip.
+        const auto trigger = dispatch_map_trigger();
+        if (trigger.quit) {
+            context.platform.stop_audio();
+            return Marker::none;
         }
+        if (trigger.marker != Marker::none) {
+            context.platform.stop_audio();
+            return trigger.marker;
+        }
+        if (trigger.reload) break;
 
         // RPG:0129..01c6 keeps composing world frames and samples the
         // keyboard without blocking. Menus/dialogue still use wait_for_input,

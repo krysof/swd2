@@ -8,7 +8,7 @@
 - `RSK/RS1..RS4/RAP/RRO` 的原版 64 KiB LZ/Huffman 解码器；
 - 原始 `SWD2.EXE` 启动/调度状态机的等价 C++ 实现；
 - DOS 资源路径规范化与资源目录统计；
-- MAPA/MAPZ 世界数据库、MAP0 的 481 条地图入口/特殊事件、地图实体、DE 平面精灵、
+- MAPA/MAPZ 世界数据库、MAP0 的 481 条地图入口/特殊事件、SA 地图实体精灵、DE 平面演出、
   CHNA 事件与 Big5 对话；
 - SDL 单窗口前端，以及合入同一进程的 MEO、RPG、FIG、DEMO 模块；
 - 自动测试直接使用 `game/` 原始数据校验启动、地图、事件、对话和模块切换。

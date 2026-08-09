@@ -47,7 +47,7 @@ Windows、Linux、macOS、iOS、Android、WebAssembly 或主机平台可分别�
 - `RPG.EXE` 的当前区域加载、四 VGA 平面地图合成、视口、四人三延迟槽队列、
   队员/实体深度交错、碰撞/滑行、野外毒伤/随机遇敌、自动事件及原版代码窗口驱动的
   实体移动；
-- MAPA/MAPZ 世界数据库、MAP0 矩形入口/特殊实体事件/BMAN 切换、CHNA 事件 VM、
+- MAPA/MAPZ 世界数据库、MAP0 矩形入口/特殊实体事件/BMAN 切换、SA 地图实体、CHNA 事件 VM、
   Big5 字库和 NAME 字形替换；
 - 事件 VM 的完整 0..61 调度表、精确 MAPZ 共享区域修改、进程内地图/战斗切换，
   商店、背包使用、装备/出售，以及 DE/RI/VOC/调色板/mode-X 演出；
