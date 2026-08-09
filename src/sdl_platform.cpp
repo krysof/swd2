@@ -71,31 +71,59 @@ InputAction translate_event(const SDL_Event& event) {
 }
 
 #ifdef __EMSCRIPTEN__
-// Touch directions are injected as portable actions instead of synthetic DOM
-// key autorepeat. Emscripten/SDL deliberately coalesces or marks repeated
-// keydowns, while RPG's world loop consumes discrete DOS-style direction
-// actions. Keep the queue short so releasing a button cannot leave a long
-// movement tail after a temporary animation or map load.
-std::deque<InputAction> browser_direction_actions;
+struct BrowserDirectionState {
+    int held_code{};
+    Uint32 repeat_at{};
+};
+
+BrowserDirectionState browser_direction;
+
+InputAction browser_direction_action(int direction) {
+    switch (direction) {
+    case 1: return InputAction::up;
+    case 2: return InputAction::left;
+    case 3: return InputAction::down;
+    case 4: return InputAction::right;
+    default: return InputAction::none;
+    }
+}
+
+InputAction take_browser_direction_action() {
+    // DOM callbacks only update ordinary JavaScript state. Polling it while
+    // the game is already executing avoids re-entering WebAssembly during an
+    // ASYNCIFY sleep, which Safari can reject. A short JS queue preserves a
+    // quick tap even when press and release both occur between world frames.
+    const auto queued = EM_ASM_INT({
+        const queue = Module.swd2DirectionQueue;
+        return queue && queue.length ? queue.shift() | 0 : 0;
+    });
+    const auto held = EM_ASM_INT({
+        return Module.swd2HeldDirection | 0;
+    });
+    const auto now = SDL_GetTicks();
+    if (queued != 0) {
+        browser_direction.held_code = held;
+        browser_direction.repeat_at = now + 180U;
+        return browser_direction_action(queued);
+    }
+    if (held == 0) {
+        browser_direction.held_code = 0;
+        return InputAction::none;
+    }
+    if (held != browser_direction.held_code) {
+        browser_direction.held_code = held;
+        browser_direction.repeat_at = now + 180U;
+        return browser_direction_action(held);
+    }
+    if (SDL_TICKS_PASSED(now, browser_direction.repeat_at)) {
+        browser_direction.repeat_at = now + 85U;
+        return browser_direction_action(held);
+    }
+    return InputAction::none;
+}
 #endif
 
 }  // namespace
-
-#ifdef __EMSCRIPTEN__
-extern "C" EMSCRIPTEN_KEEPALIVE void swd2_web_direction(int direction) {
-    InputAction action = InputAction::none;
-    switch (direction) {
-    case 1: action = InputAction::up; break;
-    case 2: action = InputAction::left; break;
-    case 3: action = InputAction::down; break;
-    case 4: action = InputAction::right; break;
-    default: return;
-    }
-    if (browser_direction_actions.size() < 2U) {
-        browser_direction_actions.push_back(action);
-    }
-}
-#endif
 
 struct SdlPlatform::Impl {
     SDL_Window* window{};
@@ -205,11 +233,8 @@ struct SdlPlatform::Impl {
     InputAction take_pending_action() {
         if (frontend_quit) return InputAction::quit;
 #ifdef __EMSCRIPTEN__
-        if (!browser_direction_actions.empty()) {
-            const auto action = browser_direction_actions.front();
-            browser_direction_actions.pop_front();
-            return action;
-        }
+        if (const auto action = take_browser_direction_action();
+            action != InputAction::none) return action;
 #endif
         if (pending_actions.empty()) return InputAction::none;
         const auto action = pending_actions.front();

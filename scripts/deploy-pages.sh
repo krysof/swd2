@@ -9,7 +9,18 @@ deploy="$root/build/pages-deploy"
 "$root/scripts/audit-completion.py" --validate
 echo "Publishing a progress checkpoint; this is not a 100% completion claim."
 
-"$root/scripts/build-wasm.sh"
+release_day="$(TZ=Asia/Tokyo date +%Y.%m.%d)"
+release_count=1
+while IFS= read -r tag; do
+  suffix="${tag##*.}"
+  if [[ "$suffix" =~ ^[0-9]+$ ]] && (( suffix >= release_count )); then
+    release_count=$((suffix + 1))
+  fi
+done < <(git -C "$root" tag -l "web-release-$release_day.*")
+release_version="$release_day.$release_count"
+echo "Web release version: $release_version"
+
+SWD2_WEB_VERSION="$release_version" "$root/scripts/build-wasm.sh"
 
 if ! gh repo view "$repository" >/dev/null 2>&1; then
   gh repo create "$repository" --public \
@@ -49,4 +60,6 @@ else
   rm -f "$pages_error"
 fi
 
+git -C "$root" tag "web-release-$release_version" HEAD
+echo "Version: $release_version"
 echo "Published: https://${repository%%/*}.github.io/${repository#*/}/"

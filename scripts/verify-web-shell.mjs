@@ -157,63 +157,26 @@ if (orientationRequests !== 1 || wakeRequests !== 1) {
 const pointer = { pointerId: 7, preventDefault() {} };
 const upButton = controlButtons.find(button => button.dataset.key === 'ArrowUp');
 upButton.listeners.pointerdown[0](pointer);
-if (ids.canvas.dispatched.length !== 1 ||
-    ids.canvas.dispatched[0].type !== 'keydown' ||
-    ids.canvas.dispatched[0].key !== 'ArrowUp') {
-  throw new Error('touch direction did not begin with one fresh keydown');
-}
-if (pendingTimeouts.size !== 1 || pendingIntervals.size !== 0) {
-  throw new Error('touch direction did not arm exactly one initial repeat delay');
-}
-const delayedRepeat = pendingTimeouts.values().next().value;
-pendingTimeouts.clear();
-delayedRepeat();
-if (pendingIntervals.size !== 1) {
-  throw new Error('touch direction did not arm its held repeat interval');
-}
-const intervalRepeat = pendingIntervals.values().next().value;
-intervalRepeat();
-intervalRepeat();
-upButton.listeners.pointerup[0](pointer);
-const directionEvents = ids.canvas.dispatched.map(event =>
-  `${event.type}:${event.key}`);
-const expectedDirectionEvents = [
-  'keydown:ArrowUp',
-  'keyup:ArrowUp', 'keydown:ArrowUp',
-  'keyup:ArrowUp', 'keydown:ArrowUp',
-  'keyup:ArrowUp', 'keydown:ArrowUp',
-  'keyup:ArrowUp',
-];
-if (directionEvents.join('|') !== expectedDirectionEvents.join('|')) {
-  throw new Error(`held touch direction did not emit fresh SDL pulses: ${directionEvents}`);
-}
-if (pendingTimeouts.size !== 0 || pendingIntervals.size !== 0) {
-  throw new Error('touch direction left a repeat timer after release');
-}
-
-ids.canvas.dispatched.length = 0;
-const injectedDirections = [];
-context.Module._swd2_web_direction = code => injectedDirections.push(code);
-context.Module.onRuntimeInitialized();
-const rightButton = controlButtons.find(button => button.dataset.key === 'ArrowRight');
-rightButton.listeners.pointerdown[0](pointer);
-if (injectedDirections.join(',') !== '4' || ids.canvas.dispatched.length !== 0 ||
-    pendingTimeouts.size !== 1) {
-  throw new Error('runtime-ready touch direction did not use direct WASM injection');
-}
-const directDelay = pendingTimeouts.values().next().value;
-pendingTimeouts.clear();
-directDelay();
-const directInterval = pendingIntervals.values().next().value;
-directInterval();
-directInterval();
-rightButton.listeners.pointerup[0](pointer);
-if (injectedDirections.join(',') !== '4,4,4,4' ||
+if (context.Module.swd2HeldDirection !== 1 ||
+    context.Module.swd2DirectionQueue.join(',') !== '1' ||
     ids.canvas.dispatched.length !== 0 ||
     pendingTimeouts.size !== 0 || pendingIntervals.size !== 0) {
-  throw new Error(
-    `held direction did not repeat directly through WASM: ${injectedDirections}`);
+  throw new Error('touch direction did not enter the JS state polled by SDL');
 }
+upButton.listeners.pointerup[0](pointer);
+if (context.Module.swd2HeldDirection !== 0 ||
+    context.Module.swd2DirectionQueue.join(',') !== '1') {
+  throw new Error('direction release did not stop hold while preserving its quick tap');
+}
+context.Module.swd2DirectionQueue.shift();
+const rightButton = controlButtons.find(button => button.dataset.key === 'ArrowRight');
+rightButton.listeners.pointerdown[0](pointer);
+if (context.Module.swd2HeldDirection !== 4 ||
+    context.Module.swd2DirectionQueue.join(',') !== '4') {
+  throw new Error('touch direction hold state did not switch sides');
+}
+rightButton.listeners.pointerup[0](pointer);
+context.Module.swd2DirectionQueue.length = 0;
 
 const escapeButton = controlButtons.find(button => button.dataset.key === 'Escape');
 escapeButton.listeners.pointerdown[0](pointer);

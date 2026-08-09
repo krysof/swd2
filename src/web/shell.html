@@ -73,6 +73,7 @@
       box-shadow: 0 20px 70px #000, inset 0 0 24px #9a714022;
     }
     .start-credit { margin: 0 0 9px; font-size: clamp(21px, 6vw, 30px); font-weight: 800; }
+    .start-version { margin: 0 0 9px; color: #cab995; font-size: 14px; }
     .start-site { display: block; margin: 0 0 22px; color: #e8bd76; }
     #start-button { min-width: 230px; min-height: 52px; font-weight: 800; }
     @media (hover: none), (pointer: coarse) { .hint { font-size: 12px; } }
@@ -115,6 +116,7 @@
   <div id="start-gate" role="dialog" aria-modal="true" aria-labelledby="start-credit">
     <div class="start-card">
       <p class="start-credit" id="start-credit">白河愁 破解移植</p>
+      <p class="start-version" id="build-version">版本 __SWD2_RELEASE_VERSION__</p>
       <a class="start-site" href="http://www.ff18.com" target="_blank" rel="noopener noreferrer">http://www.ff18.com</a>
       <button id="start-button" type="button">点击开始并开启声音</button>
     </div>
@@ -158,7 +160,6 @@
     const idbfsSelfTestPath = '/saves/.swd2-idbfs-restart-probe';
     let startRequested = Boolean(idbfsSelfTestToken);
     let startDependencyInstalled = false;
-    let wasmRuntimeReady = false;
     let wakeLock = null;
 
     if (idbfsSelfTestToken) startGate.hidden = true;
@@ -290,6 +291,8 @@
     }
 
     var Module = {
+      swd2HeldDirection: 0,
+      swd2DirectionQueue: [],
       arguments: ['--game', '/game', '--save-dir', '/saves', '--play'],
       canvas,
       preRun: [function() {
@@ -330,7 +333,6 @@
         else this.setStatus('正在启动游戏…');
       },
       onRuntimeInitialized() {
-        wasmRuntimeReady = true;
         statusWrap.classList.add('ready');
         unlockWebAudio();
         canvas.focus();
@@ -354,29 +356,20 @@
       });
       canvas.dispatchEvent(event);
     }
-    function pulseDirection(key) {
-      // SDL intentionally ignores OS autorepeat keydowns for menu safety.
-      // End and restart the synthetic press so every held-touch tick reaches
-      // SDL as a fresh direction while the final pointer release still leaves
-      // the keyboard state clean.
-      emitKey('keyup', key);
-      emitKey('keydown', key);
-    }
-    function injectDirection(key) {
-      if (wasmRuntimeReady && typeof Module._swd2_web_direction === 'function') {
-        Module._swd2_web_direction(directionCodes[key]);
-        return true;
+    function pressDirection(key) {
+      const direction = directionCodes[key];
+      if (!direction) return;
+      // Do not re-enter WebAssembly from a DOM callback: the game may be in an
+      // ASYNCIFY sleep. SDL polls this plain JS state and repeats the held key.
+      if (Module.swd2DirectionQueue.length < 4) {
+        Module.swd2DirectionQueue.push(direction);
       }
-      return false;
+      Module.swd2HeldDirection = direction;
     }
-    function repeatHeldDirection(button, held) {
-      const key = button.dataset.key;
-      if (injectDirection(key)) {
-        if (held.keyboardDown) emitKey('keyup', key);
-        held.keyboardDown = false;
-      } else {
-        pulseDirection(key);
-        held.keyboardDown = true;
+    function releaseDirection(key) {
+      const direction = directionCodes[key];
+      if (Module.swd2HeldDirection === direction) {
+        Module.swd2HeldDirection = 0;
       }
     }
     const directionKeys = new Set(['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown']);
@@ -385,10 +378,9 @@
       if (event) event.preventDefault();
       const held = heldControls.get(button);
       if (!held) return;
-      clearTimeout(held.delay);
-      clearInterval(held.repeat);
       heldControls.delete(button);
-      if (held.keyboardDown) emitKey('keyup', button.dataset.key);
+      if (held.direction) releaseDirection(button.dataset.key);
+      else emitKey('keyup', button.dataset.key);
     }
     document.querySelectorAll('[data-key]').forEach(button => {
       button.addEventListener('pointerdown', event => {
@@ -396,29 +388,12 @@
         if (heldControls.has(button)) return;
         button.setPointerCapture(event.pointerId);
         const direction = directionKeys.has(button.dataset.key);
-        const held = { delay: 0, repeat: 0, keyboardDown: !direction };
+        const held = { direction };
         heldControls.set(button, held);
         if (direction) {
-          // Direct WASM injection is authoritative after startup. Retain the
-          // key pulse only as a short loading-time fallback.
-          if (!injectDirection(button.dataset.key)) {
-            emitKey('keydown', button.dataset.key);
-            held.keyboardDown = true;
-          }
+          pressDirection(button.dataset.key);
         } else {
           emitKey('keydown', button.dataset.key);
-        }
-        // A physical keyboard generates fresh DOS key events while held. DOM
-        // events synthesized by a touch button remain one logically pressed
-        // key and SDL rejects their autorepeat flag. Pulse only the four
-        // movement directions after a short initial delay. ESC and Enter stay
-        // single-shot to prevent one press from accepting multiple screens.
-        if (direction) {
-          held.delay = setTimeout(() => {
-            repeatHeldDirection(button, held);
-            held.repeat = setInterval(
-              () => repeatHeldDirection(button, held), 85);
-          }, 180);
         }
       });
       button.addEventListener('pointerup', event => releaseControl(button, event));

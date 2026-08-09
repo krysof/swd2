@@ -36,8 +36,8 @@ grep -Fq 'index.data' "$site/index.js" || {
   echo "error: index.js does not reference the preloaded game data" >&2
   exit 1
 }
-grep -Fq '_swd2_web_direction' "$site/index.js" || {
-  echo "error: index.js does not expose direct held-touch direction injection" >&2
+grep -Fq 'swd2HeldDirection' "$site/index.js" || {
+  echo "error: index.js does not poll held-touch direction state" >&2
   exit 1
 }
 
@@ -64,6 +64,7 @@ done
 
 for pattern in \
   "白河愁 破解移植" \
+  "id=build-version" \
   "http://www.ff18.com" \
   "点击开始并开启声音" \
   "swd2-user-start" \
@@ -88,6 +89,10 @@ for pattern in \
     exit 1
   }
 done
+if grep -Fq '__SWD2_RELEASE_VERSION__' "$site/index.html"; then
+  echo "error: index.html still contains the unreplaced Web release version" >&2
+  exit 1
+fi
 if grep -Fq "aspect-ratio:8/5" "$site/index.html"; then
   echo "error: index.html displays the 320x200 framebuffer at the flattened 8:5 byte ratio" >&2
   exit 1
@@ -135,12 +140,11 @@ done
 
 for pattern in \
   "const directionKeys" \
-  "pulseDirection" \
-  "injectDirection" \
-  "_swd2_web_direction" \
+  "pressDirection" \
+  "releaseDirection" \
+  "swd2HeldDirection" \
+  "swd2DirectionQueue" \
   "heldControls" \
-  "setTimeout" \
-  "setInterval" \
   "lostpointercapture"; do
   grep -Fq "$pattern" "$site/index.html" || {
     echo "error: index.html is missing held-direction touch input: $pattern" >&2
