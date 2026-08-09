@@ -36,6 +36,10 @@ InputAction parse_action(const std::string& value) {
     if (value == "PGDN" || value == "PAGEDOWN") return InputAction::page_down;
     if (value == "HOME") return InputAction::home;
     if (value == "END") return InputAction::end;
+    if (value == "ERASE" || value == "CLEAR" || value == "INSERT" ||
+        value == "CTRL") {
+        return InputAction::erase;
+    }
     if (value == "OK" || value == "CONFIRM" || value == "ENTER") {
         return InputAction::confirm;
     }
@@ -146,6 +150,7 @@ std::string_view input_action_name(InputAction action) noexcept {
     case InputAction::confirm: return "CONFIRM";
     case InputAction::cancel: return "CANCEL";
     case InputAction::quit: return "QUIT";
+    case InputAction::erase: return "ERASE";
     }
     return "UNKNOWN";
 }

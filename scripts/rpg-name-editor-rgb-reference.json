@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "This locks the visible default RPG name-editor page only. The DOSBox PNG remains external reference evidence and does not prove every cursor, page or bitmap-edit state.",
+  "program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "frames": [
+    {
+      "label": "RPG new-game default name editor",
+      "original": "000085.png",
+      "sha256": "e02aefecd1c7714561866d7f383908e1df0d1002b2707c067e7ab640a56cf2d7",
+      "rewrite_frame": 109
+    }
+  ]
+}

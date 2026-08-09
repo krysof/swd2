@@ -45,5 +45,5 @@ if command -v node >/dev/null 2>&1; then
 fi
 
 printf '%s\n' \
-  'SAVE/MAPZ verification: native five-slot, live new-game pair, explicit Record routing, --no-save isolation, and simulated IDBFS reload passed.' \
+  'SAVE/MAPZ/NAME verification: native five-slot, live new-game slot, explicit Record routing, --no-save isolation, and simulated IDBFS reload passed.' \
   'Run the WASM site with ?idbfs-self-test=TOKEN in a real browser and require data-idbfs-self-test="pass".'

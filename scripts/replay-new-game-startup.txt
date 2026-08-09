@@ -3,5 +3,6 @@
 # event -> first ordinary world poll. This reaches the real new-game world,
 # but is deliberately not represented as a complete playthrough.
 WAIT:CONFIRM*4
+WAIT:CANCEL
 POLL:CONFIRM
 POLL:QUIT

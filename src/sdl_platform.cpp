@@ -44,6 +44,9 @@ InputAction translate_event(const SDL_Event& event) {
         case SDLK_PAGEDOWN: return InputAction::page_down;
         case SDLK_HOME: return InputAction::home;
         case SDLK_END: return InputAction::end;
+        case SDLK_LCTRL:
+        case SDLK_RCTRL:
+        case SDLK_INSERT: return InputAction::erase;
         case SDLK_RETURN:
         case SDLK_KP_ENTER:
         case SDLK_SPACE:

@@ -610,6 +610,8 @@ void write_replay_trace(const std::filesystem::path& path,
     if (map_digest) output << '"' << hex_digest(*map_digest) << '"';
     else output << "null";
     output << ",\n"
+           << "  \"name_fnv1a64\": \""
+           << hex_digest(fnv1a(context.name_font)) << "\",\n"
            << "  \"stop_reason\": \"" << swd2::stop_reason_name(result.reason)
            << "\",\n"
            << "  \"final_marker\": \"" << swd2::marker_name(result.final_marker)
@@ -644,9 +646,10 @@ void run_monolithic(const std::filesystem::path& game_root,
         game_root, slot.state(), platform, slot.map_database(),
         [&slot, &game_root, &save_root, write_save](
             std::uint8_t selected, const swd2::SharedState& state,
-            const swd2::MapDatabase& map) {
+            const swd2::MapDatabase& map,
+            std::span<const std::uint8_t> name_font) {
             if (!write_save) return;
-            swd2::SaveSlot::save_as(save_root, selected, state, map);
+            swd2::SaveSlot::save_as(save_root, selected, state, map, name_font);
             // Record changes the active DOS save pair.  The optional exit
             // checkpoint must follow that chosen slot rather than silently
             // writing the command-line seed slot as well.
@@ -655,8 +658,10 @@ void run_monolithic(const std::filesystem::path& game_root,
         },
         [&slot, &game_root, &save_root](std::uint8_t selected) {
             slot = swd2::SaveSlot::open(game_root, save_root, selected);
-            return swd2::LoadedSaveSlot{slot.state(), slot.map_database()};
+            return swd2::LoadedSaveSlot{
+                slot.state(), slot.map_database(), slot.name_font()};
         },
+        slot.name_font(),
     };
     platform.bind_context(context);
     swd2::ModuleRegistry modules;
@@ -678,7 +683,8 @@ void run_monolithic(const std::filesystem::path& game_root,
             throw std::runtime_error(
                 "cannot checkpoint current SAVE state without live MAPZ state");
         }
-        slot.save(context.shared_state, *context.map_database);
+        slot.save(context.shared_state, *context.map_database,
+                  context.name_font);
     }
     // A capture without its DONE trailer is intentionally invalid. Finalize
     // only after strict replay invariants pass so an interrupted/partial run
@@ -706,9 +712,10 @@ void play_monolithic(const std::filesystem::path& game_root,
         game_root, slot.state(), platform, slot.map_database(),
         [&slot, &game_root, &save_root, write_save](
             std::uint8_t selected, const swd2::SharedState& state,
-            const swd2::MapDatabase& map) {
+            const swd2::MapDatabase& map,
+            std::span<const std::uint8_t> name_font) {
             if (!write_save) return;
-            swd2::SaveSlot::save_as(save_root, selected, state, map);
+            swd2::SaveSlot::save_as(save_root, selected, state, map, name_font);
             slot = swd2::SaveSlot::open(game_root, save_root, selected);
             // Native renames are durable on return. In a browser /saves is
             // IDBFS, so every explicit system-menu save must also flush the
@@ -717,8 +724,10 @@ void play_monolithic(const std::filesystem::path& game_root,
         },
         [&slot, &game_root, &save_root](std::uint8_t selected) {
             slot = swd2::SaveSlot::open(game_root, save_root, selected);
-            return swd2::LoadedSaveSlot{slot.state(), slot.map_database()};
+            return swd2::LoadedSaveSlot{
+                slot.state(), slot.map_database(), slot.name_font()};
         },
+        slot.name_font(),
     };
     swd2::ModuleRegistry modules;
     modules.add(std::make_unique<swd2::MeoModule>());
@@ -731,7 +740,8 @@ void play_monolithic(const std::filesystem::path& game_root,
             throw std::runtime_error(
                 "cannot checkpoint current SAVE state without live MAPZ state");
         }
-        slot.save(context.shared_state, *context.map_database);
+        slot.save(context.shared_state, *context.map_database,
+                  context.name_font);
         persist_browser_saves();
     }
 }

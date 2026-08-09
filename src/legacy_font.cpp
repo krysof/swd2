@@ -38,6 +38,10 @@ LegacyFont LegacyFont::load(const std::filesystem::path& path) {
     if (!input) throw std::runtime_error("cannot open legacy DSK font: " + path.string());
     const std::vector<std::uint8_t> bytes{std::istreambuf_iterator<char>(input),
                                           std::istreambuf_iterator<char>()};
+    return parse(bytes);
+}
+
+LegacyFont LegacyFont::parse(std::span<const std::uint8_t> bytes) {
     if (bytes.size() < 2) throw std::runtime_error("legacy DSK font is truncated");
     const auto count = static_cast<std::size_t>(little_u16(bytes, 0));
     if (bytes.size() != 2 + count * (2 + glyph_bytes)) {
@@ -87,6 +91,38 @@ LegacyFont::rasterize_or_first(std::uint16_t big5_code) const {
         throw std::out_of_range("cannot fall back in an empty DSK font");
     }
     return rasterize_bitmap(glyphs_.front());
+}
+
+void LegacyFont::replace_glyph(
+    std::size_t index,
+    std::span<const std::uint8_t, glyph_bytes> bitmap) {
+    if (index >= glyphs_.size()) {
+        throw std::out_of_range("legacy DSK glyph index is outside the font");
+    }
+    std::copy(bitmap.begin(), bitmap.end(), glyphs_[index].begin());
+}
+
+std::vector<std::uint8_t> LegacyFont::serialize() const {
+    if (codes_.size() != glyphs_.size() || codes_.size() > 0xffffU) {
+        throw std::runtime_error("legacy DSK font cannot be serialized");
+    }
+    std::vector<std::uint8_t> result(
+        2U + codes_.size() * (2U + glyph_bytes));
+    result[0] = static_cast<std::uint8_t>(codes_.size() & 0xffU);
+    result[1] = static_cast<std::uint8_t>(codes_.size() >> 8U);
+    for (std::size_t index = 0; index < codes_.size(); ++index) {
+        result[2U + index * 2U] =
+            static_cast<std::uint8_t>(codes_[index] >> 8U);
+        result[3U + index * 2U] =
+            static_cast<std::uint8_t>(codes_[index] & 0xffU);
+    }
+    auto bitmap = 2U + codes_.size() * 2U;
+    for (const auto& glyph : glyphs_) {
+        std::copy(glyph.begin(), glyph.end(),
+                  result.begin() + static_cast<std::ptrdiff_t>(bitmap));
+        bitmap += glyph_bytes;
+    }
+    return result;
 }
 
 }  // namespace swd2

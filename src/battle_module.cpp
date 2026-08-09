@@ -3310,7 +3310,9 @@ Marker BattleModule::run(GameContext& context, Marker input) {
     bool start_battle = true;
     if (!encounter.introduction_text.empty()) {
         const auto font = LegacyFont::load(context.game_root / "FIG.DSK");
-        const auto name_font = LegacyFont::load(context.game_root / "NAME.DSK");
+        const auto name_font = context.name_font.empty()
+            ? LegacyFont::load(context.game_root / "NAMEQ.DSK")
+            : LegacyFont::parse(context.name_font);
         std::size_t text_offset = 0;
         while (true) {
             const auto page = render_dialogue_page(
@@ -3444,7 +3446,9 @@ Marker BattleModule::run(GameContext& context, Marker input) {
         const auto abilities =
             BattleAbilityDatabase::load(context.game_root / "FIG.EXE");
         const auto command_font = LegacyFont::load(context.game_root / "FIG.DSK");
-        const auto command_name_font = LegacyFont::load(context.game_root / "NAME.DSK");
+        const auto command_name_font = context.name_font.empty()
+            ? LegacyFont::load(context.game_root / "NAMEQ.DSK")
+            : LegacyFont::parse(context.name_font);
         auto session = BattleSession::create(
             context.shared_state, encounter, items, random_encounter_rules);
         auto random = FigBattleRandom::load(

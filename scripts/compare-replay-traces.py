@@ -44,6 +44,8 @@ def main() -> int:
             == rewrite.get("state_fnv1a64"),
             "final_mapz": original.get("mapz_fnv1a64")
             == rewrite.get("mapz_fnv1a64"),
+            "final_name": original.get("name_fnv1a64")
+            == rewrite.get("name_fnv1a64"),
             "stop": (
                 original.get("stop_reason"),
                 original.get("final_marker"),

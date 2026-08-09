@@ -233,6 +233,8 @@ if(BUILD_TESTING)
                     "${PROJECT_SOURCE_DIR}/scripts/replay-new-game-startup.txt"
                 --trace-output
                     "${CMAKE_BINARY_DIR}/new-game-startup-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/new-game-startup-frames.bin"
     )
     add_test(
         NAME new_game_startup_validation
@@ -272,6 +274,7 @@ if(BUILD_TESTING)
                 "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-trace.json"
                 "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-saves/SAVE.DA3"
                 "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-saves/MAPZ.DA3"
+                "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-saves/NAME3.DSK"
     )
     set_tests_properties(new_game_exit_checkpoint_validation PROPERTIES
         DEPENDS new_game_exit_checkpoint_replay)

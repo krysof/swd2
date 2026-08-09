@@ -200,6 +200,7 @@ def main() -> int:
 
         digest(data.get("state_fnv1a64"), "state_fnv1a64")
         digest(data.get("mapz_fnv1a64"), "mapz_fnv1a64", nullable=True)
+        digest(data.get("name_fnv1a64"), "name_fnv1a64")
 
         transitions = data.get("transitions")
         if not isinstance(transitions, list) or not transitions:

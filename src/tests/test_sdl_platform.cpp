@@ -149,7 +149,7 @@ int main() {
                     "continuous direction kept repeating after its one release");
         }
 
-        const std::array<std::pair<SDL_Keycode, swd2::InputAction>, 12> keyboard{{
+        const std::array<std::pair<SDL_Keycode, swd2::InputAction>, 15> keyboard{{
             {SDLK_UP, swd2::InputAction::up},
             {SDLK_DOWN, swd2::InputAction::down},
             {SDLK_LEFT, swd2::InputAction::left},
@@ -158,6 +158,9 @@ int main() {
             {SDLK_PAGEDOWN, swd2::InputAction::page_down},
             {SDLK_HOME, swd2::InputAction::home},
             {SDLK_END, swd2::InputAction::end},
+            {SDLK_LCTRL, swd2::InputAction::erase},
+            {SDLK_RCTRL, swd2::InputAction::erase},
+            {SDLK_INSERT, swd2::InputAction::erase},
             {SDLK_RETURN, swd2::InputAction::confirm},
             {SDLK_SPACE, swd2::InputAction::confirm},
             {SDLK_z, swd2::InputAction::confirm},

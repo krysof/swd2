@@ -30,16 +30,16 @@ def main() -> int:
             raise ValueError(
                 f"startup transitions differ: {transitions!r}")
         expected_values = {
-            ("input", "total"): 6,
-            ("input", "consumed"): 6,
+            ("input", "total"): 7,
+            ("input", "consumed"): 7,
             ("input", "remaining"): 0,
-            ("boundaries", "wait"): 4,
+            ("boundaries", "wait"): 5,
             ("boundaries", "poll"): 2,
             ("boundaries", "text"): 0,
-            ("video", "frames"): 230,
+            ("video", "frames"): 252,
             ("video", "direct_updates"): 37,
-            ("audio", "music_calls"): 4,
-            ("audio", "stop_audio_calls"): 3,
+            ("audio", "music_calls"): 5,
+            ("audio", "stop_audio_calls"): 4,
         }
         for (section, key), expected_value in expected_values.items():
             actual = data.get(section, {}).get(key)
@@ -47,12 +47,18 @@ def main() -> int:
                 raise ValueError(
                     f"startup {section}.{key} is {actual!r}, "
                     f"expected {expected_value}")
-        if data.get("delay_milliseconds") != 4948:
+        if data.get("delay_milliseconds") != 5248:
             raise ValueError("startup cumulative 70-Hz timing differs")
         if data.get("state_fnv1a64") != "1693cf52a3bbdad7":
             raise ValueError("startup final DAQ/shared-state digest differs")
         if data.get("mapz_fnv1a64") != "827f0f1b725a0958":
             raise ValueError("startup final MAPZ.DAQ digest differs")
+        if data.get("name_fnv1a64") != "e3d2853e2676513b":
+            raise ValueError("startup final NAME.DSK digest differs")
+        frame_hashes = data.get("frame_fnv1a64", [])
+        if len(frame_hashes) <= 109 or \
+                frame_hashes[109] != "86d24d180442b751":
+            raise ValueError("startup RPG name-editor frame differs")
         if data.get("stop_reason") != "module requested exit" or \
                 data.get("final_marker") != "--":
             raise ValueError("startup did not stop from the explicit world quit")

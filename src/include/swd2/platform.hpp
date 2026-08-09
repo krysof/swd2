@@ -21,6 +21,10 @@ enum class InputAction {
     confirm,
     cancel,
     quit,
+    // RPG:1880 treats the DOS Ctrl and Insert scan codes as a distinct
+    // "clear this bitmap pixel" command. It cannot be collapsed into Cancel
+    // because Escape leaves the editor without changing the selected pixel.
+    erase,
 };
 
 struct ClockTime {

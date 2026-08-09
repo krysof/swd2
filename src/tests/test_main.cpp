@@ -119,7 +119,7 @@ void test_replay_input() {
     const auto steps = swd2::parse_replay_input(
         "# deterministic boundary stream\n"
         "POLL:RIGHT*2, WAIT:ENTER TEXT:NONE*3\n"
-        "FRONTEND:QUIT, ESC");
+        "FRONTEND:QUIT, ESC, WAIT:CTRL");
     const std::vector<ReplayInputStep> expected = {
         {ReplayInputBoundary::poll, InputAction::right},
         {ReplayInputBoundary::poll, InputAction::right},
@@ -129,10 +129,12 @@ void test_replay_input() {
         {ReplayInputBoundary::text, InputAction::none},
         {ReplayInputBoundary::frontend, InputAction::quit},
         {ReplayInputBoundary::any, InputAction::cancel},
+        {ReplayInputBoundary::wait, InputAction::erase},
     };
     require(steps == expected &&
                 swd2::replay_boundary_name(steps[0].boundary) == "POLL" &&
-                swd2::input_action_name(steps[2].action) == "CONFIRM",
+                swd2::input_action_name(steps[2].action) == "CONFIRM" &&
+                swd2::input_action_name(steps[8].action) == "ERASE",
             "deterministic replay input grammar differs");
 
     auto rejected = false;
@@ -1901,9 +1903,11 @@ void test_save_slot(const std::filesystem::path& game_root) {
         require(slot.slot() == 4 &&
                     slot.state_path().filename() == "SAVE.DA4" &&
                     slot.map_path().filename() == "MAPZ.DA4" &&
+                    slot.name_path().filename() == "NAME4.DSK" &&
                     std::filesystem::file_size(slot.state_path()) ==
-                        swd2::SharedState::byte_size,
-                "portable save slot did not seed the selected SAVE/MAPZ pair");
+                        swd2::SharedState::byte_size &&
+                    slot.name_font() == read_file(game_root / "NAME4.DSK"),
+                "portable save slot did not seed the selected SAVE/MAPZ/NAME triple");
 
         auto state = slot.state();
         state.set_u16(0x104, 4321);
@@ -1917,7 +1921,9 @@ void test_save_slot(const std::filesystem::path& game_root) {
         map->mutate_area_word(338, 10, 2, 19, true);
         map->mutate_area_word(338, 10, 4, 19, true);
         map->mutate_area_word(636, 3, 3, 8, false);
-        slot.save(state);
+        auto edited_name = slot.name_font();
+        edited_name.back() ^= 0x01U;
+        slot.save(state, *map, edited_name);
 
         auto reopened = swd2::SaveSlot::open(game_root, temporary, 4);
         require(reopened.state().u16(0x104) == 4321 &&
@@ -1930,11 +1936,13 @@ void test_save_slot(const std::filesystem::path& game_root) {
                             .area.graphics_path == "\\SWD2\\T4\\AREA7.RAP" &&
                     reopened.map_database()
                             ->location_at_directory_offset(636)
-                            .area.entity_fields[3][1] == 0x0800U,
-                "portable save slot did not persist both SAVE and MAPZ mutations");
+                            .area.entity_fields[3][1] == 0x0800U &&
+                    reopened.name_font() == edited_name,
+                "portable save slot did not persist SAVE/MAPZ/NAME mutations");
 
         const auto state_temporary = temporary / ".swd2-slot4-save.tmp";
         const auto map_temporary = temporary / ".swd2-slot4-map.tmp";
+        const auto name_temporary = temporary / ".swd2-slot4-name.tmp";
         const auto transaction = temporary / ".swd2-slot4.txn";
         auto stale_state = reopened.state();
         stale_state.set_u16(0x104, 1111);
@@ -1979,8 +1987,47 @@ void test_save_slot(const std::filesystem::path& game_root) {
                     !std::filesystem::exists(state_temporary),
                 "interrupted SAVE/MAPZ pair did not roll forward atomically");
 
+        auto triple_state = recovered.state();
+        triple_state.set_u16(0x104, 6543);
+        triple_state.save(state_temporary);
+        auto triple_map = swd2::MapDatabase::load(recovered.map_path());
+        triple_map.mutate_area_word(location_offset, field, byte_offset,
+                                    0x0678U, false);
+        triple_map.save(map_temporary);
+        auto triple_name = recovered.name_font();
+        triple_name[triple_name.size() - 2U] ^= 0x02U;
+        {
+            std::ofstream name_output(name_temporary, std::ios::binary);
+            name_output.write(
+                reinterpret_cast<const char*>(triple_name.data()),
+                static_cast<std::streamsize>(triple_name.size()));
+            std::ofstream marker(transaction, std::ios::binary);
+            marker << "SWD2SLOT2\n";
+        }
+        // Simulate interruption after NAME and MAPZ were installed but before
+        // SAVE. The remaining state temporary must complete the whole slot.
+        std::filesystem::copy_file(
+            name_temporary, recovered.name_path(),
+            std::filesystem::copy_options::overwrite_existing);
+        std::filesystem::remove(name_temporary);
+        std::filesystem::copy_file(
+            map_temporary, recovered.map_path(),
+            std::filesystem::copy_options::overwrite_existing);
+        std::filesystem::remove(map_temporary);
+        const auto triple_recovered = swd2::SaveSlot::open(
+            game_root, temporary, 4);
+        require(triple_recovered.state().u16(0x104) == 6543 &&
+                    triple_recovered.map_database()
+                            ->location_at_directory_offset(location_offset)
+                            .area.entity_fields[3][38] == 0x0678U &&
+                    triple_recovered.name_font() == triple_name &&
+                    !std::filesystem::exists(transaction) &&
+                    !std::filesystem::exists(state_temporary),
+                "interrupted SAVE/MAPZ/NAME slot did not roll forward atomically");
+
         state.set_u16(0x104, 9876);
-        swd2::SaveSlot::save_as(temporary, 5, state, *map);
+        swd2::SaveSlot::save_as(
+            temporary, 5, state, *map, triple_recovered.name_font());
         auto copied = swd2::SaveSlot::open(game_root, temporary, 5);
         require(copied.state().u16(0x104) == 9876 &&
                     copied.map_database()
@@ -2059,7 +2106,8 @@ void test_save_slot(const std::filesystem::path& game_root) {
         const auto source = swd2::SaveSlot::open(game_root, matrix_root, 1);
         for (std::uint8_t number = 1; number <= 5; ++number) {
             swd2::SaveSlot::save_as(
-                matrix_root, number, source.state(), *source.map_database());
+                matrix_root, number, source.state(), *source.map_database(),
+                source.name_font());
         }
         for (std::uint8_t number = 1; number <= 5; ++number) {
             const auto copied_slot = swd2::SaveSlot::open(
@@ -6458,19 +6506,23 @@ void test_monolithic_runtime(const std::filesystem::path& game_root) {
 void test_rpg_opening_menu(const std::filesystem::path& game_root) {
     {
         ScriptedPlatform platform;
-        platform.actions = {swd2::InputAction::confirm};
+        platform.actions = {
+            swd2::InputAction::confirm,  // default New Game
+            swd2::InputAction::cancel,   // leave RPG:1586 name editor
+        };
         auto original = swd2::SharedState::load(game_root / "SAVE.DA1");
         swd2::GameContext context{game_root, original, platform};
         require(swd2::RpgModule().run(
                     context, swd2::Marker::menu_ready) ==
                     swd2::Marker::open_demo &&
                     context.shared_state.bytes() == original.bytes() &&
-                    platform.presented == 43U && platform.wait_calls == 1U &&
+                    context.name_font == read_file(game_root / "NAME.DSK") &&
+                    platform.presented == 65U && platform.wait_calls == 2U &&
                     platform.poll_calls == 0U &&
-                    platform.frontend_quit_poll_calls == 42U &&
-                    platform.delay_calls == 42U &&
-                    platform.delayed_milliseconds == 600U &&
-                    platform.music_calls == 1U && platform.stop_calls == 1U &&
+                    platform.frontend_quit_poll_calls == 63U &&
+                    platform.delay_calls == 63U &&
+                    platform.delayed_milliseconds == 900U &&
+                    platform.music_calls == 2U && platform.stop_calls == 2U &&
                     platform.palette_hashes.front() !=
                         platform.palette_hashes.back() &&
                     platform.frame_hashes[21] ==
@@ -6503,7 +6555,9 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
                     game_root / ("SAVE.DA" + std::to_string(slot))),
                 std::make_shared<swd2::MapDatabase>(
                     swd2::MapDatabase::load(
-                        game_root / ("MAPZ.DA" + std::to_string(slot))))};
+                        game_root / ("MAPZ.DA" + std::to_string(slot)))),
+                read_file(game_root /
+                    ("NAME" + std::to_string(slot) + ".DSK"))};
         };
         const auto result = swd2::RpgModule().run(
             context, swd2::Marker::menu_ready);
@@ -6558,6 +6612,83 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
                     platform.presented == 83U && platform.direct_updates == 37U &&
                     platform.poll_calls == 1U && platform.stop_calls == 1U,
                 "RPG OM path did not install DAQ and dispatch opening entity two");
+    }
+}
+
+void test_rpg_name_editor(const std::filesystem::path& game_root) {
+    // RPG:1586's character-grid path copies the selected CHAIN.DSK bitmap
+    // into the active NAME slot and then advances the four-column name cursor.
+    // Page zero starts with five commands plus a full-width space, so six
+    // Right actions select Big5 bffa (the released character "錢").
+    {
+        ScriptedPlatform platform;
+        platform.actions = {
+            swd2::InputAction::confirm,  // title: New Game
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::confirm,  // copy bffa to NAME slot zero
+            swd2::InputAction::cancel,   // leave the editor
+        };
+        swd2::GameContext context{
+            game_root, swd2::SharedState::load(game_root / "SAVE.DA1"),
+            platform};
+        require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+                    swd2::Marker::open_demo,
+                "RPG name character-copy path did not return ED");
+
+        const auto edited = swd2::LegacyFont::parse(context.name_font);
+        const auto released = swd2::LegacyFont::load(game_root / "NAME.DSK");
+        const auto chain = swd2::LegacyFont::load(game_root / "CHAIN.DSK");
+        require(std::equal(edited.glyph(edited.codes()[0]).begin(),
+                           edited.glyph(edited.codes()[0]).end(),
+                           chain.glyph(0xbffaU).begin()) &&
+                    std::equal(edited.glyph(edited.codes()[1]).begin(),
+                               edited.glyph(edited.codes()[1]).end(),
+                               released.glyph(released.codes()[1]).begin()) &&
+                    context.name_font.size() == 514U,
+                "RPG name editor did not copy exactly one CHAIN glyph");
+    }
+
+    // RPG:1880 edits the selected 16x15 bitmap in place. Exercise a genuine
+    // held editor state rather than calling LegacyFont::replace_glyph from the
+    // test: select the star command, set pixels (0,0) and (1,0), leave the
+    // zoomed editor, clear the released pixel at x=4, then leave the outer
+    // editor. The released first row is 0800h, so setting the two high bits
+    // and clearing bit four produces c000h.
+    {
+        ScriptedPlatform platform;
+        platform.actions = {
+            swd2::InputAction::confirm,  // title: New Game
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::confirm,  // a1b8: bitmap editor
+            swd2::InputAction::confirm,  // set (0,0)
+            swd2::InputAction::right,
+            swd2::InputAction::confirm,  // set (1,0)
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::right,
+            swd2::InputAction::erase,    // Ctrl/Insert clears (4,0)
+            swd2::InputAction::cancel,   // leave bitmap editor
+            swd2::InputAction::cancel,   // leave name editor
+        };
+        swd2::GameContext context{
+            game_root, swd2::SharedState::load(game_root / "SAVE.DA1"),
+            platform};
+        require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+                    swd2::Marker::open_demo,
+                "RPG name bitmap-edit path did not return ED");
+        const auto edited = swd2::LegacyFont::parse(context.name_font);
+        const auto bitmap = edited.glyph(edited.codes()[0]);
+        require(bitmap[0] == 0xc0U && bitmap[1] == 0x00U &&
+                    context.name_font.size() == 514U,
+                "RPG name bitmap editor did not persist its two pixels");
     }
 }
 
@@ -7890,11 +8021,16 @@ void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.save_slot = [&](std::uint8_t slot,
                             const swd2::SharedState& saved_state,
-                            const swd2::MapDatabase&) {
+                            const swd2::MapDatabase&,
+                            std::span<const std::uint8_t> name_font) {
         ++saves;
         saved_slot = slot;
         require(saved_state.bytes() == context.shared_state.bytes(),
                 "RPG system save supplied a stale SharedState snapshot");
+        require(name_font.size() == context.name_font.size() &&
+                    std::equal(name_font.begin(), name_font.end(),
+                               context.name_font.begin()),
+                "RPG system save supplied a stale NAME font");
     };
     require(swd2::RpgModule().run(
                 context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
@@ -7927,7 +8063,8 @@ void test_rpg_system_menu_save_restricted(
     std::size_t saves = 0;
     swd2::GameContext context{game_root, state, platform};
     context.save_slot = [&](std::uint8_t, const swd2::SharedState&,
-                            const swd2::MapDatabase&) { ++saves; };
+                            const swd2::MapDatabase&,
+                            std::span<const std::uint8_t>) { ++saves; };
     const auto restricted_result = swd2::RpgModule().run(
         context, swd2::Marker::continue_rpg);
     require(restricted_result == swd2::Marker::none &&
@@ -7965,7 +8102,8 @@ void test_rpg_system_menu_load(const std::filesystem::path& game_root) {
         return swd2::LoadedSaveSlot{
             std::move(loaded_state),
             std::make_shared<swd2::MapDatabase>(
-                swd2::MapDatabase::load(game_root / "MAPZ.DA1"))};
+                swd2::MapDatabase::load(game_root / "MAPZ.DA1")),
+            read_file(game_root / "NAME2.DSK")};
     };
     require(swd2::RpgModule().run(
                 context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
@@ -9630,6 +9768,7 @@ int main(int argc, char** argv) {
         test_meo_exit_fade(argv[1]);
         test_monolithic_runtime(argv[1]);
         test_rpg_opening_menu(argv[1]);
+        test_rpg_name_editor(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
         test_rpg_event_program_exit(argv[1]);
         test_rpg_idle_world_ticks(argv[1]);

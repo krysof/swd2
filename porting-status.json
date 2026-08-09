@@ -61,7 +61,7 @@
         "背包、装备、奇术、旅行、商店、状态和存档槽全部状态逐像素通过",
         "不存在通用居中框或近似画面"
       ],
-      "evidence": ["src/rpg_presentation.cpp", "src/rpg_module.cpp", "src/reverse-engineering.md", "src/tests/test_main.cpp", "scripts/compare-dosbox-rgb-frame.py", "scripts/rpg-opening-rgb-reference.json", "scripts/replay-smoke.txt"],
+      "evidence": ["src/rpg_presentation.cpp", "src/rpg_module.cpp", "src/reverse-engineering.md", "src/tests/test_main.cpp", "scripts/compare-dosbox-rgb-frame.py", "scripts/rpg-opening-rgb-reference.json", "scripts/rpg-name-editor-rgb-reference.json", "scripts/replay-new-game-startup.txt", "scripts/replay-smoke.txt"],
       "remaining": ["把已零差异的 OP01/五槽 RGB 抽查提升为索引像素基准，并补齐背包/装备边界状态差分", "补齐奇术/旅行/存档槽全部选择状态差分"]
     },
     {
@@ -119,13 +119,13 @@
     },
     {
       "id": "save_roundtrips",
-      "title": "五槽 SAVE/MAPZ 与各平台持久化往返",
+      "title": "五槽 SAVE/MAPZ/NAME 与各平台持久化往返",
       "status": "in_progress",
       "acceptance": [
-        "五个槽位 SAVE 和 MAPZ 成对原子保存/读取",
+        "五个槽位 SAVE、MAPZ 和 NAME 作为同一事务保存/读取",
         "桌面文件系统与浏览器 IDBFS 重启往返均无字节或状态丢失"
       ],
-      "evidence": ["src/save_slot.cpp", "src/main.cpp", "src/web/shell.html", "src/tests/test_main.cpp", "scripts/verify-save-roundtrips.sh", "scripts/verify-live-save-pair.py", "scripts/verify-explicit-save-routing.py", "scripts/verify-no-save-mode.py", "scripts/replay-new-game-startup.txt", "scripts/replay-explicit-save.txt"],
+      "evidence": ["src/save_slot.cpp", "src/legacy_font.cpp", "src/rpg_module.cpp", "src/main.cpp", "src/web/shell.html", "src/tests/test_main.cpp", "scripts/verify-save-roundtrips.sh", "scripts/verify-live-save-pair.py", "scripts/verify-explicit-save-routing.py", "scripts/verify-no-save-mode.py", "scripts/replay-new-game-startup.txt", "scripts/replay-explicit-save.txt"],
       "remaining": ["把 ?idbfs-self-test=TOKEN 接入可用的真实浏览器 runner", "在主流浏览器矩阵记录 data-idbfs-self-test=pass"]
     },
     {

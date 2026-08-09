@@ -348,7 +348,8 @@ void fill_rect(Viewport& viewport, int left, int top, int width, int height,
 // only against the physical VGA page.
 void draw_legacy_text(Viewport& viewport, const LegacyFont& font,
                       std::span<const std::uint8_t> text, int left, int top,
-                      int width, int height, std::uint8_t color) {
+                      int width, int height, std::uint8_t color,
+                      const LegacyFont* alternate_font = nullptr) {
     static_cast<void>(width);
     auto x = 0;
     auto y = 0;
@@ -371,7 +372,10 @@ void draw_legacy_text(Viewport& viewport, const LegacyFont& font,
         if (cursor + 1 >= text.size()) break;
         const auto code = static_cast<std::uint16_t>(text[cursor]) << 8U |
                           text[cursor + 1];
-        const auto glyph = font.rasterize_or_first(code);
+        const auto glyph = alternate_font != nullptr &&
+                                   alternate_font->contains(code)
+            ? alternate_font->rasterize(code)
+            : font.rasterize_or_first(code);
         for (std::size_t row = 0; row < LegacyFont::glyph_height; ++row) {
             for (std::size_t column = 0; column < LegacyFont::glyph_width; ++column) {
                 if (glyph[row * LegacyFont::glyph_width + column] == 0) continue;
@@ -386,6 +390,176 @@ void draw_legacy_text(Viewport& viewport, const LegacyFont& font,
         }
         x += static_cast<int>(LegacyFont::glyph_width);
         cursor += 2;
+    }
+}
+
+std::optional<Viewport> run_rpg_name_editor(
+    PlatformBackend& platform, const SpriteArchive& menu_sprites,
+    const LegacyFont& text_font, LegacyFont& active_name_font,
+    std::span<const std::uint8_t> prompt,
+    std::span<const std::uint8_t> name_slots,
+    std::span<const std::uint8_t> character_pages,
+    std::span<const std::uint8_t, 768> palette) {
+    // RPG:1586..180a. Each page is nine rows of eleven Big5 cells. The first
+    // five cells are name-slot/page/edit commands and the remaining cells are
+    // source glyphs copied from CHAIN.DSK into one of NAME.DSK's fixed slots.
+    constexpr std::size_t page_bytes = 0xd8U;
+    constexpr std::size_t page_rows = 9U;
+    constexpr std::size_t page_columns = 11U;
+    constexpr std::size_t row_bytes = 24U;  // 11 pairs plus ##/$$
+    if (active_name_font.glyph_count() != 16U ||
+        character_pages.size() != page_bytes * 3U ||
+        menu_sprites.sprites().size() <= 179U) {
+        throw std::runtime_error("RPG name editor resources are malformed");
+    }
+
+    std::size_t name_column = 0U;
+    std::size_t name_row = 0U;
+    std::size_t character_column = 0U;
+    std::size_t character_row = 0U;
+    std::size_t page = 0U;
+
+    const auto cursor = [&](Viewport& frame, int x_byte, int y) {
+        const auto& info = menu_sprites.sprites()[179U];
+        blit(frame, menu_sprites.pixels(179U), info.width, info.height,
+             (x_byte - 1) * 4, y - 1);
+    };
+    const auto draw_name_panel = [&](Viewport& frame) {
+        draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites,
+                               52, 10, 8, 4);
+        draw_legacy_text(frame, text_font, name_slots,
+                         54 * 4, 18, 96, 64, 0, &active_name_font);
+        cursor(frame, 62 + static_cast<int>(name_column) * 4,
+               18 + static_cast<int>(name_row) * 16);
+    };
+    const auto draw_main = [&]() {
+        Viewport frame{std::vector<std::uint8_t>(320U * 200U, 0U), {}};
+        std::copy(palette.begin(), palette.end(), frame.palette.begin());
+        draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites,
+                                0, 0, 8, 11);
+        draw_legacy_text(frame, text_font, prompt,
+                         6 * 4, 15, 184, 32, 0, &active_name_font);
+        draw_legacy_text(
+            frame, text_font,
+            character_pages.subspan(page * page_bytes, page_bytes),
+            7 * 4, 46, 176, 144, 0, &active_name_font);
+        draw_name_panel(frame);
+        cursor(frame, 7 + static_cast<int>(character_column) * 4,
+               46 + static_cast<int>(character_row) * 16);
+        return frame;
+    };
+    const auto selected_slot = [&]() {
+        return name_row * 4U + name_column;
+    };
+    const auto selected_code = [&]() {
+        const auto offset = page * page_bytes + character_row * row_bytes +
+                            character_column * 2U;
+        return static_cast<std::uint16_t>(
+            static_cast<std::uint16_t>(character_pages[offset]) << 8U |
+            character_pages[offset + 1U]);
+    };
+
+    const auto edit_bitmap = [&]() -> bool {
+        auto bitmap = std::array<std::uint8_t, LegacyFont::glyph_bytes>{};
+        std::copy(active_name_font.glyph(
+                      active_name_font.codes()[selected_slot()]).begin(),
+                  active_name_font.glyph(
+                      active_name_font.codes()[selected_slot()]).end(),
+                  bitmap.begin());
+        std::size_t pixel_x = 0U;
+        std::size_t pixel_y = 0U;
+        while (true) {
+            auto frame = draw_main();
+            draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites,
+                                    6, 33, 12, 8);
+            for (std::size_t y = 0; y < LegacyFont::glyph_height; ++y) {
+                const auto word = static_cast<std::uint16_t>(bitmap[y * 2U])
+                                  << 8U | bitmap[y * 2U + 1U];
+                for (std::size_t x = 0; x < LegacyFont::glyph_width; ++x) {
+                    auto set = (word & (0x8000U >> x)) != 0U;
+                    if (x == pixel_x && y == pixel_y) set = !set;
+                    fill_rect(frame, 32 + static_cast<int>(x) * 8,
+                              48 + static_cast<int>(y) * 8,
+                              8, 8, set ? 0U : 0x0aU);
+                }
+            }
+            // 19a3 redraws the four-row name card after the zoomed bitmap so
+            // its right-hand overlap and selection bracket remain visible.
+            draw_name_panel(frame);
+            platform.present({
+                320, 200, frame.pixels,
+                std::span<const std::uint8_t, 768>(frame.palette)});
+            const auto action = platform.wait_for_input();
+            if (action == InputAction::quit) return false;
+            if (action == InputAction::cancel) {
+                active_name_font.replace_glyph(selected_slot(), bitmap);
+                return true;
+            }
+            if (action == InputAction::left && pixel_x != 0U) --pixel_x;
+            else if (action == InputAction::right &&
+                     pixel_x + 1U != LegacyFont::glyph_width) ++pixel_x;
+            else if (action == InputAction::up && pixel_y != 0U) --pixel_y;
+            else if (action == InputAction::down &&
+                     pixel_y + 1U != LegacyFont::glyph_height) ++pixel_y;
+            // RPG:194c checks the PC scan-code bytes for Space (39h) and
+            // Enter (1ch); both are the portable Confirm action.
+            else if (action == InputAction::confirm) {
+                bitmap[pixel_y * 2U + pixel_x / 8U] |=
+                    static_cast<std::uint8_t>(0x80U >> (pixel_x & 7U));
+                active_name_font.replace_glyph(selected_slot(), bitmap);
+            // RPG:196b checks Ctrl (1dh) and Insert (52h), not Home/End or
+            // PageDown. Preserve it as a separate command so Escape remains
+            // the sole way out of the zoomed editor.
+            } else if (action == InputAction::erase) {
+                bitmap[pixel_y * 2U + pixel_x / 8U] &=
+                    static_cast<std::uint8_t>(
+                        ~(0x80U >> (pixel_x & 7U)));
+                active_name_font.replace_glyph(selected_slot(), bitmap);
+            }
+        }
+    };
+
+    while (true) {
+        auto frame = draw_main();
+        platform.present({
+            320, 200, frame.pixels,
+            std::span<const std::uint8_t, 768>(frame.palette)});
+        const auto action = platform.wait_for_input();
+        if (action == InputAction::quit) return std::nullopt;
+        if (action == InputAction::cancel) return frame;
+        if (action == InputAction::up && character_row != 0U) {
+            --character_row;
+        } else if (action == InputAction::down &&
+                   character_row + 1U != page_rows) {
+            ++character_row;
+        } else if (action == InputAction::left && character_column != 0U) {
+            --character_column;
+        } else if (action == InputAction::right &&
+                   character_column + 1U != page_columns) {
+            ++character_column;
+        } else if (action == InputAction::confirm) {
+            switch (selected_code()) {
+            case 0xa1f4U: if (name_row != 0U) --name_row; break;
+            case 0xa1f5U: if (name_row != 3U) ++name_row; break;
+            case 0xa1f6U: if (name_column != 0U) --name_column; break;
+            case 0xa1f7U: if (name_column != 3U) ++name_column; break;
+            case 0xa1b8U:
+                if (!edit_bitmap()) return std::nullopt;
+                break;
+            case 0xa1beU: if (page != 2U) ++page; break;
+            case 0xa1b5U: if (page != 0U) --page; break;
+            default: {
+                const auto code = selected_code();
+                const auto source_code = text_font.contains(code)
+                    ? code : text_font.codes().front();
+                active_name_font.replace_glyph(
+                    selected_slot(), text_font.glyph(source_code));
+                // 1807 deliberately falls through the right-arrow tail.
+                if (name_column != 3U) ++name_column;
+                break;
+            }
+            }
+        }
     }
 }
 
@@ -675,6 +849,7 @@ public:
                  const SaveSlotWriter* save_slot,
                  const SaveSlotLoader* load_slot,
                  std::shared_ptr<MapDatabase>* live_map_database,
+                 std::vector<std::uint8_t>* live_name_font,
                  FieldActionRuntime& field_action_runtime,
                  SharedState& state, std::filesystem::path game_root,
                  std::filesystem::path* playing_music,
@@ -722,6 +897,7 @@ public:
           map_database_(map_database), map_transitions_(map_transitions),
           save_slot_(save_slot),
           load_slot_(load_slot), live_map_database_(live_map_database),
+          live_name_font_(live_name_font),
           field_action_runtime_(field_action_runtime), state_(state),
           game_root_(std::move(game_root)), playing_music_(playing_music),
           music_enabled_(music_enabled), sound_enabled_(sound_enabled),
@@ -1897,7 +2073,7 @@ public:
                                 }
                                 (*save_slot_)(
                                     static_cast<std::uint8_t>(selector.slot() + 1U),
-                                    state, *map_database_);
+                                    state, *map_database_, name_font_.serialize());
                                 break;
                             }
                         }
@@ -3496,7 +3672,7 @@ private:
             if (result == RpgSaveSelectorResult::committed) {
                 (*save_slot_)(
                     static_cast<std::uint8_t>(selector.slot() + 1U),
-                    state_, *map_database_);
+                    state_, *map_database_, name_font_.serialize());
                 return;
             }
         }
@@ -3583,6 +3759,12 @@ private:
                     }
                     state_ = std::move(loaded.state);
                     *live_map_database_ = std::move(loaded.map_database);
+                    if (loaded.name_font.empty() || live_name_font_ == nullptr) {
+                        throw std::runtime_error(
+                            "RPG system load returned no NAME font");
+                    }
+                    static_cast<void>(LegacyFont::parse(loaded.name_font));
+                    *live_name_font_ = std::move(loaded.name_font);
                     const auto loaded_music_enabled = state_.u8(0x3f4) == 0U;
                     sound_enabled_ = state_.u8(0x3f5) == 0U;
                     if (music_enabled_ && !loaded_music_enabled) {
@@ -3991,6 +4173,7 @@ private:
     const SaveSlotWriter* save_slot_{};
     const SaveSlotLoader* load_slot_{};
     std::shared_ptr<MapDatabase>* live_map_database_{};
+    std::vector<std::uint8_t>* live_name_font_{};
     FieldActionRuntime& field_action_runtime_;
     SharedState& state_;
     std::filesystem::path game_root_;
@@ -4205,6 +4388,10 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     music_enabled_ = context.shared_state.u8(0x3f4) == 0U;
     sound_enabled_ = context.shared_state.u8(0x3f5) == 0U;
     const auto item_font = LegacyFont::load(context.game_root / "CHAIN.DSK");
+    if (context.name_font.empty()) {
+        context.name_font = read_file(context.game_root / "NAMEQ.DSK");
+    }
+    static_cast<void>(LegacyFont::parse(context.name_font));
     const auto items = ItemDatabase::load(context.game_root / "ITEM.EXE");
     const auto item_texts = ItemTextDatabase::load(context.game_root / "ITEM2.EXE");
     const auto map_transitions =
@@ -4237,6 +4424,12 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     // and OM/OC bypass it when the launcher starts a fresh RPG process.
     const auto opening_menu_labels = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x2f32);
+    const auto name_editor_prompt = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x2f4a);
+    const auto name_editor_slots = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x2f78);
+    const auto name_editor_characters = extract_rpg_embedded_data(
+        rpg_load_image, rpg_entry_offset, 0x2fb0, 3U * 0xd8U);
     // RPG.EXE:37c3 indexes 34 fixed four-glyph destination labels at
     // DATA:3ace. Disabled SAVE+51e entries simply skip their eight bytes.
     const auto travel_labels = extract_rpg_embedded_data(
@@ -4440,6 +4633,29 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                 if (!fade_opening_to_black(opening_frame)) {
                     return Marker::none;
                 }
+                // RPG:b57 calls 1586 before publishing ED. The editor starts
+                // from released NAME.DSK, not the command-line seed slot, and
+                // writes the resulting 514-byte active font to NAMEQ.DSK.
+                auto edited_name_font = LegacyFont::parse(
+                    read_file(context.game_root / "NAME.DSK"));
+                if (music_enabled_) {
+                    context.platform.play_music(
+                        read_file(context.game_root / "RX" / "S2.RIX"), true);
+                }
+                const auto editor_frame = run_rpg_name_editor(
+                    context.platform, menu_sprites, item_font,
+                    edited_name_font, name_editor_prompt, name_editor_slots,
+                    name_editor_characters,
+                    std::span<const std::uint8_t, 768>(opening_base.palette));
+                if (!editor_frame) {
+                    context.platform.stop_audio();
+                    return Marker::none;
+                }
+                context.name_font = edited_name_font.serialize();
+                context.platform.stop_audio();
+                if (!fade_opening_to_black(*editor_frame)) {
+                    return Marker::none;
+                }
                 return Marker::open_demo;
             }
 
@@ -4499,6 +4715,12 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                     }
                     context.shared_state = std::move(loaded.state);
                     context.map_database = std::move(loaded.map_database);
+                    if (loaded.name_font.empty()) {
+                        throw std::runtime_error(
+                            "RPG opening load hook returned no NAME font");
+                    }
+                    static_cast<void>(LegacyFont::parse(loaded.name_font));
+                    context.name_font = std::move(loaded.name_font);
                 } else {
                     context.shared_state = SharedState::load(
                         context.game_root / ("SAVE.DA" + std::to_string(slot)));
@@ -4606,7 +4828,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         context.game_root / normalize_dos_asset_path(context.shared_state.event_executable_path()));
     const auto event_font = LegacyFont::load(
         context.game_root / normalize_dos_asset_path(context.shared_state.event_data_path()));
-    const auto name_font = LegacyFont::load(context.game_root / "NAME.DSK");
+    const auto name_font = LegacyFont::parse(context.name_font);
     const auto requested_music =
         normalize_dos_asset_path(context.shared_state.music_path());
     if (requested_music != playing_music) {
@@ -4674,6 +4896,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
             compose_scene, advance_scene_palette,
             &map_database, &map_transitions, &context.save_slot,
             &context.load_slot, &context.map_database,
+            &context.name_font,
             field_action_runtime,
             context.shared_state, context.game_root, &playing_music,
             music_enabled_, sound_enabled_, menu_runtime);

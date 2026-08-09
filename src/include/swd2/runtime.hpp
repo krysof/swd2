@@ -9,15 +9,19 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <span>
+#include <vector>
 
 namespace swd2 {
 
 using SaveSlotWriter = std::function<void(std::uint8_t, const SharedState&,
-                                          const MapDatabase&)>;
+                                          const MapDatabase&,
+                                          std::span<const std::uint8_t>)>;
 
 struct LoadedSaveSlot {
     SharedState state;
     std::shared_ptr<MapDatabase> map_database;
+    std::vector<std::uint8_t> name_font;
 };
 
 using SaveSlotLoader = std::function<LoadedSaveSlot(std::uint8_t)>;
@@ -36,6 +40,10 @@ struct GameContext {
     // Optional matching load hook used by RPG's System/Read row. The core
     // replaces both halves atomically at the next map-resource boundary.
     SaveSlotLoader load_slot;
+    // Active NAMEQ.DSK image. RPG's new-game editor changes its sixteen glyph
+    // bitmaps, Continue replaces it from NAME<n>.DSK, and Record persists it
+    // beside SAVE/MAPZ. Tests which omit it fall back to released NAME.DSK.
+    std::vector<std::uint8_t> name_font;
 };
 
 class GameModule {
