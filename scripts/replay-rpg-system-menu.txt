@@ -1,0 +1,10 @@
+# MEO: select RPG and confirm twice.
+WAIT:CONFIRM*3
+# RPG: Continue, first slot, and confirm Yes.
+WAIT:DOWN
+WAIT:CONFIRM*3
+# In the world ESC opens the field diamond; Enter selects default System.
+POLL:CANCEL
+WAIT:CONFIRM
+# Stop only after the complete default System page has been submitted.
+WAIT:QUIT

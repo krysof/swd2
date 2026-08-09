@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The crop locks the fully covered default RPG System panel. The animated world and uncovered field-diamond pixels are intentionally outside this check and still need independent indexed-pixel evidence.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG default System panel",
+      "original": "000170.png",
+      "sha256": "ab6844c24fe0b75e3fcb7a0a98a257d212ce98ce32121a57d7a630c32596559f",
+      "rewrite_frame": 114,
+      "crop": [80, 10, 186, 122]
+    }
+  ]
+}

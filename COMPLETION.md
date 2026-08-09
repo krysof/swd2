@@ -49,6 +49,9 @@ comparison 报告完全一致。
 `scripts/capture-original-dosbox.py` 可以在固定 DOS 日期/时间和隔离的 `C:\\SWD2` 下生成
 带哈希 manifest 的原版 RGB 录像/抽帧，用于定位场景和复核时序；但 DOSBox-X 录像已通过
 VGA DAC 转色，只是 `reference_only`，不能代替上述索引像素及逐帧调色板证据。
+当捕获需要小型入口 harness 时，manifest 必须同时记录 `program_sha256` 和独立的
+`reference_program_sha256`；不允许用 harness 摘要替代被观察的原版 EXE 摘要。区域 RGB
+抽查也必须明确登记 crop，不能把被排除的动态背景算作已验证。
 
 `scripts/audit-runtime-sources.py` 另外以失败封闭方式检查生产源码：所有平台无关翻译单元
 必须确实列入 `swd2_core`，四个原模块必须仍在单进程核心中，且源码不得重新出现显式

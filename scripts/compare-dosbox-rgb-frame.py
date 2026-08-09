@@ -84,6 +84,22 @@ def load_dosbox_rgb(path: Path) -> bytes:
     return image.tobytes()
 
 
+def crop_rgb(rgb: bytes, crop: object) -> tuple[bytes, int]:
+    if (not isinstance(crop, list) or len(crop) != 4 or
+            any(type(value) is not int for value in crop)):
+        raise ValueError("crop must be [x, y, width, height] integers")
+    x, y, width, height = crop
+    if x < 0 or y < 0 or width <= 0 or height <= 0 or \
+            x + width > 320 or y + height > 200:
+        raise ValueError("crop lies outside the 320x200 VGA page")
+    rows = []
+    stride = 320 * 3
+    for row in range(y, y + height):
+        start = row * stride + x * 3
+        rows.append(rgb[start:start + width * 3])
+    return b"".join(rows), width * height
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path)
@@ -97,9 +113,17 @@ def main() -> int:
     if manifest.get("schema_version") != 1 or manifest.get("kind") != "dosbox_rgb_spot_check":
         raise SystemExit("unsupported DOSBox RGB spot-check manifest")
     if args.game is not None:
-        actual_program = sha256(args.game / "RPG.EXE")
-        if actual_program != manifest.get("program_sha256"):
-            raise SystemExit("RPG.EXE does not match the reference capture")
+        reference_name = manifest.get("reference_program", "RPG.EXE")
+        if (not isinstance(reference_name, str) or
+                not reference_name.upper().endswith((".EXE", ".COM")) or
+                Path(reference_name).name != reference_name):
+            raise SystemExit("invalid reference program in manifest")
+        expected_program = manifest.get(
+            "reference_program_sha256", manifest.get("program_sha256"))
+        actual_program = sha256(args.game / reference_name)
+        if actual_program != expected_program:
+            raise SystemExit(
+                f"{reference_name} does not match the reference capture")
 
     frames = load_rewrite_rgb(args.rewrite_capture)
     results: list[dict[str, object]] = []
@@ -113,6 +137,16 @@ def main() -> int:
             raise SystemExit(f"rewrite frame index is absent: {rewrite_index}")
         original = load_dosbox_rgb(original_path)
         rewrite = frames[rewrite_index]
+        pixel_count = 320 * 200
+        crop = entry.get("crop")
+        if crop is not None:
+            try:
+                original, pixel_count = crop_rgb(original, crop)
+                rewrite, rewrite_pixel_count = crop_rgb(rewrite, crop)
+            except ValueError as error:
+                raise SystemExit(f"{entry['label']}: {error}") from error
+            if rewrite_pixel_count != pixel_count:  # defensive symmetry
+                raise SystemExit(f"{entry['label']}: inconsistent crop size")
         mismatched = sum(
             original[offset : offset + 3] != rewrite[offset : offset + 3]
             for offset in range(0, len(original), 3)
@@ -122,11 +156,14 @@ def main() -> int:
             "original": entry["original"],
             "rewrite_frame": rewrite_index,
             "mismatched_rgb_pixels": mismatched,
+            "compared_rgb_pixels": pixel_count,
         }
+        if crop is not None:
+            result["crop"] = crop
         results.append(result)
         if mismatched:
             raise SystemExit(
-                f"{entry['label']}: {mismatched}/64000 RGB pixels differ"
+                f"{entry['label']}: {mismatched}/{pixel_count} RGB pixels differ"
             )
 
     report = {
@@ -143,7 +180,9 @@ def main() -> int:
             json.dumps(report, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
-    print(f"DOSBox RGB spot check: {len(results)} frames, 0/64000 pixels differ each")
+    compared = ", ".join(
+        f"0/{result['compared_rgb_pixels']}" for result in results)
+    print(f"DOSBox RGB spot check: {len(results)} frames, {compared} pixels differ")
     return 0
 
 

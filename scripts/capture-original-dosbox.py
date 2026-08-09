@@ -94,6 +94,13 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--autotype", type=Path)
     parser.add_argument("--program", default="SWD2.EXE")
+    parser.add_argument(
+        "--reference-program",
+        help=(
+            "original EXE whose behavior is being observed when --program is "
+            "a small launch harness"
+        ),
+    )
     parser.add_argument("--wait", type=float, default=2.0)
     parser.add_argument("--pace", type=float, default=1.0)
     parser.add_argument("--time-limit", type=int, default=60)
@@ -115,12 +122,22 @@ def main() -> int:
             raise RuntimeError("ffmpeg is required when --extract-fps is used")
         if not args.game.is_dir():
             raise RuntimeError(f"game directory does not exist: {args.game}")
-        if not re.fullmatch(r"[A-Za-z0-9_.-]+\.EXE", args.program,
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+\.(?:EXE|COM)", args.program,
                             re.IGNORECASE):
-            raise ValueError("--program must be a plain DOS .EXE filename")
+            raise ValueError(
+                "--program must be a plain DOS .EXE or .COM filename")
         program = args.game / args.program
         if not program.is_file():
             raise RuntimeError(f"original program does not exist: {program}")
+        reference_name = args.reference_program or args.program
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+\.(?:EXE|COM)", reference_name,
+                            re.IGNORECASE):
+            raise ValueError(
+                "--reference-program must be a plain DOS .EXE or .COM filename")
+        reference_program = args.game / reference_name
+        if not reference_program.is_file():
+            raise RuntimeError(
+                f"reference program does not exist: {reference_program}")
         if args.wait < 0 or args.wait > 30:
             raise ValueError("--wait must be between 0 and 30 seconds")
         if args.pace < 0.01 or args.pace > 10:
@@ -230,6 +247,12 @@ def main() -> int:
             "dosbox": dosbox_version,
             "program": args.program,
             "program_sha256": sha256(program),
+            # A harness can reproduce an original overlay-entry contract while
+            # leaving the reference executable byte-for-byte untouched.  Keep
+            # both identities so a harness hash can never be mistaken for the
+            # executable whose behavior the capture demonstrates.
+            "reference_program": reference_name,
+            "reference_program_sha256": sha256(reference_program),
             "game_path_layout": "C:\\SWD2",
             "dos_date": "1994-08-02",
             "dos_time": "12:00:00",
