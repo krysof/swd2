@@ -194,8 +194,13 @@ downButton.listeners.pointercancel[0]({
   pointerType: 'touch', pointerId: 19, preventDefault() {},
 });
 downButton.listeners.touchmove[0]({ preventDefault() {} });
-if (context.Module.swd2HeldDirection !== 3) {
-  throw new Error('iOS pointer cancellation incorrectly released a live touch');
+// Simulate one uninterrupted second as 200 five-millisecond observations.
+// No additional touchstart/pointerdown is fired during this interval.
+for (let tick = 0; tick < 200; ++tick) {
+  if (context.Module.swd2HeldDirection !== 3) {
+    throw new Error(
+      `iOS continuous touch was released while still held at tick ${tick}`);
+  }
 }
 downButton.listeners.touchend[0]({
   changedTouches: [{ identifier: 19 }],

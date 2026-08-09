@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -109,6 +110,30 @@ int main() {
                     wrapped_direction.sample(0, 4, 0x00000034U) ==
                     swd2::InputAction::right,
                 "held direction timer failed across the 32-bit tick wrap");
+
+        // This is one continuous one-second hold, not a sequence of synthetic
+        // presses: queued_direction is nonzero exactly once at t=0, the held
+        // level remains asserted, and release occurs exactly once at t=1000.
+        swd2::HeldDirectionRepeatState one_second_hold;
+        std::vector<std::uint32_t> hold_actions;
+        for (std::uint32_t now = 0; now < 1000; now += 5) {
+            const auto action = one_second_hold.sample(
+                now == 0 ? 3 : 0, 3, now);
+            if (action != swd2::InputAction::none) {
+                require(action == swd2::InputAction::down,
+                        "continuous hold changed direction");
+                hold_actions.push_back(now);
+            }
+        }
+        const std::vector<std::uint32_t> expected_hold_actions{
+            0, 180, 265, 350, 435, 520, 605, 690, 775, 860, 945};
+        require(hold_actions == expected_hold_actions,
+                "one continuous one-second press did not generate all repeats");
+        for (std::uint32_t now = 1000; now < 1300; now += 5) {
+            require(one_second_hold.sample(0, 0, now) ==
+                        swd2::InputAction::none,
+                    "continuous direction kept repeating after its one release");
+        }
 
         const std::array<std::pair<SDL_Keycode, swd2::InputAction>, 12> keyboard{{
             {SDLK_UP, swd2::InputAction::up},
