@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -34,6 +35,19 @@ def load_and_validate() -> dict:
         isinstance(command, str) and command.strip() for command in commands
     ):
         fail("completion_commands must be a non-empty string list")
+    for command in commands:
+        try:
+            words = shlex.split(command)
+        except ValueError as error:
+            fail(f"invalid completion command: {command}: {error}")
+        executable = words[0]
+        if not executable.startswith("./scripts/"):
+            continue
+        path = ROOT / executable[2:]
+        if not path.is_file():
+            fail(f"completion script does not exist: {executable}")
+        if path.stat().st_mode & 0o111 == 0:
+            fail(f"completion script is not executable: {executable}")
 
     seen: set[str] = set()
     for index, gate in enumerate(gates):
@@ -127,4 +141,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

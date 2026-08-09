@@ -146,8 +146,8 @@
         "差分输入、原版基准、现代输出和容差规则可重复生成",
         "所有登记场景零未解释差异"
       ],
-      "evidence": ["src/tests/test_main.cpp", "src/reverse-engineering.md"],
-      "remaining": ["建立统一 verify-pixel-diffs.sh", "登记全部 RPG/FIG 场景和基准"]
+      "evidence": ["src/tests/test_main.cpp", "src/reverse-engineering.md", "scripts/verify-pixel-diffs.sh", "scripts/verify-evidence-manifest.py"],
+      "remaining": ["登记全部 RPG/FIG 场景和原版基准", "生成通过哈希校验的 pixel_diffs manifest"]
     },
     {
       "id": "full_playthrough",
@@ -157,8 +157,8 @@
         "至少一条完整主线从新游戏运行到结局",
         "关键状态、画面、战斗、存档和模块切换与原版基准一致"
       ],
-      "evidence": [],
-      "remaining": ["录制原版完整输入/状态基准", "实现并通过 verify-playthrough.sh"]
+      "evidence": ["scripts/verify-playthrough.sh", "scripts/verify-evidence-manifest.py"],
+      "remaining": ["录制原版完整输入/状态基准", "生成通过哈希校验的 playthrough manifest"]
     },
     {
       "id": "placeholder_elimination",
@@ -179,8 +179,8 @@
         "原生和主流浏览器长时间运行无崩溃、泄漏、漂移或存档损坏",
         "平台矩阵结果由自动脚本和日志存档"
       ],
-      "evidence": [],
-      "remaining": ["实现 verify-long-run.sh", "完成桌面与浏览器平台矩阵"]
+      "evidence": ["scripts/verify-long-run.sh", "scripts/verify-evidence-manifest.py"],
+      "remaining": ["完成桌面与浏览器平台矩阵", "生成通过哈希校验的 long_run manifest"]
     }
   ],
   "completion_commands": [

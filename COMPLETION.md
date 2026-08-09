@@ -30,10 +30,15 @@ WASM 或发布 GitHub Pages 都只是阶段检查点，不等于移植完成。
 依次执行原生构建/测试、WASM 构建、像素差分、存档往返、完整通关回放和长期运行检查；
 任何一项失败都不能报告100%。中途版本仍可发布，但必须称为 checkpoint。
 
+像素差分、完整通关和长期平台矩阵不能靠手工一句“已测试”放行。对应脚本要求仓库内存在
+`verification/pixel_diffs/manifest.json`、`verification/playthrough/manifest.json` 和
+`verification/long_run/manifest.json`；manifest 必须为 `status=verified`，并列出每个
+证据文件的完整 SHA-256。文件缺失、摘要变化或空证据都会让最终命令失败。清单结构检查
+也会提前拒绝不存在或没有执行权限的 `./scripts/...` 完成命令。
+
 ## 更新要求
 
 1. 先满足 `acceptance`，再补充可复查的 `evidence`；
 2. 未完成门必须保留具体 `remaining`，禁止只写“继续完善”；
 3. 新发现的原版行为若不属于现有门，必须新增门或扩充相应验收条件；
 4. 删除或弱化验收条件也必须有新的逆向证据和回归测试支持。
-
