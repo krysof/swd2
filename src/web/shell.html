@@ -92,12 +92,19 @@
     }
     @media (orientation: portrait) and (pointer: coarse) {
       main {
-        position: fixed; left: 50%; top: 50%;
-        width: 100svh; height: 100svw;
-        transform: translate(-50%, -50%) rotate(90deg);
-        transform-origin: center;
+        width: 100svw; height: 100svh;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        align-content: center; justify-items: center;
       }
-      .stage { width: min(100%, calc((100svw - 10px) * 8 / 5)); }
+      .stage {
+        width: min(100%, calc((100svh - 118px) * 8 / 5));
+        grid-column: 1; grid-row: 1;
+      }
+      .touch {
+        width: 100%; margin: 8px 0 0; flex-direction: row;
+        grid-column: 1; grid-row: 2;
+      }
     }
   </style>
 </head>

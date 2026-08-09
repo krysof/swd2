@@ -67,13 +67,18 @@ for pattern in \
   "navigator.wakeLock" \
   "visibilitychange" \
   "screen.orientation.lock" \
-  "rotate(90deg)" \
+  "orientation:portrait" \
+  "grid-template-columns:1fr" \
   "user-select:none"; do
   grep -Fq "$pattern" "$site/index.html" || {
     echo "error: index.html is missing mobile start/orientation/wake behavior: $pattern" >&2
     exit 1
   }
 done
+if grep -Fq 'rotate(90deg)' "$site/index.html"; then
+  echo "error: portrait layout rotates the 320x200 game and button text sideways" >&2
+  exit 1
+fi
 for label in ▲ ▼ ◀ ▶ ESC 回车; do
   grep -Fq ">$label</button>" "$site/index.html" || {
     echo "error: index.html is missing the $label button label" >&2
