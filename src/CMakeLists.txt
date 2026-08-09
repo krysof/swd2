@@ -1106,4 +1106,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_capture_reward_validation PROPERTIES
         DEPENDS fig_capture_reward_prepare)
+    add_test(
+        NAME fig_monster_status_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-status-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-status-save"
+    )
+    add_test(
+        NAME fig_monster_status_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-status.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-status-save"
+                "${CMAKE_BINARY_DIR}/fig-monster-status"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-status-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_status_validation PROPERTIES
+        DEPENDS fig_monster_status_prepare)
 endif()
