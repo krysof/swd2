@@ -382,23 +382,51 @@
       if (held.direction) releaseDirection(button.dataset.key);
       else emitKey('keyup', button.dataset.key);
     }
+    function pressControl(button, event, source, contactId) {
+      event.preventDefault();
+      if (heldControls.has(button)) return;
+      const direction = directionKeys.has(button.dataset.key);
+      heldControls.set(button, { direction, source, contactId });
+      if (direction) pressDirection(button.dataset.key);
+      else emitKey('keydown', button.dataset.key);
+    }
     document.querySelectorAll('[data-key]').forEach(button => {
       button.addEventListener('pointerdown', event => {
-        event.preventDefault();
-        if (heldControls.has(button)) return;
-        button.setPointerCapture(event.pointerId);
-        const direction = directionKeys.has(button.dataset.key);
-        const held = { direction };
-        heldControls.set(button, held);
-        if (direction) {
-          pressDirection(button.dataset.key);
-        } else {
-          emitKey('keydown', button.dataset.key);
-        }
+        // iOS/WKWebView also emits pointer events for a touch. Ignore those
+        // and use the native touch lifetime below: WebKit may cancel pointer
+        // capture during a long press even while the finger remains down.
+        if (event.pointerType === 'touch') return;
+        try { button.setPointerCapture(event.pointerId); } catch (_) {}
+        pressControl(button, event, 'pointer', event.pointerId);
       });
-      button.addEventListener('pointerup', event => releaseControl(button, event));
-      button.addEventListener('pointercancel', event => releaseControl(button, event));
-      button.addEventListener('lostpointercapture', event => releaseControl(button, event));
+      for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        button.addEventListener(type, event => {
+          if (event.pointerType === 'touch') return;
+          const held = heldControls.get(button);
+          if (held && held.source === 'pointer' &&
+              (event.pointerId === undefined || event.pointerId === held.contactId)) {
+            releaseControl(button, event);
+          }
+        });
+      }
+      button.addEventListener('touchstart', event => {
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (!touch) return;
+        pressControl(button, event, 'touch', touch.identifier);
+      }, { passive: false });
+      button.addEventListener('touchmove', event => {
+        if (heldControls.get(button)?.source === 'touch') event.preventDefault();
+      }, { passive: false });
+      for (const type of ['touchend', 'touchcancel']) {
+        button.addEventListener(type, event => {
+          const held = heldControls.get(button);
+          if (!held || held.source !== 'touch') return;
+          const ended = Array.prototype.some.call(
+            event.changedTouches || [],
+            touch => touch.identifier === held.contactId);
+          if (ended) releaseControl(button, event);
+        }, { passive: false });
+      }
     });
     window.addEventListener('blur', () => {
       for (const button of [...heldControls.keys()]) releaseControl(button);

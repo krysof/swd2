@@ -160,6 +160,10 @@ for pattern in \
   "swd2HeldDirection" \
   "swd2DirectionQueue" \
   "heldControls" \
+  "touchstart" \
+  "touchmove" \
+  "touchend" \
+  "passive:!1" \
   "lostpointercapture"; do
   grep -Fq "$pattern" "$site/index.html" || {
     echo "error: index.html is missing held-direction touch input: $pattern" >&2

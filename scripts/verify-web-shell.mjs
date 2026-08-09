@@ -178,6 +178,34 @@ if (context.Module.swd2HeldDirection !== 4 ||
 rightButton.listeners.pointerup[0](pointer);
 context.Module.swd2DirectionQueue.length = 0;
 
+const downButton = controlButtons.find(button => button.dataset.key === 'ArrowDown');
+const touchStart = {
+  changedTouches: [{ identifier: 19 }],
+  preventDefault() {},
+};
+downButton.listeners.touchstart[0](touchStart);
+if (context.Module.swd2HeldDirection !== 3 ||
+    context.Module.swd2DirectionQueue.join(',') !== '3') {
+  throw new Error('native touchstart did not latch the held direction');
+}
+// WKWebView can cancel the parallel Pointer Events stream while the native
+// touch remains active. That must not be interpreted as a direction release.
+downButton.listeners.pointercancel[0]({
+  pointerType: 'touch', pointerId: 19, preventDefault() {},
+});
+downButton.listeners.touchmove[0]({ preventDefault() {} });
+if (context.Module.swd2HeldDirection !== 3) {
+  throw new Error('iOS pointer cancellation incorrectly released a live touch');
+}
+downButton.listeners.touchend[0]({
+  changedTouches: [{ identifier: 19 }],
+  preventDefault() {},
+});
+if (context.Module.swd2HeldDirection !== 0) {
+  throw new Error('native touchend did not release the held direction');
+}
+context.Module.swd2DirectionQueue.length = 0;
+
 const escapeButton = controlButtons.find(button => button.dataset.key === 'Escape');
 escapeButton.listeners.pointerdown[0](pointer);
 escapeButton.listeners.pointerup[0](pointer);
