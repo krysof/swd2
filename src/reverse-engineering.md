@@ -1134,6 +1134,12 @@ Enter/Esc、手柄十个数字按钮、摇杆启停滞回、逐字轮询，以�
 关闭事件不误消费动作的语义；真实浏览器 DOM/IDBFS 与物理手柄矩阵仍必须另行执行，
 因此 portable-input 门继续保持 `in_progress`。
 
+五个便携槽的 SAVE/MAPZ 也不再靠两个互不相关的原子 rename。`SaveSlot` 会先完成两份
+临时文件，再原子安装 `SWD2PAIR1` 事务标记，按 MAPZ→SAVE 固定顺序替换；若进程在两半
+之间退出，下次 open 会按仍存在的临时文件向前完成，而没有标记的预备文件一律丢弃。
+回归同时模拟了“尚未立标”和“MAPZ 已换、SAVE 未换”两个中断点。浏览器仍需通过真实
+IDBFS reload runner 证明这套文件级恢复在持久化层重启后有效。
+
 完整回放输入不再受命令行长度或“同一队列被哪个 API 先读”影响。`replay_input` 的文本
 格式可把每一步标为 WAIT（交互阻塞）、POLL（普通非阻塞）、TEXT（跳字）或 FRONTEND
 （只允许 NONE/QUIT），并用 `*次数` 压缩连续移动/空 tick。严格 `--run-replay` 遇到

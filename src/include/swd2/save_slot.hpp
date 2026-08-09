@@ -34,8 +34,10 @@ public:
         return map_database_;
     }
 
-    // Commits both halves using temporary files. The caller supplies the live
-    // SharedState because GameContext owns it during the monolithic run.
+    // Commits both halves through a roll-forward transaction marker. A crash
+    // after only MAPZ or SAVE is renamed is completed on the next open, so a
+    // caller can observe only the old pair or the complete new pair.
+    // GameContext owns the live SharedState and supplies it here.
     void save(const SharedState& state);
 
 private:

@@ -1777,6 +1777,52 @@ void test_save_slot(const std::filesystem::path& game_root) {
                             .area.entity_fields[3][1] == 0x0800U,
                 "portable save slot did not persist both SAVE and MAPZ mutations");
 
+        const auto state_temporary = temporary / ".swd2-slot4-save.tmp";
+        const auto map_temporary = temporary / ".swd2-slot4-map.tmp";
+        const auto transaction = temporary / ".swd2-slot4.txn";
+        auto stale_state = reopened.state();
+        stale_state.set_u16(0x104, 1111);
+        stale_state.save(state_temporary);
+        auto stale_map = swd2::MapDatabase::load(reopened.map_path());
+        stale_map.mutate_area_word(location_offset, field, byte_offset,
+                                   0x0222U, false);
+        stale_map.save(map_temporary);
+        const auto discarded = swd2::SaveSlot::open(game_root, temporary, 4);
+        require(discarded.state().u16(0x104) == 4321 &&
+                    discarded.map_database()
+                            ->location_at_directory_offset(location_offset)
+                            .area.entity_fields[3][38] ==
+                        static_cast<std::uint16_t>(before + 1U) &&
+                    !std::filesystem::exists(state_temporary) &&
+                    !std::filesystem::exists(map_temporary),
+                "unmarked save temporaries were not discarded as an old transaction");
+
+        auto recovery_state = discarded.state();
+        recovery_state.set_u16(0x104, 5432);
+        recovery_state.save(state_temporary);
+        auto recovery_map = swd2::MapDatabase::load(discarded.map_path());
+        recovery_map.mutate_area_word(location_offset, field, byte_offset,
+                                      0x0456U, false);
+        recovery_map.save(map_temporary);
+        {
+            std::ofstream marker(transaction, std::ios::binary);
+            marker << "SWD2PAIR1\n";
+        }
+        // Simulate interruption after MAPZ was installed but before SAVE was
+        // renamed. The marker and remaining SAVE temporary must roll forward.
+        std::filesystem::copy_file(
+            map_temporary, discarded.map_path(),
+            std::filesystem::copy_options::overwrite_existing);
+        std::filesystem::remove(map_temporary);
+        const auto recovered = swd2::SaveSlot::open(game_root, temporary, 4);
+        require(recovered.state().u16(0x104) == 5432 &&
+                    recovered.map_database()
+                            ->location_at_directory_offset(location_offset)
+                            .area.entity_fields[3][38] == 0x0456U &&
+                    !std::filesystem::exists(transaction) &&
+                    !std::filesystem::exists(state_temporary),
+                "interrupted SAVE/MAPZ pair did not roll forward atomically");
+
         state.set_u16(0x104, 9876);
         swd2::SaveSlot::save_as(temporary, 5, state, *map);
         auto copied = swd2::SaveSlot::open(game_root, temporary, 5);
