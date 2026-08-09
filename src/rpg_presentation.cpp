@@ -235,62 +235,6 @@ void draw_rpg_selector_panel(
     sprite(93, x + 6, y + 8, true);
 }
 
-void draw_rpg_grid_panel(
-    std::span<std::uint8_t> surface,
-    std::size_t width,
-    std::size_t height,
-    const SpriteArchive& menu_sprites,
-    int left,
-    int top,
-    int columns,
-    int rows) {
-    if (width == 0 || height == 0 || surface.size() != width * height ||
-        columns < 0 || rows < 0 || menu_sprites.sprites().size() <= 173U) {
-        throw std::runtime_error("invalid RPG grid panel arguments");
-    }
-    const auto sprite = [&](std::size_t frame, int x_byte, int y) {
-        const auto& info = menu_sprites.sprites().at(frame);
-        const auto source = menu_sprites.pixels(frame);
-        const auto left_pixel = x_byte * 4;
-        for (std::size_t row = 0; row < info.height; ++row) {
-            for (std::size_t column = 0; column < info.width; ++column) {
-                const auto x = left_pixel + static_cast<int>(column);
-                const auto target_y = y + static_cast<int>(row);
-                if (x < 0 || target_y < 0 ||
-                    x >= static_cast<int>(width) ||
-                    target_y >= static_cast<int>(height)) {
-                    continue;
-                }
-                // 2781 calls the opaque 653a path for all nine pieces.
-                surface[static_cast<std::size_t>(target_y) * width +
-                        static_cast<std::size_t>(x)] =
-                    source[row * info.width + column];
-            }
-        }
-    };
-    const auto horizontal = [&](std::size_t frame, int x_byte, int y) {
-        for (auto column = 0; column < columns; ++column, x_byte += 2) {
-            sprite(frame, x_byte, y);
-        }
-        return x_byte;
-    };
-
-    // 2781: top frames 50h/51h/52h, body a8h/a9h/aah repeated at a
-    // 16-pixel vertical cadence, then bottom abh/ach/adh.
-    sprite(80U, left, top);
-    auto right = horizontal(81U, left + 6, top);
-    sprite(82U, right, top);
-    auto y = top + 8;
-    for (auto row = 0; row < rows; ++row, y += 16) {
-        sprite(168U, left, y);
-        right = horizontal(169U, left + 6, y);
-        sprite(170U, right, y);
-    }
-    sprite(171U, left, y);
-    right = horizontal(172U, left + 6, y);
-    sprite(173U, right, y);
-}
-
 void draw_rpg_compact_panel(
     std::span<std::uint8_t> surface,
     std::size_t width,
@@ -332,6 +276,9 @@ void draw_rpg_compact_panel(
         sprite(right_frame, x, y);
     };
 
+    // RPG:2781. Top frames 50h/51h/52h, body a8h/a9h/aah at a
+    // 16-pixel cadence, then bottom abh/ach/adh. This is the dense 8-pixel
+    // horizontal-cell family, not the MENU 83..93 selector at 281d.
     row(80, 81, 82, top);
     auto y = top + 8;
     for (auto body = 0; body < rows; ++body, y += 16) {

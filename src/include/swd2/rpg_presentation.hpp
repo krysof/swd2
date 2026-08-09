@@ -65,19 +65,6 @@ void draw_rpg_selector_panel(
     int columns,
     int rows);
 
-// RPG.EXE:2781 builds the dense 8-pixel-cell panel used by the 16x15 name
-// bitmap editor. It uses MENU frames 80..82 and 168..173 and is distinct from
-// the 16-pixel-row selector family at 281d.
-void draw_rpg_grid_panel(
-    std::span<std::uint8_t> surface,
-    std::size_t width,
-    std::size_t height,
-    const SpriteArchive& menu_sprites,
-    int left,
-    int top,
-    int columns,
-    int rows);
-
 // RPG.EXE:2781 uses a second MENU-frame family for compact information
 // panels.  Frames 80..82 form the top row, 168..170 the repeated 16-line
 // body, and 171..173 the bottom.  Unlike the generic selector these pieces
