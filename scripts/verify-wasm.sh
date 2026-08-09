@@ -71,19 +71,23 @@ for pattern in \
   "rotate(90deg)" \
   "width:100%!important" \
   "height:100%!important" \
-  "aspect-ratio:8/5" \
+  "aspect-ratio:4/3" \
   "grid-template-columns:154px minmax(0,1fr) 206px" \
   "grid-column:1" \
   "grid-column:2" \
   "grid-column:3" \
   "flex-direction:row" \
-  'data-mobile-layout=rotated-v3' \
+  'data-mobile-layout=rotated-v4-crt' \
   "user-select:none"; do
   grep -Fq "$pattern" "$site/index.html" || {
     echo "error: index.html is missing mobile start/orientation/wake behavior: $pattern" >&2
     exit 1
   }
 done
+if grep -Fq "aspect-ratio:8/5" "$site/index.html"; then
+  echo "error: index.html displays the 320x200 framebuffer at the flattened 8:5 byte ratio" >&2
+  exit 1
+fi
 python3 - "$site/index.html" <<'PY'
 import pathlib
 import re
