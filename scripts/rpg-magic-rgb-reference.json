@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The four crops cover every stable Magic-page UI body. The animated world and one exposed bottom border row remain outside this RGB check.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG Magic selected actor portrait",
+      "original": "000155.png",
+      "sha256": "e29e640a28cf8cb45694cdb281636957647b965f9c7af1bba02714845d17e362",
+      "rewrite_frame": 116,
+      "crop": [32, 21, 48, 48]
+    },
+    {
+      "label": "RPG Magic editable actor name card",
+      "original": "000155.png",
+      "sha256": "e29e640a28cf8cb45694cdb281636957647b965f9c7af1bba02714845d17e362",
+      "rewrite_frame": 116,
+      "crop": [16, 72, 80, 32]
+    },
+    {
+      "label": "RPG Magic resource label and value",
+      "original": "000155.png",
+      "sha256": "e29e640a28cf8cb45694cdb281636957647b965f9c7af1bba02714845d17e362",
+      "rewrite_frame": 116,
+      "crop": [16, 104, 80, 32]
+    },
+    {
+      "label": "RPG Magic initial ability list",
+      "original": "000155.png",
+      "sha256": "e29e640a28cf8cb45694cdb281636957647b965f9c7af1bba02714845d17e362",
+      "rewrite_frame": 116,
+      "crop": [96, 40, 224, 144]
+    }
+  ]
+}

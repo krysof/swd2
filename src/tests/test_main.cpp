@@ -7653,11 +7653,11 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
                 platform.presented == 10U && platform.stop_calls == 1U,
             "RPG 2f64 actor selector did not enter/return from 26f3 Status");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
-                platform.frame_hashes[4] == 10287332555232791096ULL &&
+                platform.frame_hashes[4] == 6678540695786810520ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 7309384108166588722ULL &&
+                platform.frame_hashes[5] == 2193962491457470674ULL &&
                 platform.frame_hashes[6] != platform.frame_hashes[5] &&
-                platform.frame_hashes[6] == 6262036099231779612ULL &&
+                platform.frame_hashes[6] == 8029418886458010572ULL &&
                 platform.frame_hashes[7] == platform.frame_hashes[3] &&
                 platform.frame_hashes[8] == platform.frame_hashes[2] &&
                 platform.frame_hashes[9] == platform.frame_hashes[0],
@@ -7686,9 +7686,9 @@ void test_rpg_field_magic_menu(const std::filesystem::path& game_root) {
                 platform.presented == 9U && platform.stop_calls == 1U,
             "RPG 2fb7 actor selector/list did not return through the field menu");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
-                platform.frame_hashes[4] == 5845923941079099482ULL &&
+                platform.frame_hashes[4] == 18106793398524205324ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 5574429281769751476ULL &&
+                platform.frame_hashes[5] == 15442176735255148482ULL &&
                 platform.frame_hashes[6] == platform.frame_hashes[3] &&
                 platform.frame_hashes[7] == platform.frame_hashes[2] &&
                 platform.frame_hashes[8] == platform.frame_hashes[0],

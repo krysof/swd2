@@ -2926,6 +2926,23 @@ private:
         }
     }
 
+    void draw_selected_actor_identity(Viewport& frame,
+                                      std::size_t actor) {
+        // RPG:337d/33a9 first draws 33de's actor card, then creates a
+        // one-row 4-column card at mode-X (4,72). 71fd reads the four Big5
+        // codes directly from the selected 9fh-byte SAVE actor record and
+        // resolves their editable glyphs through NAME#.DSK.
+        draw_rpg_actor_card(frame, menu_sprites_, state_, actor, 8 * 4, 21);
+        draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
+                               4, 72, 4, 1);
+        const auto actor_base = 0x106U + actor * 0x9fU;
+        draw_legacy_text(
+            frame, name_font_,
+            std::span<const std::uint8_t>(state_.bytes()).subspan(
+                actor_base, 8U),
+            6 * 4, 81, 64, 16, 0);
+    }
+
     Viewport magic_action_choice_frame(const Viewport& source,
                                        bool can_refine,
                                        std::size_t selected) const {
@@ -3091,8 +3108,7 @@ private:
                     state_.u8(actor_base + 0x6dU + selected);
                 const auto selected_record_offset =
                     static_cast<std::size_t>(selected_id) * 20U;
-                draw_rpg_actor_card(frame, menu_sprites_, state_, actor,
-                                    8 * 4, 21);
+                draw_selected_actor_identity(frame, actor);
                 if (selected_record_offset + 20U <=
                     field_ability_records_.size()) {
                     draw_magic_ability_info(
@@ -3399,10 +3415,7 @@ private:
                 // 33a9/26f3 combines the selected actor card with the shared
                 // eight-row selector. DATA:3806 contains 28 fixed 8-byte rows;
                 // 37f5=20 is therefore the maximum first visible row.
-                draw_rpg_actor_card(frame, menu_sprites_, state_, actor,
-                                    8 * 4, 21);
-                draw_rpg_compact_panel(frame.pixels, 320, 200, menu_sprites_,
-                                       4, 72, 4, 1);
+                draw_selected_actor_identity(frame, actor);
                 draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                         24, 36, 5, 8);
                 draw_rpg_selector_scrollbar(

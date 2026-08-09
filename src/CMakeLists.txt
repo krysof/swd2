@@ -447,6 +447,28 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_field_diamond_validation PROPERTIES
         DEPENDS rpg_field_diamond_replay)
     add_test(
+        NAME rpg_magic_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-magic-saves"
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-magic.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-magic-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-magic-frames.bin"
+    )
+    add_test(
+        NAME rpg_magic_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-magic.py"
+                "${CMAKE_BINARY_DIR}/rpg-magic-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-magic-frames.bin"
+    )
+    set_tests_properties(rpg_magic_validation PROPERTIES
+        DEPENDS rpg_magic_replay)
+    add_test(
         NAME new_game_exit_checkpoint_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"
