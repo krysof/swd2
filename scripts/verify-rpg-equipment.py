@@ -144,16 +144,25 @@ def main() -> int:
             if slot_palette != palette or \
                     hashlib.sha256(crop(slot_pixels, 4, 192)).hexdigest() != expected:
                 raise ValueError(f"equipment slot-{slot} UI crop differs")
-        stable = crop(pixels, 4, 192)
-        # This digest equals the original RPGOC/DOSBox frame-220 crop named
-        # in rpg-equipment-rgb-reference.json (0/61,440 RGB pixels differ).
-        if hashlib.sha256(rgb(stable, palette)).hexdigest() != \
-                "679c0d0bec258e4f234c84e2adbc40180121efc6b0621eb7133bd7f0aba1f3fd":
-            raise ValueError("equipment RGB UI crop differs")
+        expected_rgb_crops = [
+            "679c0d0bec258e4f234c84e2adbc40180121efc6b0621eb7133bd7f0aba1f3fd",
+            "48f817ef4589b31d735e8ad318031a23b5a4e350a91fd7c1ab4dcdd4b3a0c5d8",
+            "d287cc641d88fd1141f104041a6e9ad2be9f61fb65e582f43e87eba42e2e7693",
+            "6b762cf0ad689d26334d792ce4b40c517b0e8f1cdcb2b0fdd2da050208ad433c",
+            "cef7e2fde8d9b120abba46fe5ab720fd5c52455d392b06692a4fab03121bf9bb",
+        ]
+        # These digests equal the five original RPGOC/DOSBox crops named in
+        # rpg-equipment-rgb-reference.json (0/61,440 RGB pixels differ each).
+        for slot, expected in enumerate(expected_rgb_crops):
+            slot_pixels, slot_palette = frames[117 + slot]
+            actual = hashlib.sha256(
+                rgb(crop(slot_pixels, 4, 192), slot_palette)).hexdigest()
+            if actual != expected:
+                raise ValueError(f"equipment slot-{slot} RGB UI crop differs")
 
         print(
             "RPG equipment checkpoint: 128 frames, all 11 slot cursors, "
-            "CD000 palette and 61,440-pixel original RGB crop locked")
+            "CD000 palette and five 61,440-pixel original RGB crops locked")
         return 0
     except (OSError, ValueError, json.JSONDecodeError) as error:
         parser.exit(1, f"RPG equipment checkpoint: FAIL: {error}\n")

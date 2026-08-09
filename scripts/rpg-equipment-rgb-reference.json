@@ -2,17 +2,45 @@
   "schema_version": 1,
   "kind": "dosbox_rgb_spot_check",
   "status": "reference_only",
-  "limitation": "The crop covers the complete stable equipment UI from VGA rows 4 through 195. Only four transparent world rows above and below it are excluded because autonomous map animation differs at the original and rewrite capture instants.",
+  "limitation": "Each crop covers the complete stable equipment UI from VGA rows 4 through 195. Only four transparent world rows above and below it are excluded because autonomous map animation differs at the original and rewrite capture instants. The original scripted input capture reached slots 0 through 4; all eleven rewrite cursor states are locked separately by verify-rpg-equipment.py.",
   "reference_program": "RPG.EXE",
   "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
   "capture_program": "RPGOC.COM",
   "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
   "frames": [
     {
-      "label": "RPG equipment page, CD000 palette and ME02 artwork",
-      "original": "frames/000220.png",
+      "label": "RPG equipment slot 0, CD000 palette and ME02 artwork",
+      "original": "frames/000184.png",
       "sha256": "795f0f5e25bd22df4479d9ddd7f7897214bf516e098d607ac15767b16cb056b4",
       "rewrite_frame": 117,
+      "crop": [0, 4, 320, 192]
+    },
+    {
+      "label": "RPG equipment slot 1",
+      "original": "frames/000205.png",
+      "sha256": "6ca61022c8c395c7329edb786fe7c87f2acd0be6f4a7c62941a10a77f8fecea2",
+      "rewrite_frame": 118,
+      "crop": [0, 4, 320, 192]
+    },
+    {
+      "label": "RPG equipment slot 2",
+      "original": "frames/000220.png",
+      "sha256": "fda33e9e9584f43c90bdaae2cb92eccdd185e21ddc670f309c3d14a20efe7d25",
+      "rewrite_frame": 119,
+      "crop": [0, 4, 320, 192]
+    },
+    {
+      "label": "RPG equipment slot 3",
+      "original": "frames/000235.png",
+      "sha256": "1dcd3a6ed11929537d4a9abf05efd02e15a10a9a44088e741c0cb2ce3b408109",
+      "rewrite_frame": 120,
+      "crop": [0, 4, 320, 192]
+    },
+    {
+      "label": "RPG equipment slot 4",
+      "original": "frames/000250.png",
+      "sha256": "dbd3d64f55651230d3122575aa4cbcda7883a30f6035807ef9b3a42e8a23c122",
+      "rewrite_frame": 121,
       "crop": [0, 4, 320, 192]
     }
   ]
