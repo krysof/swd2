@@ -1475,6 +1475,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     std::size_t invisible_fixed_bss_operations = 0;
     std::set<std::uint16_t> opcode37_destinations;
     std::array<std::size_t, 11> opcode3_field_mutations{};
+    std::size_t sa_opcode3_context_writes = 0;
+    std::size_t sa_opcode39_context_writes = 0;
     std::set<std::tuple<std::string, std::uint16_t, std::uint16_t,
                         std::size_t>> dynamic_entity_contexts;
     while (!pending.empty()) {
@@ -1531,6 +1533,24 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                             "reachable event uses an unexplained fixed-BSS entity slot");
                     }
                     if (first_record_visit) ++invisible_fixed_bss_operations;
+                }
+            }
+
+            const auto& active_area = world.location_at_directory_offset(
+                active_location_offset).area;
+            if (command.opcode == 3U && command.arguments.size() >= 2U &&
+                command.arguments[0] == 0U &&
+                state.entity < active_area.entity_count() &&
+                (active_area.entity_fields[0][state.entity] >> 8U) != 0U) {
+                ++sa_opcode3_context_writes;
+            }
+            if (command.opcode == 39U && command.arguments.size() >= 2U &&
+                (command.arguments[0] & 1U) == 0U) {
+                const auto entity = static_cast<std::size_t>(
+                    command.arguments[0] / 2U);
+                if (entity < active_area.entity_count() &&
+                    (active_area.entity_fields[0][entity] >> 8U) != 0U) {
+                    ++sa_opcode39_context_writes;
                 }
             }
 
@@ -1696,9 +1716,11 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     }
     const std::array<std::size_t, 11> expected_opcode3_field_mutations{
         200U, 0U, 2U, 63U, 0U, 0U, 0U, 0U, 0U, 403U, 0U};
-    if (opcode3_field_mutations != expected_opcode3_field_mutations) {
+    if (opcode3_field_mutations != expected_opcode3_field_mutations ||
+        sa_opcode3_context_writes != 0U ||
+        sa_opcode39_context_writes != 155U) {
         throw std::runtime_error(
-            "reachable opcode 3 field distribution differs from the release");
+            "reachable transient entity-frame writes differ from the release");
     }
 
     // RPG:0edc performs the same immediate centre-cell MAP0 probe after an
@@ -1842,6 +1864,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << " opcode-37 immediate MAP0 spawn contexts; "
               << opcode3_field_mutations[0]
               << " opcode-3 transient sprite-base writes; "
+              << sa_opcode39_context_writes
+              << " opcode-39 SA frame contexts; "
               << visited_states.size() * 2U
               << " entity-context executions, "
               << context_commands[0] + context_commands[1]

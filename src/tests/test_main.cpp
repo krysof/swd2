@@ -6519,12 +6519,62 @@ void test_rpg_opcode37_chained_spawn_event(
     context.map_database = database;
     const auto marker = swd2::RpgModule().run(
         context, swd2::Marker::menu_ready);
+    // The last two nonblack pages bracket entry 23's opcode-39 SA082 frame
+    // change before its battle transition turns the palette black.
     require(marker == swd2::Marker::open_figure &&
                 platform.presented == 109U && platform.poll_calls == 33U &&
                 platform.cursor == 33U &&
                 context.shared_state.map_location_directory_offset() == 756U &&
                 (context.shared_state.u16(0x51a) & 0x0008U) != 0U,
             "RPG opcode 37 did not dispatch its immediate MAP0 spawn event");
+}
+
+void test_rpg_sa_scripted_entity_frames(
+    const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto& location = database->location_at_directory_offset(828U);
+    require(location.area.event_archive_path == "CHNA5.EXE" &&
+                location.area.entity_count() == 8U &&
+                location.area.entity_fields[0][0] == 0x5200U &&
+                location.area.entity_fields[9][0] == 46U,
+            "WEST12 SA082 scripted-animation oracle changed");
+
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(state, *database, 828U);
+    auto graphics = swd2::normalize_dos_asset_path(location.area.graphics_path);
+    auto layout = swd2::normalize_dos_asset_path(location.area.layout_path);
+    graphics.replace_extension();
+    layout.replace_extension();
+    const auto map = swd2::MapResource::load(game_root / graphics,
+                                              game_root / layout);
+    require(map.layout().width == 130U && map.layout().height == 230U &&
+                map.cell_base() == 8U,
+            "WEST12 scripted-animation RAP oracle changed");
+    // Entity zero is at world (49,31); place the leader immediately west.
+    state.set_u16(0x40f, map.cell_base());
+    state.set_viewport_x(28U);
+    state.set_viewport_y(19U);
+    state.set_actor_screen_x(38U);
+    state.set_actor_screen_y(80U);
+    state.set_actor_direction(9U);
+    state.set_u16(0x40d, static_cast<std::uint16_t>(
+        map.cell_base() + (19U * map.layout().width + 28U) * 2U));
+
+    ScriptedPlatform platform;
+    platform.text_actions.assign(64U, swd2::InputAction::confirm);
+    platform.actions.assign(64U, swd2::InputAction::confirm);
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+    const auto marker = swd2::RpgModule().run(
+        context, swd2::Marker::menu_ready);
+    require(marker == swd2::Marker::open_figure &&
+                platform.presented == 52U && platform.poll_calls == 4U &&
+                platform.cursor == 4U && platform.text_poll_calls == 0U &&
+                platform.frame_hashes.size() == 52U &&
+                platform.frame_hashes[30] == 11619654329426894177ULL &&
+                platform.frame_hashes[31] == 18286921205049796719ULL,
+            "RPG did not execute the visible SA082 opcode-39 sequence");
 }
 
 void test_rpg_map_special_event(const std::filesystem::path& game_root) {
@@ -9319,6 +9369,7 @@ int main(int argc, char** argv) {
         test_rpg_map_portal(argv[1]);
         test_rpg_map_chained_spawn_trigger(argv[1]);
         test_rpg_opcode37_chained_spawn_event(argv[1]);
+        test_rpg_sa_scripted_entity_frames(argv[1]);
         test_rpg_map_special_event(argv[1]);
         test_rpg_map_actor_variant(argv[1]);
         test_rpg_top_dialogue_panel(argv[1]);
