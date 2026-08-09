@@ -2769,8 +2769,15 @@ void test_fig_effect_timeline(const std::filesystem::path& game_root) {
     // the runtime renderer would safely skip a malformed layer.
     std::map<std::uint16_t, std::size_t> maximum_frames;
     for (std::uint16_t effect = 0x32; effect <= 0x65; ++effect) {
-        for (const auto& step : swd2::fig_effect_timeline(effect)) {
+        const auto resources = swd2::fig_effect_resource_sequence(effect);
+        const auto timeline = swd2::fig_effect_timeline(effect);
+        require(resources.empty() || !timeline.empty(),
+                "FIG archive-backed effect retained a generic presentation fallback");
+        for (const auto& step : timeline) {
             for (const auto& layer : step.layers) {
+                require(std::find(resources.begin(), resources.end(), layer.resource) !=
+                            resources.end(),
+                        "FIG exact effect timeline references an undeclared archive");
                 auto& maximum = maximum_frames[layer.resource];
                 maximum = std::max(maximum, layer.sprite_frame);
             }

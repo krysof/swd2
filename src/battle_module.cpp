@@ -1339,47 +1339,35 @@ std::vector<LoadedBattleEffectStep> load_event_effect_frames(
     const BattleSessionEvent& event, const BattleAbilityDatabase& abilities,
     const std::filesystem::path& game_root,
     std::map<std::uint16_t, SpriteArchive>& cache) {
-    std::vector<std::uint16_t> resources;
-    if (resources.empty()) {
-        const auto effect = event_effect_code(event, abilities);
-        if (effect) {
-            const auto sequence = fig_effect_resource_sequence(*effect);
-            resources.assign(sequence.begin(), sequence.end());
-        }
-    }
-
     const auto effect = event_effect_code(event, abilities);
-    const auto exact_timeline = effect ? fig_effect_timeline(*effect)
-                                       : std::vector<FigEffectStep>{};
-    std::vector<LoadedBattleEffectStep> frames;
-    if (!exact_timeline.empty()) {
-        for (const auto& step : exact_timeline) {
-            LoadedBattleEffectStep loaded;
-            for (const auto& layer : step.layers) {
-                auto found = cache.find(layer.resource);
-                if (found == cache.end()) {
-                    const auto path = numbered_action_path(game_root, layer.resource);
-                    if (!std::filesystem::exists(path)) continue;
-                    found = cache.emplace(layer.resource, load_sprites(path)).first;
-                }
-                if (layer.sprite_frame >= found->second.sprites().size()) continue;
-                loaded.layers.push_back({&found->second, layer.sprite_frame, layer});
-            }
-            if (!loaded.layers.empty()) frames.push_back(std::move(loaded));
-        }
-        return frames;
+    if (!effect) return {};
+    const auto resources = fig_effect_resource_sequence(*effect);
+    const auto exact_timeline = fig_effect_timeline(*effect);
+    if (!resources.empty() && exact_timeline.empty()) {
+        throw std::runtime_error(
+            "FIG archive-backed effect has no exact presentation timeline");
     }
-    for (const auto resource : resources) {
-        auto found = cache.find(resource);
-        if (found == cache.end()) {
-            const auto path = numbered_action_path(game_root, resource);
-            if (!std::filesystem::exists(path)) continue;
-            found = cache.emplace(resource, load_sprites(path)).first;
+    std::vector<LoadedBattleEffectStep> frames;
+    for (const auto& step : exact_timeline) {
+        LoadedBattleEffectStep loaded;
+        for (const auto& layer : step.layers) {
+            auto found = cache.find(layer.resource);
+            if (found == cache.end()) {
+                const auto path = numbered_action_path(game_root, layer.resource);
+                if (!std::filesystem::exists(path)) {
+                    throw std::runtime_error(
+                        "FIG exact effect timeline resource is missing: " +
+                        path.string());
+                }
+                found = cache.emplace(layer.resource, load_sprites(path)).first;
+            }
+            if (layer.sprite_frame >= found->second.sprites().size()) {
+                throw std::runtime_error(
+                    "FIG exact effect timeline frame is out of range");
+            }
+            loaded.layers.push_back({&found->second, layer.sprite_frame, layer});
         }
-        for (std::size_t frame = 0;
-             frame < found->second.sprites().size(); ++frame) {
-            frames.push_back({{{&found->second, frame, std::nullopt}}});
-        }
+        if (!loaded.layers.empty()) frames.push_back(std::move(loaded));
     }
     return frames;
 }

@@ -374,9 +374,10 @@ fig_page_wipe_scanline_ends() noexcept {
 
 // Exact visual playback schedule for FIG's archive-backed effect handlers
 // 32..65.
-// An empty result means the handler has no visual frames or is still handled
-// by the older archive-order fallback.  Resource ids and frame resets follow
-// the original 49c1/4a82/48da loops, not merely the archive load order.
+// An empty result means the handler has no visual frames. Every selector with
+// a nonempty resource sequence must have an explicit timeline; the runtime
+// deliberately has no generic archive-order fallback. Resource ids and frame
+// resets follow the original 49c1/4a82/48da loops, not merely the load order.
 [[nodiscard]] std::vector<FigEffectStep> fig_effect_timeline(
     std::uint16_t effect_code);
 
