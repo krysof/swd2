@@ -455,6 +455,7 @@ if(BUILD_TESTING)
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-field-diamond.py"
                 "${CMAKE_BINARY_DIR}/rpg-field-diamond-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-field-diamond-frames.bin"
     )
     set_tests_properties(rpg_field_diamond_validation PROPERTIES
         DEPENDS rpg_field_diamond_replay)

@@ -13,35 +13,85 @@
       "original": "000110.png",
       "sha256": "0dd2c6b1bd7dee2199adceff992bda2a589a5d3ddde8541b72326eba40fb983b",
       "rewrite_frame": 113,
-      "crop": [64, 8, 64, 32]
+      "crop": [
+        64,
+        8,
+        64,
+        32
+      ],
+      "rewrite_indexed_crop_sha256": "a6b4365b34aaddae36745b25e9d3d579533960e585b9da7d3dd74fdcc5b7f690",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "47f383adb80ae2008635626450fcf6e0e879fd4fa09f09152d907c5b38b3b92c",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 2048
     },
     {
       "label": "RPG field diamond left Magic card",
       "original": "000125.png",
       "sha256": "ed9fd4a60d48ccfe019dd58b7a91de786379da07cdbd37d1cf2e5f7053ab0768",
       "rewrite_frame": 114,
-      "crop": [24, 40, 64, 32]
+      "crop": [
+        24,
+        40,
+        64,
+        32
+      ],
+      "rewrite_indexed_crop_sha256": "b60f03bc42de2c947ed309278afb8d5bf02478ee0f1aeac06968364ab9de50f3",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "98be752de1f5c94c9c414e70ca22c64c08fd59c57b54f5be182da4a2a8a95f18",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 2048
     },
     {
       "label": "RPG field diamond up System/Book card",
       "original": "000140.png",
       "sha256": "0dd2c6b1bd7dee2199adceff992bda2a589a5d3ddde8541b72326eba40fb983b",
       "rewrite_frame": 115,
-      "crop": [64, 8, 64, 32]
+      "crop": [
+        64,
+        8,
+        64,
+        32
+      ],
+      "rewrite_indexed_crop_sha256": "a6b4365b34aaddae36745b25e9d3d579533960e585b9da7d3dd74fdcc5b7f690",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "47f383adb80ae2008635626450fcf6e0e879fd4fa09f09152d907c5b38b3b92c",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 2048
     },
     {
       "label": "RPG field diamond down Status card",
       "original": "000155.png",
       "sha256": "dbc6cb5487923916dec799394155c6237856945ace3cd3b076f7532d33fbd962",
       "rewrite_frame": 116,
-      "crop": [64, 72, 64, 32]
+      "crop": [
+        64,
+        72,
+        64,
+        32
+      ],
+      "rewrite_indexed_crop_sha256": "def7fede73164b09e8ee25c9d20ed7d1ab114e9aeca5cf4137dd26eb34afd771",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "d550bc4d0d5f37fd91d349b02e2a2556bf2266832226a812f32ce41478225ecc",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 2048
     },
     {
       "label": "RPG field diamond right Item card",
       "original": "000170.png",
       "sha256": "432b42df44fa5e20f1ed371b04dd99001e7b2a7a99409a514402d98b6ee54791",
       "rewrite_frame": 117,
-      "crop": [104, 40, 64, 32]
+      "crop": [
+        104,
+        40,
+        64,
+        32
+      ],
+      "rewrite_indexed_crop_sha256": "5c905d9d571643eb5172fca917e826cc1ac40167e6c49049b664cc9c45e4ff09",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "15dbaed072322fb3c405f10c9f635279eba51155d6affeeafe1ee3e0d8cbe66d",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 2048
     }
   ]
 }
