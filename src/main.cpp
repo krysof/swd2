@@ -15,6 +15,7 @@
 #include "swd2/mon_database.hpp"
 #include "swd2/monster_definition.hpp"
 #include "swd2/rpg_module.hpp"
+#include "swd2/replay_input.hpp"
 #include "swd2/runtime.hpp"
 #include "swd2/mz_executable.hpp"
 #include "swd2/planar_sprite_set.hpp"
@@ -156,66 +157,268 @@ void trace_launcher(const std::string& marker_script) {
               << ", marker=" << swd2::marker_name(result.final_marker) << '\n';
 }
 
-class ScriptPlatform final : public swd2::PlatformBackend {
+class ReplayPlatform final : public swd2::PlatformBackend {
 public:
-    explicit ScriptPlatform(std::vector<swd2::InputAction> actions) : actions_(std::move(actions)) {}
+    explicit ReplayPlatform(std::vector<swd2::ReplayInputStep> steps)
+        : steps_(std::move(steps)) {}
 
     void present(const swd2::IndexedSurfaceView& surface) override {
+        record_surface(surface, false);
+    }
+    void present_direct_update(const swd2::IndexedSurfaceView& surface) override {
+        record_surface(surface, true);
+    }
+    swd2::InputAction wait_for_input() override {
+        ++wait_calls;
+        return consume(swd2::ReplayInputBoundary::wait, true);
+    }
+    swd2::InputAction poll_input() override {
+        ++poll_calls;
+        return consume(swd2::ReplayInputBoundary::poll, false);
+    }
+    swd2::InputAction poll_text_input() override {
+        ++text_calls;
+        return consume(swd2::ReplayInputBoundary::text, false);
+    }
+    bool poll_frontend_quit() override {
+        ++frontend_calls;
+        if (cursor_ == steps_.size() ||
+            steps_[cursor_].boundary != swd2::ReplayInputBoundary::frontend) {
+            return false;
+        }
+        const auto action = steps_[cursor_++].action;
+        unmatched_nonblocking_calls_ = 0;
+        return action == swd2::InputAction::quit;
+    }
+    swd2::ClockTime clock_time() const override { return {0, 0}; }
+    void delay_for(std::chrono::milliseconds duration) override {
+        if (duration.count() > 0) {
+            delay_milliseconds += static_cast<std::uint64_t>(duration.count());
+        }
+    }
+    void play_music(std::span<const std::uint8_t> bytes, bool loop) override {
+        ++music_calls;
+        mix(audio_digest, static_cast<std::uint64_t>(loop ? 1U : 0U));
+        mix(audio_digest, bytes);
+    }
+    void play_voice(std::span<const std::uint8_t> bytes) override {
+        ++voice_calls;
+        mix(audio_digest, std::uint64_t{2});
+        mix(audio_digest, bytes);
+    }
+    void stop_music() override {
+        ++stop_music_calls;
+        mix(audio_digest, std::uint64_t{3});
+    }
+    void stop_audio() override {
+        ++stop_audio_calls;
+        mix(audio_digest, std::uint64_t{4});
+    }
+
+    std::size_t frames{};
+    std::size_t direct_updates{};
+    std::size_t last_width{};
+    std::size_t last_height{};
+    std::size_t wait_calls{};
+    std::size_t poll_calls{};
+    std::size_t text_calls{};
+    std::size_t frontend_calls{};
+    std::size_t music_calls{};
+    std::size_t voice_calls{};
+    std::size_t stop_music_calls{};
+    std::size_t stop_audio_calls{};
+    std::size_t implicit_quit_calls{};
+    std::uint64_t delay_milliseconds{};
+    std::uint64_t frame_digest{14695981039346656037ULL};
+    std::uint64_t audio_digest{14695981039346656037ULL};
+
+    [[nodiscard]] std::size_t input_count() const noexcept {
+        return steps_.size();
+    }
+    [[nodiscard]] std::size_t consumed_inputs() const noexcept { return cursor_; }
+    [[nodiscard]] std::size_t remaining_inputs() const noexcept {
+        return steps_.size() - cursor_;
+    }
+
+private:
+    static void mix(std::uint64_t& digest, std::uint8_t value) noexcept {
+        digest ^= value;
+        digest *= 1099511628211ULL;
+    }
+    static void mix(std::uint64_t& digest,
+                    std::span<const std::uint8_t> bytes) noexcept {
+        for (const auto byte : bytes) mix(digest, byte);
+    }
+    static void mix(std::uint64_t& digest, std::uint64_t value) noexcept {
+        for (unsigned shift = 0; shift < 64; shift += 8) {
+            mix(digest, static_cast<std::uint8_t>(value >> shift));
+        }
+    }
+
+    void record_surface(const swd2::IndexedSurfaceView& surface, bool direct) {
+        if (surface.width == 0 || surface.height == 0 ||
+            surface.pixels.size() != surface.width * surface.height) {
+            throw std::runtime_error("replay frontend received an invalid frame");
+        }
         last_width = surface.width;
         last_height = surface.height;
         ++frames;
+        if (direct) ++direct_updates;
+        mix(frame_digest, static_cast<std::uint64_t>(direct ? 1U : 0U));
+        mix(frame_digest, static_cast<std::uint64_t>(surface.width));
+        mix(frame_digest, static_cast<std::uint64_t>(surface.height));
+        mix(frame_digest, surface.pixels);
+        mix(frame_digest, surface.palette);
     }
-    swd2::InputAction wait_for_input() override {
-        if (cursor_ == actions_.size()) {
+
+    swd2::InputAction consume(swd2::ReplayInputBoundary boundary,
+                              bool blocking) {
+        if (cursor_ == steps_.size()) {
+            ++implicit_quit_calls;
             return swd2::InputAction::quit;
         }
-        return actions_[cursor_++];
+        const auto& step = steps_[cursor_];
+        if (step.boundary == swd2::ReplayInputBoundary::any ||
+            step.boundary == boundary) {
+            ++cursor_;
+            unmatched_nonblocking_calls_ = 0;
+            return step.action;
+        }
+        if (blocking) {
+            throw std::runtime_error(
+                "replay boundary mismatch: runtime requested " +
+                std::string(swd2::replay_boundary_name(boundary)) +
+                " but next input requires " +
+                std::string(swd2::replay_boundary_name(step.boundary)));
+        }
+        if (++unmatched_nonblocking_calls_ > 1'000'000U) {
+            throw std::runtime_error(
+                "replay made no progress across one million nonblocking polls");
+        }
+        return swd2::InputAction::none;
     }
-    swd2::InputAction poll_input() override { return wait_for_input(); }
-    swd2::ClockTime clock_time() const override { return {0, 0}; }
-    void play_music(std::span<const std::uint8_t>, bool) override {}
-    void play_voice(std::span<const std::uint8_t>) override {}
-    void stop_audio() override {}
 
-    std::size_t frames{};
-    std::size_t last_width{};
-    std::size_t last_height{};
-
-private:
-    std::vector<swd2::InputAction> actions_;
+    std::vector<swd2::ReplayInputStep> steps_;
     std::size_t cursor_{};
+    std::size_t unmatched_nonblocking_calls_{};
 };
 
-std::vector<swd2::InputAction> parse_actions(const std::string& text) {
-    std::vector<swd2::InputAction> result;
-    std::istringstream input(text);
-    for (std::string token; std::getline(input, token, ',');) {
-        std::transform(token.begin(), token.end(), token.begin(), [](unsigned char c) {
-            return static_cast<char>(std::toupper(c));
-        });
-        if (token == "UP") result.push_back(swd2::InputAction::up);
-        else if (token == "DOWN") result.push_back(swd2::InputAction::down);
-        else if (token == "LEFT") result.push_back(swd2::InputAction::left);
-        else if (token == "RIGHT") result.push_back(swd2::InputAction::right);
-        else if (token == "PGUP" || token == "PAGEUP")
-            result.push_back(swd2::InputAction::page_up);
-        else if (token == "PGDN" || token == "PAGEDOWN")
-            result.push_back(swd2::InputAction::page_down);
-        else if (token == "HOME") result.push_back(swd2::InputAction::home);
-        else if (token == "END") result.push_back(swd2::InputAction::end);
-        else if (token == "OK" || token == "CONFIRM") result.push_back(swd2::InputAction::confirm);
-        else if (token == "CANCEL") result.push_back(swd2::InputAction::cancel);
-        else if (token == "TICK" || token == "NONE") result.push_back(swd2::InputAction::none);
-        else if (token == "QUIT") result.push_back(swd2::InputAction::quit);
-        else throw std::runtime_error("unknown scripted input: " + token);
+std::uint64_t fnv1a(std::span<const std::uint8_t> bytes) noexcept {
+    auto digest = std::uint64_t{14695981039346656037ULL};
+    for (const auto byte : bytes) {
+        digest ^= byte;
+        digest *= 1099511628211ULL;
     }
-    return result;
+    return digest;
 }
 
-void run_monolithic(const std::filesystem::path& game_root, const std::string& script,
+std::uint64_t fnv1a_file(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        throw std::runtime_error("cannot hash replay artifact: " + path.string());
+    }
+    auto digest = std::uint64_t{14695981039346656037ULL};
+    for (char value{}; input.get(value);) {
+        digest ^= static_cast<std::uint8_t>(value);
+        digest *= 1099511628211ULL;
+    }
+    if (!input.eof()) {
+        throw std::runtime_error("failed while hashing replay artifact: " +
+                                 path.string());
+    }
+    return digest;
+}
+
+std::string hex_digest(std::uint64_t digest) {
+    std::ostringstream output;
+    output << std::hex << std::setw(16) << std::setfill('0') << digest;
+    return output.str();
+}
+
+void write_replay_trace(const std::filesystem::path& path,
+                        const ReplayPlatform& platform,
+                        const swd2::GameContext& context,
+                        const swd2::LaunchResult& result) {
+    if (!path.parent_path().empty()) {
+        std::filesystem::create_directories(path.parent_path());
+    }
+    std::optional<std::uint64_t> map_digest;
+    if (context.map_database) {
+        auto probe = path;
+        probe += ".mapz-probe";
+        context.map_database->save(probe);
+        try {
+            map_digest = fnv1a_file(probe);
+        } catch (...) {
+            std::filesystem::remove(probe);
+            throw;
+        }
+        std::filesystem::remove(probe);
+    }
+
+    std::ofstream output(path, std::ios::trunc);
+    if (!output) {
+        throw std::runtime_error("cannot create replay trace: " + path.string());
+    }
+    output << "{\n"
+           << "  \"schema_version\": 1,\n"
+           << "  \"input\": {\"total\": " << platform.input_count()
+           << ", \"consumed\": " << platform.consumed_inputs()
+           << ", \"remaining\": " << platform.remaining_inputs()
+           << ", \"implicit_quit_calls\": " << platform.implicit_quit_calls
+           << "},\n"
+           << "  \"boundaries\": {\"wait\": " << platform.wait_calls
+           << ", \"poll\": " << platform.poll_calls
+           << ", \"text\": " << platform.text_calls
+           << ", \"frontend\": " << platform.frontend_calls << "},\n"
+           << "  \"video\": {\"frames\": " << platform.frames
+           << ", \"direct_updates\": " << platform.direct_updates
+           << ", \"last_width\": " << platform.last_width
+           << ", \"last_height\": " << platform.last_height
+           << ", \"fnv1a64\": \"" << hex_digest(platform.frame_digest)
+           << "\"},\n"
+           << "  \"audio\": {\"music_calls\": " << platform.music_calls
+           << ", \"voice_calls\": " << platform.voice_calls
+           << ", \"stop_music_calls\": " << platform.stop_music_calls
+           << ", \"stop_audio_calls\": " << platform.stop_audio_calls
+           << ", \"fnv1a64\": \"" << hex_digest(platform.audio_digest)
+           << "\"},\n"
+           << "  \"delay_milliseconds\": " << platform.delay_milliseconds
+           << ",\n"
+           << "  \"state_fnv1a64\": \""
+           << hex_digest(fnv1a(context.shared_state.bytes())) << "\",\n"
+           << "  \"mapz_fnv1a64\": ";
+    if (map_digest) output << '"' << hex_digest(*map_digest) << '"';
+    else output << "null";
+    output << ",\n"
+           << "  \"stop_reason\": \"" << swd2::stop_reason_name(result.reason)
+           << "\",\n"
+           << "  \"final_marker\": \"" << swd2::marker_name(result.final_marker)
+           << "\",\n"
+           << "  \"transitions\": [\n";
+    for (std::size_t index = 0; index < result.transitions.size(); ++index) {
+        const auto& transition = result.transitions[index];
+        output << "    {\"module\": \"" << swd2::module_name(transition.module)
+               << "\", \"input\": \"" << swd2::marker_name(transition.input)
+               << "\", \"output\": \"" << swd2::marker_name(transition.output)
+               << "\", \"launched\": "
+               << (transition.launched ? "true" : "false") << '}';
+        if (index + 1U != result.transitions.size()) output << ',';
+        output << '\n';
+    }
+    output << "  ]\n}\n";
+    if (!output) {
+        throw std::runtime_error("failed to write replay trace: " + path.string());
+    }
+}
+
+void run_monolithic(const std::filesystem::path& game_root,
+                    std::vector<swd2::ReplayInputStep> inputs,
                     const std::filesystem::path& save_root, std::uint8_t slot_number,
-                    bool write_save) {
-    ScriptPlatform platform(parse_actions(script));
+                    bool write_save,
+                    const std::optional<std::filesystem::path>& trace_output,
+                    bool require_all_inputs) {
+    ReplayPlatform platform(std::move(inputs));
     auto slot = swd2::SaveSlot::open(game_root, save_root, slot_number);
     swd2::GameContext context{
         game_root, slot.state(), platform, slot.map_database(),
@@ -236,6 +439,17 @@ void run_monolithic(const std::filesystem::path& game_root, const std::string& s
     modules.add(std::make_unique<swd2::DemoModule>());
     const auto result = swd2::MonolithicRuntime(std::move(modules)).run(context);
     if (write_save) slot.save(context.shared_state);
+    if (trace_output) {
+        write_replay_trace(*trace_output, platform, context, result);
+    }
+    if (require_all_inputs && platform.remaining_inputs() != 0U) {
+        throw std::runtime_error(
+            "replay stopped before consuming all boundary-locked inputs");
+    }
+    if (require_all_inputs && platform.implicit_quit_calls != 0U) {
+        throw std::runtime_error(
+            "replay exhausted its input and relied on an implicit quit");
+    }
     for (const auto& transition : result.transitions) {
         std::cout << swd2::module_name(transition.module) << " -> "
                   << swd2::marker_name(transition.output) << '\n';
@@ -285,6 +499,19 @@ std::vector<std::uint8_t> read_binary_file(const std::filesystem::path& path) {
         throw std::runtime_error("cannot open input file: " + path.string());
     }
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+std::string read_text_file(const std::filesystem::path& path) {
+    std::ifstream input(path);
+    if (!input) {
+        throw std::runtime_error("cannot open replay input file: " + path.string());
+    }
+    std::ostringstream contents;
+    contents << input.rdbuf();
+    if (!input.eof() && input.fail()) {
+        throw std::runtime_error("failed to read replay input file: " + path.string());
+    }
+    return contents.str();
 }
 
 void extract_resource(const std::filesystem::path& input_path,
@@ -1012,7 +1239,11 @@ void usage(const char* program) {
               << "  " << program << " --trace MT,ED,--,IF,OC,--\n";
     std::cout << "  " << program
               << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save]"
-                 " --run-script CONFIRM,CONFIRM,CONFIRM,RIGHT,DOWN,QUIT\n";
+                 " [--trace-output FILE.json]"
+                 " --run-script CONFIRM,CONFIRM,RIGHT,DOWN,QUIT\n"
+              << "  " << program
+              << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save]"
+                 " --run-replay INPUT.txt --trace-output FILE.json\n";
 #ifdef SWD2_HAVE_SDL2
     std::cout << "  " << program
               << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save] --play\n";
@@ -1033,6 +1264,9 @@ int main(int argc, char** argv) {
         std::string trace;
         std::filesystem::path extract_input;
         std::filesystem::path extract_output;
+        std::filesystem::path replay_input;
+        std::optional<std::filesystem::path> replay_trace;
+        bool strict_replay = false;
         std::size_t render_index = 0;
 
         for (int i = 1; i < argc; ++i) {
@@ -1088,6 +1322,14 @@ int main(int argc, char** argv) {
             } else if (argument == "--run-script" && i + 1 < argc) {
                 mode = Mode::run;
                 trace = argv[++i];
+                replay_input.clear();
+                strict_replay = false;
+            } else if (argument == "--run-replay" && i + 1 < argc) {
+                mode = Mode::run;
+                replay_input = argv[++i];
+                strict_replay = true;
+            } else if (argument == "--trace-output" && i + 1 < argc) {
+                replay_trace = std::filesystem::path(argv[++i]);
             } else if (argument == "--play") {
                 mode = Mode::play;
             } else if (argument == "--help" || argument == "-h") {
@@ -1099,6 +1341,9 @@ int main(int argc, char** argv) {
         }
 
         if (save_root.empty()) save_root = game_root / "portable-saves";
+        if (replay_trace && mode != Mode::run) {
+            throw std::runtime_error("--trace-output requires --run-script or --run-replay");
+        }
 
         if (mode == Mode::trace) {
             trace_launcher(trace);
@@ -1123,7 +1368,12 @@ int main(int argc, char** argv) {
         } else if (mode == Mode::render_planar) {
             render_planar_sprite(extract_input, render_index, extract_output);
         } else if (mode == Mode::run) {
-            run_monolithic(game_root, trace, save_root, slot_number, write_save);
+            const auto input_text = strict_replay
+                ? read_text_file(replay_input)
+                : trace;
+            run_monolithic(game_root, swd2::parse_replay_input(input_text),
+                           save_root, slot_number, write_save,
+                           replay_trace, strict_replay);
         } else if (mode == Mode::play) {
 #ifdef SWD2_HAVE_SDL2
             play_monolithic(game_root, save_root, slot_number, write_save);

@@ -34,6 +34,7 @@
 #include "swd2/rpg_module.hpp"
 #include "swd2/rpg_entity_system.hpp"
 #include "swd2/rpg_presentation.hpp"
+#include "swd2/replay_input.hpp"
 #include "swd2/rix_decoder.hpp"
 #include "swd2/mz_executable.hpp"
 #include "swd2/planar_sprite_set.hpp"
@@ -107,6 +108,45 @@ void test_paths() {
     require(swd2::normalize_dos_asset_path("C:\\SWD2\\BA\\BA01.RSK") ==
                 std::filesystem::path("BA/BA01.RSK"),
             "absolute SWD2 path conversion failed");
+}
+
+void test_replay_input() {
+    using swd2::InputAction;
+    using swd2::ReplayInputBoundary;
+    using swd2::ReplayInputStep;
+    const auto steps = swd2::parse_replay_input(
+        "# deterministic boundary stream\n"
+        "POLL:RIGHT*2, WAIT:ENTER TEXT:NONE*3\n"
+        "FRONTEND:QUIT, ESC");
+    const std::vector<ReplayInputStep> expected = {
+        {ReplayInputBoundary::poll, InputAction::right},
+        {ReplayInputBoundary::poll, InputAction::right},
+        {ReplayInputBoundary::wait, InputAction::confirm},
+        {ReplayInputBoundary::text, InputAction::none},
+        {ReplayInputBoundary::text, InputAction::none},
+        {ReplayInputBoundary::text, InputAction::none},
+        {ReplayInputBoundary::frontend, InputAction::quit},
+        {ReplayInputBoundary::any, InputAction::cancel},
+    };
+    require(steps == expected &&
+                swd2::replay_boundary_name(steps[0].boundary) == "POLL" &&
+                swd2::input_action_name(steps[2].action) == "CONFIRM",
+            "deterministic replay input grammar differs");
+
+    auto rejected = false;
+    try {
+        static_cast<void>(swd2::parse_replay_input("POLL:LEFT*0"));
+    } catch (const std::runtime_error&) {
+        rejected = true;
+    }
+    require(rejected, "replay parser accepted a zero repeat count");
+    rejected = false;
+    try {
+        static_cast<void>(swd2::parse_replay_input("FRONTEND:CONFIRM"));
+    } catch (const std::runtime_error&) {
+        rejected = true;
+    }
+    require(rejected, "replay parser accepted a gameplay frontend action");
 }
 
 void test_rpg_mode_x_event_offset() {
@@ -8973,6 +9013,7 @@ int main(int argc, char** argv) {
         require(argc == 2, "test requires the game directory argument");
         test_launcher();
         test_paths();
+        test_replay_input();
         test_rpg_mode_x_event_offset();
         test_rpg_opcode55_monochrome(argv[1]);
         test_rpg_save_slot_selector(argv[1]);

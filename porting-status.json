@@ -114,7 +114,7 @@
         "交互输入、非阻塞输入、跳字输入和前端关闭严格分离",
         "桌面、WASM、手柄和触摸路径不丢失或误消费动作"
       ],
-      "evidence": ["src/include/swd2/platform.hpp", "src/sdl_platform.cpp", "src/tests/test_main.cpp", "src/tests/test_sdl_platform.cpp"],
+      "evidence": ["src/include/swd2/platform.hpp", "src/include/swd2/replay_input.hpp", "src/replay_input.cpp", "src/sdl_platform.cpp", "src/tests/test_main.cpp", "src/tests/test_sdl_platform.cpp"],
       "remaining": ["在真实浏览器验证键盘与仅 ESC/回车触摸按钮", "在至少一个真实手柄和非 macOS 桌面后端完成交叉测试"]
     },
     {
@@ -157,8 +157,8 @@
         "至少一条完整主线从新游戏运行到结局",
         "关键状态、画面、战斗、存档和模块切换与原版基准一致"
       ],
-      "evidence": ["scripts/verify-playthrough.sh", "scripts/verify-evidence-manifest.py"],
-      "remaining": ["录制原版完整输入/状态基准", "生成通过哈希校验的 playthrough manifest"]
+      "evidence": ["src/include/swd2/replay_input.hpp", "src/replay_input.cpp", "src/main.cpp", "scripts/replay-smoke.txt", "scripts/verify-playthrough.sh", "scripts/verify-evidence-manifest.py"],
+      "remaining": ["使用边界锁定格式录制从新游戏到结局的原版输入/状态基准", "生成通过哈希校验的 playthrough manifest"]
     },
     {
       "id": "placeholder_elimination",

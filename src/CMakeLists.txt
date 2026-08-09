@@ -50,6 +50,7 @@ add_library(swd2_core
     rpg_entity_system.cpp
     rpg_module.cpp
     rpg_presentation.cpp
+    replay_input.cpp
     rix_decoder.cpp
     runtime.cpp
     save_slot.cpp
@@ -167,5 +168,14 @@ if(BUILD_TESTING)
         NAME legacy_program_data_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
                 --verify-legacy-program-data
+    )
+    add_test(
+        NAME replay_trace_smoke
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/replay-smoke-saves"
+                --no-save
+                --run-replay "${PROJECT_SOURCE_DIR}/scripts/replay-smoke.txt"
+                --trace-output "${CMAKE_BINARY_DIR}/replay-smoke-trace.json"
     )
 endif()

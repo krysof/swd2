@@ -1,0 +1,3 @@
+# Boundary-locked replay smoke test: render MEO once, then close only from its
+# blocking selector. This is infrastructure validation, not playthrough proof.
+WAIT:QUIT

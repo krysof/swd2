@@ -1133,3 +1133,10 @@ Enter/Esc、手柄十个数字按钮、摇杆启停滞回、逐字轮询，以�
 都通过真实 `SDL_PushEvent` 进入与发布程序相同的 `SdlPlatform`。这能锁住桌面映射和
 关闭事件不误消费动作的语义；真实浏览器 DOM/IDBFS 与物理手柄矩阵仍必须另行执行，
 因此 portable-input 门继续保持 `in_progress`。
+
+完整回放输入不再受命令行长度或“同一队列被哪个 API 先读”影响。`replay_input` 的文本
+格式可把每一步标为 WAIT（交互阻塞）、POLL（普通非阻塞）、TEXT（跳字）或 FRONTEND
+（只允许 NONE/QUIT），并用 `*次数` 压缩连续移动/空 tick。严格 `--run-replay` 遇到
+阻塞边界不符、百万次无进展轮询或未消费尾部都会失败；`--trace-output` 同时记录帧/调色
+板链、音频载荷链、累计延时、最终 SAVE/MAPZ、模块切换和每类输入调用。当前 CTest 用
+WAIT:QUIT 锁住一帧 MEO 烟雾测试；它只证明回放基础设施可执行，不能冒充完整通关证据。
