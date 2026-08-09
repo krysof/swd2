@@ -7995,12 +7995,21 @@ void test_rpg_field_magic_travel_scroll(
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 20U && platform.stop_calls == 1U,
             "RPG 12-destination travel selector did not preserve its input/frame boundaries");
-    require(platform.frame_hashes[6] != platform.frame_hashes[15] &&
-                platform.frame_hashes[15] != platform.frame_hashes[16] &&
-                platform.frame_hashes[16] != platform.frame_hashes[17] &&
-                platform.frame_hashes[17] == platform.frame_hashes[18] &&
-                platform.frame_hashes[19] != platform.frame_hashes[0],
-            "RPG travel selector did not scroll twice and clamp on its last row");
+    const std::vector<std::uint64_t> expected_frames{
+        5188932088196950066ULL, 15540623177949900666ULL,
+        5992870746625885040ULL, 10228933188199922168ULL,
+        14723619521334390648ULL, 14201100971235321150ULL,
+        10840548927968299476ULL, 9316171890198649933ULL,
+        343747605213214233ULL, 11790066974229451761ULL,
+        10439051896786491203ULL, 14384895171955972357ULL,
+        5927851693166360777ULL, 11569754272034889269ULL,
+        4430970383128354317ULL, 5846874248742118948ULL,
+        10468143681461831282ULL, 16139685883988307604ULL,
+        16139685883988307604ULL, 14919137624718806277ULL,
+    };
+    require(platform.frame_hashes == expected_frames,
+            "RPG travel selector's twelve rows, two scrolls, final clamp, "
+            "or reloaded map pixels differ");
 }
 
 void test_rpg_field_magic_travel_current(
