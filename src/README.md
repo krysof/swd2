@@ -299,6 +299,17 @@ EOF
 逆向和场景定位参考；manifest 会明确标记 `status=reference_only`，不能冒充像素门要求的
 原始索引像素、逐帧 VGA 调色板和完整 `SWD2FRM2` 基准。
 
+已登记的 RPG 标题/读档 RGB 抽查可把五张带 SHA-256 的 DOSBox PNG 与烟雾回放的
+指定现代帧逐 RGB 像素比较；每张必须 64,000 像素零差异：
+
+```sh
+./scripts/compare-dosbox-rgb-frame.py \
+  scripts/rpg-opening-rgb-reference.json ORIGINAL_PNG_DIR \
+  build/replay-smoke.swd2frames --game game
+```
+
+这仍是明确标记的场景抽查，不等于全部 RPG/FIG 的索引像素完成门。
+
 模拟并验证启动器协议。列表中的每一项是相应子模块返回的共享标记：
 
 ```sh

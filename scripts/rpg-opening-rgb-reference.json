@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "RGB observations prove these visible pages only; they do not replace indexed-palette SWD2FRM2 evidence for every RPG/FIG scene.",
+  "program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "frames": [
+    {
+      "label": "RPG title default New Game",
+      "original": "s018.png",
+      "sha256": "0332eb1b1da041237419216b7a156ba4693b74111681dd83507d6d6d009849c2",
+      "rewrite_frame": 87
+    },
+    {
+      "label": "RPG title Continue selected",
+      "original": "s019.png",
+      "sha256": "ac44104a1f6e607d2c990526116a882ab3a1e5f29255c2d6ba88fef7683e3f22",
+      "rewrite_frame": 88
+    },
+    {
+      "label": "RPG Continue five-slot selector",
+      "original": "s020.png",
+      "sha256": "b6a1fa64925ecbc54745ac3d0d85f96618a02a3a3cae53849614aafceb19ea59",
+      "rewrite_frame": 89
+    },
+    {
+      "label": "RPG Continue confirmation card",
+      "original": "s024.png",
+      "sha256": "9e63561f79344ca3efb21f50798be0c3f55b53312ee6401128c125b7dbfd47d2",
+      "rewrite_frame": 90
+    },
+    {
+      "label": "RPG loaded world page",
+      "original": "s033.png",
+      "sha256": "839717702c2928956ba56262c66610d53c6e3b2e0984c3ab186576c29f595640",
+      "rewrite_frame": 112
+    }
+  ]
+}
