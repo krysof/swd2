@@ -36,6 +36,7 @@
 #include <map>
 #include <optional>
 #include <queue>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -533,11 +534,35 @@ void verify_battles(const std::filesystem::path& game_root) {
             swd2::decode_rsk_block(read_binary_file(path)).data));
         ++fighter_archives;
     }
+    std::set<std::uint16_t> weapon_items;
+    const std::regex weapon_name{R"(^SW([0-9]{3})\.RSK$)"};
+    for (const auto& entry : std::filesystem::directory_iterator(game_root / "SW")) {
+        if (!entry.is_regular_file()) continue;
+        std::smatch match;
+        const auto filename = entry.path().filename().string();
+        if (!std::regex_match(filename, match, weapon_name)) continue;
+        const auto weapon = static_cast<std::uint16_t>(std::stoul(match[1].str()));
+        if (!weapon_items.insert(weapon).second) {
+            throw std::runtime_error("duplicate FIG weapon archive id");
+        }
+        const auto archive = swd2::SpriteArchive::parse(
+            swd2::decode_rsk_block(
+                read_binary_file(entry.path())).data);
+        if (archive.sprites().empty()) {
+            throw std::runtime_error("empty FIG weapon archive: " + filename);
+        }
+    }
+    if (weapon_items.size() != 50U || !weapon_items.contains(0) ||
+        !weapon_items.contains(117) || !weapon_items.contains(164) ||
+        !weapon_items.contains(324)) {
+        throw std::runtime_error("released FIG weapon archive set changed");
+    }
     std::cout << "verified ORC battle data: " << battles.directory_entry_count()
               << " directory entries, " << battles.encounter_count() << " unique encounters, "
               << backgrounds.size() << " backgrounds, " << definitions.size()
               << " monster definitions, " << monster_sprites.size() << " monster archives, "
-              << fighter_archives << " fighter archives; MON 17x17 matrix and "
+              << fighter_archives << " fighter archives, "
+              << weapon_items.size() << " weapon archives; MON 17x17 matrix and "
               << mon.value_entry_count() << " value entries; "
               << abilities.abilities().size() << " FIG ability records\n";
 }

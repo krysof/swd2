@@ -1286,9 +1286,14 @@ void draw_weapon_overlay(BattleSurface& surface,
                          const std::filesystem::path& game_root,
                          int target_x, int target_y) {
     const auto path = weapon_path(game_root, animation.item_id);
-    if (!std::filesystem::exists(path)) return;
+    if (!std::filesystem::exists(path)) {
+        throw std::runtime_error(
+            "FIG weapon animation resource is missing: " + path.string());
+    }
     const auto archive = load_sprites(path);
-    if (archive.sprites().empty()) return;
+    if (archive.sprites().empty()) {
+        throw std::runtime_error("FIG weapon animation archive is empty");
+    }
     const auto placement = fig_weapon_placement(target_x, target_y);
     if (animation.mirrored) {
         blit_mirrored(surface, archive, 0, placement.left, placement.top);

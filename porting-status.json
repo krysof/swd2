@@ -186,6 +186,10 @@
   "completion_commands": [
     "cmake --build build -j4",
     "ctest --test-dir build --output-on-failure",
+    "build/src/swd2_rewrite --game game --verify-resources",
+    "build/src/swd2_rewrite --game game --verify-maps",
+    "build/src/swd2_rewrite --game game --verify-battles",
+    "build/src/swd2_rewrite --game game --verify-legacy-program-data",
     "build/src/swd2_rewrite --game game --verify-events",
     "./scripts/audit-runtime-sources.py",
     "./scripts/build-wasm.sh",

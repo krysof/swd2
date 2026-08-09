@@ -151,4 +151,21 @@ if(BUILD_TESTING)
         NAME reachable_event_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-events
     )
+    add_test(
+        NAME resource_audit
+        COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-resources
+    )
+    add_test(
+        NAME map_audit
+        COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-maps
+    )
+    add_test(
+        NAME battle_audit
+        COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-battles
+    )
+    add_test(
+        NAME legacy_program_data_audit
+        COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
+                --verify-legacy-program-data
+    )
 endif()
