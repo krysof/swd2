@@ -348,6 +348,7 @@ if(BUILD_TESTING)
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-speed-wrap.py"
                 "${CMAKE_BINARY_DIR}/rpg-system-speed-wrap-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-system-speed-wrap-frames.bin"
     )
     set_tests_properties(rpg_system_speed_wrap_validation PROPERTIES
         DEPENDS rpg_system_speed_wrap_replay)
@@ -369,6 +370,7 @@ if(BUILD_TESTING)
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-exit.py"
                 "${CMAKE_BINARY_DIR}/rpg-system-exit-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-system-exit-frames.bin"
     )
     set_tests_properties(rpg_system_exit_validation PROPERTIES
         DEPENDS rpg_system_exit_replay)

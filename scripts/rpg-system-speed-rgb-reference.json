@@ -13,42 +13,102 @@
       "original": "000190.png",
       "sha256": "141ca9396e944c2be36660fbb4528eef266f54f884dd5ea0c5129702b17988ba",
       "rewrite_frame": 119,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "44a5ad7c708deadd2741aa1d2de7bfbd33301daff3c69091c9d1068d04620940",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "be429ae0ff37ef93899bce1bdb7c4d627ab4fca7241bf9a1f53dc787d2f6e7a3",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System speed value two",
       "original": "000200.png",
       "sha256": "8fad077066e7de09860fdcf339222b44347d9d576f08bc36ac38a9d647176d3e",
       "rewrite_frame": 120,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "36e5c8b7b977519c72de5d411e4b9679d9947c9a89d4ba235dfddaefcee5ddaa",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "23ff95cc03930707fb1cfbbcaf3ecb3fb08e7eae5797dc0ac8265292d7c0b673",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System speed value three",
       "original": "000215.png",
       "sha256": "1003a0cecab14cb399bf0feeaf3bc277c9f59d6790607e4c7ab293ee9e865f64",
       "rewrite_frame": 121,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "aa86b2b1e2d88245784aeff65f1d4847e84ce101bfd67e1b5ae88a963f557a94",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "fbe9191ed1a6639dc9f0d862dff3ff9e4c61f54b88820e0eb82f831aeccee38b",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System speed value four",
       "original": "000230.png",
       "sha256": "d40e76fde3f8e04a498b6fecdeb7a9ef2130e5dfd4465d4edd17b8d51a92736c",
       "rewrite_frame": 122,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "6295ae3178475663be9afd74ca44c432c7dddec489f74e938eec51d0da3214aa",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "970b4fc99ddf0b5768e1ac535915b0063c3dcc38b543e6fd9dd59d8734ef2eec",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System speed value five",
       "original": "000245.png",
       "sha256": "6ae8bbd4428eb0f87da380ec5f1cfadaec52275999a7c9edaf8d2fe41c0a8fbb",
       "rewrite_frame": 123,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "4581b42187cf4dc6c19261027547ddc375c7d6a8853da4af0397af42ab07dee0",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "b4116bdeb7a09e43d1dd5994e3ffb4fc5b3c6f99d8e3382d0fe4bd3759b24897",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System speed Right wrap to value one",
       "original": "000260.png",
       "sha256": "141ca9396e944c2be36660fbb4528eef266f54f884dd5ea0c5129702b17988ba",
       "rewrite_frame": 124,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "44a5ad7c708deadd2741aa1d2de7bfbd33301daff3c69091c9d1068d04620940",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "be429ae0ff37ef93899bce1bdb7c4d627ab4fca7241bf9a1f53dc787d2f6e7a3",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     }
   ]
 }

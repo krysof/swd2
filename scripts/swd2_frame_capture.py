@@ -38,7 +38,8 @@ def load_indexed_frames(path: Path) -> list[tuple[bytes, bytes]]:
             raise ValueError(f"unknown frame record {tag!r}")
         width, height, direct, reserved = struct.unpack(
             "<IIB3s", take(12, "frame header"))
-        if (width, height, direct, reserved) != (320, 200, 0, b"\0\0\0"):
+        if (width, height) != (320, 200) or direct not in (0, 1) or \
+                reserved != b"\0\0\0":
             raise ValueError("unexpected indexed VGA frame header")
         frames.append((
             take(320 * 200, "indexed pixels"),

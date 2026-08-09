@@ -13,7 +13,17 @@
       "original": "000225.png",
       "sha256": "4db60583c08e6c2e4667cc6bce6442f14eee4273995fc436c4b007837ee9c503",
       "rewrite_frame": 123,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "8e7ee7216b945d22efa0e888baed3ec3d2691680182939e0a1b8f4977743f702",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "c7aaff73e52530dbf6b43e0359356c46db856ac41434cbe4fc53def44282a074",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     }
   ]
 }
