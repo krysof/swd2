@@ -7946,6 +7946,62 @@ void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
             "RPG action-29h travel list/map reload frames were not stable");
 }
 
+void test_rpg_field_magic_travel_scroll(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::left,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // actor zero
+        swd2::InputAction::confirm,  // ability 99 / action 29h
+        swd2::InputAction::confirm,  // Use
+    };
+    // 3725 caps the visible list at ten rows. Eleven Down inputs therefore
+    // move through the first ten rows and then scroll the window twice while
+    // retaining the cursor on its bottom row; the twelfth proves the lower
+    // edge remains clamped.
+    platform.actions.insert(
+        platform.actions.end(), 12U, swd2::InputAction::down);
+    platform.actions.push_back(swd2::InputAction::confirm);
+    platform.actions.push_back(swd2::InputAction::quit);
+
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    constexpr auto actor_base = 0x106U;
+    state.set_u8(actor_base + 0x6dU, 99U);
+    state.set_u16(actor_base + 0x55U, 100U);
+    // Include disabled nonzero values as well as zeros. 37b7 skips zeros to
+    // find candidates, while 37cd only counts and draws entries equal to one.
+    for (std::size_t index = 0; index < 35U; ++index) {
+        state.set_u8(0x51eU + index, 0U);
+    }
+    constexpr std::array<std::size_t, 12> unlocked{
+        0U, 2U, 3U, 5U, 7U, 8U, 11U, 13U, 17U, 20U, 27U, 33U,
+    };
+    for (const auto index : unlocked) state.set_u8(0x51eU + index, 1U);
+    state.set_u8(0x51eU + 1U, 2U);
+    state.set_u8(0x51eU + 6U, 0x80U);
+    state.set_u8(0x51eU + 34U, 0x0fU);
+    require((state.u16(0x408U) & 0x8000U) != 0U,
+            "fixture no longer permits scrolling action-29h travel");
+
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
+                context.shared_state.u16(actor_base + 0x55U) == 85U &&
+                context.shared_state.map_location_directory_offset() == 0x0372U,
+            "RPG scrolling travel list did not map ordinal 11 back to SAVE+53f");
+    require(platform.cursor == platform.actions.size() &&
+                platform.presented == 20U && platform.stop_calls == 1U,
+            "RPG 12-destination travel selector did not preserve its input/frame boundaries");
+    require(platform.frame_hashes[6] != platform.frame_hashes[15] &&
+                platform.frame_hashes[15] != platform.frame_hashes[16] &&
+                platform.frame_hashes[16] != platform.frame_hashes[17] &&
+                platform.frame_hashes[17] == platform.frame_hashes[18] &&
+                platform.frame_hashes[19] != platform.frame_hashes[0],
+            "RPG travel selector did not scroll twice and clamp on its last row");
+}
+
 void test_rpg_field_magic_travel_current(
     const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
@@ -10010,6 +10066,7 @@ int main(int argc, char** argv) {
         test_rpg_field_magic_material_cast(argv[1]);
         test_rpg_field_magic_material_error(argv[1]);
         test_rpg_field_magic_travel(argv[1]);
+        test_rpg_field_magic_travel_scroll(argv[1]);
         test_rpg_field_magic_travel_current(argv[1]);
         test_rpg_field_magic_travel_restricted(argv[1]);
         test_rpg_system_menu_speed_and_exit(argv[1]);
