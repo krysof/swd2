@@ -267,6 +267,23 @@ FNV 摘要用于快速确定性比较，最终证据文件本身仍由完成门�
 调色板，只有严格回放成功消费全部输入后才写 `DONE` 结尾。可用
 `scripts/compare-frame-captures.py` 对原版基准和重写输出做零容差、字节级现场比较。
 
+原版流程可先用隔离的 DOSBox-X 驱动生成可复查的 RGB 录像和抽帧：
+
+```sh
+cat > original-input.txt <<'EOF'
+# DOSBox-X AUTOTYPE key tokens, in delivery order.
+enter kp_2 enter
+EOF
+./scripts/capture-original-dosbox.py \
+  --autotype original-input.txt --time-limit 60 --extract-fps 1 \
+  --output /tmp/swd2-original-reference
+```
+
+工具把发行文件复制到临时 `C:\\SWD2`、固定 DOS 日期/时间，保存 ZMBV 录像、输入序列、
+程序/录像/抽帧 SHA-256 和媒体参数。该录像经过 DOSBox-X VGA DAC 转成 RGB，只能作为
+逆向和场景定位参考；manifest 会明确标记 `status=reference_only`，不能冒充像素门要求的
+原始索引像素、逐帧 VGA 调色板和完整 `SWD2FRM2` 基准。
+
 模拟并验证启动器协议。列表中的每一项是相应子模块返回的共享标记：
 
 ```sh
