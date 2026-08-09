@@ -115,7 +115,7 @@
         "桌面、WASM、手柄和触摸路径不丢失或误消费动作"
       ],
       "evidence": ["src/include/swd2/platform.hpp", "src/include/swd2/replay_input.hpp", "src/replay_input.cpp", "src/sdl_platform.cpp", "src/tests/test_main.cpp", "src/tests/test_sdl_platform.cpp"],
-      "remaining": ["在真实浏览器验证键盘与仅 ESC/回车触摸按钮", "在至少一个真实手柄和非 macOS 桌面后端完成交叉测试"]
+      "remaining": ["在真实浏览器验证键盘与上下左右/ESC/回车触摸按钮", "在至少一个真实手柄和非 macOS 桌面后端完成交叉测试"]
     },
     {
       "id": "save_roundtrips",

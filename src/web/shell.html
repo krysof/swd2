@@ -37,7 +37,18 @@
       min-width: 44px; min-height: 40px; padding: 8px 12px; font: inherit; touch-action: none;
     }
     button:active { background: #8b632f; transform: translateY(1px); }
-    .touch { display: flex; justify-content: center; margin: 16px auto 0; }
+    .touch {
+      display: flex; justify-content: center; align-items: center;
+      gap: clamp(18px, 6vw, 64px); margin: 16px auto 0;
+    }
+    .dpad {
+      display: grid; grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(2, 44px); gap: 5px;
+    }
+    .dpad [data-key="ArrowUp"] { grid-column: 2; grid-row: 1; }
+    .dpad [data-key="ArrowLeft"] { grid-column: 1; grid-row: 2; }
+    .dpad [data-key="ArrowDown"] { grid-column: 2; grid-row: 2; }
+    .dpad [data-key="ArrowRight"] { grid-column: 3; grid-row: 2; }
     .actions { display: flex; gap: 14px; }
     .actions button { min-width: 92px; font-weight: 800; }
     #error { min-height: 1.4em; margin: 8px 0 0; color: #ff9b8f; font-size: 13px; }
@@ -59,6 +70,12 @@
       <p class="hint">键盘方向键移动 · Enter 确认 · Esc 取消 · 存档保存在当前浏览器</p>
     </div>
     <div class="touch" aria-label="触摸控制">
+      <div class="dpad" aria-label="方向控制">
+        <button data-key="ArrowUp" aria-label="上">▲</button>
+        <button data-key="ArrowLeft" aria-label="左">◀</button>
+        <button data-key="ArrowDown" aria-label="下">▼</button>
+        <button data-key="ArrowRight" aria-label="右">▶</button>
+      </div>
       <div class="actions">
         <button data-key="Escape" aria-label="取消">ESC</button>
         <button data-key="Enter" aria-label="确认">回车</button>
@@ -165,7 +182,10 @@
       onAbort(reason) { errorText.textContent = `启动失败：${reason}`; }
     };
 
-    const keyCodes = { Enter: 13, Escape: 27 };
+    const keyCodes = {
+      Enter: 13, Escape: 27,
+      ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40
+    };
     function emitKey(type, key) {
       canvas.focus();
       const event = new KeyboardEvent(type, { key, code: key, bubbles: true, cancelable: true });

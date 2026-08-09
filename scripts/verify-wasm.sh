@@ -47,24 +47,24 @@ if grep -Eq '水浒|水滸' "$site/index.html"; then
 fi
 
 button_count="$(grep -o '<button' "$site/index.html" | wc -l | tr -d '[:space:]')"
-if [[ "$button_count" != "2" ]]; then
-  echo "error: index.html must contain exactly the ESC and Enter buttons (found $button_count)" >&2
+if [[ "$button_count" != "6" ]]; then
+  echo "error: index.html must contain four directions, ESC and Enter (found $button_count)" >&2
   exit 1
 fi
-for key in Escape Enter; do
+for key in ArrowUp ArrowDown ArrowLeft ArrowRight Escape Enter; do
   grep -Eq "data-key=(\"$key\"|'$key'|$key)([[:space:]>])" "$site/index.html" || {
     echo "error: index.html is missing the $key control" >&2
     exit 1
   }
 done
-for label in ESC 回车; do
+for label in ▲ ▼ ◀ ▶ ESC 回车; do
   grep -Fq ">$label</button>" "$site/index.html" || {
     echo "error: index.html is missing the $label button label" >&2
     exit 1
   }
 done
-if grep -Eq 'data-key=("Arrow(Up|Down|Left|Right)"|Arrow(Up|Down|Left|Right))([[:space:]>])|id=("fullscreen"|fullscreen)([[:space:]>])' "$site/index.html"; then
-  echo "error: index.html exposes controls other than ESC and Enter" >&2
+if grep -Eq 'id=("fullscreen"|fullscreen)([[:space:]>])' "$site/index.html"; then
+  echo "error: index.html unexpectedly exposes a fullscreen control" >&2
   exit 1
 fi
 
