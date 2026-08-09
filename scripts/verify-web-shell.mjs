@@ -220,4 +220,109 @@ if (actionEvents.join('|') !== 'keydown:Escape|keyup:Escape' ||
   throw new Error('ESC must stay single-shot while directions repeat');
 }
 
-console.log('Web shell start/held-direction smoke: OK');
+// Execute the diagnostic in two fresh page contexts backed by one simulated
+// persistent store.  This is not a substitute for the real-browser matrix,
+// but it proves the shipped reload probe itself writes, commits, reloads,
+// compares exact bytes, cleans up, and exposes the authoritative pass marker.
+const persistedFiles = new Map();
+const sessionValues = new Map();
+function makeIdbfsPage() {
+  const pageIds = Object.fromEntries(
+    ['canvas', 'status-wrap', 'status', 'progress', 'error',
+     'start-gate', 'start-button'].map(id => [id, new Element(id)]));
+  const pageButtons = [
+    'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'Escape', 'Enter'
+  ].map(key => {
+    const button = new Element(key);
+    button.dataset.key = key;
+    return button;
+  });
+  const pageDocument = {
+    documentElement: new Element('html'),
+    visibilityState: 'visible',
+    getElementById: id => pageIds[id],
+    querySelectorAll: selector => selector === '[data-key]' ? pageButtons : [],
+    addEventListener() {},
+  };
+  const pageWindow = {
+    AudioContext: AudioContextMock,
+    addEventListener() {},
+  };
+  const memoryFiles = new Map();
+  const pageDependencies = new Set();
+  let reloads = 0;
+  const pageContext = {
+    console,
+    document: pageDocument,
+    window: pageWindow,
+    screen: { orientation: { lock() { return Promise.resolve(); } } },
+    navigator: {},
+    location: {
+      search: '?idbfs-self-test=roundtrip-token',
+      reload() { ++reloads; },
+    },
+    URLSearchParams,
+    sessionStorage: {
+      getItem(key) { return sessionValues.get(key) ?? null; },
+      setItem(key, value) { sessionValues.set(key, String(value)); },
+      removeItem(key) { sessionValues.delete(key); },
+    },
+    FS: {
+      mkdir() {},
+      mount() {},
+      writeFile(path, value) { memoryFiles.set(path, String(value)); },
+      readFile(path, options) {
+        if (!memoryFiles.has(path)) throw new Error(`missing file ${path}`);
+        if (options?.encoding !== 'utf8') throw new Error('unexpected encoding');
+        return memoryFiles.get(path);
+      },
+      unlink(path) {
+        if (!memoryFiles.delete(path)) throw new Error(`missing file ${path}`);
+      },
+      syncfs(load, callback) {
+        const source = load ? persistedFiles : memoryFiles;
+        const destination = load ? memoryFiles : persistedFiles;
+        destination.clear();
+        for (const [path, value] of source) destination.set(path, value);
+        callback(null);
+      },
+    },
+    IDBFS: {},
+    addRunDependency(name) { pageDependencies.add(name); },
+    removeRunDependency(name) { pageDependencies.delete(name); },
+    setTimeout: fakeSetTimeout,
+    clearTimeout: fakeClearTimeout,
+    setInterval: fakeSetInterval,
+    clearInterval: fakeClearInterval,
+    KeyboardEvent: context.KeyboardEvent,
+  };
+  vm.createContext(pageContext);
+  vm.runInContext(code, pageContext);
+  return {
+    context: pageContext,
+    ids: pageIds,
+    dependencies: pageDependencies,
+    reloads: () => reloads,
+  };
+}
+
+const firstIdbfsPage = makeIdbfsPage();
+firstIdbfsPage.context.Module.preRun[0]();
+if (firstIdbfsPage.reloads() !== 1 ||
+    persistedFiles.get('/saves/.swd2-idbfs-restart-probe') !==
+      'SWD2-IDBFS:roundtrip-token' ||
+    sessionValues.get('swd2-idbfs-self-test-token') !== 'roundtrip-token' ||
+    !firstIdbfsPage.dependencies.has('swd2-idbfs')) {
+  throw new Error('IDBFS diagnostic did not commit its first-page probe');
+}
+
+const secondIdbfsPage = makeIdbfsPage();
+secondIdbfsPage.context.Module.preRun[0]();
+if (secondIdbfsPage.reloads() !== 0 || persistedFiles.size !== 0 ||
+    sessionValues.has('swd2-idbfs-self-test-token') ||
+    secondIdbfsPage.context.document.documentElement.dataset.idbfsSelfTest !== 'pass' ||
+    secondIdbfsPage.ids.error.textContent !== '') {
+  throw new Error('IDBFS diagnostic did not restore, verify, and clean its probe');
+}
+
+console.log('Web shell start/held-direction and IDBFS reload smoke: OK');

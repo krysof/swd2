@@ -40,7 +40,10 @@ for pattern in \
     exit 1
   }
 done
+if command -v node >/dev/null 2>&1; then
+  node "$root/scripts/verify-web-shell.mjs" "$shell"
+fi
 
 printf '%s\n' \
-  'SAVE/MAPZ verification: native five-slot, live new-game pair, explicit Record routing, and --no-save isolation passed; automatic IDBFS reload probe is built in.' \
+  'SAVE/MAPZ verification: native five-slot, live new-game pair, explicit Record routing, --no-save isolation, and simulated IDBFS reload passed.' \
   'Run the WASM site with ?idbfs-self-test=TOKEN in a real browser and require data-idbfs-self-test="pass".'
