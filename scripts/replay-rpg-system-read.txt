@@ -1,0 +1,12 @@
+# Reach the loaded world and select System / Read.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:CONFIRM
+WAIT:DOWN*2
+WAIT:CONFIRM
+# Visit all five slots, wrap to slot one, then show default Yes.
+WAIT:RIGHT*5
+WAIT:CONFIRM
+WAIT:QUIT

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The crops lock all five Read slots, right-edge wrap, and default-Yes confirmation over the fully covered bottom panel. The replay stops before replacing the live save triple.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG System Read slot one",
+      "original": "000158.png",
+      "sha256": "87b37bdbf32725ba8306bfb065ba6756fbc579dfff87e14db60a3f4df7d2bea2",
+      "rewrite_frame": 117,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Read slot two",
+      "original": "000170.png",
+      "sha256": "be2040aef32abef55ff02156af8172fb892022bd5964e640581347c216b25255",
+      "rewrite_frame": 118,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Read slot three",
+      "original": "000182.png",
+      "sha256": "0bdc77f216daae02a7a6427205c33c8af1c0eba7604fb339ff19247ba85a5f73",
+      "rewrite_frame": 119,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Read slot four",
+      "original": "000195.png",
+      "sha256": "54921da5e3b38ff9ab36a6017ac1435801b41b0cfb0ee2e4d271200fccc83fba",
+      "rewrite_frame": 120,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Read slot five",
+      "original": "000207.png",
+      "sha256": "2476e67bcd579194b2d843c2b8a6ec909d1e98d4bd588ef18f5c8200812700c7",
+      "rewrite_frame": 121,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Read Right wrap to slot one",
+      "original": "000220.png",
+      "sha256": "87b37bdbf32725ba8306bfb065ba6756fbc579dfff87e14db60a3f4df7d2bea2",
+      "rewrite_frame": 122,
+      "crop": [16, 116, 284, 80]
+    },
+    {
+      "label": "RPG System Read slot one default Yes",
+      "original": "000240.png",
+      "sha256": "0c29b61a25c026465a80065a78739550ac33df7f2c79541ea164a7f1f13ac8e7",
+      "rewrite_frame": 123,
+      "crop": [16, 116, 284, 80]
+    }
+  ]
+}
