@@ -1474,6 +1474,7 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     std::size_t event_pointer_mutations = 0;
     std::size_t invisible_fixed_bss_operations = 0;
     std::set<std::uint16_t> opcode37_destinations;
+    std::array<std::size_t, 11> opcode3_field_mutations{};
     std::set<std::tuple<std::string, std::uint16_t, std::uint16_t,
                         std::size_t>> dynamic_entity_contexts;
     while (!pending.empty()) {
@@ -1505,6 +1506,10 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
             if (first_record_visit) {
                 audit.opcodes.insert(command.opcode);
                 all_opcodes.insert(command.opcode);
+                if (command.opcode == 3U && command.arguments.size() >= 2U &&
+                    command.arguments[0] < opcode3_field_mutations.size()) {
+                    ++opcode3_field_mutations[command.arguments[0]];
+                }
             }
 
             if (((command.opcode >= 23U && command.opcode <= 27U) ||
@@ -1689,6 +1694,12 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         throw std::runtime_error(
             "reachable RPG event graph differs from the audited release");
     }
+    const std::array<std::size_t, 11> expected_opcode3_field_mutations{
+        200U, 0U, 2U, 63U, 0U, 0U, 0U, 0U, 0U, 403U, 0U};
+    if (opcode3_field_mutations != expected_opcode3_field_mutations) {
+        throw std::runtime_error(
+            "reachable opcode 3 field distribution differs from the release");
+    }
 
     // RPG:0edc performs the same immediate centre-cell MAP0 probe after an
     // opcode-37 area load as e94 does after a normal portal. Lock every
@@ -1829,6 +1840,8 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << " invisible fixed-BSS slot operation; "
               << opcode37_spawn_special_destinations.size()
               << " opcode-37 immediate MAP0 spawn contexts; "
+              << opcode3_field_mutations[0]
+              << " opcode-3 transient sprite-base writes; "
               << visited_states.size() * 2U
               << " entity-context executions, "
               << context_commands[0] + context_commands[1]

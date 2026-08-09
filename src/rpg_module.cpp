@@ -552,6 +552,10 @@ void draw_world_characters(
     std::map<std::uint16_t, SpriteArchive>& animation_sets) {
     const auto cell_base = state.u16(0x40f);
     const auto map_width = state.map_width();
+    if (area.entity_sprite_resources.size() != area.entity_count()) {
+        throw std::runtime_error(
+            "world renderer received an unprepared MAPZ entity table");
+    }
     const auto party_count = std::min<std::size_t>(
         4U, static_cast<std::size_t>(state.u16(0x10) + state.u16(0x102)));
 
@@ -590,7 +594,8 @@ void draw_world_characters(
                 entity.behavior != 6) {
                 frame_index += entity.direction;
             }
-            const auto resource = static_cast<std::uint16_t>(entity.sprite >> 8U);
+            const auto resource = static_cast<std::uint16_t>(
+                area.entity_sprite_resources[index]);
             if (resource == 0) {
                 if (frame_index >= actors.sprites().size()) continue;
                 const auto& sprite = actors.sprites()[frame_index];
@@ -907,6 +912,7 @@ public:
             cutscene_frame_index_ = 0;
             reset_direct_page_layers();
             palette_dark_ = false;
+            prepare_runtime_map_area(area);
             relocated_area_ = &area;
             auto graphics = normalize_dos_asset_path(
                 state_.area_graphics_path());
@@ -4348,6 +4354,7 @@ Marker RpgModule::run(GameContext& context, Marker) {
         location.area = std::move(*relocated_transient_area);
         relocated_transient_area.reset();
     }
+    prepare_runtime_map_area(location.area);
     context.shared_state.set_u16(0x417, map.layout().width);
     context.shared_state.set_u16(0x419, map.layout().height);
     if (pending_map_reload_) {

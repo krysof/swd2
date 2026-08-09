@@ -5718,6 +5718,9 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
         swd2::ScriptArchive::from_records(entity_frame_records);
     swd2::MapAreaRecord entity_frame_area;
     for (auto& field : entity_frame_area.entity_fields) field.resize(1);
+    entity_frame_area.entity_fields[0][0] = 0x4402U;
+    swd2::prepare_runtime_map_area(entity_frame_area);
+    swd2::prepare_runtime_map_area(entity_frame_area);  // Runtime reload guard.
     auto entity_frame_state =
         swd2::SharedState::load(game_root / "SAVE.DA1");
     const auto before_entity_frames = host.presentations;
@@ -5726,8 +5729,24 @@ void test_stateful_event_opcodes(const std::filesystem::path& game_root) {
         &entity_frame_area, 0, host);
     require(entity_frame.status == swd2::EventVmStatus::completed &&
                 entity_frame_area.entity_fields[0][0] == 7 &&
+                entity_frame_area.entity_sprite_resources ==
+                    std::vector<std::uint8_t>({0x44U}) &&
                 host.presentations == before_entity_frames + 1U,
-            "event opcode 39 did not present its rebuilt entity frame");
+            "event opcode 39 changed the loaded SA resource with its frame");
+
+    const std::vector<std::vector<std::uint8_t>> persistent_frame_records = {
+        event_words({3, 0, 0x31, 0xffff}),
+    };
+    const auto persistent_frame_archive =
+        swd2::ScriptArchive::from_records(persistent_frame_records);
+    const auto persistent_frame = swd2::execute_event(
+        persistent_frame_archive, 2, entity_frame_state,
+        &entity_frame_area, 0, host);
+    require(persistent_frame.status == swd2::EventVmStatus::completed &&
+                entity_frame_area.entity_fields[0][0] == 0x31U &&
+                entity_frame_area.entity_sprite_resources ==
+                    std::vector<std::uint8_t>({0x44U}),
+            "event opcode 3 changed the loaded SA resource with its frame");
 
     const std::vector<std::vector<std::uint8_t>> byte_slot_records = {
         event_words({54, 0x20, 0x1234, 0xffff}),

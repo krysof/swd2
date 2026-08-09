@@ -19,6 +19,11 @@ struct MapAreaRecord {
     std::uint16_t flags{};
     std::uint16_t auxiliary{};
     std::array<std::vector<std::uint16_t>, 11> entity_fields;
+    // RPG:10fd turns field 0's high byte into a per-entity sprite-segment
+    // pointer, then masks the transient field word to its low byte. Keep the
+    // loaded resource separate so opcodes 3/39 can replace the frame base
+    // without accidentally switching the already-loaded SA archive.
+    std::vector<std::uint8_t> entity_sprite_resources;
     std::string graphics_path;
     std::string layout_path;
     std::string music_path;
@@ -45,6 +50,10 @@ struct MapEntityRecord {
 };
 
 [[nodiscard]] MapEntityRecord map_entity(const MapAreaRecord& area, std::size_t index);
+
+// Converts a raw MAPA/MAPZ area copy into the transient representation built
+// by RPG:10fd. Calling it again on an already-prepared runtime area is a no-op.
+void prepare_runtime_map_area(MapAreaRecord& area);
 
 struct MapLocationRecord {
     // Byte position of this location's pointer in the archive directory. The

@@ -280,6 +280,22 @@ MapEntityRecord map_entity(const MapAreaRecord& area, std::size_t index) {
     };
 }
 
+void prepare_runtime_map_area(MapAreaRecord& area) {
+    if (!area.entity_sprite_resources.empty()) {
+        if (area.entity_sprite_resources.size() != area.entity_count()) {
+            throw std::runtime_error(
+                "runtime MAPZ sprite-resource table has the wrong size");
+        }
+        return;
+    }
+    area.entity_sprite_resources.reserve(area.entity_count());
+    for (auto& sprite : area.entity_fields[0]) {
+        area.entity_sprite_resources.push_back(
+            static_cast<std::uint8_t>(sprite >> 8U));
+        sprite &= 0x00ffU;
+    }
+}
+
 void install_map_location(SharedState& state, MapDatabase& database,
                           std::uint16_t encoded_directory_offset) {
     const auto relative_position =
