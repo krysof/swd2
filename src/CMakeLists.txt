@@ -275,4 +275,58 @@ if(BUILD_TESTING)
     )
     set_tests_properties(new_game_exit_checkpoint_validation PROPERTIES
         DEPENDS new_game_exit_checkpoint_replay)
+    add_test(
+        NAME explicit_save_routing_prepare
+        COMMAND "${CMAKE_COMMAND}" -E remove_directory
+                "${CMAKE_BINARY_DIR}/explicit-save-routing-saves"
+    )
+    add_test(
+        NAME explicit_save_routing_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/explicit-save-routing-saves"
+                --slot 1
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-explicit-save.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/explicit-save-routing-trace.json"
+    )
+    set_tests_properties(explicit_save_routing_replay PROPERTIES
+        DEPENDS explicit_save_routing_prepare)
+    add_test(
+        NAME explicit_save_routing_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-explicit-save-routing.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/explicit-save-routing-saves"
+                "${CMAKE_BINARY_DIR}/explicit-save-routing-trace.json"
+    )
+    set_tests_properties(explicit_save_routing_validation PROPERTIES
+        DEPENDS explicit_save_routing_replay)
+    add_test(
+        NAME no_save_mode_prepare
+        COMMAND "${CMAKE_COMMAND}" -E remove_directory
+                "${CMAKE_BINARY_DIR}/no-save-mode-saves"
+    )
+    add_test(
+        NAME no_save_mode_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/no-save-mode-saves"
+                --slot 1
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-explicit-save.txt"
+    )
+    set_tests_properties(no_save_mode_replay PROPERTIES
+        DEPENDS no_save_mode_prepare)
+    add_test(
+        NAME no_save_mode_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-no-save-mode.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/no-save-mode-saves"
+    )
+    set_tests_properties(no_save_mode_validation PROPERTIES
+        DEPENDS no_save_mode_replay)
 endif()

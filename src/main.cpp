@@ -642,9 +642,15 @@ void run_monolithic(const std::filesystem::path& game_root,
     auto slot = swd2::SaveSlot::open(game_root, save_root, slot_number);
     swd2::GameContext context{
         game_root, slot.state(), platform, slot.map_database(),
-        [&save_root](std::uint8_t selected, const swd2::SharedState& state,
-                     const swd2::MapDatabase& map) {
+        [&slot, &game_root, &save_root, write_save](
+            std::uint8_t selected, const swd2::SharedState& state,
+            const swd2::MapDatabase& map) {
+            if (!write_save) return;
             swd2::SaveSlot::save_as(save_root, selected, state, map);
+            // Record changes the active DOS save pair.  The optional exit
+            // checkpoint must follow that chosen slot rather than silently
+            // writing the command-line seed slot as well.
+            slot = swd2::SaveSlot::open(game_root, save_root, selected);
             persist_browser_saves();
         },
         [&slot, &game_root, &save_root](std::uint8_t selected) {
@@ -698,9 +704,12 @@ void play_monolithic(const std::filesystem::path& game_root,
     auto slot = swd2::SaveSlot::open(game_root, save_root, slot_number);
     swd2::GameContext context{
         game_root, slot.state(), platform, slot.map_database(),
-        [&save_root](std::uint8_t selected, const swd2::SharedState& state,
-                     const swd2::MapDatabase& map) {
+        [&slot, &game_root, &save_root, write_save](
+            std::uint8_t selected, const swd2::SharedState& state,
+            const swd2::MapDatabase& map) {
+            if (!write_save) return;
             swd2::SaveSlot::save_as(save_root, selected, state, map);
+            slot = swd2::SaveSlot::open(game_root, save_root, selected);
             // Native renames are durable on return. In a browser /saves is
             // IDBFS, so every explicit system-menu save must also flush the
             // in-memory filesystem instead of waiting for the game to exit.

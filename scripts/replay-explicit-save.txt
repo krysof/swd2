@@ -1,0 +1,15 @@
+# Load slot one, enter System, toggle Music so SAVE changes, then Record into
+# slot four.  Leaving both menus and exiting the world proves the frontend's
+# optional exit checkpoint follows slot four instead of overwriting slot one.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:DOWN*3
+WAIT:CONFIRM
+WAIT:RIGHT*3
+WAIT:CONFIRM*2
+WAIT:CANCEL*2
+POLL:QUIT
