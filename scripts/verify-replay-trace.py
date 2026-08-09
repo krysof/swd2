@@ -70,6 +70,11 @@ def main() -> int:
         if video.get("last_width") != 320 or video.get("last_height") != 200:
             fail("trace did not end on the original 320x200 surface")
         digest(video.get("fnv1a64"), "video.fnv1a64")
+        frame_hashes = data.get("frame_fnv1a64")
+        if not isinstance(frame_hashes, list) or len(frame_hashes) != frames:
+            fail("trace does not contain exactly one digest per submitted frame")
+        for index, frame_hash in enumerate(frame_hashes):
+            digest(frame_hash, f"frame_fnv1a64[{index}]")
 
         audio = data.get("audio")
         if not isinstance(audio, dict):

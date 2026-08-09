@@ -231,6 +231,7 @@ public:
     std::uint64_t delay_milliseconds{};
     std::uint64_t frame_digest{14695981039346656037ULL};
     std::uint64_t audio_digest{14695981039346656037ULL};
+    std::vector<std::uint64_t> frame_hashes;
 
     [[nodiscard]] std::size_t input_count() const noexcept {
         return steps_.size();
@@ -264,6 +265,13 @@ private:
         last_height = surface.height;
         ++frames;
         if (direct) ++direct_updates;
+        auto frame_hash = std::uint64_t{14695981039346656037ULL};
+        mix(frame_hash, static_cast<std::uint64_t>(direct ? 1U : 0U));
+        mix(frame_hash, static_cast<std::uint64_t>(surface.width));
+        mix(frame_hash, static_cast<std::uint64_t>(surface.height));
+        mix(frame_hash, surface.pixels);
+        mix(frame_hash, surface.palette);
+        frame_hashes.push_back(frame_hash);
         mix(frame_digest, static_cast<std::uint64_t>(direct ? 1U : 0U));
         mix(frame_digest, static_cast<std::uint64_t>(surface.width));
         mix(frame_digest, static_cast<std::uint64_t>(surface.height));
@@ -377,6 +385,13 @@ void write_replay_trace(const std::filesystem::path& path,
            << ", \"last_height\": " << platform.last_height
            << ", \"fnv1a64\": \"" << hex_digest(platform.frame_digest)
            << "\"},\n"
+           << "  \"frame_fnv1a64\": [\n";
+    for (std::size_t index = 0; index < platform.frame_hashes.size(); ++index) {
+        output << "    \"" << hex_digest(platform.frame_hashes[index]) << '"';
+        if (index + 1U != platform.frame_hashes.size()) output << ',';
+        output << '\n';
+    }
+    output << "  ],\n"
            << "  \"audio\": {\"music_calls\": " << platform.music_calls
            << ", \"voice_calls\": " << platform.voice_calls
            << ", \"stop_music_calls\": " << platform.stop_music_calls
