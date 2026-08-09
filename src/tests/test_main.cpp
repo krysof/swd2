@@ -7973,14 +7973,16 @@ void test_rpg_field_magic_travel_scroll(
     // Spread the twelve released-format values across the complete table so
     // the selected visible ordinal must be mapped back across intervening
     // zero entries. Values other than 0/1/0fh are not produced by the game.
-    for (std::size_t index = 0; index < 35U; ++index) {
+    for (std::size_t index = 0; index < 36U; ++index) {
         state.set_u8(0x51eU + index, 0U);
     }
     constexpr std::array<std::size_t, 12> unlocked{
         0U, 2U, 3U, 5U, 7U, 8U, 11U, 13U, 17U, 20U, 27U, 33U,
     };
     for (const auto index : unlocked) state.set_u8(0x51eU + index, 1U);
-    state.set_u8(0x51eU + 34U, 0x0fU);
+    // The release files retain one reserved zero after the 34 labels and put
+    // the terminating 0fh at byte 35.
+    state.set_u8(0x51eU + 35U, 0x0fU);
     require((state.u16(0x408U) & 0x8000U) != 0U,
             "fixture no longer permits scrolling action-29h travel");
 
