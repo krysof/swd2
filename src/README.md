@@ -281,7 +281,8 @@ FNV 摘要用于快速确定性比较，最终证据文件本身仍由完成门�
 `scripts/compare-frame-captures.py` 对原版基准和重写输出做零容差、字节级现场比较。
 `scripts/original-fig-if.asm`/`build-original-fig-harness.sh` 则只用于隔离捕获未经修改的
 FIG.EXE。当前五类资源卡的确定性 IF 回放已与这些原版捕获在 VGA 第 0..197 行逐 RGB
-像素完全一致；底部两行是独立的循环调色板时相，未被伪装成静态容差。
+像素完全一致；底部两行是独立的循环调色板时相，未被伪装成静态容差。物品 51 的
+预览、类别、八行名称和数量页则连同底部两行都与原版完整 320×200 RGB 帧一致。
 
 仓库内的短启动检查点会实际走过 `MEO -> RPG(MT/ED) -> DEMO -> RPG(OM)`，装入
 `SAVE.DAQ/MAPZ.DAQ` 并执行开场实体后才从世界页退出：

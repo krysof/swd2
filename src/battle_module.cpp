@@ -811,8 +811,6 @@ BattleSurface compose_command_frame(
             }
         }
         const auto selected_row = cursor - first;
-        blit(result, menu_sprites, 1, 30 * 4,
-             9 + static_cast<int>(selected_row) * 16);
         for (std::size_t visible = 0; visible < 8 && first + visible < entries.size();
              ++visible) {
             const auto index = first + visible;
@@ -847,6 +845,11 @@ BattleSurface compose_command_frame(
                                  16 + static_cast<int>(visible) * 16);
             }
         }
+        // FIG 1ac2 shares 41a1's ordering: item names/counts precede the
+        // frame-1 selector overlay.  Drawing the bar first lets record zero's
+        // first glyph punch two black pixels through its lower edge.
+        blit(result, menu_sprites, 1, 30 * 4,
+             9 + static_cast<int>(selected_row) * 16);
     }
     draw_target_overlay();
     return finish_frame();

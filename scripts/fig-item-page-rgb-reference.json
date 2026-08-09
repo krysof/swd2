@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_item_page",
+  "item_id": 51,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-item-page-autotype.txt",
+  "capture_autotype_sha256": "a1b3868b311733973e77a76ea64271779b60f7a040ab3c2c603275f7ef72b9ec",
+  "fixture_save_sha256": "670eb2287c7f363fad62ad6ba99327a7e69d3eee947309bdf2306ff4044d9c3f",
+  "original_review_frame": 100,
+  "original_png_sha256": "072bcb388e68d1291b249ca49b5f21c7dd7eae679de6dc436c43d1ae0d19dfb6",
+  "original_rgb_sha256": "c8353b0bfff6a21a4eed79325be700d78eb0cc3c0aa6225cc41e892b3e3ba796",
+  "capture_video_sha256": "206134757821bd2f8c2c88d0e1d217b6d5d1f6efbf0cdb5519aa7857140daafc",
+  "capture_manifest_sha256": "909e01ce08dad39fad69429682dcfdb8ade499658a0449df9a60f631bec6b891",
+  "rewrite_video_fnv1a64": "6e33ae35d5756306",
+  "rewrite_state_fnv1a64": "b642bb1ac30e59ef",
+  "rewrite_final_fnv1a64": "692a2474de2cb466",
+  "rewrite_indexed_sha256": "06d20130a3988c3debb5b04ba55c11c94fa32583d9ffd6f18acbc0bfd8edae66",
+  "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+  "rewrite_rgb_sha256": "c8353b0bfff6a21a4eed79325be700d78eb0cc3c0aa6225cc41e892b3e3ba796"
+}

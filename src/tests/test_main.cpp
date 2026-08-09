@@ -9755,7 +9755,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 item_card_context, swd2::Marker::open_figure) ==
                 swd2::Marker::none && item_card_platform.presented == 4 &&
                 item_card_platform.frame_hashes.back() ==
-                    15441783918533631957ULL,
+                    11055461560149624076ULL,
             "FIG 1ac2 item-category card did not render");
 
     struct StatusCardCase {
