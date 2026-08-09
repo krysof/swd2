@@ -1,0 +1,17 @@
+# Load the four-member SWRO7 save and open restricted item 166's Equip action.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM*3
+# Exercise both horizontal portrait directions, then reject actor identity zero.
+WAIT:RIGHT
+WAIT:LEFT
+WAIT:CONFIRM
+# Skip only the typewriter delay, acknowledge the completed 369a page, then
+# cancel through Inventory and the field diamond before quitting on the map.
+TEXT:CONFIRM
+POLL:CONFIRM
+WAIT:CANCEL*2
+POLL:QUIT

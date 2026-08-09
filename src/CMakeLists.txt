@@ -702,6 +702,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_equipment_actors_validation PROPERTIES
         DEPENDS rpg_equipment_actors_prepare)
     add_test(
+        NAME rpg_equipment_errors_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-equipment-errors-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-equipment-errors-saves"
+    )
+    add_test(
+        NAME rpg_equipment_errors_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-equipment-errors.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-equipment-errors-saves"
+                "${CMAKE_BINARY_DIR}/rpg-equipment-errors"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-equipment-errors-rgb-reference.json"
+    )
+    set_tests_properties(rpg_equipment_errors_validation PROPERTIES
+        DEPENDS rpg_equipment_errors_prepare)
+    add_test(
         NAME rpg_magic_actors_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-party-target-fixture.py"

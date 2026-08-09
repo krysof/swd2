@@ -1,0 +1,17 @@
+# Load item 166, select the allowed actor identity 12, and enter equipment.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM*3
+WAIT:RIGHT
+WAIT:CONFIRM
+# Confirm row zero although item 166 belongs to a different equipment category.
+WAIT:CONFIRM
+TEXT:CONFIRM
+# Cancel acknowledges 3728; subsequent Cancels unwind Equipment, Inventory,
+# and the field diamond without changing the staged save.
+POLL:CANCEL
+WAIT:CANCEL*3
+POLL:QUIT

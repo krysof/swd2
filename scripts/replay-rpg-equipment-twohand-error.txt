@@ -1,0 +1,17 @@
+# Load a two-handed item while actor zero has two independently occupied hands.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM*3
+WAIT:RIGHT
+WAIT:LEFT
+WAIT:CONFIRM
+# Move from Head to the first hand and trigger the original 370e conflict.
+WAIT:DOWN*2
+WAIT:CONFIRM
+TEXT:CONFIRM
+POLL:CONFIRM
+WAIT:CANCEL*3
+POLL:QUIT
