@@ -3230,13 +3230,16 @@ bool present_defeat_summary(
     const LegacyFont& fallback, const BattleSession& session,
     const BattleAbilityDatabase& abilities) {
     play_battle_music(context, context.game_root / "RX" / "DEAD.RIX", false);
-    auto frame = compose_settlement_scene(
-        base_surface, encounter, items, context.game_root, menu_sprites,
-        std::span<const BattlePartyMember>(session.party()).first(
-            session.party_count()), session.monsters());
-    draw_message_panel(frame, menu_sprites, 26, 75, 6);
-    draw_fig_text(frame, font, fallback, abilities.defeat_text(),
-                  28, 84, 0x6b);
+    auto frame = base_surface;
+    draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
+                 session.monsters());
+    // FIG's defeat epilogue does not draw the extracted DATA:2e3f text or a
+    // party card.  After the final death page it leaves only the surviving
+    // monsters on the BA background while DEAD.RIX plays for 54 ticks.  The
+    // former compact red "全體陣亡" panel was a rewrite invention.
+    static_cast<void>(font);
+    static_cast<void>(fallback);
+    static_cast<void>(abilities);
     context.platform.present({
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
