@@ -617,6 +617,39 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_sell_validation PROPERTIES
         DEPENDS rpg_sell_replay)
     add_test(
+        NAME rpg_item_action_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-item-action-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-item-action-saves"
+    )
+    add_test(
+        NAME rpg_item_action_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-item-action-saves"
+                --slot 1
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-item-action.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-item-action-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-item-action-frames.bin"
+    )
+    set_tests_properties(rpg_item_action_replay PROPERTIES
+        DEPENDS rpg_item_action_prepare)
+    add_test(
+        NAME rpg_item_action_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-item-action.py"
+                "${CMAKE_BINARY_DIR}/rpg-item-action-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-item-action-frames.bin"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-item-action-rgb-reference.json"
+    )
+    set_tests_properties(rpg_item_action_validation PROPERTIES
+        DEPENDS rpg_item_action_replay)
+    add_test(
         NAME rpg_status_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

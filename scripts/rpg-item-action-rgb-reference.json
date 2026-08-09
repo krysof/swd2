@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "Five opaque 320x200 pages lock the complete four-direction Item action selector and its return to Use. DOSBox RGB cannot replace the registered rewrite's indexed VGA evidence.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "capture_video_sha256": "33c16dcb5a6ba8739499460a8190e81cd7cc95b8806387c2b48cf4f88853af69",
+  "capture_state": "SAVE.DAQ staged at SWRO7 with item 68 in slot zero and SAVE+3f1 cleared to expose the lower Alchemy card",
+  "rewrite_first_frame": 116,
+  "frames": [
+    {"choice": "use", "original": "000194.png", "original_sha256": "debdf9e87d579282371f1d536d26bdec827ddda2ee92889f11229d10d560eb5d", "rewrite_indexed_sha256": "5485353968b70038380874e305e81b93c56812d2987ca192d1de598a19f9812e", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "6b2c5ccdfd82b9ed8d4d7190f38efd339570cf9fd1686ebb885ab5115427596e"},
+    {"choice": "description", "original": "000225.png", "original_sha256": "2cd3564da2e5d3f3e5c141945dca0780b9ab80b8abfe15ec08e63bdd45263040", "rewrite_indexed_sha256": "540d241716e164db2fd5dd1d9cbc66db1f6ff325e77f410cc8b509323d2e4406", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "4ccb758eb0a5ae21c0db1496be7af34385342ff81c2a7ab0bf04d22ec7a1acbd"},
+    {"choice": "discard", "original": "000256.png", "original_sha256": "3e5a573effa476bff085a18a38bd0f877f25173a2cc56a847e3f9ff18402033e", "rewrite_indexed_sha256": "8594b1b2fe165a2f731c8e314dbf46cf0ce3b03e617df53f4441e9b5ab7010e4", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "524ba2542f405d4e300dc85c388bc953e5b7ff3d703db892f1834d3f96ad2121"},
+    {"choice": "alchemy", "original": "000286.png", "original_sha256": "944dffb9a3a0abfca74a606f4ed84e9b39f15d97cf50d0fad4c0111d40cda585", "rewrite_indexed_sha256": "1c30ea2c8fa39fce0c7da64c7e01eaaa09c86f1aedb1fb49f507ebe8bd1cd91d", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "f62c8a9d1f154b660ef4c658a5b27583c3d9cf5b5e65aaf8d46eac7bdd32915b"},
+    {"choice": "use", "original": "000317.png", "original_sha256": "debdf9e87d579282371f1d536d26bdec827ddda2ee92889f11229d10d560eb5d", "rewrite_indexed_sha256": "5485353968b70038380874e305e81b93c56812d2987ca192d1de598a19f9812e", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "6b2c5ccdfd82b9ed8d4d7190f38efd339570cf9fd1686ebb885ab5115427596e"}
+  ]
+}

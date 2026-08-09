@@ -2833,9 +2833,9 @@ private:
         opaque(3, 20, 115);       // 棄
         if (has_alchemy) {
             opaque(0, 12, 170);
-            opaque(47, 14, 179);  // 煉妖壺
-            opaque(48, 18, 179);
-            opaque(49, 22, 179);
+            opaque(71, 14, 179);  // 煉妖壺
+            opaque(72, 18, 179);
+            opaque(73, 22, 179);
         }
 
         static constexpr std::array<std::pair<int, int>, 4> positions{{

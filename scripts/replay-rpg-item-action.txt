@@ -1,0 +1,14 @@
+# MEO: select RPG and load the staged slot one.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+# Open Item from the field diamond, then open item 68's action diamond.
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM*2
+# Visit right/Description, up/Discard, down/Alchemy, then left/Use.
+WAIT:RIGHT
+WAIT:UP
+WAIT:DOWN
+WAIT:LEFT
+WAIT:QUIT
