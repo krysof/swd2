@@ -13,49 +13,119 @@
       "original": "000158.png",
       "sha256": "87b37bdbf32725ba8306bfb065ba6756fbc579dfff87e14db60a3f4df7d2bea2",
       "rewrite_frame": 117,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "44a5ad7c708deadd2741aa1d2de7bfbd33301daff3c69091c9d1068d04620940",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "be429ae0ff37ef93899bce1bdb7c4d627ab4fca7241bf9a1f53dc787d2f6e7a3",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System Read slot two",
       "original": "000170.png",
       "sha256": "be2040aef32abef55ff02156af8172fb892022bd5964e640581347c216b25255",
       "rewrite_frame": 118,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "36e5c8b7b977519c72de5d411e4b9679d9947c9a89d4ba235dfddaefcee5ddaa",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "23ff95cc03930707fb1cfbbcaf3ecb3fb08e7eae5797dc0ac8265292d7c0b673",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System Read slot three",
       "original": "000182.png",
       "sha256": "0bdc77f216daae02a7a6427205c33c8af1c0eba7604fb339ff19247ba85a5f73",
       "rewrite_frame": 119,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "aa86b2b1e2d88245784aeff65f1d4847e84ce101bfd67e1b5ae88a963f557a94",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "fbe9191ed1a6639dc9f0d862dff3ff9e4c61f54b88820e0eb82f831aeccee38b",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System Read slot four",
       "original": "000195.png",
       "sha256": "54921da5e3b38ff9ab36a6017ac1435801b41b0cfb0ee2e4d271200fccc83fba",
       "rewrite_frame": 120,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "6295ae3178475663be9afd74ca44c432c7dddec489f74e938eec51d0da3214aa",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "970b4fc99ddf0b5768e1ac535915b0063c3dcc38b543e6fd9dd59d8734ef2eec",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System Read slot five",
       "original": "000207.png",
       "sha256": "2476e67bcd579194b2d843c2b8a6ec909d1e98d4bd588ef18f5c8200812700c7",
       "rewrite_frame": 121,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "4581b42187cf4dc6c19261027547ddc375c7d6a8853da4af0397af42ab07dee0",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "b4116bdeb7a09e43d1dd5994e3ffb4fc5b3c6f99d8e3382d0fe4bd3759b24897",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System Read Right wrap to slot one",
       "original": "000220.png",
       "sha256": "87b37bdbf32725ba8306bfb065ba6756fbc579dfff87e14db60a3f4df7d2bea2",
       "rewrite_frame": 122,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "44a5ad7c708deadd2741aa1d2de7bfbd33301daff3c69091c9d1068d04620940",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "be429ae0ff37ef93899bce1bdb7c4d627ab4fca7241bf9a1f53dc787d2f6e7a3",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     },
     {
       "label": "RPG System Read slot one default Yes",
       "original": "000240.png",
       "sha256": "0c29b61a25c026465a80065a78739550ac33df7f2c79541ea164a7f1f13ac8e7",
       "rewrite_frame": 123,
-      "crop": [16, 116, 284, 80]
+      "crop": [
+        16,
+        116,
+        284,
+        80
+      ],
+      "rewrite_indexed_crop_sha256": "00e9fd0b69d037451eabf16cc618564e6e6bff68f36f1a857b070c0d21b49d5c",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "e39fb213df2a8ede1ba89fe07be42b3858b57e2a62797e951d09b399bcb32492",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22720
     }
   ]
 }

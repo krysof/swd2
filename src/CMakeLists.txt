@@ -389,6 +389,7 @@ if(BUILD_TESTING)
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-record.py"
                 "${CMAKE_BINARY_DIR}/rpg-system-record-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-system-record-frames.bin"
     )
     set_tests_properties(rpg_system_record_validation PROPERTIES
         DEPENDS rpg_system_record_replay)
@@ -410,6 +411,7 @@ if(BUILD_TESTING)
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-read.py"
                 "${CMAKE_BINARY_DIR}/rpg-system-read-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-system-read-frames.bin"
     )
     set_tests_properties(rpg_system_read_validation PROPERTIES
         DEPENDS rpg_system_read_replay)
