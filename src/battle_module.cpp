@@ -3738,11 +3738,6 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             return Marker::none;
         }
         const auto outcome = session.outcome();
-        auto encounter_capture_granted = false;
-        if (outcome == BattleOutcome::victory) {
-            encounter_capture_granted = session.try_grant_encounter_capture(
-                encounter.special_value, random.function());
-        }
         session.store(context.shared_state);
         random.store(context.shared_state);
         if (outcome == BattleOutcome::victory) {
@@ -3756,10 +3751,23 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 command_font, command_name_font, session, abilities,
                 presentation_rewards, share);
             auto frontend_quit = !victory_frame;
-            if (!frontend_quit && encounter_capture_granted) {
-                frontend_quit = !present_encounter_capture_reward(
-                    context, std::move(*victory_frame), menu_sprites,
-                    command_font, command_name_font, abilities);
+            if (!frontend_quit) {
+                // FIG 0531 waits on the victory summary before 053b tests
+                // inventory +3e4 and 0542 performs the one-in-three draw.
+                // Deferring both the random cursor advance and item write is
+                // observable at the portable frontend-quit boundary; the
+                // former implementation granted the encounter item while the
+                // still-unacknowledged victory page was on screen.
+                const auto encounter_capture_granted =
+                    session.try_grant_encounter_capture(
+                        encounter.special_value, random.function());
+                session.store(context.shared_state);
+                random.store(context.shared_state);
+                if (encounter_capture_granted) {
+                    frontend_quit = !present_encounter_capture_reward(
+                        context, std::move(*victory_frame), menu_sprites,
+                        command_font, command_name_font, abilities);
+                }
             }
             // FIG 0592 restores the pre-battle temporary-stat snapshots
             // before applying any growth-table delta.

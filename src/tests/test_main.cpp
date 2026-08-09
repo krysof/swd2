@@ -9607,6 +9607,75 @@ void test_battle_module(const std::filesystem::path& game_root) {
                     settlement_money + 20U,
             "FIG victory-page quit continued into RPG or lost committed rewards");
 
+    const auto capture_reward_state = [&] {
+        auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+        state.set_u16(0x10, 3);
+        state.set_u16(0x4a0, 100);
+        state.set_u16(0x49c, 0x1004);
+        state.set_u16(0x49e, 20);
+        state.set_u16(0x3f2, 1);
+        for (std::size_t slot = 0; slot < 50; ++slot) {
+            state.set_u16(0x382 + slot * 2U, 0);
+        }
+        for (std::size_t index = 0; index < 3; ++index) {
+            const auto actor = 0x106 + index * 0x9f;
+            state.set_u16(actor + 8, 0);
+            state.set_u16(actor + 0x0c, 30000);
+            state.set_u16(actor + 0x0e, 30000);
+            state.set_u16(actor + 0x2d, 1000);
+            state.set_u16(actor + 0x2f, 1000);
+            state.set_u16(actor + 0x31, 1000);
+            state.set_u16(actor + 0x33, 1);
+            state.set_u16(actor + 0x41, 30000);
+            state.set_u16(actor + 0x43, 30000);
+            state.set_u16(actor + 0x5d, 30000);
+            state.set_u16(actor + 0x5f, 30000);
+            state.set_u16(actor + 0x65, 0);
+            state.set_u16(actor + 0x67, 0);
+        }
+        return state;
+    }();
+    ScriptedPlatform capture_victory_quit_platform;
+    capture_victory_quit_platform.text_actions = {
+        swd2::InputAction::confirm};
+    capture_victory_quit_platform.actions.assign(
+        10U, swd2::InputAction::confirm);
+    capture_victory_quit_platform.actions.push_back(
+        swd2::InputAction::quit);
+    auto capture_victory_quit_state = capture_reward_state;
+    swd2::GameContext capture_victory_quit_context{
+        game_root, capture_victory_quit_state,
+        capture_victory_quit_platform};
+    require(swd2::BattleModule().run(
+                capture_victory_quit_context,
+                swd2::Marker::open_figure) == swd2::Marker::none &&
+                capture_victory_quit_platform.cursor == 11U &&
+                std::all_of(
+                    capture_victory_quit_context.shared_state.bytes().begin() +
+                        0x382,
+                    capture_victory_quit_context.shared_state.bytes().begin() +
+                        0x3e6,
+                    [](std::uint8_t value) { return value == 0; }),
+            "FIG granted the ## encounter item before victory acknowledgement");
+
+    ScriptedPlatform capture_reward_quit_platform;
+    capture_reward_quit_platform.text_actions = {
+        swd2::InputAction::confirm};
+    capture_reward_quit_platform.actions.assign(
+        11U, swd2::InputAction::confirm);
+    capture_reward_quit_platform.actions.push_back(
+        swd2::InputAction::quit);
+    auto capture_reward_quit_state = capture_reward_state;
+    swd2::GameContext capture_reward_quit_context{
+        game_root, capture_reward_quit_state,
+        capture_reward_quit_platform};
+    require(swd2::BattleModule().run(
+                capture_reward_quit_context,
+                swd2::Marker::open_figure) == swd2::Marker::none &&
+                capture_reward_quit_platform.cursor == 12U &&
+                capture_reward_quit_context.shared_state.u16(0x382) == 83U,
+            "FIG did not grant and compact the ## item after victory acknowledgement");
+
     ScriptedPlatform introduction_cursor_platform;
     introduction_cursor_platform.actions = {swd2::InputAction::quit};
     introduction_cursor_platform.text_actions = {swd2::InputAction::confirm};

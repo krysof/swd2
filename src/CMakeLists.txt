@@ -1087,4 +1087,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_ordinary_attack_validation PROPERTIES
         DEPENDS fig_ordinary_attack_prepare)
+    add_test(
+        NAME fig_capture_reward_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ordinary-attack-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-capture-reward-save"
+    )
+    add_test(
+        NAME fig_capture_reward_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-capture-reward.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-capture-reward-save"
+                "${CMAKE_BINARY_DIR}/fig-capture-reward"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-capture-reward-rgb-reference.json"
+    )
+    set_tests_properties(fig_capture_reward_validation PROPERTIES
+        DEPENDS fig_capture_reward_prepare)
 endif()
