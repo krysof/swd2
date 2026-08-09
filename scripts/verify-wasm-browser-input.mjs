@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// Real-browser boundary test for the touch hold path.  It launches an
+// Real-browser boundary test for the touch-hold and IDBFS restart paths. It launches an
 // installed Chromium-family browser with mobile emulation, sends one trusted
 // CDP touchStart, holds it for one second, and sends one touchEnd.  The WASM
 // polling boundary records deliveries only when ?input-self-test=1 is present,
@@ -147,7 +147,12 @@ class CdpConnection {
 async function waitUntil(action, description, timeoutMilliseconds = 20_000) {
   const deadline = Date.now() + timeoutMilliseconds;
   while (Date.now() < deadline) {
-    if (await action()) return;
+    try {
+      if (await action()) return;
+    } catch (_) {
+      // A navigation/reload temporarily destroys the JavaScript execution
+      // context. Retry against the replacement document until the deadline.
+    }
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   fail(`timed out waiting for ${description}`);
@@ -321,10 +326,34 @@ try {
   }
   if (!released.rotated) fail('portrait mobile layout did not apply rotation');
 
+  // Exercise the Web shell's actual two-load IDBFS probe in the same browser
+  // profile. The first document writes and syncs a token before reloading;
+  // only the second document may expose data-idbfs-self-test=pass after it
+  // reads the exact persisted bytes and removes the probe again.
+  const idbfsToken = 'edge-restart-roundtrip';
+  await cdp.send('Page.navigate', {
+    url: `http://127.0.0.1:${httpPort}/?idbfs-self-test=${idbfsToken}`,
+  });
+  await waitUntil(
+    () => cdp.evaluate(
+      `['pass', 'fail'].includes(document.documentElement.dataset.idbfsSelfTest)`),
+    'IDBFS write, page reload and byte restoration', 30_000);
+  const idbfs = await cdp.evaluate(`({
+    result: document.documentElement.dataset.idbfsSelfTest,
+    status: document.getElementById('status').textContent,
+    error: document.getElementById('error').textContent,
+    gateHidden: document.getElementById('start-gate').hidden,
+    sessionToken: sessionStorage.getItem('swd2-idbfs-self-test-token')
+  })`);
+  if (idbfs.result !== 'pass' || idbfs.error || !idbfs.gateHidden ||
+      idbfs.sessionToken !== null) {
+    fail(`IDBFS restart probe did not finish cleanly: ${JSON.stringify(idbfs)}`);
+  }
+
   const version = await cdp.send('Browser.getVersion');
   const report = {
     schema_version: 1,
-    kind: 'wasm_browser_touch_hold',
+    kind: 'wasm_browser_runtime_checks',
     status: 'verified',
     limitation: 'Headless desktop Edge with mobile emulation is not a physical iOS/Android device test.',
     browser: version.product,
@@ -341,6 +370,14 @@ try {
       first_to_last_delivery_milliseconds: deliverySpan,
       deliveries_after_release: 0,
     },
+    idbfs: {
+      initial_sync: 'completed',
+      exact_probe_write: 'completed',
+      page_reloads: 1,
+      restored_bytes: 'exact',
+      cleanup_sync: 'completed',
+      result: idbfs.result,
+    },
     assets: Object.fromEntries(
       ['index.html', 'index.js', 'index.wasm', 'index.data'].map(
         name => [name, sha256(path.join(options.site, name))])),
@@ -351,7 +388,8 @@ try {
   }
   console.log(
     `WASM browser input: OK (${held.deliveries.length} world-frame ` +
-    `deliveries from one 1000ms trusted touch hold; release stopped at once)`);
+    `deliveries from one 1000ms trusted touch hold; release stopped at once; ` +
+    `IDBFS restart roundtrip passed)`);
 } catch (error) {
   if (browserOutput) console.error(browserOutput.slice(-4_000));
   throw error;

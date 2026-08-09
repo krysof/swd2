@@ -1364,6 +1364,10 @@ WASM 的阻塞输入循环还必须在每次 `emscripten_sleep(10)` 恢复后重
 数组由 WASM 内部采样点写入；2026-08-10 的 Edge 151 记录在一次保持中跨过 DOM、
 ASYNCIFY 与 SDL 进入 28 个世界帧，松开后零追加输入。它证明桌面 Edge 的真实浏览器
 链路，不冒充物理 iOS/Android 触摸验收，portable-input 门仍保持 `in_progress`。
+同一 runner 随后切到 `?idbfs-self-test=TOKEN`：第一页把探针写入 `/saves` 并
+`syncfs(false)` 后重载，第二页 `syncfs(true)`、逐字节比较、删除并再次提交；只有完整
+两次页面生命周期成功才写 `data-idbfs-self-test=pass`。Edge 151 已通过该真实浏览器
+往返，但其他主流浏览器仍未进入矩阵，save-roundtrips 门不提前改为 `verified`。
 
 五个便携槽实际是 SAVE/MAPZ/NAME 三件套，而不是两件套：原版 `4ce6..4d29` 写
 `SAVE.DAn`、`MAPZ.DAn` 和 `NAME<n>.DSK`，`4c16..4c73` 读三者并把槽位 NAME
