@@ -723,8 +723,6 @@ BattleSurface compose_command_frame(
             }
         }
         const auto selected_row = cursor - first;
-        blit(result, menu_sprites, 1, 30 * 4,
-             9 + static_cast<int>(selected_row) * 16);
         for (std::size_t visible = 0; visible < 8 && first + visible < entries.size();
              ++visible) {
             const auto index = first + visible;
@@ -766,6 +764,13 @@ BattleSurface compose_command_frame(
                                  16 + static_cast<int>(visible) * 16);
             }
         }
+        // FIG 41a1 draws all visible names/costs first, then overlays the
+        // 168x22 MENU frame-1 selection bar.  This matters at the boundary
+        // with the following row: the lower two bar scanlines cover two black
+        // pixels in record zero's first glyph.  Reversing these calls leaves a
+        // two-pixel artifact that is absent in the original VGA page.
+        blit(result, menu_sprites, 1, 30 * 4,
+             9 + static_cast<int>(selected_row) * 16);
         draw_target_overlay();
         return finish_frame();
     }

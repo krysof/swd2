@@ -261,6 +261,16 @@ ctest --test-dir build --output-on-failure
   --frame-output replay.swd2frames
 ```
 
+为原版覆盖入口制作短场景证据时，可用 `--start-marker IF` 直接从当前槽进入统一进程内的
+FIG 模块；`MT/OC/OM` 和 `ED` 分别直入 RPG 与 DEMO。它只跳过启动调度，不会执行或模拟
+任何 DOS EXE，例如五类能力卡基准使用：
+
+```sh
+./build/src/swd2_rewrite --game game --save-dir ability-save --no-save \
+  --start-marker IF --run-replay scripts/replay-fig-ability-page.txt \
+  --trace-output fig.json --frame-output fig.swd2frames
+```
+
 语法为 `[WAIT|POLL|TEXT|FRONTEND:]动作[*次数]`，逗号/空白分隔，`#` 到行末为注释。
 例如 `POLL:RIGHT*12, WAIT:CONFIRM, TEXT:NONE*4, FRONTEND:QUIT`。严格回放必须消费全部
 登记动作；输出记录每个输入前的 SAVE/MAPZ 检查点、逐帧摘要、整段帧链、直接写页、
@@ -269,6 +279,9 @@ FNV 摘要用于快速确定性比较，最终证据文件本身仍由完成门�
 `--frame-output` 是可选的逐像素证据流：每页保存页类型、320×200 索引像素和完整 VGA
 调色板，只有严格回放成功消费全部输入后才写 `DONE` 结尾。可用
 `scripts/compare-frame-captures.py` 对原版基准和重写输出做零容差、字节级现场比较。
+`scripts/original-fig-if.asm`/`build-original-fig-harness.sh` 则只用于隔离捕获未经修改的
+FIG.EXE。当前五类资源卡的确定性 IF 回放已与这些原版捕获在 VGA 第 0..197 行逐 RGB
+像素完全一致；底部两行是独立的循环调色板时相，未被伪装成静态容差。
 
 仓库内的短启动检查点会实际走过 `MEO -> RPG(MT/ED) -> DEMO -> RPG(OM)`，装入
 `SAVE.DAQ/MAPZ.DAQ` 并执行开场实体后才从世界页退出：

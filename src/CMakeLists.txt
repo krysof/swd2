@@ -878,4 +878,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(no_save_mode_validation PROPERTIES
         DEPENDS no_save_mode_replay)
+    add_test(
+        NAME fig_ability_pages_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ability-pages-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ability-pages-saves"
+    )
+    add_test(
+        NAME fig_ability_pages_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ability-pages.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ability-pages-saves"
+                "${CMAKE_BINARY_DIR}/fig-ability-pages"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ability-pages-rgb-reference.json"
+    )
+    set_tests_properties(fig_ability_pages_validation PROPERTIES
+        DEPENDS fig_ability_pages_prepare)
 endif()

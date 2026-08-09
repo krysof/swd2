@@ -9691,7 +9691,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 notice_platform.direct_updates == 12U &&
                 notice_platform.text_poll_calls == 12U &&
                 notice_platform.frame_hashes.back() ==
-                    15354309854190851288ULL,
+                    16802371218918559576ULL,
             "FIG 3e19 modal battle notice did not consume its closing key");
 
     // 3f3b has a distinct icon pair/resource label for all five classes.
@@ -9701,11 +9701,11 @@ void test_battle_module(const std::filesystem::path& game_root) {
         1, 4, 33, 3, 41,
     };
     static constexpr std::array<std::uint64_t, 5> ability_card_hashes = {
-        13015473527361863690ULL,
-        11277564899619558452ULL,
-        18363502700070130146ULL,
-        10216347769889622229ULL,
-        2119409900340458190ULL,
+        2136310556241958219ULL,
+        1528792397434994685ULL,
+        11884972925251303491ULL,
+        663590590265685276ULL,
+        14204298780667695339ULL,
     };
     for (std::size_t resource = 0; resource < ability_card_ids.size();
          ++resource) {
