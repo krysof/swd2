@@ -6,5 +6,7 @@ WAIT:CONFIRM*3
 # In the world ESC opens the field diamond; Enter selects default System.
 POLL:CANCEL
 WAIT:CONFIRM
-# Stop only after the complete default System page has been submitted.
+# Visit every one of the seven System rows without activating an action.
+WAIT:DOWN*6
+# Stop only after the complete Exit-DOS-selected page has been submitted.
 WAIT:QUIT

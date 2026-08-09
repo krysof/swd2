@@ -2,17 +2,59 @@
   "schema_version": 1,
   "kind": "dosbox_rgb_spot_check",
   "status": "reference_only",
-  "limitation": "The crop locks the fully covered default RPG System panel. The animated world and uncovered field-diamond pixels are intentionally outside this check and still need independent indexed-pixel evidence.",
+  "limitation": "The crops lock all seven selected-row states of the fully covered RPG System panel. The animated world and uncovered field-diamond pixels are intentionally outside this check and still need independent indexed-pixel evidence.",
   "reference_program": "RPG.EXE",
   "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
   "capture_program": "RPGOC.COM",
   "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
   "frames": [
     {
-      "label": "RPG default System panel",
-      "original": "000170.png",
+      "label": "RPG System row 0: music",
+      "original": "000125.png",
       "sha256": "ab6844c24fe0b75e3fcb7a0a98a257d212ce98ce32121a57d7a630c32596559f",
       "rewrite_frame": 114,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System row 1: sound",
+      "original": "000140.png",
+      "sha256": "10144224ea7031747fe695bb3651662bc7dc9493c5f0f99546346ef00cf2567c",
+      "rewrite_frame": 115,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System row 2: read",
+      "original": "000155.png",
+      "sha256": "7c97328f59f10e846e44ee1588685e0c94e87497a7912bb4d2fe907b7561709c",
+      "rewrite_frame": 116,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System row 3: record",
+      "original": "000170.png",
+      "sha256": "8747e093158dd47345f840d25fa68e570c6abc4b9ca85dd79ab8e42221c75691",
+      "rewrite_frame": 117,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System row 4: message speed",
+      "original": "000185.png",
+      "sha256": "7ba78d8e68bb6a345b49600f4da002527a58969fde4fe6ffaff70d04cb29b18e",
+      "rewrite_frame": 118,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System row 5: game speed",
+      "original": "000200.png",
+      "sha256": "40f4f3960fb9dc6b1b78a3bdb87d59c03154e6e808752b3aa291bdc4a65956e5",
+      "rewrite_frame": 119,
+      "crop": [80, 10, 186, 122]
+    },
+    {
+      "label": "RPG System row 6: Exit DOS",
+      "original": "000215.png",
+      "sha256": "dce1cf97ca059329ce5785d398ba4cb4a31de608588c8f0ea4f5f857ebd89139",
+      "rewrite_frame": 120,
       "crop": [80, 10, 186, 122]
     }
   ]
