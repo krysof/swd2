@@ -1030,4 +1030,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_level_up_validation PROPERTIES
         DEPENDS fig_level_up_prepare)
+    add_test(
+        NAME fig_story_30_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-story-30-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-story-30-save"
+    )
+    add_test(
+        NAME fig_story_30_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-story-30.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-story-30-save"
+                "${CMAKE_BINARY_DIR}/fig-story-30"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-story-30-rgb-reference.json"
+    )
+    set_tests_properties(fig_story_30_validation PROPERTIES
+        DEPENDS fig_story_30_prepare)
 endif()
