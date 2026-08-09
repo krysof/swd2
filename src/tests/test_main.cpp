@@ -3768,13 +3768,12 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 menu.entries().size() == 2,
             "FIG Attack command did not enter its two-way mode submenu");
     menu.input(swd2::InputAction::confirm);
-    require(menu.complete() &&
+    require(!menu.complete() && menu.actor() == 1 &&
                 menu.commands()[0].kind == swd2::PlayerCommandKind::basic_attack &&
-                menu.commands()[1].kind == swd2::PlayerCommandKind::basic_attack &&
-                menu.commands()[2].kind == swd2::PlayerCommandKind::basic_attack &&
-                menu.commands()[0].target == 0 && menu.commands()[1].target == 0 &&
-                menu.commands()[2].target == 0,
-            "FIG group attack did not fill every commandable party slot");
+                menu.commands()[1].kind == swd2::PlayerCommandKind::skip &&
+                menu.commands()[2].kind == swd2::PlayerCommandKind::skip &&
+                menu.commands()[0].target == 0,
+            "FIG ordinary attack skipped command collection for later actors");
 
     const auto multi_encounter = std::find_if(
         database.encounters().begin(), database.encounters().end(),
@@ -3797,7 +3796,12 @@ void test_battle_session(const std::filesystem::path& game_root) {
             "FIG target selector wrapped above its first entry");
     multi_menu.input(swd2::InputAction::down);
     multi_menu.input(swd2::InputAction::confirm);
-    require(multi_menu.complete() && multi_menu.commands()[0].target == 1,
+    require(!multi_menu.complete() && multi_menu.actor() == 1 &&
+                multi_menu.page() == swd2::BattleCommandMenuPage::commands &&
+                multi_menu.commands()[0].kind ==
+                    swd2::PlayerCommandKind::basic_attack &&
+                multi_menu.commands()[0].target == 1 &&
+                multi_menu.commands()[1].kind == swd2::PlayerCommandKind::skip,
             "FIG multi-monster selector did not commit the highlighted target");
 
     swd2::BattleCommandMenu target_return_menu(
@@ -9530,7 +9534,11 @@ void test_demo_timeline(const std::filesystem::path& game_root) {
 
 void test_battle_module(const std::filesystem::path& game_root) {
     ScriptedPlatform round_quit_platform;
-    round_quit_platform.actions.assign(2U, swd2::InputAction::confirm);
+    round_quit_platform.actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+    };
     round_quit_platform.frontend_actions = {swd2::InputAction::quit};
     auto round_quit_state = swd2::SharedState::load(
         game_root / "SAVE.DA1");
@@ -9542,7 +9550,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
     require(swd2::BattleModule().run(
                 round_quit_context, swd2::Marker::open_figure) ==
                 swd2::Marker::none &&
-                round_quit_platform.cursor == 2U &&
+                round_quit_platform.cursor == 3U &&
                 round_quit_platform.frontend_cursor == 1U &&
                 round_quit_platform.stop_calls == 1U &&
                 round_quit_context.shared_state.u16(0x4a0) == 0U &&
@@ -9574,7 +9582,11 @@ void test_battle_module(const std::filesystem::path& game_root) {
             "FIG defeat timer ignored frontend quit or returned to RPG");
 
     ScriptedPlatform settlement_quit_platform;
-    settlement_quit_platform.actions.assign(2U, swd2::InputAction::confirm);
+    settlement_quit_platform.actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+    };
     settlement_quit_platform.actions.push_back(swd2::InputAction::quit);
     auto settlement_quit_state = swd2::SharedState::load(
         game_root / "SAVE.DA1");

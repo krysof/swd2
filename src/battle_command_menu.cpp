@@ -453,7 +453,12 @@ void BattleCommandMenu::input(InputAction action) {
 
     if (page_ == BattleCommandMenuPage::attack_modes) {
         pending_ = {entry.kind, 0, 0, 0};
-        pending_group_attack_ = true;
+        // FIG 1621 stores the two-way submenu index in DS:2f18.  Ordinary
+        // attack (index zero) records only the current actor and the caller
+        // continues command collection at 0332/0367/03a4.  Automatic mode
+        // (index one) takes the 0328 shortcut after 166b and therefore keeps
+        // the commands prefilled for every remaining commandable actor.
+        pending_group_attack_ = entry.kind == PlayerCommandKind::automatic;
         show_targets(true);
         return;
     }
