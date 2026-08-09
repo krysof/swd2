@@ -562,6 +562,23 @@ void draw_menu_number(BattleSurface& surface,
     }
 }
 
+void draw_menu_number_right(BattleSurface& surface,
+                            const SpriteArchive& menu_sprites,
+                            std::uint16_t value, int mode_x_column, int top,
+                            std::size_t digit_base = 111U) {
+    // FIG 3d6c treats 4325 as the one-digit origin and moves it two Mode-X
+    // columns left for every additional decimal digit before entering 3c77.
+    // This is used by the two level-up columns; the victory totals use 3c77
+    // directly and therefore remain left-aligned.
+    auto remaining = value;
+    while (remaining >= 10U) {
+        mode_x_column -= 2;
+        remaining = static_cast<std::uint16_t>(remaining / 10U);
+    }
+    draw_menu_number(surface, menu_sprites, value, mode_x_column, top,
+                     digit_base);
+}
+
 BattleSurface compose_command_frame(
     const BattleSurface& scene, const BattleSession& session,
     const BattleCommandMenu& menu, const BattleEncounter& encounter,
@@ -3286,15 +3303,19 @@ bool present_level_ups(
                                 static_cast<std::ptrdiff_t>(actor_base),
                             8U, title.begin());
             }
-            draw_fig_text(frame, font, fallback, title, 26, 19);
+            // FIG's four editable name slots A374..A377 deliberately overlap
+            // glyphs present in FIG.DSK.  The level-up title renders those
+            // slots through the active NAME font first, then falls back to
+            // FIG.DSK for the fixed "升級了" suffix.
+            draw_fig_text(frame, fallback, font, title, 26, 19);
             draw_fig_text(frame, font, fallback,
                           abilities.level_up_stats_text(), 26, 35);
             auto top = 38;
             for (std::size_t stat = 0; stat < step->before.size(); ++stat) {
-                draw_menu_number(frame, menu_sprites,
-                                 step->before[stat], 38, top, 111);
-                draw_menu_number(frame, menu_sprites,
-                                 step->after[stat], 52, top, 111);
+                draw_menu_number_right(frame, menu_sprites,
+                                       step->before[stat], 38, top, 111);
+                draw_menu_number_right(frame, menu_sprites,
+                                       step->after[stat], 52, top, 111);
                 top += 16;
             }
             if (step->learned_ability &&
