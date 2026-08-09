@@ -4192,12 +4192,13 @@ std::optional<InputAction> corner_slide(const MapLocationRecord& location,
 
 }  // namespace
 
-Marker RpgModule::run(GameContext& context, Marker) {
+Marker RpgModule::run(GameContext& context, Marker input_marker) {
     // A map-changing event reloads resources by restarting this outer loop.
     // Keeping the transition iterative is important: the DOS game could cross
     // maps indefinitely, whereas recursive re-entry would eventually exhaust
     // the native stack on a long portable session.
     std::filesystem::path playing_music;
+    pending_map_reload_ = false;
     // RPG:4c38..4c42 restores the two driver-disable bytes from SAVE before
     // loading map music. Zero means enabled; the system menu writes the same
     // bytes back, so audio preferences survive save/load and FIG round trips.
@@ -4231,6 +4232,11 @@ Marker RpgModule::run(GameContext& context, Marker) {
     // translated or host-encoded string.
     const auto save_slot_prompt = extract_rpg_embedded_text(
         rpg_load_image, rpg_entry_offset, 0x3a4a);
+    // RPG:a45 renders this literal two-row Big5 menu over OP01.RSK.  The
+    // branch is part of RPG.EXE, not MEO: MT enters it, ED leaves for DEMO,
+    // and OM/OC bypass it when the launcher starts a fresh RPG process.
+    const auto opening_menu_labels = extract_rpg_embedded_text(
+        rpg_load_image, rpg_entry_offset, 0x2f32);
     // RPG.EXE:37c3 indexes 34 fixed four-glyph destination labels at
     // DATA:3ace. Disabled SAVE+51e entries simply skip their eight bytes.
     const auto travel_labels = extract_rpg_embedded_data(
@@ -4312,6 +4318,190 @@ Marker RpgModule::run(GameContext& context, Marker) {
         rpg_load_image, rpg_entry_offset, 0x388e);
     const auto equipment_stat_labels = extract_rpg_embedded_data(
         rpg_load_image, rpg_entry_offset, 0x3a60, 40U);
+
+    std::optional<std::size_t> startup_event_entity;
+    if (input_marker == Marker::menu_ready) {
+        auto opening_data = decode_rsk_block(
+            read_file(context.game_root / "OP01.RSK")).data;
+        const auto opening_art = SpriteArchive::parse(std::move(opening_data));
+        if (!opening_art.has_palette() || opening_art.sprites().size() != 1U ||
+            opening_art.sprites()[0].width != 320U ||
+            opening_art.sprites()[0].height != 200U) {
+            throw std::runtime_error(
+                "OP01.RSK is not the original 320x200 opening page");
+        }
+
+        Viewport opening_base{
+            std::vector<std::uint8_t>(opening_art.pixels(0).begin(),
+                                      opening_art.pixels(0).end()),
+            opening_art.palette()};
+        Viewport faded = opening_base;
+        faded.palette.fill(0U);
+
+        // RPG:c0a restores these switches before a45 starts OP01.RIX.  The
+        // title is allowed to play with the same saved audio preference as
+        // the world which follows it.
+        music_enabled_ = context.shared_state.u8(0x3f4) == 0U;
+        sound_enabled_ = context.shared_state.u8(0x3f5) == 0U;
+        if (music_enabled_) {
+            context.platform.play_music(
+                read_file(context.game_root / "RX" / "OP01.RIX"), true);
+        }
+
+        // RPG:5fab raises every DAC component by three once per 70 Hz tick,
+        // independently clamping it to OP01's target palette.  Ordinary keys
+        // are deliberately not sampled here; only the host lifecycle channel
+        // may abort a timed original sequence without stealing the later menu
+        // input.
+        std::uint64_t fade_ticks = 0U;
+        while (faded.palette != opening_base.palette) {
+            if (context.platform.poll_frontend_quit()) {
+                context.platform.stop_audio();
+                return Marker::none;
+            }
+            for (std::size_t component = 0; component < faded.palette.size();
+                 ++component) {
+                const auto target = opening_base.palette[component];
+                faded.palette[component] = static_cast<std::uint8_t>(
+                    std::min<unsigned>(target,
+                        static_cast<unsigned>(faded.palette[component]) + 3U));
+            }
+            context.platform.present({
+                320, 200, faded.pixels,
+                std::span<const std::uint8_t, 768>(faded.palette)});
+            const auto before = fade_ticks * 1000U / 70U;
+            const auto after = ++fade_ticks * 1000U / 70U;
+            context.platform.delay_for(
+                std::chrono::milliseconds(after - before));
+        }
+
+        std::size_t opening_choice = 0U;
+        bool enter_world = false;
+        while (!enter_world) {
+            auto opening_frame = opening_base;
+            draw_rpg_compact_panel(opening_frame.pixels, 320, 200,
+                                   menu_sprites, 25, 150, 8, 2);
+            draw_legacy_text(opening_frame, item_font, opening_menu_labels,
+                             27 * 4, 159, 160, 32, 0);
+            if (menu_sprites.sprites().size() <= 147U) {
+                throw std::runtime_error("MENU.RSK lacks opening cursor 147");
+            }
+            const auto& opening_cursor = menu_sprites.sprites()[147];
+            blit(opening_frame, menu_sprites.pixels(147),
+                 opening_cursor.width, opening_cursor.height,
+                 47 * 4, opening_choice == 0U ? 161 : 177);
+            context.platform.present({
+                320, 200, opening_frame.pixels,
+                std::span<const std::uint8_t, 768>(opening_frame.palette)});
+
+            const auto action = context.platform.wait_for_input();
+            if (action == InputAction::quit || action == InputAction::cancel) {
+                context.platform.stop_audio();
+                return Marker::none;
+            }
+            if (action == InputAction::up) {
+                opening_choice = 0U;
+                continue;
+            }
+            if (action == InputAction::down) {
+                opening_choice = 1U;
+                continue;
+            }
+            if (action != InputAction::confirm) continue;
+
+            if (opening_choice == 0U) {
+                context.platform.stop_audio();
+                return Marker::open_demo;
+            }
+
+            // Continue calls the same 4e4b/46cc five-slot selector used by
+            // the field/system save pages.  It is drawn over the current
+            // OP01 menu page, then atomically replaces both SAVE and MAPZ.
+            RpgSaveSlotSelector selector;
+            while (true) {
+                auto slot_frame = opening_frame;
+                draw_rpg_selector_panel(slot_frame.pixels, 320, 200,
+                                        menu_sprites, 4, 112, 7, 4);
+                draw_legacy_text(slot_frame, item_font, save_slot_prompt,
+                                 10 * 4, 125, 260, 16, 0);
+                if (menu_sprites.sprites().size() > 141U) {
+                    const auto& cursor = menu_sprites.sprites()[141];
+                    blit(slot_frame, menu_sprites.pixels(141),
+                         cursor.width, cursor.height,
+                         (14 + static_cast<int>(selector.slot()) * 8) * 4,
+                         141);
+                }
+                if (selector.confirming()) {
+                    const auto opaque = [&](std::size_t sprite,
+                                            int x_byte, int y) {
+                        if (sprite >= menu_sprites.sprites().size()) return;
+                        const auto& info = menu_sprites.sprites()[sprite];
+                        blit_opaque(slot_frame, menu_sprites.pixels(sprite),
+                                    info.width, info.height, x_byte * 4, y);
+                    };
+                    opaque(0, 23, 147);
+                    opaque(0, 41, 147);
+                    opaque(29, 29, 156);
+                    opaque(8, 47, 156);
+                    apply_rpg_binary_choice_highlight(
+                        slot_frame.pixels, 320, 200,
+                        std::span<const std::uint8_t, 768>(slot_frame.palette),
+                        23, 41, 147, selector.confirmation_choice());
+                }
+                context.platform.present({
+                    320, 200, slot_frame.pixels,
+                    std::span<const std::uint8_t, 768>(slot_frame.palette)});
+                const auto result = selector.input(
+                    context.platform.wait_for_input());
+                if (result == RpgSaveSelectorResult::quit) {
+                    context.platform.stop_audio();
+                    return Marker::none;
+                }
+                if (result == RpgSaveSelectorResult::cancelled) break;
+                if (result != RpgSaveSelectorResult::committed) continue;
+
+                const auto slot = static_cast<std::uint8_t>(
+                    selector.slot() + 1U);
+                if (context.load_slot) {
+                    auto loaded = context.load_slot(slot);
+                    if (!loaded.map_database) {
+                        throw std::runtime_error(
+                            "RPG opening load hook returned no MAPZ database");
+                    }
+                    context.shared_state = std::move(loaded.state);
+                    context.map_database = std::move(loaded.map_database);
+                } else {
+                    context.shared_state = SharedState::load(
+                        context.game_root / ("SAVE.DA" + std::to_string(slot)));
+                    context.map_database = std::make_shared<MapDatabase>(
+                        MapDatabase::load(context.game_root /
+                            ("MAPZ.DA" + std::to_string(slot))));
+                }
+                enter_world = true;
+                break;
+            }
+        }
+        context.platform.stop_audio();
+    } else if (input_marker == Marker::returned_from_demo) {
+        // RPG:b88 is the only new-game initializer.  DEMO returns OM, after
+        // which RPG loads the Q template pair, forces location-directory byte
+        // offset eight, and dispatches entity byte offset four (index two)
+        // before the first ordinary world page.
+        context.shared_state = SharedState::load(context.game_root / "SAVE.DAQ");
+        context.shared_state.set_u16(0x424, 8U);
+        context.map_database = std::make_shared<MapDatabase>(
+            MapDatabase::load(context.game_root / "MAPZ.DAQ"));
+        startup_event_entity = 2U;
+    } else if (input_marker != Marker::continue_rpg) {
+        throw std::runtime_error(
+            "RPG module received an unsupported launcher marker");
+    }
+
+    // Continue and OM may have replaced the complete SAVE block, including
+    // the persisted driver switches.  Apply those values only after startup
+    // selection/initialization has completed.
+    music_enabled_ = context.shared_state.u8(0x3f4) == 0U;
+    sound_enabled_ = context.shared_state.u8(0x3f5) == 0U;
     RpgEntityRuntime entity_runtime;
     RpgWorldStepRuntime world_step_runtime;
     FieldActionRuntime field_action_runtime;
@@ -4571,6 +4761,29 @@ Marker RpgModule::run(GameContext& context, Marker) {
                 outcome.quit || outcome.program_exit,
                 outcome.map_reload};
     };
+
+    if (startup_event_entity) {
+        const auto entity_index = *startup_event_entity;
+        startup_event_entity.reset();
+        if (entity_index >= location.area.entity_count()) {
+            throw std::runtime_error(
+                "RPG new-game opening entity is absent from MAPZ.DAQ");
+        }
+        auto outcome = run_entity_event(entity_index);
+        if (outcome.quit || outcome.program_exit) {
+            context.platform.stop_audio();
+            return Marker::none;
+        }
+        if (outcome.marker != Marker::none) {
+            context.platform.stop_audio();
+            return outcome.marker;
+        }
+        if (outcome.map_reload) {
+            relocated_transient_area = std::move(outcome.relocated_area);
+            pending_map_reload_ = true;
+            continue;
+        }
+    }
 
     if (check_chained_transition_before_present) {
         check_chained_transition_before_present = false;

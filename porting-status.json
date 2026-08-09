@@ -50,8 +50,8 @@
         "全部地图移动、碰撞、实体行为和剧情触发与原版一致",
         "完整通关轨迹中不存在状态分歧"
       ],
-      "evidence": ["src/rpg_entity_system.cpp", "src/rpg_module.cpp", "src/map_database.cpp", "src/main.cpp", "src/tests/test_main.cpp"],
-      "remaining": ["把 6,862 个可执行地点/实体上下文逐一与原版场景帧和状态基准对照", "由完整通关回放证明无状态分歧"]
+      "evidence": ["src/rpg_entity_system.cpp", "src/rpg_module.cpp", "src/map_database.cpp", "src/main.cpp", "src/tests/test_main.cpp", "scripts/replay-smoke.txt"],
+      "remaining": ["把 6,862 个可执行地点/实体上下文逐一与原版场景帧和状态基准对照", "以完整新游戏通关回放验证 DAQ 开场事件后的全部状态无分歧"]
     },
     {
       "id": "rpg_ui_pixel_parity",
@@ -61,8 +61,8 @@
         "背包、装备、奇术、旅行、商店、状态和存档槽全部状态逐像素通过",
         "不存在通用居中框或近似画面"
       ],
-      "evidence": ["src/rpg_presentation.cpp", "src/rpg_module.cpp", "src/reverse-engineering.md"],
-      "remaining": ["补齐背包/装备边界状态差分", "补齐奇术/旅行/存档槽全部选择状态差分"]
+      "evidence": ["src/rpg_presentation.cpp", "src/rpg_module.cpp", "src/reverse-engineering.md", "src/tests/test_main.cpp"],
+      "remaining": ["把 OP01 标题、五槽读档及背包/装备边界状态加入原版逐像素差分", "补齐奇术/旅行/存档槽全部选择状态差分"]
     },
     {
       "id": "fig_rules",
@@ -158,7 +158,7 @@
         "关键状态、画面、战斗、存档和模块切换与原版基准一致"
       ],
       "evidence": ["src/include/swd2/replay_input.hpp", "src/replay_input.cpp", "src/main.cpp", "scripts/replay-smoke.txt", "scripts/verify-replay-trace.py", "scripts/compare-replay-traces.py", "scripts/verify-playthrough.sh", "scripts/verify-evidence-manifest.py"],
-      "remaining": ["使用边界锁定格式录制从新游戏到结局的原版输入/状态基准", "生成通过哈希校验的 playthrough manifest"]
+      "remaining": ["沿已恢复的 MT→ED→DEMO→OM/DAQ 开场路径录制从新游戏到结局的原版输入/状态基准", "生成通过哈希校验的 playthrough manifest"]
     },
     {
       "id": "placeholder_elimination",

@@ -1,5 +1,7 @@
-# Boundary-locked replay smoke test: pass MEO through three blocking confirms,
-# enter RPG, then close only from the world's nonblocking poll. This is
-# infrastructure validation, not playthrough proof.
+# Boundary-locked replay smoke test: pass MEO, choose Continue on RPG's OP01
+# title page, accept slot one/default Yes, then close only from the world's
+# nonblocking poll. This is infrastructure validation, not playthrough proof.
+WAIT:CONFIRM*3
+WAIT:DOWN
 WAIT:CONFIRM*3
 POLL:QUIT

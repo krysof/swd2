@@ -6365,7 +6365,13 @@ public:
 
 void test_monolithic_runtime(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
-    platform.actions.push_back(swd2::InputAction::quit);
+    platform.actions.insert(platform.actions.end(), {
+        swd2::InputAction::down,     // RPG title: Continue
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // slot one
+        swd2::InputAction::confirm,  // default Yes
+        swd2::InputAction::quit,     // first world poll
+    });
     swd2::GameContext context{game_root, swd2::SharedState::load(game_root / "SAVE.DA1"), platform};
     swd2::ModuleRegistry modules;
     modules.add(std::make_unique<swd2::MeoModule>());
@@ -6378,9 +6384,99 @@ void test_monolithic_runtime(const std::filesystem::path& game_root) {
             "monolithic runtime did not begin with MEO");
     require(result.transitions[1].module == swd2::Module::rpg,
             "monolithic runtime did not continue in-process to RPG");
-    require(platform.presented == 4 && platform.music_calls == 1 &&
-                platform.stop_calls == 1,
-            "MEO and RPG did not render/play map music in one process");
+    require(platform.presented == 29 && platform.music_calls == 2 &&
+                platform.stop_calls == 2,
+            "MEO, RPG title/load and world did not remain in one process");
+}
+
+void test_rpg_opening_menu(const std::filesystem::path& game_root) {
+    {
+        ScriptedPlatform platform;
+        platform.actions = {swd2::InputAction::confirm};
+        auto original = swd2::SharedState::load(game_root / "SAVE.DA1");
+        swd2::GameContext context{game_root, original, platform};
+        require(swd2::RpgModule().run(
+                    context, swd2::Marker::menu_ready) ==
+                    swd2::Marker::open_demo &&
+                    context.shared_state.bytes() == original.bytes() &&
+                    platform.presented == 22U && platform.wait_calls == 1U &&
+                    platform.poll_calls == 0U &&
+                    platform.frontend_quit_poll_calls == 21U &&
+                    platform.delay_calls == 21U &&
+                    platform.delayed_milliseconds == 300U &&
+                    platform.music_calls == 1U && platform.stop_calls == 1U &&
+                    platform.palette_hashes.front() !=
+                        platform.palette_hashes.back() &&
+                    platform.frame_hashes.back() ==
+                        6322980293999423254ULL &&
+                    platform.palette_hashes.back() ==
+                        3016666169878880281ULL,
+                "RPG MT path did not reproduce OP01 fade and default New Game");
+    }
+
+    {
+        ScriptedPlatform platform;
+        platform.actions = {
+            swd2::InputAction::down,
+            swd2::InputAction::confirm,
+            swd2::InputAction::confirm,
+            swd2::InputAction::confirm,
+            swd2::InputAction::quit,
+        };
+        auto initial = swd2::SharedState::load(game_root / "SAVE.DAQ");
+        auto selected = std::uint8_t{0};
+        auto loads = std::size_t{0};
+        swd2::GameContext context{game_root, initial, platform};
+        context.load_slot = [&](std::uint8_t slot) {
+            selected = slot;
+            ++loads;
+            return swd2::LoadedSaveSlot{
+                swd2::SharedState::load(
+                    game_root / ("SAVE.DA" + std::to_string(slot))),
+                std::make_shared<swd2::MapDatabase>(
+                    swd2::MapDatabase::load(
+                        game_root / ("MAPZ.DA" + std::to_string(slot))))};
+        };
+        const auto result = swd2::RpgModule().run(
+            context, swd2::Marker::menu_ready);
+        const auto slot_one = swd2::SharedState::load(
+            game_root / "SAVE.DA1");
+        require(result == swd2::Marker::none &&
+                    selected == 1U && loads == 1U &&
+                    context.map_database != nullptr &&
+                    context.shared_state.u16(0x2c) == slot_one.u16(0x2c) &&
+                    context.shared_state.u16(0x2c) != initial.u16(0x2c) &&
+                    platform.presented == 26U && platform.wait_calls == 4U &&
+                    platform.poll_calls == 1U &&
+                    platform.music_calls == 2U && platform.stop_calls == 2U,
+                "RPG Continue did not select and atomically install SAVE/MAPZ");
+    }
+
+    {
+        ScriptedPlatform platform;
+        platform.actions = {swd2::InputAction::quit};
+        auto initial = swd2::SharedState::load(game_root / "SAVE.DA1");
+        auto wrong_map = std::make_shared<swd2::MapDatabase>(
+            swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+        swd2::GameContext context{game_root, initial, platform, wrong_map};
+        const auto expected_state = swd2::SharedState::load(
+            game_root / "SAVE.DAQ");
+        const auto expected_map = swd2::MapDatabase::load(
+            game_root / "MAPZ.DAQ");
+        const auto result = swd2::RpgModule().run(
+            context, swd2::Marker::returned_from_demo);
+        require(result == swd2::Marker::none &&
+                    context.map_database != nullptr &&
+                    context.shared_state.map_location_directory_offset() == 8U &&
+                    context.shared_state.u16(0x2c) == expected_state.u16(0x2c) &&
+                    std::equal(context.map_database->serialized_bytes().begin(),
+                               context.map_database->serialized_bytes().end(),
+                               expected_map.serialized_bytes().begin(),
+                               expected_map.serialized_bytes().end()) &&
+                    platform.presented == 83U && platform.direct_updates == 37U &&
+                    platform.poll_calls == 1U && platform.stop_calls == 1U,
+                "RPG OM path did not install DAQ and dispatch opening entity two");
+    }
 }
 
 void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
@@ -6400,7 +6496,7 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
     state.set_viewport_y(99);
     state.set_actor_direction(9);
     swd2::GameContext context{game_root, state, platform};
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG entity-dialogue run did not terminate normally");
     require(platform.presented == 4 && platform.music_calls == 1 &&
                 platform.stop_calls == 1 && platform.frame_hashes.size() == 4 &&
@@ -6431,7 +6527,7 @@ void test_rpg_event_program_exit(const std::filesystem::path& game_root) {
     state.set_actor_direction(9);
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none &&
                 platform.cursor == 2U && platform.poll_calls == 2U &&
                 platform.presented == 3U && platform.stop_calls == 1U,
@@ -6446,7 +6542,7 @@ void test_rpg_idle_world_ticks(const std::filesystem::path& game_root) {
     swd2::GameContext context{
         game_root, swd2::SharedState::load(game_root / "SAVE.DA1"), platform};
     context.map_database = database;
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none,
             "RPG idle world tick did not terminate normally");
     require(platform.poll_calls == 2U && platform.wait_calls == 0U &&
@@ -6481,7 +6577,7 @@ void test_rpg_map_portal(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto portal_marker = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(portal_marker == swd2::Marker::none &&
                 platform.presented == 2U && platform.poll_calls == 1U &&
                 platform.music_calls == 2U && platform.stop_calls == 1U &&
@@ -6551,7 +6647,7 @@ void test_rpg_map_chained_spawn_trigger(
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto marker = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(marker == swd2::Marker::none &&
                 platform.presented == 2U && platform.poll_calls == 1U &&
                 platform.frame_hashes.size() == 2U &&
@@ -6605,7 +6701,7 @@ void test_rpg_opcode37_chained_spawn_event(
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto marker = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     // The last two nonblack pages bracket entry 23's opcode-39 SA082 frame
     // change before its battle transition turns the palette black.
     require(marker == swd2::Marker::open_figure &&
@@ -6654,7 +6750,7 @@ void test_rpg_sa_scripted_entity_frames(
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto marker = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(marker == swd2::Marker::open_figure &&
                 platform.presented == 52U && platform.poll_calls == 4U &&
                 platform.cursor == 4U && platform.text_poll_calls == 0U &&
@@ -6687,7 +6783,7 @@ void test_rpg_map_special_event(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto marker = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(marker == swd2::Marker::none &&
                 platform.presented == 6U && platform.wait_calls == 0U &&
                 platform.poll_calls == 2U &&
@@ -6727,7 +6823,7 @@ void test_rpg_map_actor_variant(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto variant_marker = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(variant_marker == swd2::Marker::none &&
                 platform.presented == 2U && platform.poll_calls == 2U &&
                 platform.frame_hashes[0] == 5050928523494376350ULL &&
@@ -6779,7 +6875,7 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
     state.set_dos_string(0x485, 24, location.area.event_font_path);
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
-    const auto top_result = swd2::RpgModule().run(context, swd2::Marker::menu_ready);
+    const auto top_result = swd2::RpgModule().run(context, swd2::Marker::continue_rpg);
     const auto top_archive = swd2::ScriptArchive::load(game_root / "CHNA6.EXE");
     const auto top_record = swd2::decode_event_record(
         top_archive.event_stream(125));
@@ -6824,7 +6920,7 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG field-menu inventory run did not terminate normally");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 6U && platform.stop_calls == 1U,
@@ -6858,7 +6954,7 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
     swd2::GameContext reopen_context{
         game_root, reopen_state, reopen_platform};
     const auto reopen_result = swd2::RpgModule().run(
-        reopen_context, swd2::Marker::menu_ready);
+        reopen_context, swd2::Marker::continue_rpg);
     require(reopen_result == swd2::Marker::none &&
                 reopen_platform.cursor == reopen_platform.actions.size() &&
                 reopen_platform.frame_hashes.size() == 13U &&
@@ -6892,7 +6988,7 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
     swd2::GameContext explain_context{
         game_root, explain_state, explain_platform};
     require(swd2::RpgModule().run(
-                explain_context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                explain_context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 explain_platform.cursor == explain_platform.actions.size() &&
                 explain_context.shared_state.u16(0x382) == 98,
             "RPG item Explain action did not preserve/return to 2d0f");
@@ -6925,7 +7021,7 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
     paged_state.set_u16(0x382, 250);
     swd2::GameContext paged_context{game_root, paged_state, paged_platform};
     require(swd2::RpgModule().run(
-                paged_context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                paged_context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 paged_platform.cursor == paged_platform.actions.size() &&
                 paged_context.shared_state.u16(0x382) == 250U,
             "RPG paged ITEM2 explanation did not return to 2d0f");
@@ -6958,7 +7054,7 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
     swd2::GameContext discard_context{
         game_root, discard_state, discard_platform};
     require(swd2::RpgModule().run(
-                discard_context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                discard_context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 discard_platform.cursor == discard_platform.actions.size() &&
                 discard_context.shared_state.u16(0x382) == 99 &&
                 discard_context.shared_state.u16(0x384) == 0,
@@ -6983,7 +7079,7 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
     use_state.set_u16(0x106 + 0x37, 100);
     swd2::GameContext use_context{game_root, use_state, use_platform};
     require(swd2::RpgModule().run(
-                use_context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                use_context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 use_platform.cursor == use_platform.actions.size() &&
                 use_context.shared_state.u16(0x382) == 0U &&
                 use_context.shared_state.u16(0x106 + 0x35) == 50U,
@@ -7019,7 +7115,7 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
     swd2::GameContext talisman_context{
         game_root, talisman_state, talisman_platform};
     const auto talisman_result = swd2::RpgModule().run(
-        talisman_context, swd2::Marker::menu_ready);
+        talisman_context, swd2::Marker::continue_rpg);
     require(talisman_result == swd2::Marker::none &&
                 talisman_platform.cursor == talisman_platform.actions.size() &&
                 talisman_platform.frame_hashes.size() == 9U &&
@@ -7052,7 +7148,7 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
     swd2::GameContext talisman_error_context{
         game_root, talisman_error_state, talisman_error_platform};
     require(swd2::RpgModule().run(
-                talisman_error_context, swd2::Marker::menu_ready) ==
+                talisman_error_context, swd2::Marker::continue_rpg) ==
                     swd2::Marker::none &&
                 talisman_error_platform.cursor ==
                     talisman_error_platform.actions.size() &&
@@ -7088,7 +7184,7 @@ void test_rpg_inventory_alchemy(const std::filesystem::path& game_root) {
     state.set_u16(0x384, 99);
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 context.shared_state.u16(0x382) == 458U &&
                 context.shared_state.u16(0x384) == 0U,
@@ -7129,7 +7225,7 @@ void test_rpg_inventory_equipment_screen(
     state.set_u16(0x382U, 117U);  // category-nine two-handed equipment
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 platform.cursor == platform.actions.size(),
             "RPG equipment-page run did not terminate normally");
     require(context.shared_state.u16(0x382U) == 122U &&
@@ -7173,7 +7269,7 @@ void test_rpg_inventory_empty_slot_unequip(
             "empty-slot unequip fixture no longer matches SAVE.DA1");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 platform.cursor == platform.actions.size(),
             "RPG empty-slot unequip run did not terminate normally");
     require(context.shared_state.u16(0x382U) == 165U &&
@@ -7213,7 +7309,7 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
                       state.u16(0x106U + 0x37U) >> 2U));
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG field Status run did not terminate normally");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 10U && platform.stop_calls == 1U,
@@ -7246,7 +7342,7 @@ void test_rpg_field_magic_menu(const std::filesystem::path& game_root) {
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG field Magic run did not terminate normally");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 9U && platform.stop_calls == 1U,
@@ -7284,7 +7380,7 @@ void test_rpg_field_magic_cast(const std::filesystem::path& game_root) {
             "fixture no longer exposes actor-one field ability 50");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(actor_base + 0x55U) == before - 7U,
             "RPG field ability did not dispatch/deduct DATA:1dce cost");
     require(platform.cursor == platform.actions.size() &&
@@ -7315,7 +7411,7 @@ void test_rpg_field_magic_value_error(const std::filesystem::path& game_root) {
     state.set_u16(actor_base + 0x55U, 0);
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(actor_base + 0x55U) == 0U,
             "RPG insufficient ability resource changed actor state");
     require(platform.cursor == platform.actions.size() &&
@@ -7345,7 +7441,7 @@ void test_rpg_field_magic_description(const std::filesystem::path& game_root) {
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG DATE2 field-ability description run did not terminate");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 14U && platform.stop_calls == 1U &&
@@ -7379,7 +7475,7 @@ void test_rpg_field_magic_refine(const std::filesystem::path& game_root) {
             "fixture no longer exposes an empty type-four refine slot");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(0x382U) == 50U + 0x8cU &&
                 context.shared_state.u16(actor_base + 0x55U) == before,
             "RPG 333d Refine did not create/compact the type-10 talisman");
@@ -7411,7 +7507,7 @@ void test_rpg_field_magic_refine_full(const std::filesystem::path& game_root) {
     state.set_u16(0x3e4U, 1U);
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(0x3e4U) == 1U,
             "RPG full-inventory Refine changed physical slot 49");
     require(platform.cursor == platform.actions.size() &&
@@ -7445,7 +7541,7 @@ void test_rpg_field_magic_material_cast(const std::filesystem::path& game_root) 
     }
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG type-five field ability run did not terminate");
     for (std::size_t material = 0; material < 5U; ++material) {
         require(context.shared_state.u16(0x3e6U + material * 2U) == 0U,
@@ -7483,7 +7579,7 @@ void test_rpg_field_magic_material_error(const std::filesystem::path& game_root)
     }
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(0x3e6U) == 1U &&
                 context.shared_state.u16(0x3e8U) == 1U &&
                 context.shared_state.u16(0x3eaU) == 0U,
@@ -7515,7 +7611,7 @@ void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
             "fixture no longer permits action-29h travel");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(actor_base + 0x55U) == 85U &&
                 context.shared_state.map_location_directory_offset() == 0x0046U,
             "RPG ability 99 did not deduct/reload the selected MAPZ destination");
@@ -7548,7 +7644,7 @@ void test_rpg_field_magic_travel_current(
     state.set_u16(0x40aU, 0U);
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(actor_base + 0x55U) == 93U &&
                 context.shared_state.map_location_directory_offset() == 0x0046U,
             "RPG ability 98 did not reload SAVE+40a at its seven-point cost");
@@ -7582,7 +7678,7 @@ void test_rpg_field_magic_travel_restricted(
     const auto before_location = state.map_location_directory_offset();
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(actor_base + 0x55U) == 100U &&
                 context.shared_state.map_location_directory_offset() ==
                     before_location,
@@ -7616,7 +7712,7 @@ void test_rpg_system_menu_speed_and_exit(
             "fixture no longer has RPG message speed two");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(0x3f2) == 1U,
             "RPG system menu did not commit the selected message speed");
     require(platform.cursor == platform.actions.size() &&
@@ -7654,7 +7750,7 @@ void test_rpg_system_value_confirmation_escape(
             "fixture no longer exposes a nonzero message speed");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(0x3f2) == 0U &&
                 platform.cursor == platform.actions.size() &&
                 platform.presented == 12U &&
@@ -7683,7 +7779,7 @@ void test_rpg_system_value_left_wrap(
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.u16(0x3f2) == 4U &&
                 platform.cursor == platform.actions.size() &&
                 platform.presented == 13U &&
@@ -7719,7 +7815,7 @@ void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
                 "RPG system save supplied a stale SharedState snapshot");
     };
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 saves == 1U && saved_slot == 1U,
             "RPG system Record did not persist the confirmed slot pair");
     require(platform.cursor == platform.actions.size() &&
@@ -7751,7 +7847,7 @@ void test_rpg_system_menu_save_restricted(
     context.save_slot = [&](std::uint8_t, const swd2::SharedState&,
                             const swd2::MapDatabase&) { ++saves; };
     const auto restricted_result = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(restricted_result == swd2::Marker::none &&
                 saves == 0U &&
                 platform.cursor == platform.actions.size() &&
@@ -7790,7 +7886,7 @@ void test_rpg_system_menu_load(const std::filesystem::path& game_root) {
                 swd2::MapDatabase::load(game_root / "MAPZ.DA1"))};
     };
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 loads == 1U && loaded_slot == 2U &&
                 context.shared_state.u16(0x104) == loaded_money &&
                 context.map_database != nullptr,
@@ -7819,7 +7915,7 @@ void test_rpg_system_audio_toggle(const std::filesystem::path& game_root) {
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     swd2::GameContext context{game_root, state, platform};
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG system audio-toggle run did not terminate normally");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 11U && platform.music_calls == 2U &&
@@ -7839,7 +7935,7 @@ void test_rpg_system_audio_toggle(const std::filesystem::path& game_root) {
     swd2::GameContext disabled_context{
         game_root, disabled_state, disabled_platform};
     require(swd2::RpgModule().run(
-                disabled_context, swd2::Marker::menu_ready) ==
+                disabled_context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none &&
                 disabled_platform.music_calls == 0U,
             "RPG ignored the saved music/sound disable bytes on startup");
@@ -7861,7 +7957,7 @@ void test_rpg_entity_collision(const std::filesystem::path& game_root) {
     const auto original_x = state.world_x();
     const auto original_y = state.world_y();
     swd2::GameContext context{game_root, state, platform};
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG entity-collision run did not terminate normally");
     require(context.shared_state.world_x() == original_x &&
                 context.shared_state.world_y() == original_y &&
@@ -7911,7 +8007,7 @@ void test_rpg_behavior_six_collision(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto result = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(result == swd2::Marker::none &&
                 context.shared_state.world_x() == 42U &&
                 context.shared_state.world_y() == 74U,
@@ -7952,7 +8048,7 @@ void test_rpg_interaction_rays(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto ray_result = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(ray_result == swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 platform.poll_calls == 2U && platform.wait_calls == 0U &&
@@ -8006,7 +8102,7 @@ void test_rpg_corner_slide(const std::filesystem::path& game_root) {
         8U + ((center_y - 12) * map.layout().width + center_x - 20) * 2U));
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG corner-slide run did not terminate normally");
     require(context.shared_state.world_x() == center_x &&
                 context.shared_state.world_y() == center_y + 1 &&
@@ -8071,7 +8167,7 @@ void test_rpg_overworld_poison(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     require(swd2::RpgModule().run(
-                context, swd2::Marker::menu_ready) == swd2::Marker::none &&
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 context.shared_state.world_x() == start_x + 10U &&
                 context.shared_state.world_y() == start_y &&
                 context.shared_state.u16(actor + 0x2dU) == 0U &&
@@ -8107,7 +8203,7 @@ void test_rpg_overworld_poison(const std::filesystem::path& game_root) {
     swd2::GameContext quit_context{game_root, quit_state, quit_platform};
     quit_context.map_database = database;
     require(swd2::RpgModule().run(
-                quit_context, swd2::Marker::menu_ready) ==
+                quit_context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none &&
                 quit_platform.cursor == quit_platform.actions.size() &&
                 quit_platform.frontend_cursor == 1U &&
@@ -8174,7 +8270,7 @@ void test_rpg_random_encounter(const std::filesystem::path& game_root) {
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto encounter_result = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     std::uint64_t black_hash = 1469598103934665603ULL;
     for (std::size_t pixel = 0; pixel < 320U * 200U; ++pixel) {
         black_hash *= 1099511628211ULL;
@@ -8212,7 +8308,7 @@ void test_rpg_random_encounter(const std::filesystem::path& game_root) {
     swd2::GameContext quit_context{game_root, quit_state, quit_platform};
     quit_context.map_database = database;
     require(swd2::RpgModule().run(
-                quit_context, swd2::Marker::menu_ready) ==
+                quit_context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none &&
                 quit_platform.cursor == quit_platform.actions.size() &&
                 quit_platform.presented == 75U &&
@@ -8255,7 +8351,7 @@ void test_rpg_automatic_entity_event(const std::filesystem::path& game_root) {
     state.set_dos_string(0x485, 24, location.area.event_font_path);
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG automatic entity-event run did not terminate normally");
     require(context.shared_state.world_x() == 79 &&
                 context.shared_state.world_y() == 69 &&
@@ -8298,7 +8394,7 @@ void test_rpg_event_voice(const std::filesystem::path& game_root) {
     state.set_dos_string(0x485, 24, location.area.event_font_path);
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG voiced event did not terminate normally");
     require(platform.voice_calls == 1 &&
                 platform.voice_bytes == std::filesystem::file_size(
@@ -8338,7 +8434,7 @@ void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
     state.set_dos_string(0x485, 24, location.area.event_font_path);
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none,
             "RPG compact money-overlay event did not terminate normally");
     require(platform.presented == 5 && platform.compact_hashes.size() == 5 &&
@@ -8384,7 +8480,7 @@ void test_rpg_dialogue_then_money_overlay(
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     const auto result = swd2::RpgModule().run(
-        context, swd2::Marker::menu_ready);
+        context, swd2::Marker::continue_rpg);
     require(result == swd2::Marker::open_figure &&
                 platform.cursor == platform.actions.size() &&
                 platform.music_calls == 2U,
@@ -8468,7 +8564,7 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
     swd2::GameContext no_context{game_root, no_state, no_platform};
     no_context.map_database = no_database;
     const auto no_result = swd2::RpgModule().run(
-        no_context, swd2::Marker::menu_ready);
+        no_context, swd2::Marker::continue_rpg);
     require(no_result == swd2::Marker::none &&
                 no_context.shared_state.u16(0x104) == 100U &&
                 no_context.shared_state.u16(0x382) == 0U &&
@@ -8494,7 +8590,7 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
     swd2::GameContext yes_context{game_root, yes_state, yes_platform};
     yes_context.map_database = yes_database;
     const auto yes_result =
-        swd2::RpgModule().run(yes_context, swd2::Marker::menu_ready);
+        swd2::RpgModule().run(yes_context, swd2::Marker::continue_rpg);
     require(yes_result == swd2::Marker::none &&
                 yes_context.shared_state.u16(0x104) == 75U &&
                 yes_context.shared_state.u16(0x382) == 117U &&
@@ -8519,7 +8615,7 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
     swd2::GameContext error_context{game_root, error_state, error_platform};
     error_context.map_database = error_database;
     require(swd2::RpgModule().run(
-                error_context, swd2::Marker::menu_ready) ==
+                error_context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none &&
                 error_context.shared_state.u16(0x104) == 0U &&
                 error_context.shared_state.u16(0x382) == 0U &&
@@ -8551,7 +8647,7 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
         game_root, sell_state, sell_platform};
     sell_context.map_database = sell_database;
     require(swd2::RpgModule().run(
-                sell_context, swd2::Marker::menu_ready) ==
+                sell_context, swd2::Marker::continue_rpg) ==
                     swd2::Marker::none &&
                 sell_platform.cursor == sell_platform.actions.size() &&
                 sell_context.shared_state.u16(0x104U) == 119U &&
@@ -8588,7 +8684,7 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
         game_root, combined_quit_state, combined_quit_platform};
     combined_quit_context.map_database = combined_quit_database;
     const auto combined_quit_result = swd2::RpgModule().run(
-        combined_quit_context, swd2::Marker::menu_ready);
+        combined_quit_context, swd2::Marker::continue_rpg);
     require(combined_quit_result ==
                 swd2::Marker::none &&
                 combined_quit_platform.cursor ==
@@ -8624,7 +8720,7 @@ void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
     state.set_dos_string(0x485, 24, location.area.event_font_path);
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) == swd2::Marker::none,
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) == swd2::Marker::none,
             "RPG cutscene event did not terminate normally");
     const std::set<std::uint64_t> palettes(platform.palette_hashes.begin(),
                                            platform.palette_hashes.end());
@@ -8659,7 +8755,7 @@ void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
     swd2::GameContext quit_context{game_root, quit_state, quit_platform};
     quit_context.map_database = quit_database;
     require(swd2::RpgModule().run(
-                quit_context, swd2::Marker::menu_ready) ==
+                quit_context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none &&
                 quit_platform.cursor == quit_platform.actions.size() &&
                 quit_platform.frontend_cursor == 1U &&
@@ -8706,7 +8802,7 @@ void test_rpg_cutscene_presentation(const std::filesystem::path& game_root) {
         game_root, timed_quit_state, timed_quit_platform};
     timed_quit_context.map_database = timed_quit_database;
     const auto timed_quit_result = swd2::RpgModule().run(
-        timed_quit_context, swd2::Marker::menu_ready);
+        timed_quit_context, swd2::Marker::continue_rpg);
     require(timed_quit_result == swd2::Marker::none &&
                 timed_quit_platform.cursor ==
                     timed_quit_platform.actions.size() &&
@@ -8747,7 +8843,7 @@ void test_rpg_opcode55_cutscene(const std::filesystem::path& game_root) {
     state.set_dos_string(0x485, 24, location.area.event_font_path);
     swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
-    require(swd2::RpgModule().run(context, swd2::Marker::menu_ready) ==
+    require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none,
             "RPG opcode-55 ending cutscene did not terminate normally");
     require(platform.monochrome_transitions == 15,
@@ -9450,6 +9546,7 @@ int main(int argc, char** argv) {
         test_event_vm(argv[1]);
         test_stateful_event_opcodes(argv[1]);
         test_monolithic_runtime(argv[1]);
+        test_rpg_opening_menu(argv[1]);
         test_rpg_entity_dialogue(argv[1]);
         test_rpg_event_program_exit(argv[1]);
         test_rpg_idle_world_ticks(argv[1]);
