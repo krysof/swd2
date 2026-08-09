@@ -349,6 +349,14 @@
       });
       canvas.dispatchEvent(event);
     }
+    function pulseDirection(key) {
+      // SDL intentionally ignores OS autorepeat keydowns for menu safety.
+      // End and restart the synthetic press so every held-touch tick reaches
+      // SDL as a fresh direction while the final pointer release still leaves
+      // the keyboard state clean.
+      emitKey('keyup', key);
+      emitKey('keydown', key);
+    }
     const directionKeys = new Set(['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown']);
     const heldControls = new Map();
     function releaseControl(button, event) {
@@ -369,14 +377,15 @@
         heldControls.set(button, held);
         emitKey('keydown', button.dataset.key);
         // A physical keyboard generates fresh DOS key events while held. DOM
-        // events synthesized by a touch button do not, so repeat only the four
+        // events synthesized by a touch button remain one logically pressed
+        // key and SDL rejects their autorepeat flag. Pulse only the four
         // movement directions after a short initial delay. ESC and Enter stay
         // single-shot to prevent one press from accepting multiple screens.
         if (directionKeys.has(button.dataset.key)) {
           held.delay = setTimeout(() => {
-            emitKey('keydown', button.dataset.key);
+            pulseDirection(button.dataset.key);
             held.repeat = setInterval(
-              () => emitKey('keydown', button.dataset.key), 85);
+              () => pulseDirection(button.dataset.key), 85);
           }, 180);
         }
       });

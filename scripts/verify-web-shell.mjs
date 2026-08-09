@@ -18,6 +18,7 @@ class Element {
     this.listeners = {};
     this.classList = { add() {} };
     this.textContent = '';
+    this.dispatched = [];
   }
 
   addEventListener(type, listener) {
@@ -26,18 +27,25 @@ class Element {
 
   focus() {}
   setPointerCapture() {}
-  dispatchEvent() {}
+  dispatchEvent(event) { this.dispatched.push(event); }
 }
 
 const ids = Object.fromEntries(
   ['canvas', 'status-wrap', 'status', 'progress', 'error',
    'start-gate', 'start-button'].map(id => [id, new Element(id)]));
+const controlButtons = [
+  'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'Escape', 'Enter'
+].map(key => {
+  const button = new Element(key);
+  button.dataset.key = key;
+  return button;
+});
 const documentListeners = {};
 const document = {
   documentElement: new Element('html'),
   visibilityState: 'visible',
   getElementById: id => ids[id],
-  querySelectorAll: () => [],
+  querySelectorAll: selector => selector === '[data-key]' ? controlButtons : [],
   addEventListener(type, listener) {
     (documentListeners[type] ||= []).push(listener);
   },
@@ -78,6 +86,21 @@ const navigator = {
   },
 };
 const dependencies = new Set();
+let nextTimer = 1;
+const pendingTimeouts = new Map();
+const pendingIntervals = new Map();
+function fakeSetTimeout(callback) {
+  const id = nextTimer++;
+  pendingTimeouts.set(id, callback);
+  return id;
+}
+function fakeClearTimeout(id) { pendingTimeouts.delete(id); }
+function fakeSetInterval(callback) {
+  const id = nextTimer++;
+  pendingIntervals.set(id, callback);
+  return id;
+}
+function fakeClearInterval(id) { pendingIntervals.delete(id); }
 const context = {
   console,
   document,
@@ -98,11 +121,16 @@ const context = {
       throw new Error(`attempted to remove unknown dependency ${name}`);
     }
   },
-  setTimeout,
-  clearTimeout,
-  setInterval,
-  clearInterval,
-  KeyboardEvent: class {},
+  setTimeout: fakeSetTimeout,
+  clearTimeout: fakeClearTimeout,
+  setInterval: fakeSetInterval,
+  clearInterval: fakeClearInterval,
+  KeyboardEvent: class {
+    constructor(type, init) {
+      this.type = type;
+      Object.assign(this, init);
+    }
+  },
 };
 
 vm.createContext(context);
@@ -126,4 +154,51 @@ if (orientationRequests !== 1 || wakeRequests !== 1) {
   throw new Error('the start gesture did not request landscape and Wake Lock');
 }
 
-console.log('Web shell start gesture smoke: OK');
+const pointer = { pointerId: 7, preventDefault() {} };
+const upButton = controlButtons.find(button => button.dataset.key === 'ArrowUp');
+upButton.listeners.pointerdown[0](pointer);
+if (ids.canvas.dispatched.length !== 1 ||
+    ids.canvas.dispatched[0].type !== 'keydown' ||
+    ids.canvas.dispatched[0].key !== 'ArrowUp') {
+  throw new Error('touch direction did not begin with one fresh keydown');
+}
+if (pendingTimeouts.size !== 1 || pendingIntervals.size !== 0) {
+  throw new Error('touch direction did not arm exactly one initial repeat delay');
+}
+const delayedRepeat = pendingTimeouts.values().next().value;
+pendingTimeouts.clear();
+delayedRepeat();
+if (pendingIntervals.size !== 1) {
+  throw new Error('touch direction did not arm its held repeat interval');
+}
+const intervalRepeat = pendingIntervals.values().next().value;
+intervalRepeat();
+intervalRepeat();
+upButton.listeners.pointerup[0](pointer);
+const directionEvents = ids.canvas.dispatched.map(event =>
+  `${event.type}:${event.key}`);
+const expectedDirectionEvents = [
+  'keydown:ArrowUp',
+  'keyup:ArrowUp', 'keydown:ArrowUp',
+  'keyup:ArrowUp', 'keydown:ArrowUp',
+  'keyup:ArrowUp', 'keydown:ArrowUp',
+  'keyup:ArrowUp',
+];
+if (directionEvents.join('|') !== expectedDirectionEvents.join('|')) {
+  throw new Error(`held touch direction did not emit fresh SDL pulses: ${directionEvents}`);
+}
+if (pendingTimeouts.size !== 0 || pendingIntervals.size !== 0) {
+  throw new Error('touch direction left a repeat timer after release');
+}
+
+ids.canvas.dispatched.length = 0;
+const escapeButton = controlButtons.find(button => button.dataset.key === 'Escape');
+escapeButton.listeners.pointerdown[0](pointer);
+escapeButton.listeners.pointerup[0](pointer);
+const actionEvents = ids.canvas.dispatched.map(event => `${event.type}:${event.key}`);
+if (actionEvents.join('|') !== 'keydown:Escape|keyup:Escape' ||
+    pendingTimeouts.size !== 0 || pendingIntervals.size !== 0) {
+  throw new Error('ESC must stay single-shot while directions repeat');
+}
+
+console.log('Web shell start/held-direction smoke: OK');

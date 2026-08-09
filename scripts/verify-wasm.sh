@@ -131,6 +131,7 @@ done
 
 for pattern in \
   "const directionKeys" \
+  "pulseDirection" \
   "heldControls" \
   "setTimeout" \
   "setInterval" \
