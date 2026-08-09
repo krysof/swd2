@@ -973,4 +973,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_flagged_medium_validation PROPERTIES
         DEPENDS fig_flagged_medium_prepare)
+    add_test(
+        NAME fig_victory_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-victory-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-victory-save"
+    )
+    add_test(
+        NAME fig_victory_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-victory.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-victory-save"
+                "${CMAKE_BINARY_DIR}/fig-victory"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-victory-rgb-reference.json"
+    )
+    set_tests_properties(fig_victory_validation PROPERTIES
+        DEPENDS fig_victory_prepare)
 endif()

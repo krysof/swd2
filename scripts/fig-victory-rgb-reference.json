@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_victory_summary",
+  "formation_directory_offset": 392,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-victory-autotype.txt",
+  "capture_autotype_sha256": "2df2c21a639d298945d194b650978dfa150887c0dc626e0df1de81ec9a9c2df0",
+  "fixture_save_sha256": "350bcefb303f18dc0153a1c896512407361491bf0dc5ee79f0befb7b3e4c54cc",
+  "capture_video_sha256": "3b0bbc2f4994ef5a3b96e88e4cd5878b7347ce84f6011d578b6b398df9d5eafe",
+  "capture_manifest_sha256": "e9159a5735e3c870b4c61f573a27b2344052d876b4e697c7a6339090bb291d37",
+  "original_review_frame": 221,
+  "original_png_sha256": "96818bd62b98c9c199c3339e6ea54218047ee9ce583ea079bea201ee6de58ce7",
+  "original_rgb_sha256": "000e96f9bdd95b82426d9ed2398f94c26a9fb71447005d74445784fa8a92c725",
+  "rewrite_frame": 26,
+  "rewrite_video_fnv1a64": "3d971d631e383956",
+  "rewrite_state_fnv1a64": "e43bbbb5336a07d3",
+  "rewrite_final_fnv1a64": "4992aa123da6790b",
+  "rewrite_indexed_sha256": "517189eedb08764ba591122659827c76f01df504effc65fb9aa3a60c682cbc75",
+  "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+  "rewrite_rgb_sha256": "000e96f9bdd95b82426d9ed2398f94c26a9fb71447005d74445784fa8a92c725"
+}
