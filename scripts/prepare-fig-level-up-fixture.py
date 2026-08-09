@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 EXPECTED = "96e1cc1b75e5cd5b454f58bc8aa4d338bc34592169e4d825dc8760e85fbcdc91"
+LEARNED_EXPECTED = "a74ce4ee408f08387c1ae892ea69ba3ffa30f174044f813874679734b02f36d5"
 
 
 def word(data: bytearray, offset: int, value: int) -> None:
@@ -52,7 +53,24 @@ def main() -> int:
         if actual != EXPECTED:
             raise ValueError(f"FIG level-up fixture differs: {actual}")
         (args.output / "SAVE.DA1").write_bytes(data)
-        print(f"FIG level-up fixture: {actual}")
+
+        learned_root = args.output / "learned-ability"
+        learned_root.mkdir()
+        for name in ("MAPZ.DA1", "NAME1.DSK"):
+            shutil.copy2(args.game / name, learned_root / name)
+        learned = bytearray(data)
+        word(learned, actor + 0x31, 10)
+        word(learned, actor + 0x39, 14)
+        word(learned, actor + 0x3B, 146)
+        # Growth row ten carries ability 9.  FIG only reports it when the
+        # packed id is already present in one of the fifty actor slots.
+        learned[actor + 0x6D] = 9
+        learned_actual = hashlib.sha256(learned).hexdigest()
+        if learned_actual != LEARNED_EXPECTED:
+            raise ValueError(
+                f"FIG learned-ability fixture differs: {learned_actual}")
+        (learned_root / "SAVE.DA1").write_bytes(learned)
+        print(f"FIG level-up fixtures: {actual}, {learned_actual}")
         return 0
     except (OSError, ValueError) as error:
         parser.exit(1, f"FIG level-up fixture: FAIL: {error}\n")
