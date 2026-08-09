@@ -36,6 +36,11 @@ WASM 或发布 GitHub Pages 都只是阶段检查点，不等于移植完成。
 证据文件的完整 SHA-256。文件缺失、摘要变化或空证据都会让最终命令失败。清单结构检查
 也会提前拒绝不存在或没有执行权限的 `./scripts/...` 完成命令。
 
+每个 artifact 还必须带可审计的 `role`。像素差分至少含 baseline/rewrite_output/
+diff_report，通关至少含 input/original_trace/rewrite_trace/comparison，长期矩阵至少含
+native_log/browser_log/matrix_report。通关脚本会进一步解析现代回放 trace，拒绝未消费
+输入、隐式退出、空帧或没有实际进入 MEO/RPG/FIG/DEMO 四模块的伪“通关”证据。
+
 `scripts/audit-runtime-sources.py` 另外以失败封闭方式检查生产源码：所有平台无关翻译单元
 必须确实列入 `swd2_core`，四个原模块必须仍在单进程核心中，且源码不得重新出现显式
 占位标记、`#if 0` 死代码、DOS 模拟器依赖或子进程逃生路径。这个检查只能排除可静态识别

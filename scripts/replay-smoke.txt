@@ -1,3 +1,5 @@
-# Boundary-locked replay smoke test: render MEO once, then close only from its
-# blocking selector. This is infrastructure validation, not playthrough proof.
-WAIT:QUIT
+# Boundary-locked replay smoke test: pass MEO through three blocking confirms,
+# enter RPG, then close only from the world's nonblocking poll. This is
+# infrastructure validation, not playthrough proof.
+WAIT:CONFIRM*3
+POLL:QUIT

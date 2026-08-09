@@ -1139,4 +1139,9 @@ Enter/Esc、手柄十个数字按钮、摇杆启停滞回、逐字轮询，以�
 （只允许 NONE/QUIT），并用 `*次数` 压缩连续移动/空 tick。严格 `--run-replay` 遇到
 阻塞边界不符、百万次无进展轮询或未消费尾部都会失败；`--trace-output` 同时记录帧/调色
 板链、音频载荷链、累计延时、最终 SAVE/MAPZ、模块切换和每类输入调用。当前 CTest 用
-WAIT:QUIT 锁住一帧 MEO 烟雾测试；它只证明回放基础设施可执行，不能冒充完整通关证据。
+三个 WAIT:CONFIRM 后以 POLL:QUIT 锁住 MEO→RPG 烟雾测试；它只证明回放基础设施可执行，
+不能冒充完整通关证据。
+trace 的独立验证器会拒绝剩余动作、隐式退出、无帧/非 320×200 尾页、损坏摘要或失败的
+模块启动；最终通关门还强制现代 trace 至少实际进入 MEO、RPG、FIG、DEMO 四模块。
+证据 manifest 另外要求 input/original_trace/rewrite_trace/comparison 四种带 SHA-256 的
+角色，单独复制一份“测试通过”日志不能再放行通关门。

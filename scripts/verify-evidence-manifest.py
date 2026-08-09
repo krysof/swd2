@@ -11,6 +11,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
+REQUIRED_ROLES = {
+    "pixel_diffs": {"baseline", "rewrite_output", "diff_report"},
+    "playthrough": {"input", "original_trace", "rewrite_trace", "comparison"},
+    "long_run": {"native_log", "browser_log", "matrix_report"},
+}
+
 
 def fail(message: str) -> None:
     raise ValueError(message)
@@ -40,6 +46,7 @@ def main() -> int:
         if not isinstance(artifacts, list) or not artifacts:
             fail("manifest has no hashed artifacts")
         seen: set[str] = set()
+        roles: set[str] = set()
         for artifact in artifacts:
             if not isinstance(artifact, dict):
                 fail("artifact entry is not an object")
@@ -48,6 +55,10 @@ def main() -> int:
             if relative in seen:
                 fail(f"duplicate artifact: {relative}")
             seen.add(relative)
+            role = artifact.get("role")
+            if not isinstance(role, str) or not role:
+                fail(f"artifact has no evidence role: {relative}")
+            roles.add(role)
             expected = artifact.get("sha256")
             if not isinstance(expected, str) or len(expected) != 64:
                 fail(f"artifact has no full SHA-256: {relative}")
@@ -56,6 +67,9 @@ def main() -> int:
             actual = hashlib.sha256(path.read_bytes()).hexdigest()
             if actual != expected.lower():
                 fail(f"artifact hash differs: {relative}")
+        missing_roles = sorted(REQUIRED_ROLES[args.kind] - roles)
+        if missing_roles:
+            fail(f"manifest is missing required evidence roles: {missing_roles}")
         print(f"{args.kind} evidence: OK ({len(artifacts)} hashed artifacts)")
         return 0
     except (OSError, json.JSONDecodeError, ValueError) as error:

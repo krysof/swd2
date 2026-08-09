@@ -178,4 +178,15 @@ if(BUILD_TESTING)
                 --run-replay "${PROJECT_SOURCE_DIR}/scripts/replay-smoke.txt"
                 --trace-output "${CMAKE_BINARY_DIR}/replay-smoke-trace.json"
     )
+    add_test(
+        NAME replay_trace_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-replay-trace.py"
+                "${CMAKE_BINARY_DIR}/replay-smoke-trace.json"
+                --require-module MEO.EXE
+                --require-module RPG.EXE
+                --min-frames 4
+    )
+    set_tests_properties(replay_trace_validation PROPERTIES
+        DEPENDS replay_trace_smoke)
 endif()

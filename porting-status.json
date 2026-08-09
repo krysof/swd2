@@ -157,7 +157,7 @@
         "至少一条完整主线从新游戏运行到结局",
         "关键状态、画面、战斗、存档和模块切换与原版基准一致"
       ],
-      "evidence": ["src/include/swd2/replay_input.hpp", "src/replay_input.cpp", "src/main.cpp", "scripts/replay-smoke.txt", "scripts/verify-playthrough.sh", "scripts/verify-evidence-manifest.py"],
+      "evidence": ["src/include/swd2/replay_input.hpp", "src/replay_input.cpp", "src/main.cpp", "scripts/replay-smoke.txt", "scripts/verify-replay-trace.py", "scripts/verify-playthrough.sh", "scripts/verify-evidence-manifest.py"],
       "remaining": ["使用边界锁定格式录制从新游戏到结局的原版输入/状态基准", "生成通过哈希校验的 playthrough manifest"]
     },
     {

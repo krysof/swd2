@@ -3,10 +3,12 @@ cmake_minimum_required(VERSION 3.20)
 project(swd2_rewrite VERSION 0.1.0 LANGUAGES CXX)
 
 include(CTest)
+if(BUILD_TESTING)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+endif()
 add_subdirectory(src)
 
 if(BUILD_TESTING)
-    find_package(Python3 REQUIRED COMPONENTS Interpreter)
     add_test(
         NAME completion_manifest
         COMMAND "${Python3_EXECUTABLE}"
