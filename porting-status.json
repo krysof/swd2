@@ -61,7 +61,7 @@
         "背包、装备、奇术、旅行、商店、状态和存档槽全部状态逐像素通过",
         "不存在通用居中框或近似画面"
       ],
-      "evidence": ["src/rpg_presentation.cpp", "src/rpg_module.cpp", "src/reverse-engineering.md", "src/tests/test_main.cpp", "scripts/compare-dosbox-rgb-frame.py", "scripts/rpg-opening-rgb-reference.json", "scripts/rpg-name-editor-rgb-reference.json", "scripts/replay-new-game-startup.txt", "scripts/replay-smoke.txt"],
+      "evidence": ["src/rpg_presentation.cpp", "src/rpg_module.cpp", "src/reverse-engineering.md", "src/tests/test_main.cpp", "scripts/compare-dosbox-rgb-frame.py", "scripts/rpg-opening-rgb-reference.json", "scripts/rpg-name-editor-rgb-reference.json", "scripts/rpg-name-bitmap-rgb-reference.json", "scripts/replay-name-bitmap.txt", "scripts/replay-new-game-startup.txt", "scripts/replay-smoke.txt"],
       "remaining": ["把已零差异的 OP01/五槽 RGB 抽查提升为索引像素基准，并补齐背包/装备边界状态差分", "补齐奇术/旅行/存档槽全部选择状态差分"]
     },
     {

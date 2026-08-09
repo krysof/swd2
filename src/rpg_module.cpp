@@ -470,8 +470,8 @@ std::optional<Viewport> run_rpg_name_editor(
         std::size_t pixel_y = 0U;
         while (true) {
             auto frame = draw_main();
-            draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites,
-                                    6, 33, 12, 8);
+            draw_rpg_grid_panel(frame.pixels, 320, 200, menu_sprites,
+                                6, 33, 12, 8);
             for (std::size_t y = 0; y < LegacyFont::glyph_height; ++y) {
                 const auto word = static_cast<std::uint16_t>(bitmap[y * 2U])
                                   << 8U | bitmap[y * 2U + 1U];

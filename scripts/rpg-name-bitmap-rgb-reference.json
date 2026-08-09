@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "This locks the visible initial 16x15 bitmap editor only. The DOSBox PNG remains external reference evidence and does not prove all 240 cursor positions or edited glyph states.",
+  "program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "frames": [
+    {
+      "label": "RPG name glyph 16x15 bitmap editor",
+      "original": "000095.png",
+      "sha256": "f1d09e0dcc6553129d960ed53a5e545c2d417c8e42db993e3086fe60c355a285",
+      "rewrite_frame": 114
+    }
+  ]
+}

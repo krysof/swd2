@@ -1,0 +1,9 @@
+# Open the original RPG:1880 zoomed name-glyph editor through the complete
+# MEO -> RPG title path, then leave it without changing the font and continue
+# through DEMO to the first world poll.
+WAIT:CONFIRM*4
+WAIT:RIGHT*4
+WAIT:CONFIRM
+WAIT:CANCEL*2
+POLL:CONFIRM
+POLL:QUIT
