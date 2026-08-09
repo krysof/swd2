@@ -9862,7 +9862,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 swd2::Marker::none &&
                 target_overlay_platform.presented == 4 &&
                 target_overlay_platform.frame_hashes.back() ==
-                    9077867568305503402ULL,
+                    7907822032058171701ULL,
             "FIG 178c target list did not preserve its dimmed attack menus");
 
     ScriptedPlatform platform;

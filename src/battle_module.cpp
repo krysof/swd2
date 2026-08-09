@@ -594,10 +594,6 @@ BattleSurface compose_command_frame(
             const auto rows = static_cast<int>(target_entries.size());
             draw_selector_panel(result, menu_sprites, 18, 70, 4,
                                 std::max(1, rows));
-            if (!target_entries.empty()) {
-                blit(result, menu_sprites, 1, 21 * 4,
-                     79 + static_cast<int>(target_cursor) * 16);
-            }
             for (std::size_t row = 0; row < target_entries.size(); ++row) {
                 const auto target =
                     static_cast<std::size_t>(target_entries[row].value);
@@ -608,6 +604,13 @@ BattleSurface compose_command_frame(
                 draw_big5(result, font, fallback, abilities.item_name(definition),
                           25 * 4, 83 + static_cast<int>(row) * 16,
                           enabled_text_color);
+            }
+            // FIG 178c uses the same text-then-frame-1 order as 41a1/1ac2.
+            // The bar's bottom two scanlines intentionally cover the next
+            // monster name when the first row is selected.
+            if (!target_entries.empty()) {
+                blit(result, menu_sprites, 1, 21 * 4,
+                     79 + static_cast<int>(target_cursor) * 16);
             }
         } else if (active_page == BattleCommandMenuPage::party_target &&
                    !target_entries.empty()) {
