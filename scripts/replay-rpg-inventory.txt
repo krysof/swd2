@@ -7,6 +7,7 @@ WAIT:CONFIRM*3
 POLL:CANCEL
 WAIT:RIGHT
 WAIT:CONFIRM
-# Submit the initial inventory page, then move the cursor down once.
-WAIT:DOWN
+# Submit every one of the 50 physical inventory rows, including all 42
+# one-row scrolls after the cursor reaches the bottom of the eight-row panel.
+WAIT:DOWN*49
 WAIT:QUIT

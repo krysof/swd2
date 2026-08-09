@@ -67,32 +67,57 @@ def main() -> int:
         if data.get("schema_version") != 1:
             raise ValueError("unsupported trace schema")
         if data.get("input") != {
-            "total": 12,
-            "consumed": 12,
+            "total": 60,
+            "consumed": 60,
             "remaining": 0,
             "implicit_quit_calls": 0,
         }:
             raise ValueError("inventory replay input accounting differs")
         if data.get("boundaries") != {
-            "wait": 11,
+            "wait": 59,
             "poll": 1,
             "text": 0,
             "frontend": 105,
         }:
             raise ValueError("inventory replay input boundaries differ")
         video = data.get("video", {})
-        if video.get("frames") != 117 or \
+        if video.get("frames") != 165 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "e1151f6084b2e4f6":
+                video.get("fnv1a64") != "c2bc45241eba1f35":
             raise ValueError("inventory replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
-        if len(hashes) != 117 or hashes[113:117] != [
+        inventory_pages = [
+            "b39e6c5808648ed7", "ee0161595a5de622",
+            "baad37ae3f821bd6", "7f62ae2b4a2e3672",
+            "d8db0ba139c62eb2", "c17e39e2890267ca",
+            "0ac20eb1d3a2a066", "c7a03895f43673ed",
+            "bf211faeb8f93899", "652afd15db4bd6ad",
+            "2efe3a042901e915", "220486a992ac2a21",
+            "7a310c3a0998fe15", "7526a66ff19aedb9",
+            "2233023ccdfe4511", "86dd80381b339cd5",
+            "5a63a06abab9f641", "7e237a70f6b88b7d",
+            "205fd8733edcfd61", "b94e25016fa60871",
+            "d95a832b992e0c29", "fca7870230116a2d",
+            "aaf40db0f8c14165", "f933d936efc1f131",
+            "3e582eeaca129755", "bc36512644e54185",
+            "54bd3cfa3076578d", "3b31d75e28967ae5",
+            "e2e09ebf0a08c669", "95c4e3af40f2e311",
+            "41f29786f40d90b5", "31a40c86aee73781",
+            "47097801eedd26a1", "1e8856a3ef904f11",
+            "92084037ba586369", "c5f7e1fbbece4415",
+            "0ef3fb5674768ed9", "9da3954fe394d6c5",
+            "05063d85dee05ea5", "8198a284d2643bc9",
+            "0b6789eaae8d30d5", "1827c02f726be6dd",
+            "9b7d44a3dc56c831", "ec6e8d42908c1895",
+            "ac2f5ba206f68e59", "3ded9bfb24d435e9",
+            "b4130adceb9b5411", "1a46e3945cf2f74d",
+            "f4602a4eb4105235", "c737ae2763a734f5",
+        ]
+        if len(hashes) != 165 or hashes[113:115] != [
                 "a2bc9fa38fe088af",  # System-selected field diamond
                 "ddb26857dd11b4f3",  # Item-selected field diamond
-                "b39e6c5808648ed7",  # inventory row zero
-                "ee0161595a5de622",  # inventory row one
-        ]:
+        ] or hashes[115:165] != inventory_pages:
             raise ValueError("inventory selection pages differ")
         if (data.get("state_fnv1a64"), data.get("mapz_fnv1a64"),
                 data.get("name_fnv1a64")) != (
@@ -101,7 +126,7 @@ def main() -> int:
             raise ValueError("inventory replay changed the loaded save triple")
 
         frames = load_frames(args.frames)
-        if len(frames) != 117:
+        if len(frames) != 165:
             raise ValueError("inventory frame capture count differs")
         source_pixels, source_palette = frames[114]
         inventory_pixels, inventory_palette = frames[115]
@@ -124,7 +149,7 @@ def main() -> int:
                 f"{mismatched}/{len(checked)} unobscured pixels")
 
         print(
-            "RPG inventory checkpoint: 117 frames, two rows locked, "
+            "RPG inventory checkpoint: 165 frames, all 50 rows locked, "
             f"{len(checked)} grayscale world pixels exact")
         return 0
     except (OSError, ValueError, json.JSONDecodeError) as error:
