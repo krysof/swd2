@@ -933,6 +933,7 @@ void verify_maps(const std::filesystem::path& game_root) {
     }
     std::size_t sa_sets = 0;
     std::size_t sa_frames = 0;
+    std::map<std::uint16_t, std::size_t> sa_frame_counts;
     for (const auto& entry :
          std::filesystem::directory_iterator(game_root / "SA")) {
         if (!entry.is_regular_file() || entry.path().extension() != ".RSK") {
@@ -940,6 +941,21 @@ void verify_maps(const std::filesystem::path& game_root) {
         }
         const auto archive = swd2::SpriteArchive::parse(
             swd2::decode_rsk_block(read_binary_file(entry.path())).data);
+        const auto stem = entry.path().stem().string();
+        if (stem.size() != 5U || stem[0] != 'S' || stem[1] != 'A' ||
+            !std::all_of(stem.begin() + 2, stem.end(), [](unsigned char byte) {
+                return std::isdigit(byte) != 0;
+            })) {
+            throw std::runtime_error("SA archive has an invalid decimal name");
+        }
+        const auto resource = static_cast<std::uint16_t>(
+            std::stoul(stem.substr(2)));
+        if (resource == 0U || resource > 0xffU ||
+            !sa_frame_counts.emplace(
+                resource, archive.sprites().size()).second) {
+            throw std::runtime_error(
+                "SA archive resource id is invalid or duplicated");
+        }
         ++sa_sets;
         sa_frames += archive.sprites().size();
     }
@@ -975,6 +991,8 @@ void verify_maps(const std::filesystem::path& game_root) {
     std::size_t special_entity_contexts = 0;
     std::size_t spawn_trigger_locations = 0;
     std::size_t spawn_special_locations = 0;
+    std::size_t active_actor_entity_frames = 0;
+    std::size_t active_sa_entity_frames = 0;
     for (const auto& location : world.locations()) {
         if (seen_areas.insert(location.area_offset).second) {
             auto graphics = game_root / swd2::normalize_dos_asset_path(
@@ -1127,6 +1145,37 @@ void verify_maps(const std::filesystem::path& game_root) {
                     referenced_sa.insert(
                         static_cast<std::uint16_t>(record.sprite >> 8U));
                 }
+                if (record.behavior != 3U && record.behavior != 7U) {
+                    const auto animation_frame =
+                        (record.animation_frame & 1U) != 0U
+                        ? 1U : record.animation_frame;
+                    auto frame = static_cast<std::size_t>(
+                        record.sprite & 0xffU) + animation_frame;
+                    if (record.behavior != 4U && record.behavior != 5U &&
+                        record.behavior != 6U) {
+                        frame += record.direction;
+                    }
+                    const auto resource = static_cast<std::uint16_t>(
+                        record.sprite >> 8U);
+                    if (resource == 0U) {
+                        // No active released entity uses MAN1 areas; BMAN1's
+                        // fifty frames therefore cover every raw zero-id row.
+                        ++active_actor_entity_frames;
+                        if ((location.area.flags & 0x8000U) != 0U ||
+                            frame >= 50U) {
+                            throw std::runtime_error(
+                                "active MAPA entity uses an invalid MAN/BMAN frame");
+                        }
+                    } else {
+                        ++active_sa_entity_frames;
+                        const auto found = sa_frame_counts.find(resource);
+                        if (found == sa_frame_counts.end() ||
+                            frame >= found->second) {
+                            throw std::runtime_error(
+                                "active MAPA entity uses an invalid SA frame");
+                        }
+                    }
+                }
                 const auto cell = record.cell_offset;
                 if (cell < resource.cell_base() ||
                     ((cell - resource.cell_base()) & 1U) != 0U ||
@@ -1233,6 +1282,8 @@ void verify_maps(const std::filesystem::path& game_root) {
         special_transition_actions != expected_special_actions ||
         special_entity_contexts != 15U || spawn_trigger_locations != 23U ||
         spawn_special_locations != 23U ||
+        active_actor_entity_frames != 197U ||
+        active_sa_entity_frames != 437U ||
         world.locations().size() != 466U || seen_areas.size() != 152U ||
         referenced_entities != 822U || split_layouts != 2U ||
         inert_off_map_entities != 4U ||
@@ -1260,7 +1311,8 @@ void verify_maps(const std::filesystem::path& game_root) {
               << " non-map tile sets skipped; " << de_sets << " DE sprite sets, "
               << de_frames << " frames; " << sa_sets << " SA entity archives/"
               << sa_frames << " frames (" << referenced_sa.size()
-              << " referenced); " << transitions.area_count()
+              << " referenced, " << active_sa_entity_frames
+              << " active entity frames); " << transitions.area_count()
               << " MAP0 areas, " << transitions.record_count()
               << " transition records/" << transition_rows << " expanded rows ("
               << wrapped_transition_records << " wrapping, "
