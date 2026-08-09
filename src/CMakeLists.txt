@@ -485,6 +485,39 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_magic_validation PROPERTIES
         DEPENDS rpg_magic_replay)
     add_test(
+        NAME rpg_travel_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-travel-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-travel-saves"
+    )
+    add_test(
+        NAME rpg_travel_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-travel-saves"
+                --slot 1
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-travel.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-travel-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-travel-frames.bin"
+    )
+    set_tests_properties(rpg_travel_replay PROPERTIES
+        DEPENDS rpg_travel_prepare)
+    add_test(
+        NAME rpg_travel_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-travel.py"
+                "${CMAKE_BINARY_DIR}/rpg-travel-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-travel-frames.bin"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-travel-rgb-reference.json"
+    )
+    set_tests_properties(rpg_travel_validation PROPERTIES
+        DEPENDS rpg_travel_replay)
+    add_test(
         NAME rpg_status_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

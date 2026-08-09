@@ -1,0 +1,13 @@
+# MEO: select RPG and confirm twice.
+WAIT:CONFIRM*3
+# RPG: Continue, first slot, and confirm Yes.
+WAIT:DOWN
+WAIT:CONFIRM*3
+# Open Magic, actor zero, its staged first ability (action 29h), then Use.
+POLL:CANCEL
+WAIT:LEFT
+WAIT:CONFIRM*4
+# One frame for each of the remaining eleven destinations.  The last two
+# inputs exercise both single-line scroll steps of the ten-row selector.
+WAIT:DOWN*11
+WAIT:QUIT

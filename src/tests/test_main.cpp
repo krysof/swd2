@@ -280,11 +280,29 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
             "RPG save selector did not recover its original Big5 prompt");
     const auto travel_labels = swd2::extract_rpg_embedded_data(
         image, entry, 0x3ace, 34U * 8U);
+    const std::array<std::uint8_t, 8> spaced_travel_label{
+        0xb2, 0xbd, 0xa1, 0x40, 0x20, 0x20, 0xbe, 0xc2};
     require(travel_labels.size() == 272U && travel_labels[0] == 0xa6U &&
                 travel_labels[1] == 0x77U && travel_labels[6] == 0xa1U &&
                 travel_labels[7] == 0x40U &&
+                std::equal(spaced_travel_label.begin(),
+                           spaced_travel_label.end(),
+                           travel_labels.begin() + 17U * 8U) &&
                 travel_labels[264] == 0xa5U && travel_labels[271] == 0xf0U,
             "RPG travel selector did not recover its 34 fixed Big5 labels");
+    const std::array<std::uint8_t, 16> action_29_gate{
+        0x83, 0xfe, 0x29, 0x75, 0x0b, 0xf7, 0x06, 0x08,
+        0x04, 0x00, 0x80, 0x75, 0x03, 0xe9, 0x4a, 0xff};
+    require(image.size() >= 0x32b7U + action_29_gate.size() &&
+                std::equal(action_29_gate.begin(), action_29_gate.end(),
+                           image.begin() + 0x32b7U),
+            "RPG action-29h 8000h permission gate changed");
+    const std::array<std::uint8_t, 8> oc_q_slot{
+        0xe8, 0x03, 0x0b, 0xb0, 0x51, 0xe8, 0x57, 0x4b};
+    require(image.size() >= 0x00b7U + oc_q_slot.size() &&
+                std::equal(oc_q_slot.begin(), oc_q_slot.end(),
+                           image.begin() + 0x00b7U),
+            "RPG OC entry no longer reloads the Q checkpoint through 4c16");
     const auto shop_prompt = swd2::extract_rpg_embedded_text(
         image, entry, 0x3c32);
     require(shop_prompt == std::vector<std::uint8_t>({
@@ -7999,13 +8017,13 @@ void test_rpg_field_magic_travel_scroll(
         5188932088196950066ULL, 15540623177949900666ULL,
         5992870746625885040ULL, 10228933188199922168ULL,
         14723619521334390648ULL, 14201100971235321150ULL,
-        10840548927968299476ULL, 9316171890198649933ULL,
-        343747605213214233ULL, 11790066974229451761ULL,
-        10439051896786491203ULL, 14384895171955972357ULL,
-        5927851693166360777ULL, 11569754272034889269ULL,
-        4430970383128354317ULL, 5846874248742118948ULL,
-        10468143681461831282ULL, 16139685883988307604ULL,
-        16139685883988307604ULL, 14919137624718806277ULL,
+        9946720977270515444ULL, 18066313886593929101ULL,
+        10125642964897243993ULL, 15007071703683639857ULL,
+        4635137257746067203ULL, 16464635052519325509ULL,
+        9060108531915017993ULL, 6957156818809103093ULL,
+        14225319625208041421ULL, 2127997153651721956ULL,
+        9661084315877679922ULL, 15791144070524169172ULL,
+        15791144070524169172ULL, 14919137624718806277ULL,
     };
     require(platform.frame_hashes == expected_frames,
             "RPG travel selector's twelve rows, two scrolls, final clamp, "

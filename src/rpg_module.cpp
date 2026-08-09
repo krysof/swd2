@@ -393,6 +393,39 @@ void draw_legacy_text(Viewport& viewport, const LegacyFont& font,
     }
 }
 
+// 71fd is the fixed-count companion to the variable byte-stream renderer
+// above.  Its CX operand counts 16-pixel glyph cells, so every two bytes are
+// consumed as one code even when both bytes happen to be ASCII spaces.  This
+// matters for DATA:3ace travel label 17 ("祭<full-space><2020>壇"): treating
+// 2020h as two four-pixel indents moves the final glyph eight pixels left.
+void draw_legacy_fixed_pairs(Viewport& viewport, const LegacyFont& font,
+                             std::span<const std::uint8_t> text,
+                             int left, int top, std::size_t pair_count,
+                             std::uint8_t color) {
+    const auto available = std::min(pair_count, text.size() / 2U);
+    for (std::size_t pair = 0; pair < available; ++pair) {
+        const auto code = static_cast<std::uint16_t>(text[pair * 2U]) << 8U |
+                          text[pair * 2U + 1U];
+        const auto glyph = font.rasterize_or_first(code);
+        for (std::size_t row = 0; row < LegacyFont::glyph_height; ++row) {
+            for (std::size_t column = 0; column < LegacyFont::glyph_width;
+                 ++column) {
+                if (glyph[row * LegacyFont::glyph_width + column] == 0U) {
+                    continue;
+                }
+                const auto target_x = left + static_cast<int>(pair) * 16 +
+                                      static_cast<int>(column);
+                const auto target_y = top + static_cast<int>(row);
+                if (target_x >= 0 && target_x < 320 &&
+                    target_y >= 0 && target_y < 200) {
+                    viewport.pixels[static_cast<std::size_t>(target_y) * 320U +
+                                    static_cast<std::size_t>(target_x)] = color;
+                }
+            }
+        }
+    }
+}
+
 std::optional<Viewport> run_rpg_name_editor(
     PlatformBackend& platform, const SpriteArchive& menu_sprites,
     const LegacyFont& text_font, LegacyFont& active_name_font,
@@ -3080,10 +3113,9 @@ private:
                 const auto index = first_visible + row;
                 const auto label = static_cast<std::size_t>(destinations[index]) * 8U;
                 if (label + 8U <= travel_labels_.size()) {
-                    draw_legacy_text(
+                    draw_legacy_fixed_pairs(
                         frame, item_font_, travel_labels_.subspan(label, 8),
-                        22 * 4, 29 + static_cast<int>(row) * 16,
-                        64, 16, 0);
+                        22 * 4, 29 + static_cast<int>(row) * 16, 4U, 0);
                 }
             }
             if (menu_sprites_.sprites().size() > 1U) {

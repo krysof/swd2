@@ -5,9 +5,11 @@
 ; Build with:
 ;   nasm -f bin scripts/original-rpg-oc.asm -o RPGOC.COM
 ;
-; Run from a temporary copy of the original game directory.  SAVE.DA1 is read
-; into the transfer segment used by the shipped launcher, the literal marker
-; "OC" is installed, then DOS EXEC starts the untouched RPG.EXE.
+; Run from a temporary copy of the original game directory.  The historical
+; 138-byte harness retains a SAVE.DA1 payload after the transfer marker so old
+; capture hashes remain reproducible, but RPG's OC branch observes only the
+; marker and then calls 4c16 with suffix Q: staged state must therefore be put
+; in SAVE.DAQ/MAPZ.DAQ/NAMEQ.DSK.  DOS EXEC starts the untouched RPG.EXE.
 
 bits 16
 org 0x100

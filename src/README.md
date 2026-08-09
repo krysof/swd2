@@ -305,6 +305,8 @@ EOF
 ```sh
 staged_game="$(mktemp -d)"
 cp -R game/. "$staged_game/"
+# RPG's OC entry reloads the Q checkpoint. Apply any capture-only state
+# changes to SAVE.DAQ/MAPZ.DAQ/NAMEQ.DSK, not SAVE.DA1.
 ./scripts/build-original-rpg-harness.sh "$staged_game/RPGOC.COM"
 ./scripts/capture-original-dosbox.py --game "$staged_game" \
   --program RPGOC.COM --reference-program RPG.EXE \
@@ -312,7 +314,9 @@ cp -R game/. "$staged_game/"
 ```
 
 manifest 会分别保存启动 harness 和未修改参考 EXE 的名称及 SHA-256，防止把二者身份
-混为一谈。
+混为一谈。138-byte harness 为了保持既有捕获摘要仍把 `SAVE.DA1` 放在 marker 后面，
+但原版 `OC` 分支的 `00b7..00bf` 随即以 `AL=51h` 调用 `4c16`，实际重新载入的是
+`SAVE.DAQ/MAPZ.DAQ/NAMEQ.DSK`；准备定向原版场景时必须改 Q 槽。
 
 已登记的 RPG 标题/读档 RGB 抽查可把五张带 SHA-256 的 DOSBox PNG 与烟雾回放的
 指定现代帧逐 RGB 像素比较；每张必须 64,000 像素零差异：
