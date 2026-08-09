@@ -397,6 +397,39 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_system_record_validation PROPERTIES
         DEPENDS rpg_system_record_replay)
     add_test(
+        NAME rpg_system_record_commit_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-record-commit-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-system-record-commit-saves"
+    )
+    add_test(
+        NAME rpg_system_record_commit_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-system-record-commit-saves"
+                --slot 1
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-system-record-commit.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-system-record-commit-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-system-record-commit-frames.bin"
+    )
+    set_tests_properties(rpg_system_record_commit_replay PROPERTIES
+        DEPENDS rpg_system_record_commit_prepare)
+    add_test(
+        NAME rpg_system_record_commit_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-record-commit.py"
+                "${CMAKE_BINARY_DIR}/rpg-system-record-commit-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-system-record-commit-frames.bin"
+                "${CMAKE_BINARY_DIR}/rpg-system-record-commit-saves"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-system-record-commit-rgb-reference.json"
+    )
+    set_tests_properties(rpg_system_record_commit_validation PROPERTIES
+        DEPENDS rpg_system_record_commit_replay)
+    add_test(
         NAME rpg_system_read_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

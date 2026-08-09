@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The full page proves the visible post-commit return boundary. The original disk write is behavior evidence rather than indexed VGA evidence and is validated independently in the portable transaction tests.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "capture_state": "Unmodified release SAVE.DAQ/MAPZ.DAQ/NAMEQ.DSK; Record slot one and default Yes confirmed",
+  "original": "000145.png",
+  "original_sha256": "3cece896a3181404c1d086bfa2fe404fb8411aac0e9c3830f48f3db9b92a1ef5",
+  "rewrite_frame": 120,
+  "crop": [0, 0, 320, 200],
+  "rewrite_indexed_crop_sha256": "7eb96f45e2b8476878066a23f189a5f8e78bdf84946ba80d70043233aae7be48",
+  "rewrite_palette_sha256": "e4e7dc52900bdebf2c12f85849ef86d7bd06ebd1efc705f7bfc4173caa9f4176",
+  "matched_original_rgb_crop_sha256": "1411e15bf13e212b4754a5189273139ae3134026554d544d007a431e27ebf4c3",
+  "different_rgb_pixels": 0,
+  "rgb_pixels": 64000
+}

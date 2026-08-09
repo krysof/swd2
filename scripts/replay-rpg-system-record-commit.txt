@@ -1,0 +1,11 @@
+# Load the staged Q checkpoint, open System, and select Record.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:CONFIRM
+WAIT:DOWN*3
+WAIT:CONFIRM
+# Select slot one, accept default Yes, then stop at the first world poll.
+WAIT:CONFIRM*2
+POLL:QUIT
