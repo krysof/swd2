@@ -7653,9 +7653,9 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
                 platform.presented == 10U && platform.stop_calls == 1U,
             "RPG 2f64 actor selector did not enter/return from 26f3 Status");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
-                platform.frame_hashes[4] == 6678540695786810520ULL &&
+                platform.frame_hashes[4] == 11060455971827229471ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 2193962491457470674ULL &&
+                platform.frame_hashes[5] == 946387467769909865ULL &&
                 platform.frame_hashes[6] != platform.frame_hashes[5] &&
                 platform.frame_hashes[6] == 8029418886458010572ULL &&
                 platform.frame_hashes[7] == platform.frame_hashes[3] &&

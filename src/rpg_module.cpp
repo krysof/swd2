@@ -815,6 +815,7 @@ public:
                  const LegacyFont& name_font, const LegacyFont& item_font,
                  const ItemDatabase& items, const ItemTextDatabase& item_texts,
                  const SpriteArchive& menu_sprites,
+                 const SpriteArchive& status_art,
                  const SpriteArchive& equipment_art,
                  std::span<const std::uint8_t> save_slot_prompt,
                  std::span<const std::uint8_t> travel_labels,
@@ -867,7 +868,8 @@ public:
                  RpgMenuRuntime& menu_runtime)
         : platform_(platform), font_(font), name_font_(name_font),
           item_font_(item_font), items_(items), item_texts_(item_texts),
-          menu_sprites_(menu_sprites), equipment_art_(equipment_art),
+          menu_sprites_(menu_sprites), status_art_(status_art),
+          equipment_art_(equipment_art),
           save_slot_prompt_(save_slot_prompt), travel_labels_(travel_labels),
           shop_prompt_(shop_prompt),
           shop_sale_prompt_(shop_sale_prompt),
@@ -3423,6 +3425,22 @@ private:
                     24, 36, 5, 8, 20, first_visible, scroll_cue);
                 scroll_cue = RpgListSelection::ScrollCue::none;
 
+                // 26f3 switches to ME01.RSK, fixes the horizontal origin at
+                // mode-X column 22h (136 pixels), and walks all fourteen
+                // horizontal strips at y=48-first_visible*16. 653a clips by
+                // strip origin to the selector body, so scrolling reveals a
+                // different vertical slice of the original character art.
+                for (std::size_t strip = 0;
+                     strip < status_art_.sprites().size(); ++strip) {
+                    const auto top = 48 -
+                        static_cast<int>(first_visible) * 16 +
+                        static_cast<int>(strip) * 16;
+                    if (top < 48 || top > 160) continue;
+                    const auto& art = status_art_.sprites()[strip];
+                    blit_opaque(frame, status_art_.pixels(strip),
+                                art.width, art.height, 34 * 4, top);
+                }
+
                 const auto actor_base = 0x106U + actor * 0x9fU;
                 const auto draw_pair = [&](std::uint16_t current,
                                            std::uint16_t maximum, int top) {
@@ -4180,6 +4198,7 @@ private:
     const ItemDatabase& items_;
     const ItemTextDatabase& item_texts_;
     const SpriteArchive& menu_sprites_;
+    const SpriteArchive& status_art_;
     const SpriteArchive& equipment_art_;
     std::span<const std::uint8_t> save_slot_prompt_;
     std::span<const std::uint8_t> travel_labels_;
@@ -4448,6 +4467,9 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         MapTransitionDatabase::load(context.game_root / "MAP0.EXE");
     auto menu_data = decode_rsk_block(read_file(context.game_root / "MENU.RSK")).data;
     const auto menu_sprites = SpriteArchive::parse(std::move(menu_data));
+    auto status_data =
+        decode_rsk_block(read_file(context.game_root / "ME01.RSK")).data;
+    const auto status_art = SpriteArchive::parse(std::move(status_data));
     auto equipment_data =
         decode_rsk_block(read_file(context.game_root / "ME02.RSK")).data;
     const auto equipment_art = SpriteArchive::parse(std::move(equipment_data));
@@ -4931,7 +4953,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     const auto make_event_host = [&](const LegacyFont& dialogue_font) {
         return RpgEventHost(
             context.platform, dialogue_font, name_font, item_font,
-            items, item_texts, menu_sprites, equipment_art,
+            items, item_texts, menu_sprites, status_art, equipment_art,
             save_slot_prompt, travel_labels, shop_prompt,
             shop_sale_prompt, shop_money_error,
             shop_inventory_error, shop_confirmation_prompt,

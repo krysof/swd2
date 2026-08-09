@@ -1,0 +1,12 @@
+# MEO: select RPG and confirm twice.
+WAIT:CONFIRM*3
+# RPG: Continue, first slot, and confirm Yes.
+WAIT:DOWN
+WAIT:CONFIRM*3
+# Open the field diamond, select down/Status, then enter actor zero's page.
+POLL:CANCEL
+WAIT:DOWN
+WAIT:CONFIRM*2
+# Exercise both eight-row page jumps so ME01 strip scrolling is deterministic.
+WAIT:PGDN*2
+WAIT:QUIT

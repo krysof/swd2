@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The crops lock the selected actor identity and the stable ME01 artwork/status-label body. The 342 pixels where MENU number sprites intersect ME01 artwork remain separately under investigation.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG Status selected actor portrait",
+      "original": "000150.png",
+      "sha256": "e254aed09da5a6aeff7757f9855359d7b1a3ed69b1edde64bf6f3528904f8ef5",
+      "rewrite_frame": 116,
+      "crop": [32, 21, 48, 48]
+    },
+    {
+      "label": "RPG Status editable actor name card",
+      "original": "000150.png",
+      "sha256": "e254aed09da5a6aeff7757f9855359d7b1a3ed69b1edde64bf6f3528904f8ef5",
+      "rewrite_frame": 116,
+      "crop": [16, 72, 80, 32]
+    },
+    {
+      "label": "RPG Status ME01 artwork and status labels",
+      "original": "000150.png",
+      "sha256": "e254aed09da5a6aeff7757f9855359d7b1a3ed69b1edde64bf6f3528904f8ef5",
+      "rewrite_frame": 116,
+      "crop": [96, 79, 224, 66]
+    }
+  ]
+}

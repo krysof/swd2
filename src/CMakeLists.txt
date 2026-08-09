@@ -469,6 +469,28 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_magic_validation PROPERTIES
         DEPENDS rpg_magic_replay)
     add_test(
+        NAME rpg_status_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-status-saves"
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-status.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-status-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-status-frames.bin"
+    )
+    add_test(
+        NAME rpg_status_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-status.py"
+                "${CMAKE_BINARY_DIR}/rpg-status-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-status-frames.bin"
+    )
+    set_tests_properties(rpg_status_validation PROPERTIES
+        DEPENDS rpg_status_replay)
+    add_test(
         NAME new_game_exit_checkpoint_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"
