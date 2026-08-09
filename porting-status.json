@@ -125,8 +125,8 @@
         "五个槽位 SAVE 和 MAPZ 成对原子保存/读取",
         "桌面文件系统与浏览器 IDBFS 重启往返均无字节或状态丢失"
       ],
-      "evidence": ["src/save_slot.cpp", "src/main.cpp", "src/tests/test_main.cpp"],
-      "remaining": ["实现浏览器重启自动往返测试", "覆盖所有槽位和地图别名写回"]
+      "evidence": ["src/save_slot.cpp", "src/main.cpp", "src/tests/test_main.cpp", "scripts/verify-save-roundtrips.sh"],
+      "remaining": ["实现真实浏览器重启自动往返测试", "在浏览器中逐槽执行写入、reload 与字节比较"]
     },
     {
       "id": "native_and_wasm_builds",

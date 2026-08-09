@@ -1740,6 +1740,67 @@ void test_save_slot(const std::filesystem::path& game_root) {
                             .area.entity_fields[3][1] == 0x0800U,
                 "RPG save-item callback could not atomically write a chosen SAVE/MAPZ pair");
 
+        const auto matrix_root = temporary / "five-slot-matrix";
+        for (std::uint8_t number = 1; number <= 5; ++number) {
+            auto matrix_slot = swd2::SaveSlot::open(
+                game_root, matrix_root, number);
+            auto matrix_state = matrix_slot.state();
+            matrix_state.set_u16(
+                0x104, static_cast<std::uint16_t>(10'000U + number));
+            auto matrix_map = matrix_slot.map_database();
+            matrix_map->mutate_area_word(
+                14, 3, 76, static_cast<std::uint16_t>(0x100U + number),
+                false);
+            matrix_map->mutate_area_word(338, 10, 2, 19, true);
+            matrix_map->mutate_area_word(338, 10, 4, 19, true);
+            matrix_slot.save(matrix_state);
+        }
+        for (std::uint8_t number = 1; number <= 5; ++number) {
+            const auto matrix_slot = swd2::SaveSlot::open(
+                game_root, matrix_root, number);
+            require(matrix_slot.slot() == number &&
+                        matrix_slot.state().u16(0x104) == 10'000U + number &&
+                        matrix_slot.map_database()
+                                ->location_at_directory_offset(14)
+                                .area.entity_fields[3][38] == 0x100U + number &&
+                        matrix_slot.map_database()
+                                ->location_at_directory_offset(338)
+                                .area.graphics_path == "\\SWD2\\T4\\AREA7.RAP",
+                    "five-slot SAVE/MAPZ matrix did not round-trip independently");
+        }
+
+        const auto source = swd2::SaveSlot::open(game_root, matrix_root, 1);
+        for (std::uint8_t number = 1; number <= 5; ++number) {
+            swd2::SaveSlot::save_as(
+                matrix_root, number, source.state(), *source.map_database());
+        }
+        for (std::uint8_t number = 1; number <= 5; ++number) {
+            const auto copied_slot = swd2::SaveSlot::open(
+                game_root, matrix_root, number);
+            require(copied_slot.state().u16(0x104) == 10'001U &&
+                        copied_slot.map_database()
+                                ->location_at_directory_offset(14)
+                                .area.entity_fields[3][38] == 0x101U &&
+                        copied_slot.map_database()
+                                ->location_at_directory_offset(338)
+                                .area.layout_path == "\\SWD2\\T4\\AREA7.RAP",
+                    "save-as did not copy one SAVE/MAPZ pair across all five slots");
+        }
+
+        const auto partial_root = temporary / "partial-pair";
+        std::filesystem::create_directories(partial_root);
+        std::filesystem::copy_file(
+            game_root / "SAVE.DA1", partial_root / "SAVE.DA1");
+        bool partial_rejected = false;
+        try {
+            static_cast<void>(swd2::SaveSlot::open(
+                game_root, partial_root, 1));
+        } catch (const std::runtime_error&) {
+            partial_rejected = true;
+        }
+        require(partial_rejected,
+                "portable save slot accepted a lone SAVE without its MAPZ pair");
+
         bool rejected = false;
         try {
             static_cast<void>(swd2::SaveSlot::open(game_root, temporary, 0));
