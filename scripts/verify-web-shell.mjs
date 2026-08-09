@@ -192,6 +192,29 @@ if (pendingTimeouts.size !== 0 || pendingIntervals.size !== 0) {
 }
 
 ids.canvas.dispatched.length = 0;
+const injectedDirections = [];
+context.Module._swd2_web_direction = code => injectedDirections.push(code);
+context.Module.onRuntimeInitialized();
+const rightButton = controlButtons.find(button => button.dataset.key === 'ArrowRight');
+rightButton.listeners.pointerdown[0](pointer);
+if (injectedDirections.join(',') !== '4' || ids.canvas.dispatched.length !== 0 ||
+    pendingTimeouts.size !== 1) {
+  throw new Error('runtime-ready touch direction did not use direct WASM injection');
+}
+const directDelay = pendingTimeouts.values().next().value;
+pendingTimeouts.clear();
+directDelay();
+const directInterval = pendingIntervals.values().next().value;
+directInterval();
+directInterval();
+rightButton.listeners.pointerup[0](pointer);
+if (injectedDirections.join(',') !== '4,4,4,4' ||
+    ids.canvas.dispatched.length !== 0 ||
+    pendingTimeouts.size !== 0 || pendingIntervals.size !== 0) {
+  throw new Error(
+    `held direction did not repeat directly through WASM: ${injectedDirections}`);
+}
+
 const escapeButton = controlButtons.find(button => button.dataset.key === 'Escape');
 escapeButton.listeners.pointerdown[0](pointer);
 escapeButton.listeners.pointerup[0](pointer);

@@ -70,7 +70,32 @@ InputAction translate_event(const SDL_Event& event) {
     return InputAction::none;
 }
 
+#ifdef __EMSCRIPTEN__
+// Touch directions are injected as portable actions instead of synthetic DOM
+// key autorepeat. Emscripten/SDL deliberately coalesces or marks repeated
+// keydowns, while RPG's world loop consumes discrete DOS-style direction
+// actions. Keep the queue short so releasing a button cannot leave a long
+// movement tail after a temporary animation or map load.
+std::deque<InputAction> browser_direction_actions;
+#endif
+
 }  // namespace
+
+#ifdef __EMSCRIPTEN__
+extern "C" EMSCRIPTEN_KEEPALIVE void swd2_web_direction(int direction) {
+    InputAction action = InputAction::none;
+    switch (direction) {
+    case 1: action = InputAction::up; break;
+    case 2: action = InputAction::left; break;
+    case 3: action = InputAction::down; break;
+    case 4: action = InputAction::right; break;
+    default: return;
+    }
+    if (browser_direction_actions.size() < 2U) {
+        browser_direction_actions.push_back(action);
+    }
+}
+#endif
 
 struct SdlPlatform::Impl {
     SDL_Window* window{};
@@ -179,6 +204,13 @@ struct SdlPlatform::Impl {
 
     InputAction take_pending_action() {
         if (frontend_quit) return InputAction::quit;
+#ifdef __EMSCRIPTEN__
+        if (!browser_direction_actions.empty()) {
+            const auto action = browser_direction_actions.front();
+            browser_direction_actions.pop_front();
+            return action;
+        }
+#endif
         if (pending_actions.empty()) return InputAction::none;
         const auto action = pending_actions.front();
         pending_actions.pop_front();

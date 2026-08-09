@@ -36,6 +36,10 @@ grep -Fq 'index.data' "$site/index.js" || {
   echo "error: index.js does not reference the preloaded game data" >&2
   exit 1
 }
+grep -Fq '_swd2_web_direction' "$site/index.js" || {
+  echo "error: index.js does not expose direct held-touch direction injection" >&2
+  exit 1
+}
 
 grep -Fq '轩辕剑2' "$site/index.html" || {
   echo "error: index.html does not identify the game as 轩辕剑2" >&2
@@ -132,6 +136,8 @@ done
 for pattern in \
   "const directionKeys" \
   "pulseDirection" \
+  "injectDirection" \
+  "_swd2_web_direction" \
   "heldControls" \
   "setTimeout" \
   "setInterval" \
