@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <cmath>
 #include <ctime>
 #include <deque>
 #include <stdexcept>
@@ -500,26 +499,11 @@ void SdlPlatform::play_music(std::span<const std::uint8_t> rix_data, bool loop) 
 }
 
 void SdlPlatform::play_voice(std::span<const std::uint8_t> voc_data) {
-    const auto voice = decode_voc(voc_data);
     impl_->ensure_audio();
-    const auto output_count = static_cast<std::size_t>(
-        (static_cast<unsigned long long>(voice.mono_samples.size()) *
-         static_cast<unsigned>(impl_->audio_rate)) /
-        voice.sample_rate);
-    std::vector<std::int16_t> resampled(output_count);
-    for (std::size_t index = 0; index < output_count; ++index) {
-        const auto position =
-            (static_cast<double>(index) * voice.sample_rate) / impl_->audio_rate;
-        const auto first = std::min<std::size_t>(
-            static_cast<std::size_t>(position), voice.mono_samples.size() - 1U);
-        const auto second = std::min(first + 1U, voice.mono_samples.size() - 1U);
-        const auto fraction = position - static_cast<double>(first);
-        const auto value = static_cast<double>(voice.mono_samples[first]) * (1.0 - fraction) +
-                           static_cast<double>(voice.mono_samples[second]) * fraction;
-        resampled[index] = static_cast<std::int16_t>(std::lround(value));
-    }
+    auto voice = resample_voice(
+        decode_voc(voc_data), static_cast<std::uint32_t>(impl_->audio_rate));
     SDL_LockAudioDevice(impl_->audio_device);
-    impl_->voice_samples = std::move(resampled);
+    impl_->voice_samples = std::move(voice.mono_samples);
     impl_->voice_cursor = 0;
     SDL_UnlockAudioDevice(impl_->audio_device);
 }

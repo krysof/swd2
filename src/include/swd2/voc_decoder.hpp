@@ -16,4 +16,10 @@ struct DecodedVoice {
 // time-constant rate formula; output is native signed 16-bit PCM.
 DecodedVoice decode_voc(std::span<const std::uint8_t> bytes);
 
+// Converts decoded mono PCM to a host device rate using a fully integer linear
+// clock. Keeping this in the portable core avoids native/WebAssembly floating
+// point rounding differences in voice length and sample values.
+DecodedVoice resample_voice(const DecodedVoice& source,
+                            std::uint32_t sample_rate);
+
 }  // namespace swd2

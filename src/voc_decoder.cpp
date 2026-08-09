@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 
@@ -74,6 +75,51 @@ DecodedVoice decode_voc(std::span<const std::uint8_t> bytes) {
     }
     if (!found_sound || result.mono_samples.empty()) {
         throw std::runtime_error("VOC contains no PCM samples");
+    }
+    return result;
+}
+
+DecodedVoice resample_voice(const DecodedVoice& source,
+                            std::uint32_t sample_rate) {
+    if (source.sample_rate == 0 || source.mono_samples.empty() ||
+        sample_rate == 0) {
+        throw std::invalid_argument("VOC resampler has invalid PCM metadata");
+    }
+    if (source.mono_samples.size() >
+        std::numeric_limits<std::uint64_t>::max() / sample_rate) {
+        throw std::overflow_error("VOC resampled duration overflows uint64_t");
+    }
+    const auto duration_numerator =
+        static_cast<std::uint64_t>(source.mono_samples.size()) * sample_rate;
+    const auto output_count = duration_numerator / source.sample_rate;
+    if (output_count == 0 ||
+        output_count > std::numeric_limits<std::size_t>::max()) {
+        throw std::overflow_error("VOC resampled PCM size is outside size_t");
+    }
+
+    DecodedVoice result;
+    result.sample_rate = sample_rate;
+    result.mono_samples.resize(static_cast<std::size_t>(output_count));
+    for (std::size_t output = 0; output < result.mono_samples.size(); ++output) {
+        const auto position =
+            static_cast<std::uint64_t>(output) * source.sample_rate;
+        const auto first = static_cast<std::size_t>(position / sample_rate);
+        const auto fraction = static_cast<std::uint32_t>(position % sample_rate);
+        const auto clamped_first =
+            std::min(first, source.mono_samples.size() - 1U);
+        const auto second =
+            std::min(clamped_first + 1U, source.mono_samples.size() - 1U);
+        const auto interpolated =
+            static_cast<std::int64_t>(source.mono_samples[clamped_first]) *
+                (sample_rate - fraction) +
+            static_cast<std::int64_t>(source.mono_samples[second]) * fraction;
+        const auto rounding = static_cast<std::int64_t>(sample_rate / 2U);
+        const auto rounded =
+            (interpolated >= 0 ? interpolated + rounding
+                               : interpolated - rounding) /
+            sample_rate;
+        result.mono_samples[output] = static_cast<std::int16_t>(
+            std::clamp<std::int64_t>(rounded, -32'768, 32'767));
     }
     return result;
 }

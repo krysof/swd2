@@ -974,20 +974,58 @@ void test_voc_decoder(const std::filesystem::path& game_root) {
                 sample.mono_samples.front() == -1280,
             "Creative Voice time constant/unsigned PCM decoding is incorrect");
 
-    std::size_t files = 0;
-    std::size_t samples = 0;
+    std::vector<std::filesystem::path> voc_paths;
     for (const auto& entry :
          std::filesystem::recursive_directory_iterator(game_root)) {
-        if (!entry.is_regular_file() || entry.path().extension() != ".VOC") continue;
-        const auto decoded = swd2::decode_voc(read_file(entry.path()));
+        if (entry.is_regular_file() && entry.path().extension() == ".VOC") {
+            voc_paths.push_back(entry.path());
+        }
+    }
+    std::sort(voc_paths.begin(), voc_paths.end());
+
+    std::size_t files = 0;
+    std::size_t samples = 0;
+    std::array<std::uint64_t, 2> resampled_samples{};
+    std::array<std::uint64_t, 2> resampled_hashes{
+        1'469'598'103'934'665'603ULL,
+        1'469'598'103'934'665'603ULL,
+    };
+    constexpr std::array<std::uint32_t, 2> target_rates{44'100U, 48'000U};
+    for (const auto& path : voc_paths) {
+        const auto decoded = swd2::decode_voc(read_file(path));
         require(decoded.sample_rate >= 4'000 && decoded.sample_rate <= 15'625 &&
                     !decoded.mono_samples.empty(),
                 "original VOC asset decoded to invalid PCM metadata");
         ++files;
         samples += decoded.mono_samples.size();
+        for (std::size_t rate = 0; rate < target_rates.size(); ++rate) {
+            const auto converted =
+                swd2::resample_voice(decoded, target_rates[rate]);
+            require(converted.sample_rate == target_rates[rate] &&
+                        converted.mono_samples.size() ==
+                            static_cast<std::uint64_t>(
+                                decoded.mono_samples.size()) *
+                                target_rates[rate] / decoded.sample_rate,
+                    "portable VOC resampler changed the rational duration");
+            resampled_samples[rate] += converted.mono_samples.size();
+            for (const auto value : converted.mono_samples) {
+                const auto word = static_cast<std::uint16_t>(value);
+                resampled_hashes[rate] ^= word & 0xffU;
+                resampled_hashes[rate] *= 1'099'511'628'211ULL;
+                resampled_hashes[rate] ^= word >> 8U;
+                resampled_hashes[rate] *= 1'099'511'628'211ULL;
+            }
+        }
     }
     require(files == 67 && samples == 834'549,
             "not every original VOC asset passed portable PCM decoding");
+    require(resampled_samples ==
+                std::array<std::uint64_t, 2>{4'864'003U, 5'294'165U} &&
+                resampled_hashes == std::array<std::uint64_t, 2>{
+                    0x37885f7710bb6cf3ULL,
+                    0xd2a8ac5fdc8445c3ULL,
+                },
+            "portable VOC resampling changed across host sample rates");
 }
 
 void test_rix_decoder(const std::filesystem::path& game_root) {
