@@ -1,0 +1,14 @@
+# MEO: select RPG and load the staged slot one.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+# Item -> empty row enters the common 2634 four-direction party selector.
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM*2
+# Visit Right, Up, Down, then return to Left without committing a recipient.
+WAIT:RIGHT
+WAIT:UP
+WAIT:DOWN
+WAIT:LEFT
+WAIT:QUIT

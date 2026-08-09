@@ -650,6 +650,39 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_item_action_validation PROPERTIES
         DEPENDS rpg_item_action_replay)
     add_test(
+        NAME rpg_party_target_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-party-target-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-party-target-saves"
+    )
+    add_test(
+        NAME rpg_party_target_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-party-target-saves"
+                --slot 1
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-party-target.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-party-target-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-party-target-frames.bin"
+    )
+    set_tests_properties(rpg_party_target_replay PROPERTIES
+        DEPENDS rpg_party_target_prepare)
+    add_test(
+        NAME rpg_party_target_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-party-target.py"
+                "${CMAKE_BINARY_DIR}/rpg-party-target-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-party-target-frames.bin"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-party-target-rgb-reference.json"
+    )
+    set_tests_properties(rpg_party_target_validation PROPERTIES
+        DEPENDS rpg_party_target_replay)
+    add_test(
         NAME rpg_status_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

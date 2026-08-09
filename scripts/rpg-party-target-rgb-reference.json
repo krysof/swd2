@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "Five opaque 320x200 pages lock every direction of the common 2634 party selector. DOSBox RGB cannot replace the registered rewrite's indexed VGA evidence.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "capture_video_sha256": "4f91de9b7158da1e2793b90ea86453be8c37ad434e5c81feaa07a563ad644b12",
+  "capture_state": "SAVE.DAQ staged at SWRO7 with party count four and an empty physical inventory row; the selector is entered through the equipment-recipient path",
+  "rewrite_first_frame": 116,
+  "frames": [
+    {"choice": "left", "original": "000194.png", "original_sha256": "ef6faa7a99a0bd95d47d6e7dc648d300dc25de8f79925cbf350f7713cd78b33f", "rewrite_indexed_sha256": "1405997a7e597e11b99ec9eb2e80cbb9ecff433c66668816d8fa0b2e27bd58ab", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "ad94695f662f5ad60cce0c4ff37dc50f8ba14d927246c240354652beea85aa79"},
+    {"choice": "right", "original": "000225.png", "original_sha256": "3c9a593808eb6dac8ba86b8c2c0efd92771942d92be4fcd5de8e291965166e7c", "rewrite_indexed_sha256": "27da81405a9c115fb65d44e05a03ad5dc0ea353529712afefc6970fc5977aa1d", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "d46a5e402a44096e3c932f50eff2ece759a32beaff9f43675705cbe3775d305a"},
+    {"choice": "up", "original": "000256.png", "original_sha256": "4c442eca5032bef64142691ddf037b9ba304eebeac6cc7d5810b51402586f98f", "rewrite_indexed_sha256": "f4a8a8f43ada8475dbc1ea043c4c6f8b8a4987ae54cce59140e94ed91fa0c0f4", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "03b3148c72883659c054fdbbd858f05e3d257862793c904a001e7906ae3ee044"},
+    {"choice": "down", "original": "000286.png", "original_sha256": "ce435c077fe7a0c20aa195d56175089d582e827cec150ba16bcc728b0a07fd9b", "rewrite_indexed_sha256": "007452b5a140dbedae7e0150851f884514fe0e35e6bb20113de4cb5c3788cf4e", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "59bffd4f84209167ab768f9305d7363542bc7123b6fc7c376cafa9387dda4885"},
+    {"choice": "left", "original": "000317.png", "original_sha256": "ef6faa7a99a0bd95d47d6e7dc648d300dc25de8f79925cbf350f7713cd78b33f", "rewrite_indexed_sha256": "1405997a7e597e11b99ec9eb2e80cbb9ecff433c66668816d8fa0b2e27bd58ab", "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c", "matched_rgb_sha256": "ad94695f662f5ad60cce0c4ff37dc50f8ba14d927246c240354652beea85aa79"}
+  ]
+}
