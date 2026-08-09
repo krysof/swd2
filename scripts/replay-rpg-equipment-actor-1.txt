@@ -1,0 +1,11 @@
+# Load the staged four-member SWRO7 save and enter Item.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM*2
+# Select the right-hand portrait and open actor 1's equipment page.
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:QUIT

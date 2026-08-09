@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "Four opaque 320x200 equipment pages lock actor-specific equipment, traits, portrait and name content. DOSBox RGB cannot replace the registered rewrite's indexed VGA evidence.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "capture_state": "SAVE.DAQ staged at SWRO7 with four party members and an empty physical inventory row; each equipment page is entered through the original 3f53 target path",
+  "actors": [
+    {
+      "actor": 0,
+      "original_frame": "000450.png",
+      "original_png_sha256": "9652f65f0838267e021d5fcd21bdc67e69fb0b746c44b5b1e2a8cb462a321180",
+      "capture_video_sha256": "bd54467c334c6a7175b808400ed468950cf89a8a9d8eaa3993b15e4b9f3d753d",
+      "capture_manifest_sha256": "467bbb47547fd5c9aae5dda88c5ed9d06836d85c504ab7201f5deaa423cf46b4",
+      "rewrite_frames": 120,
+      "rewrite_input_total": 15,
+      "rewrite_wait_boundaries": 14,
+      "rewrite_video_fnv1a64": "3d86c9932b4067d9",
+      "rewrite_final_fnv1a64": "248ae172dad70f56",
+      "rewrite_indexed_sha256": "222c5654740bbb9f3c6cd73c8c3f3965388fed33d798e7b80614b9d32755f5e8",
+      "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c",
+      "matched_rgb_sha256": "89620511e6b9fd3c7d168eb166dd328b94eb24ef8d15e554479b79652d80e8ad"
+    },
+    {
+      "actor": 1,
+      "original_frame": "000450.png",
+      "original_png_sha256": "3744ee1b5235bbed98cf82fed8455eff1f499fce6c9fe55fdce2cce17bc993e3",
+      "capture_video_sha256": "8dcb69c7162581daa4079d1edd746bfeffdb6058700e864718dad1e5eef7f2ec",
+      "capture_manifest_sha256": "91519ac318bca2a7d62dd1c99ad32d3db568920623283f1e696cd309814e2563",
+      "rewrite_frames": 119,
+      "rewrite_input_total": 14,
+      "rewrite_wait_boundaries": 13,
+      "rewrite_video_fnv1a64": "f1ba0965d7da87b1",
+      "rewrite_final_fnv1a64": "04ade8b3608f622c",
+      "rewrite_indexed_sha256": "3eb5d3a9708b1c357db268ad43d26c0c4cdc1b06372dfd62626c6e872c11c848",
+      "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c",
+      "matched_rgb_sha256": "fc243d6041620eec7a36cd1feda4aec55f4e82c03b83a97b70baadd6dc220eb5"
+    },
+    {
+      "actor": 2,
+      "original_frame": "000450.png",
+      "original_png_sha256": "a6232d67da0deee3391962882b655d5a82780a8a89ba7405f279d9a43f0bc91b",
+      "capture_video_sha256": "8a39f37a99ab9d44b5b5c2cf0a447991e03258941f5f8965302c62622f699bfa",
+      "capture_manifest_sha256": "bccc1360bf62f01bb61648e35ec2e645a2c6f7a73ffbd0d040a874e8f514fdbb",
+      "rewrite_frames": 120,
+      "rewrite_input_total": 15,
+      "rewrite_wait_boundaries": 14,
+      "rewrite_video_fnv1a64": "b4ea116005e62fbe",
+      "rewrite_final_fnv1a64": "8bee49c652423fee",
+      "rewrite_indexed_sha256": "1cc84f286102f12efb3ec690fa12c8c99e9db04d92278e5dd9062114b48b2858",
+      "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c",
+      "matched_rgb_sha256": "ceeb3c9f369f55701cc7b04c6c682a7b553003e6d7b54cde7e1c98b12189685b"
+    },
+    {
+      "actor": 3,
+      "original_frame": "000450.png",
+      "original_png_sha256": "3b12f1bf960269ea69cd24a8c1252b2668656e703393a5bc1254a1ed122d2ae3",
+      "capture_video_sha256": "f1c0a6b777eff33271b5228a373b99e0bc6df2e43f03eb3320760f93d3e55a5b",
+      "capture_manifest_sha256": "c8a17afeeac9719479b984a98dd914afcbb40cb904f83cad7a7518bae794ce58",
+      "rewrite_frames": 120,
+      "rewrite_input_total": 15,
+      "rewrite_wait_boundaries": 14,
+      "rewrite_video_fnv1a64": "f0ffc9ddd5f28f32",
+      "rewrite_final_fnv1a64": "18015ffa6f9a7ea2",
+      "rewrite_indexed_sha256": "24e09b08c956b4281ba277a1c01a8b71ac23c38296b5757b24bbe411ccbf5ef9",
+      "rewrite_palette_sha256": "8e0d4f4d9a32216d0ec50f0c52171428aeb67825e59a2d1a8be2d0ced0c7201c",
+      "matched_rgb_sha256": "b46e54b91a1385812c4a19fabfd92e693ce71f05409fbd533efb9960e85c794e"
+    }
+  ]
+}

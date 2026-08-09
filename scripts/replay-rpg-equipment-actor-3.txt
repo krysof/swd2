@@ -1,0 +1,12 @@
+# Load the staged four-member SWRO7 save and enter Item.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM*2
+# Match the original selector path through Right to the lower actor 3 card.
+WAIT:RIGHT
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:QUIT

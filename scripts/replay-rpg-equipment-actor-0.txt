@@ -1,0 +1,12 @@
+# Load the staged four-member SWRO7 save and enter Item.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM*2
+# Match the original selector path: Right, back to Left, then confirm actor 0.
+WAIT:RIGHT
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:QUIT
