@@ -2,11 +2,17 @@
   "schema_version": 1,
   "kind": "dosbox_rgb_spot_check",
   "status": "reference_only",
-  "limitation": "The crops lock the selected actor identity and the stable ME01 artwork/status-label body. The 342 pixels where MENU number sprites intersect ME01 artwork remain separately under investigation.",
+  "limitation": "The released SAVE starts with 40 currency, while the timed original capture reaches 50 before opening Status. With that observed value applied to the rewrite fixture, the complete stable Status UI body is RGB-exact; the animated world remains outside this crop.",
   "reference_program": "RPG.EXE",
   "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
   "capture_program": "RPGOC.COM",
   "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "rewrite_fixture": {
+    "base": "SAVE.DA1",
+    "u16_overrides": [
+      {"offset": 260, "value": 50, "reason": "currency observed in the timed original Status frame"}
+    ]
+  },
   "frames": [
     {
       "label": "RPG Status selected actor portrait",
@@ -23,11 +29,11 @@
       "crop": [16, 72, 80, 32]
     },
     {
-      "label": "RPG Status ME01 artwork and status labels",
+      "label": "RPG Status complete ME01 artwork, labels and values",
       "original": "000150.png",
       "sha256": "e254aed09da5a6aeff7757f9855359d7b1a3ed69b1edde64bf6f3528904f8ef5",
       "rewrite_frame": 116,
-      "crop": [96, 79, 224, 66]
+      "crop": [96, 40, 224, 144]
     }
   ]
 }

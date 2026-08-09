@@ -87,15 +87,15 @@ def main() -> int:
         if video.get("frames") != 119 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "f977063141455dff":
+                video.get("fnv1a64") != "b923f32764b54353":
             raise ValueError("Status replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
         if len(hashes) != 119 or hashes[113:119] != [
                 "1b0a18f362ed2cb2",  # System/Book-selected field diamond
                 "a2bc9fa38fe088af",  # down/Status-selected field diamond
                 "9926d3f4783f8138",  # actor-zero selector
-                "76057402ef560c40",  # rows 0..7 / ME01 top strips
-                "ca008faa09744348",  # rows 8..15 / ME01 lower strips
+                "edebf73491c53a2a",  # rows 0..7 / ME01 top strips
+                "c354b5714d577d76",  # rows 8..15 / ME01 lower strips
                 "0d41b4774d768489",  # rows 16..23 / equipment values
         ]:
             raise ValueError("Status selection/page frames differ")
@@ -109,8 +109,8 @@ def main() -> int:
         if len(frames) != 119:
             raise ValueError("Status frame capture count differs")
         expected = [
-            (116, "da37e6af99ae0d34"),
-            (117, "6d8b40b6192e3cf4"),
+            (116, "40163683a334d336"),
+            (117, "01c6ea8a17af29ba"),
             (118, "af41fb6401b133dd"),
         ]
         crop = (96, 40, 224, 144)

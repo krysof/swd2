@@ -850,6 +850,7 @@ public:
                  std::span<const std::uint8_t> system_exit_prompt,
                  std::span<const std::uint8_t> status_menu_labels,
                  std::span<const std::uint8_t> status_value_labels,
+                 std::span<const std::uint8_t> status_divider_glyph,
                  std::span<const std::uint8_t> inventory_category_labels,
                  std::span<const std::uint8_t> equipment_slot_labels,
                  std::span<const std::uint8_t> equipment_stat_labels,
@@ -901,6 +902,7 @@ public:
           system_exit_prompt_(system_exit_prompt),
           status_menu_labels_(status_menu_labels),
           status_value_labels_(status_value_labels),
+          status_divider_glyph_(status_divider_glyph),
           inventory_category_labels_(inventory_category_labels),
           equipment_slot_labels_(equipment_slot_labels),
           equipment_stat_labels_(equipment_stat_labels),
@@ -3463,10 +3465,24 @@ private:
                         top + 3, current_base);
                     draw_menu_number(frame, menu_sprites_, maximum,
                                      56, top + 3, 111);
-                    if (menu_sprites_.sprites().size() > 38U) {
-                        const auto& slash = menu_sprites_.sprites()[38U];
-                        blit(frame, menu_sprites_.pixels(38U),
-                             slash.width, slash.height, 54 * 4, top + 1);
+                    if (status_divider_glyph_.size() == 11U) {
+                        // 47f8 does not fetch MENU frame 38. It selects
+                        // character 26h in the resident 8x11 bitmap font;
+                        // DATA:6094 has already selected 62c9's transparent
+                        // background branch and foreground colour 0fh.
+                        for (std::size_t row = 0; row < 11U; ++row) {
+                            const auto bits = status_divider_glyph_[row];
+                            for (std::size_t column = 0; column < 8U;
+                                 ++column) {
+                                if ((bits & (0x80U >> column)) != 0U) {
+                                    frame.pixels[
+                                        (top + 1 + static_cast<int>(row)) *
+                                            320 +
+                                        54 * 4 +
+                                            static_cast<int>(column)] = 0x0fU;
+                                }
+                            }
+                        }
                     }
                 };
                 // RPG DATA:376a dispatches the post-status rows as strength,
@@ -4232,6 +4248,7 @@ private:
     std::span<const std::uint8_t> system_exit_prompt_;
     std::span<const std::uint8_t> status_menu_labels_;
     std::span<const std::uint8_t> status_value_labels_;
+    std::span<const std::uint8_t> status_divider_glyph_;
     std::span<const std::uint8_t> inventory_category_labels_;
     std::span<const std::uint8_t> equipment_slot_labels_;
     std::span<const std::uint8_t> equipment_stat_labels_;
@@ -4574,6 +4591,10 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     // healthy/dead/near-death, then status bits 1000h down through 0002h.
     const auto status_value_labels = extract_rpg_embedded_data(
         rpg_load_image, rpg_entry_offset, 0x38e6, 15U * 4U);
+    // 47f8 passes character 26h to 62c9's resident 8x11 bitmap renderer.
+    const auto status_divider_glyph = extract_rpg_embedded_data(
+        rpg_load_image, rpg_entry_offset,
+        static_cast<std::uint16_t>(0x63ebU + 0x26U * 0x0bU), 11U);
     // RPG.EXE:3d7e indexes forty-two fixed two-glyph type names. Equipment
     // uses one eleven-line label string and four consecutive $$-terminated
     // statistic labels rather than host-language UI text.
@@ -4969,7 +4990,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
             field_ability_records, ability_resource_labels,
             ability_descriptions,
             system_menu_labels, system_exit_prompt,
-            status_menu_labels, status_value_labels,
+            status_menu_labels, status_value_labels, status_divider_glyph,
             inventory_category_labels, equipment_slot_labels,
             equipment_stat_labels,
             compose_scene, advance_scene_palette,
