@@ -34,6 +34,38 @@ std::filesystem::path with_extension(std::filesystem::path base, const std::stri
     return base;
 }
 
+void draw_tile(std::span<std::uint8_t> destination,
+               std::size_t destination_width,
+               std::size_t destination_height,
+               const std::array<std::vector<std::uint8_t>, 4>& planes,
+               std::uint16_t tile_count, std::size_t tile_x,
+               std::size_t tile_y, std::uint16_t encoded_tile,
+               bool transparent) {
+    if (encoded_tile == 0xffffU) return;
+    const auto tile = static_cast<std::size_t>(encoded_tile & 0x07ffU);
+    if (tile >= tile_count) {
+        throw std::runtime_error(
+            "reachable RAP/RRO tile is outside its graphics dictionary");
+    }
+    const auto source = tile * 16U;
+    for (std::size_t row = 0; row < 8U; ++row) {
+        if (tile_y * 8U + row >= destination_height ||
+            tile_x * 8U + 7U >= destination_width) {
+            continue;
+        }
+        for (std::size_t group = 0; group < 2U; ++group) {
+            for (std::size_t plane = 0; plane < planes.size(); ++plane) {
+                const auto x = tile_x * 8U + group * 4U + plane;
+                const auto y = tile_y * 8U + row;
+                const auto color = planes[plane][source + row * 2U + group];
+                if (!transparent || color != 0xfeU) {
+                    destination[y * destination_width + x] = color;
+                }
+            }
+        }
+    }
+}
+
 }  // namespace
 
 MapResource MapResource::load(const std::filesystem::path& base_path) {
@@ -78,35 +110,92 @@ MapResource MapResource::load(const std::filesystem::path& graphics_base_path,
 
     const auto layout_data =
         decode_rsk_block(read_file(with_extension(layout_base_path, ".RAP"))).data;
-    if (layout_data.size() < 12) {
-        throw std::runtime_error("decoded RAP map is shorter than its header");
+    if (layout_data.size() < 12U) {
+        throw std::runtime_error("decoded RAP map is shorter than its directory");
+    }
+    // RPG.EXE:01f4 indexes a u16 pointer directory by SAVE+411, then reads
+    // height,width and leaves SAVE+40f on the first cell. Most maps have one
+    // record (directory bytes=4). ZD has two records (directory bytes=6): a
+    // scrolling 93x25 foreground and a fixed 40x25 background.
+    const auto directory_bytes = static_cast<std::size_t>(
+        read_u16(layout_data, 0));
+    if (directory_bytes < 4U || (directory_bytes & 1U) != 0U ||
+        directory_bytes + 2U > layout_data.size()) {
+        throw std::runtime_error("decoded RAP map has an invalid pointer directory");
+    }
+    const auto pointer_count = directory_bytes / 2U;
+    if (pointer_count < 2U || pointer_count > 3U) {
+        throw std::runtime_error("decoded RAP map has an unsupported layer count");
+    }
+    std::vector<std::uint16_t> pointers;
+    pointers.reserve(pointer_count);
+    for (std::size_t offset = 0; offset < directory_bytes; offset += 2U) {
+        const auto pointer = read_u16(layout_data, offset);
+        if (pointer < directory_bytes || pointer + 2U > layout_data.size() ||
+            (!pointers.empty() && pointer <= pointers.back())) {
+            throw std::runtime_error("decoded RAP map pointer is invalid");
+        }
+        pointers.push_back(pointer);
+    }
+    if (read_u16(layout_data, pointers.back()) != 0xffffU) {
+        throw std::runtime_error("decoded RAP map has no final frame sentinel");
+    }
+
+    struct Record {
+        std::uint16_t height{};
+        std::uint16_t width{};
+        std::uint16_t cell_base{};
+        std::vector<std::uint16_t> cells;
+    };
+    std::vector<Record> records;
+    records.reserve(pointer_count - 1U);
+    for (std::size_t index = 0; index + 1U < pointers.size(); ++index) {
+        const auto offset = static_cast<std::size_t>(pointers[index]);
+        Record record;
+        record.height = read_u16(layout_data, offset);
+        record.width = read_u16(layout_data, offset + 2U);
+        if (offset + 4U > 0xffffU) {
+            throw std::runtime_error("decoded RAP cell base exceeds a DOS offset");
+        }
+        record.cell_base = static_cast<std::uint16_t>(offset + 4U);
+        const auto count = static_cast<std::size_t>(record.width) * record.height;
+        const auto end = offset + 4U + count * 2U;
+        if (record.width == 0U || record.height == 0U ||
+            end != pointers[index + 1U]) {
+            throw std::runtime_error("decoded RAP map record dimensions are invalid");
+        }
+        record.cells.reserve(count);
+        for (std::size_t cell = 0; cell < count; ++cell) {
+            record.cells.push_back(read_u16(layout_data, offset + 4U + cell * 2U));
+        }
+        records.push_back(std::move(record));
     }
     result.layout_ = {
-        read_u16(layout_data, 0), read_u16(layout_data, 2), read_u16(layout_data, 4),
-        read_u16(layout_data, 6), read_u16(layout_data, 8), read_u16(layout_data, 10),
+        static_cast<std::uint16_t>(directory_bytes), pointers.back(),
+        records[0].width, records[0].height, records[0].cell_base,
+        static_cast<std::uint16_t>(records.size()),
     };
-    if (result.layout_.tile_size != 4) {
-        throw std::runtime_error("unsupported RAP tile size");
-    }
-    const auto cells = static_cast<std::size_t>(result.layout_.width) * result.layout_.height;
-    if (layout_data.size() != 12 + cells * 2) {
-        throw std::runtime_error("decoded RAP size does not match map dimensions");
-    }
-    result.cells_.reserve(cells);
-    for (std::size_t i = 0; i < cells; ++i) {
-        result.cells_.push_back(read_u16(layout_data, 12 + i * 2));
+    result.cells_ = std::move(records[0].cells);
+    if (records.size() == 2U) {
+        if (records[1].width != 40U || records[1].height != 25U) {
+            throw std::runtime_error(
+                "decoded layered RAP background is not the original 40x25 page");
+        }
+        result.fixed_background_cells_ = std::move(records[1].cells);
     }
 
     const auto overlay_path = with_extension(layout_base_path, ".RRO");
     if (std::filesystem::is_regular_file(overlay_path)) {
         const auto overlay_data = decode_rsk_block(read_file(overlay_path)).data;
         std::size_t offset = 0;
+        bool terminated = false;
         while (offset + 2 <= overlay_data.size()) {
             const auto x = read_u16(overlay_data, offset);
             if (x == 0xffff) {
                 if (offset + 2 != overlay_data.size()) {
                     throw std::runtime_error("RRO overlay has data after its sentinel");
                 }
+                terminated = true;
                 break;
             }
             if (offset + 6 > overlay_data.size()) {
@@ -116,69 +205,152 @@ MapResource MapResource::load(const std::filesystem::path& graphics_base_path,
                                        read_u16(overlay_data, offset + 4)});
             offset += 6;
         }
+        if (!terminated) {
+            throw std::runtime_error("RRO overlay has no final sentinel");
+        }
     }
     return result;
 }
 
 IndexedMapImage MapResource::render(bool include_overlays) const {
+    if (has_fixed_background_layer()) {
+        auto image = render_viewport_background(0, 0, include_overlays);
+        composite_viewport_foreground(image.pixels, 0, 0, include_overlays);
+        return image;
+    }
     IndexedMapImage image;
-    // RAP calls this value 4, matching the four packed byte planes.  The
-    // original VGA renderer interleaves those planes into an 8x8 pixel tile.
     constexpr std::size_t rendered_tile_size = 8;
     image.width = static_cast<std::size_t>(layout_.width) * rendered_tile_size;
     image.height = static_cast<std::size_t>(layout_.height) * rendered_tile_size;
     image.pixels.assign(image.width * image.height, 0);
     image.palette = palette_;
 
-    const auto draw_tile = [&](std::size_t x, std::size_t y, std::uint16_t encoded_tile,
-                               bool transparent) {
-        if (encoded_tile == 0xffff) {
-            return;
-        }
-        // The upper five bits are map attributes.  The original 16-bit
-        // tile*16 calculation also discards them, leaving an 11-bit index.
-        const auto tile = static_cast<std::size_t>(encoded_tile & 0x07ffU);
-        if (tile >= tile_count_) {
-            // Several shipped RAPs keep unreachable padding words after the
-            // last scrollable viewport (often only the bottom-right word),
-            // and T2ROC/Z14/Z17/Z18 have a short padding run. The DOS renderer
-            // only walks the visible 40x25 window and never dereferences those
-            // words. A portable full-map backing image must likewise leave
-            // them blank instead of aborting before a reachable viewport can
-            // be cropped.
-            return;
-        }
-        const auto source = tile * 16;
-        for (std::size_t row = 0; row < 8; ++row) {
-            if (y * rendered_tile_size + row >= image.height ||
-                x * rendered_tile_size + 7 >= image.width) {
-                continue;
-            }
-            for (std::size_t group = 0; group < 2; ++group) {
-                for (std::size_t plane = 0; plane < planes_.size(); ++plane) {
-                    const auto destination_x = x * rendered_tile_size + group * 4 + plane;
-                    const auto color = planes_[plane][source + row * 2 + group];
-                    // RPG.EXE's RRO compositor treats -2 (0xfe) as transparent;
-                    // ordinary RAP map cells are copied without a color key.
-                    if (!transparent || color != 0xfe) {
-                        image.pixels[(y * rendered_tile_size + row) * image.width +
-                                     destination_x] = color;
-                    }
-                }
-            }
-        }
-    };
-
     for (std::size_t y = 0; y < layout_.height; ++y) {
         for (std::size_t x = 0; x < layout_.width; ++x) {
-            draw_tile(x, y, cells_[y * layout_.width + x], false);
+            draw_tile(image.pixels, image.width, image.height, planes_,
+                      tile_count_, x, y, cells_[y * layout_.width + x], false);
         }
     }
     if (include_overlays) {
         for (const auto& overlay : overlays_) {
-            draw_tile(overlay.x, overlay.y, overlay.tile, true);
+            if (overlay.x >= layout_.width || overlay.y >= layout_.height) {
+                continue;
+            }
+            draw_tile(image.pixels, image.width, image.height, planes_,
+                      tile_count_, overlay.x, overlay.y, overlay.tile, true);
         }
     }
+    return image;
+}
+
+IndexedMapImage MapResource::render_viewport_background(
+    std::uint16_t viewport_x, std::uint16_t viewport_y,
+    bool include_overlays) const {
+    constexpr std::size_t columns = 40U;
+    constexpr std::size_t rows = 25U;
+    if (static_cast<std::size_t>(viewport_x) + columns > layout_.width ||
+        static_cast<std::size_t>(viewport_y) + rows > layout_.height) {
+        throw std::runtime_error("RAP viewport is outside the map layout");
+    }
+    IndexedMapImage image;
+    image.width = columns * 8U;
+    image.height = rows * 8U;
+    image.pixels.assign(image.width * image.height, 0U);
+    image.palette = palette_;
+    const auto background_cell = [&](std::size_t x, std::size_t y) {
+        auto value = cells_[(static_cast<std::size_t>(viewport_y) + y) *
+                                layout_.width +
+                            static_cast<std::size_t>(viewport_x) + x];
+        if (!fixed_background_cells_.empty()) {
+            // RPG.EXE:02af first copies record 1 into a temporary 40x25
+            // page, then writes each nonzero record-0 cell after clearing
+            // BH's high nibble. In particular, a primary 4000h cell is also
+            // present (without 4000h) below actors before 0375 draws the raw
+            // primary cell again above them.
+            const auto primary = static_cast<std::uint16_t>(value & 0x0fffU);
+            value = primary != 0U
+                ? primary
+                : fixed_background_cells_[y * columns + x];
+        }
+        return value;
+    };
+    for (std::size_t y = 0; y < rows; ++y) {
+        for (std::size_t x = 0; x < columns; ++x) {
+            const auto value = background_cell(x, y);
+            if ((value & 0x4000U) == 0U) {
+                draw_tile(image.pixels, image.width, image.height, planes_,
+                          tile_count_, x, y, value, false);
+            }
+        }
+    }
+    if (include_overlays) {
+        for (const auto& overlay : overlays_) {
+            // RPG.EXE:057f draws 2000h RRO records before actors. RRO uses a
+            // different ordering bit from the 4000h bit in RAP cells.
+            if ((overlay.tile & 0x2000U) == 0U ||
+                overlay.x < viewport_x || overlay.y < viewport_y) {
+                continue;
+            }
+            const auto x = static_cast<std::size_t>(overlay.x - viewport_x);
+            const auto y = static_cast<std::size_t>(overlay.y - viewport_y);
+            if (x < columns && y < rows) {
+                draw_tile(image.pixels, image.width, image.height, planes_,
+                          tile_count_, x, y, overlay.tile, true);
+            }
+        }
+    }
+    return image;
+}
+
+void MapResource::composite_viewport_foreground(
+    std::span<std::uint8_t> pixels, std::uint16_t viewport_x,
+    std::uint16_t viewport_y, bool include_overlays) const {
+    constexpr std::size_t columns = 40U;
+    constexpr std::size_t rows = 25U;
+    constexpr std::size_t width = columns * 8U;
+    constexpr std::size_t height = rows * 8U;
+    if (pixels.size() != width * height ||
+        static_cast<std::size_t>(viewport_x) + columns > layout_.width ||
+        static_cast<std::size_t>(viewport_y) + rows > layout_.height) {
+        throw std::runtime_error("RAP foreground viewport is invalid");
+    }
+    for (std::size_t y = 0; y < rows; ++y) {
+        for (std::size_t x = 0; x < columns; ++x) {
+            // RPG.EXE:0375 reads record 0 directly. It never revisits the
+            // fixed background record used by the special 1000h path.
+            const auto value = cells_[
+                (static_cast<std::size_t>(viewport_y) + y) * layout_.width +
+                static_cast<std::size_t>(viewport_x) + x];
+            if ((value & 0x4000U) != 0U) {
+                draw_tile(pixels, width, height, planes_, tile_count_, x, y,
+                          value, false);
+            }
+        }
+    }
+    if (include_overlays) {
+        for (const auto& overlay : overlays_) {
+            // RPG.EXE:0611 draws RRO records without 2000h after actors.
+            if ((overlay.tile & 0x2000U) != 0U ||
+                overlay.x < viewport_x || overlay.y < viewport_y) {
+                continue;
+            }
+            const auto x = static_cast<std::size_t>(overlay.x - viewport_x);
+            const auto y = static_cast<std::size_t>(overlay.y - viewport_y);
+            if (x < columns && y < rows) {
+                draw_tile(pixels, width, height, planes_, tile_count_, x, y,
+                          overlay.tile, true);
+            }
+        }
+    }
+}
+
+IndexedMapImage MapResource::render_viewport(
+    std::uint16_t viewport_x, std::uint16_t viewport_y,
+    bool include_overlays) const {
+    auto image = render_viewport_background(
+        viewport_x, viewport_y, include_overlays);
+    composite_viewport_foreground(
+        image.pixels, viewport_x, viewport_y, include_overlays);
     return image;
 }
 

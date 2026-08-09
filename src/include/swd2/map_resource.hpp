@@ -4,17 +4,18 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <span>
 #include <vector>
 
 namespace swd2 {
 
 struct MapLayoutHeader {
-    std::uint16_t tile_size{};
-    std::uint16_t flags{};
+    std::uint16_t directory_bytes{};
+    std::uint16_t image_end{};
     std::uint16_t width{};
     std::uint16_t height{};
-    std::uint16_t origin_x{};
-    std::uint16_t origin_y{};
+    std::uint16_t cell_base{};
+    std::uint16_t layer_count{};
 };
 
 struct MapOverlay {
@@ -44,6 +45,12 @@ public:
     [[nodiscard]] const MapLayoutHeader& layout() const noexcept { return layout_; }
     [[nodiscard]] const std::vector<std::uint16_t>& cells() const noexcept { return cells_; }
     [[nodiscard]] const std::vector<MapOverlay>& overlays() const noexcept { return overlays_; }
+    [[nodiscard]] std::uint16_t cell_base() const noexcept {
+        return layout_.cell_base;
+    }
+    [[nodiscard]] bool has_fixed_background_layer() const noexcept {
+        return !fixed_background_cells_.empty();
+    }
     [[nodiscard]] const std::array<std::uint16_t, 24>& animation_words() const noexcept {
         return animation_words_;
     }
@@ -51,6 +58,19 @@ public:
         return palette_;
     }
     [[nodiscard]] IndexedMapImage render(bool include_overlays = true) const;
+    // Area flag 1000h selects a two-record RAP. Record 1 is a fixed 40x25
+    // background while a viewport of record 0 is overlaid with zero cells
+    // transparent, exactly as RPG.EXE:01f4/02af composes it.
+    [[nodiscard]] IndexedMapImage render_viewport(
+        std::uint16_t viewport_x, std::uint16_t viewport_y,
+        bool include_overlays = true) const;
+    [[nodiscard]] IndexedMapImage render_viewport_background(
+        std::uint16_t viewport_x, std::uint16_t viewport_y,
+        bool include_overlays = true) const;
+    void composite_viewport_foreground(
+        std::span<std::uint8_t> pixels,
+        std::uint16_t viewport_x, std::uint16_t viewport_y,
+        bool include_overlays = true) const;
 
 private:
     std::uint16_t tile_count_{};
@@ -60,6 +80,7 @@ private:
     std::array<std::vector<std::uint8_t>, 4> planes_;
     MapLayoutHeader layout_{};
     std::vector<std::uint16_t> cells_;
+    std::vector<std::uint16_t> fixed_background_cells_;
     std::vector<MapOverlay> overlays_;
 };
 

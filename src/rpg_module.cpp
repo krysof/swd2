@@ -156,29 +156,6 @@ std::vector<std::vector<std::uint8_t>> load_rpg_ability_descriptions(
     return descriptions;
 }
 
-Viewport crop_map(const IndexedMapImage& map, std::uint16_t viewport_x,
-                  std::uint16_t viewport_y) {
-    constexpr std::size_t width = 320;
-    constexpr std::size_t height = 200;
-    Viewport result;
-    result.pixels.assign(width * height, 0);
-    result.palette = map.palette;
-
-    const auto max_left = map.width > width ? map.width - width : 0;
-    const auto max_top = map.height > height ? map.height - height : 0;
-    const auto left = std::min(max_left, static_cast<std::size_t>(viewport_x) * 8);
-    const auto top = std::min(max_top, static_cast<std::size_t>(viewport_y) * 8);
-
-    const auto copied_width = std::min(width, map.width);
-    const auto copied_height = std::min(height, map.height);
-    for (std::size_t row = 0; row < copied_height; ++row) {
-        std::copy_n(map.pixels.begin() + static_cast<std::ptrdiff_t>((top + row) * map.width + left),
-                    copied_width,
-                    result.pixels.begin() + static_cast<std::ptrdiff_t>(row * width));
-    }
-    return result;
-}
-
 void draw_party_actor(Viewport& viewport, const SpriteArchive& actors,
                       const SharedState& state, std::size_t actor) {
     const auto slot = actor * 3U;
@@ -3766,11 +3743,13 @@ private:
                 !relocated_actors_) {
                 return scene_provider_();
             }
-            auto viewport = crop_map(relocated_map_->render(true),
-                                     state_.viewport_x(), state_.viewport_y());
-            viewport.palette = relocated_palette_;
+            auto background = relocated_map_->render_viewport_background(
+                state_.viewport_x(), state_.viewport_y(), true);
+            Viewport viewport{std::move(background.pixels), relocated_palette_};
             draw_world_characters(viewport, *relocated_area_, state_, game_root_,
                                   *relocated_actors_, relocated_animation_sets_);
+            relocated_map_->composite_viewport_foreground(
+                viewport.pixels, state_.viewport_x(), state_.viewport_y(), true);
             return viewport;
         }();
         if (cutscene_) {
@@ -4257,12 +4236,15 @@ Marker RpgModule::run(GameContext& context, Marker) {
         advance_map_palette(map_palette, map_palette_animation);
     };
     const auto compose_scene = [&]() {
-        const auto rendered = map.render(true);
-        auto viewport = crop_map(rendered, context.shared_state.viewport_x(),
-                                 context.shared_state.viewport_y());
-        viewport.palette = map_palette;
+        auto background = map.render_viewport_background(
+            context.shared_state.viewport_x(),
+            context.shared_state.viewport_y(), true);
+        Viewport viewport{std::move(background.pixels), map_palette};
         draw_world_characters(viewport, location.area, context.shared_state,
                               context.game_root, actors, animation_sets);
+        map.composite_viewport_foreground(
+            viewport.pixels, context.shared_state.viewport_x(),
+            context.shared_state.viewport_y(), true);
         return viewport;
     };
     struct EntityEventOutcome {

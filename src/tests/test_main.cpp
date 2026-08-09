@@ -1448,12 +1448,61 @@ void test_map_resource(const std::filesystem::path& game_root) {
     }
 
     const auto padded = swd2::MapResource::load(game_root / "T2" / "HOL2");
-    require((padded.cells().back() & 0x07ffU) >= padded.tile_count(),
-            "HOL2 unreachable RAP padding oracle changed");
+    require(padded.layout().directory_bytes == 4U &&
+                padded.layout().image_end == 64808U &&
+                padded.layout().layer_count == 1U &&
+                padded.cell_base() == 8U && padded.layout().width == 180U &&
+                padded.layout().height == 180U &&
+                padded.cells().size() == 32400U &&
+                (padded.cells().back() & 0x07ffU) < padded.tile_count(),
+            "HOL2 RAP pointer-directory/cell extent oracle changed");
     const auto padded_image = padded.render(true);
-    require(padded_image.width == 1440U && padded_image.height == 1440U &&
-                padded_image.pixels.back() == 0U,
-            "portable full-map renderer dereferenced unreachable RAP padding");
+    require(padded_image.width == 1440U && padded_image.height == 1440U,
+            "portable full-map renderer did not consume exact HOL2 cells");
+
+    const auto non_square = swd2::MapResource::load(game_root / "T6" / "EIW");
+    require(non_square.layout().directory_bytes == 4U &&
+                non_square.cell_base() == 8U &&
+                non_square.layout().width == 100U &&
+                non_square.layout().height == 60U &&
+                non_square.cells().size() == 6000U,
+            "RAP height,width words were transposed on a non-square map");
+
+    const auto layered = swd2::MapResource::load(game_root / "T6" / "ZD");
+    require(layered.layout().directory_bytes == 6U &&
+                layered.layout().image_end == 0x1a08U &&
+                layered.layout().layer_count == 2U &&
+                layered.cell_base() == 10U && layered.layout().width == 93U &&
+                layered.layout().height == 25U &&
+                layered.cells().size() == 2325U &&
+                layered.has_fixed_background_layer(),
+            "ZD two-record RAP directory was not decoded");
+    const auto world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    const auto& zd_left = world.location_at_directory_offset(498U);
+    const auto& zd_right = world.location_at_directory_offset(504U);
+    require(zd_left.area_offset == 25723U && zd_left.area.flags == 4268U &&
+                zd_left.map_position == 10U && zd_left.viewport_x == 0U &&
+                zd_left.viewport_y == 0U && zd_right.area_offset == 25723U &&
+                zd_right.map_position == 110U && zd_right.viewport_x == 50U &&
+                zd_right.viewport_y == 0U,
+            "MAPA ZD placement/layer flag oracle changed");
+    const auto hash_pixels = [](const std::vector<std::uint8_t>& pixels) {
+        std::uint64_t hash = 1469598103934665603ULL;
+        for (const auto pixel : pixels) {
+            hash ^= pixel;
+            hash *= 1099511628211ULL;
+        }
+        return hash;
+    };
+    const auto zd_left_background = layered.render_viewport_background(0U, 0U);
+    const auto zd_left_frame = layered.render_viewport(0U, 0U);
+    const auto zd_right_frame = layered.render_viewport(50U, 0U);
+    require(zd_left_frame.width == 320U && zd_left_frame.height == 200U &&
+                hash_pixels(zd_left_background.pixels) ==
+                    17375729876272745673ULL &&
+                hash_pixels(zd_left_frame.pixels) == 3074925849497365130ULL &&
+                hash_pixels(zd_right_frame.pixels) == 1382700188505759108ULL,
+            "ZD fixed-background/scrolling-layer viewport oracle changed");
 }
 
 void test_map_database(const std::filesystem::path& game_root) {
@@ -6227,7 +6276,7 @@ void test_rpg_entity_dialogue(const std::filesystem::path& game_root) {
             "RPG entity-dialogue run did not terminate normally");
     require(platform.presented == 4 && platform.music_calls == 1 &&
                 platform.stop_calls == 1 && platform.frame_hashes.size() == 4 &&
-                platform.frame_hashes[2] == 13428659426982474716ULL &&
+                platform.frame_hashes[2] == 3387064284277477342ULL &&
                 platform.text_cursor == 1U && platform.text_poll_calls == 1U &&
                 platform.direct_updates == 2U,
             "RPG did not present dialogue and manage map music in-process");
@@ -6308,7 +6357,7 @@ void test_rpg_map_portal(const std::filesystem::path& game_root) {
     require(portal_marker == swd2::Marker::none &&
                 platform.presented == 2U && platform.poll_calls == 1U &&
                 platform.music_calls == 2U && platform.stop_calls == 1U &&
-                platform.frame_hashes[1] == 4745470555474590200ULL &&
+                platform.frame_hashes[1] == 10119629112548560915ULL &&
                 context.shared_state.map_location_directory_offset() == 12U &&
                 context.shared_state.u16(0x40a) == 1U &&
                 context.shared_state.u8(0x51f) == 1U &&
@@ -6398,8 +6447,8 @@ void test_rpg_map_actor_variant(const std::filesystem::path& game_root) {
         context, swd2::Marker::menu_ready);
     require(variant_marker == swd2::Marker::none &&
                 platform.presented == 2U && platform.poll_calls == 2U &&
-                platform.frame_hashes[0] == 18269611041676858647ULL &&
-                platform.frame_hashes[1] == 1788231128183820982ULL &&
+                platform.frame_hashes[0] == 5050928523494376350ULL &&
+                platform.frame_hashes[1] == 18246363941339037203ULL &&
                 context.shared_state.map_location_directory_offset() == 188U,
             "RPG f19 action 7 did not replace BMAN1 with BMAN3");
 }
@@ -6425,17 +6474,21 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
         swd2::InputAction::quit,
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
-    constexpr std::uint16_t map_width = 39;
-    constexpr std::uint16_t cell_base = 904;
+    const auto top_map = swd2::MapResource::load(game_root / "T2" / "T2ROA");
+    require(top_map.layout().width == 71U && top_map.layout().height == 39U &&
+                top_map.cell_base() == 8U,
+            "T2ROA RAP pointer-directory oracle changed");
+    const auto map_width = top_map.layout().width;
+    const auto cell_base = top_map.cell_base();
     state.set_u16(0x424, 684);
     state.set_u16(0x40f, cell_base);
     state.set_viewport_x(16);
     state.set_viewport_y(14);
-    state.set_actor_screen_x(12);  // world x 23, left of entity x 24
-    state.set_actor_screen_y(88);  // world y 27
+    state.set_actor_screen_x(32);  // world x 33, left of entity x 34
+    state.set_actor_screen_y(40);  // world y 21
     state.set_actor_direction(9);
     state.set_u16(0x40d, static_cast<std::uint16_t>(
-        cell_base + (27U * map_width + 23U) * 2U));
+        cell_base + (21U * map_width + 33U) * 2U));
     state.set_dos_string(0x42d, 22, location.area.graphics_path);
     state.set_dos_string(0x443, 22, location.area.layout_path);
     state.set_dos_string(0x459, 22, location.area.music_path);
@@ -6469,7 +6522,7 @@ void test_rpg_top_dialogue_panel(const std::filesystem::path& game_root) {
                 swd2::Marker::none &&
                 platform.cursor == platform.actions.size() &&
                 platform.frame_hashes.size() == 12 &&
-                platform.frame_hashes[10] == 2403026594211277006ULL &&
+                platform.frame_hashes[10] == 7490964090317885377ULL &&
                 platform.text_poll_calls == ordinary_glyphs &&
                 platform.direct_updates == ordinary_glyphs + forced_glyphs,
             "RPG opcode-46 top-dialogue run did not terminate normally");
@@ -6497,7 +6550,7 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
                 platform.frame_hashes[1] != platform.frame_hashes[0] &&
                 platform.frame_hashes[2] != platform.frame_hashes[1] &&
                 platform.frame_hashes[3] != platform.frame_hashes[2] &&
-                platform.frame_hashes[3] == 3887926141398700200ULL &&
+                platform.frame_hashes[3] == 13340828503804055853ULL &&
                 platform.frame_hashes[4] == platform.frame_hashes[2] &&
                 platform.frame_hashes[5] == platform.frame_hashes[0],
             "RPG field-menu page selection/return frames were not stable");
@@ -6521,14 +6574,14 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
     auto reopen_state = swd2::SharedState::load(game_root / "SAVE.DA1");
     swd2::GameContext reopen_context{
         game_root, reopen_state, reopen_platform};
-    require(swd2::RpgModule().run(
-                reopen_context, swd2::Marker::menu_ready) ==
-                    swd2::Marker::none &&
+    const auto reopen_result = swd2::RpgModule().run(
+        reopen_context, swd2::Marker::menu_ready);
+    require(reopen_result == swd2::Marker::none &&
                 reopen_platform.cursor == reopen_platform.actions.size() &&
                 reopen_platform.frame_hashes.size() == 13U &&
                 reopen_platform.frame_hashes[5] ==
                     reopen_platform.frame_hashes[10] &&
-                reopen_platform.frame_hashes[5] == 12052809785493428505ULL,
+                reopen_platform.frame_hashes[5] == 17863590386344463468ULL,
             "RPG 39ed did not restore 37fd/37ff after reopening inventory");
 }
 
@@ -6682,12 +6735,12 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
     talisman_state.set_u16(0x106U + 0x55U, 10U);
     swd2::GameContext talisman_context{
         game_root, talisman_state, talisman_platform};
-    require(swd2::RpgModule().run(
-                talisman_context, swd2::Marker::menu_ready) ==
-                    swd2::Marker::none &&
+    const auto talisman_result = swd2::RpgModule().run(
+        talisman_context, swd2::Marker::menu_ready);
+    require(talisman_result == swd2::Marker::none &&
                 talisman_platform.cursor == talisman_platform.actions.size() &&
                 talisman_platform.frame_hashes.size() == 9U &&
-                talisman_platform.frame_hashes[2] == 7287266437654658794ULL &&
+                talisman_platform.frame_hashes[2] == 17341303582624991656ULL &&
                 talisman_context.shared_state.u16(0x382U) == 0U &&
                 talisman_context.shared_state.u16(0x106U + 0x55U) == 3U &&
                 talisman_context.shared_state.u16(0x106U + 0x2dU) != 0U,
@@ -6759,11 +6812,11 @@ void test_rpg_inventory_alchemy(const std::filesystem::path& game_root) {
             "RPG 4397 alchemy flow did not consume two items/create product");
     require(platform.presented == platform.actions.size() &&
                 platform.frame_hashes.size() == 14U &&
-                platform.frame_hashes[7] == 11364939705330296462ULL &&
-                platform.frame_hashes[8] == 14503042325848200927ULL &&
-                platform.frame_hashes[9] == 10742568333542727258ULL &&
-                platform.frame_hashes[10] == 8770727228813360409ULL &&
-                platform.frame_hashes[11] == 15396706612090017963ULL &&
+                platform.frame_hashes[7] == 11679310933776722775ULL &&
+                platform.frame_hashes[8] == 2795229981088272918ULL &&
+                platform.frame_hashes[9] == 12664240429231480625ULL &&
+                platform.frame_hashes[10] == 14297608139487699870ULL &&
+                platform.frame_hashes[11] == 10609575317381259566ULL &&
                 platform.frame_hashes[12] == platform.frame_hashes[2] &&
                 platform.frame_hashes[13] == platform.frame_hashes[0] &&
                 std::set<std::uint64_t>(platform.frame_hashes.begin(),
@@ -6802,14 +6855,14 @@ void test_rpg_inventory_equipment_screen(
                 context.shared_state.u8(0x106U + 0x2cU) == 1U,
             "RPG 425b equipment page did not exchange the selected item");
     require(platform.frame_hashes.size() == 13U &&
-                platform.frame_hashes[3] == 11433385744574714003ULL &&
-                platform.frame_hashes[4] == 2848898498388233175ULL &&
-                platform.frame_hashes[5] == 9218707047594438047ULL &&
-                platform.frame_hashes[6] == 9871791124262577919ULL &&
-                platform.frame_hashes[7] == 6721607259575207961ULL &&
-                platform.frame_hashes[8] == 674075819568147182ULL &&
-                platform.frame_hashes[9] == 14756815826000922593ULL &&
-                platform.frame_hashes[10] == 10019193737471563700ULL &&
+                platform.frame_hashes[3] == 17346323509180310990ULL &&
+                platform.frame_hashes[4] == 9580035020130697964ULL &&
+                platform.frame_hashes[5] == 1193126455766717997ULL &&
+                platform.frame_hashes[6] == 2557044951284384639ULL &&
+                platform.frame_hashes[7] == 11490455812655608249ULL &&
+                platform.frame_hashes[8] == 11095224185392137962ULL &&
+                platform.frame_hashes[9] == 9630457108031417445ULL &&
+                platform.frame_hashes[10] == 3578951147401443181ULL &&
                 platform.frame_hashes[11] == platform.frame_hashes[2] &&
                 platform.frame_hashes[12] == platform.frame_hashes[0],
             "RPG 3feb equipment redraw/return frames were not stable");
@@ -6844,12 +6897,12 @@ void test_rpg_inventory_empty_slot_unequip(
                 context.shared_state.u16(0x106U + 0x12U) == 0U,
             "RPG 3f53/425b did not move equipped item into an empty bag cell");
     require(platform.frame_hashes.size() == 11U &&
-                platform.frame_hashes[3] == 3887926141398700200ULL &&
-                platform.frame_hashes[4] == 6933714104764164447ULL &&
-                platform.frame_hashes[5] == 1877660029463832535ULL &&
-                platform.frame_hashes[6] == 7755562181881063793ULL &&
-                platform.frame_hashes[7] == 9362985103413895260ULL &&
-                platform.frame_hashes[8] == 717940005636157773ULL &&
+                platform.frame_hashes[3] == 13340828503804055853ULL &&
+                platform.frame_hashes[4] == 11432918589084695794ULL &&
+                platform.frame_hashes[5] == 6062538655916986583ULL &&
+                platform.frame_hashes[6] == 14884106248727251905ULL &&
+                platform.frame_hashes[7] == 16959856505073652608ULL &&
+                platform.frame_hashes[8] == 14429707993458738632ULL &&
                 platform.frame_hashes[9] == platform.frame_hashes[2] &&
                 platform.frame_hashes[10] == platform.frame_hashes[0],
             "RPG empty-slot equipment/return frames were not stable");
@@ -6883,11 +6936,11 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
                 platform.presented == 10U && platform.stop_calls == 1U,
             "RPG 2f64 actor selector did not enter/return from 26f3 Status");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
-                platform.frame_hashes[4] == 15410607004956992806ULL &&
+                platform.frame_hashes[4] == 10287332555232791096ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 7072014378228532340ULL &&
+                platform.frame_hashes[5] == 7309384108166588722ULL &&
                 platform.frame_hashes[6] != platform.frame_hashes[5] &&
-                platform.frame_hashes[6] == 9993337209716258874ULL &&
+                platform.frame_hashes[6] == 6262036099231779612ULL &&
                 platform.frame_hashes[7] == platform.frame_hashes[3] &&
                 platform.frame_hashes[8] == platform.frame_hashes[2] &&
                 platform.frame_hashes[9] == platform.frame_hashes[0],
@@ -6916,9 +6969,9 @@ void test_rpg_field_magic_menu(const std::filesystem::path& game_root) {
                 platform.presented == 9U && platform.stop_calls == 1U,
             "RPG 2fb7 actor selector/list did not return through the field menu");
     require(platform.frame_hashes[4] != platform.frame_hashes[3] &&
-                platform.frame_hashes[4] == 11767186264042232530ULL &&
+                platform.frame_hashes[4] == 5845923941079099482ULL &&
                 platform.frame_hashes[5] != platform.frame_hashes[4] &&
-                platform.frame_hashes[5] == 14138796905971499288ULL &&
+                platform.frame_hashes[5] == 5574429281769751476ULL &&
                 platform.frame_hashes[6] == platform.frame_hashes[3] &&
                 platform.frame_hashes[7] == platform.frame_hashes[2] &&
                 platform.frame_hashes[8] == platform.frame_hashes[0],
@@ -7186,7 +7239,7 @@ void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 8U && platform.stop_calls == 1U &&
                 platform.frame_hashes[6] != platform.frame_hashes[5] &&
-                platform.frame_hashes[6] == 6054732217561583608ULL &&
+                platform.frame_hashes[6] == 536414092186444491ULL &&
                 platform.frame_hashes[7] != platform.frame_hashes[0],
             "RPG action-29h travel list/map reload frames were not stable");
 }
@@ -7288,9 +7341,9 @@ void test_rpg_system_menu_speed_and_exit(
                 platform.stop_calls == 1U,
             "RPG 4b76/4e4b/46cc system-menu sequence was not exact");
     require(platform.frame_hashes[2] != platform.frame_hashes[1] &&
-                platform.frame_hashes[2] == 8278365232680978070ULL &&
-                platform.frame_hashes[7] == 1610721571175691861ULL &&
-                platform.frame_hashes[8] == 8823441461784675157ULL &&
+                platform.frame_hashes[2] == 9900629663170054402ULL &&
+                platform.frame_hashes[7] == 9871370903072498198ULL &&
+                platform.frame_hashes[8] == 6692007422499836438ULL &&
                 platform.frame_hashes[8] != platform.frame_hashes[7] &&
                 platform.frame_hashes[13] != platform.frame_hashes[12],
             "RPG system menu/value/exit selection frames did not change");
@@ -7388,7 +7441,7 @@ void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
             "RPG system Record did not persist the confirmed slot pair");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 11U && platform.stop_calls == 1U &&
-                platform.frame_hashes[6] == 17822201426206456687ULL,
+                platform.frame_hashes[6] == 4590673835455086092ULL,
             "RPG system Record did not return through 4b76 to the field");
 }
 
@@ -8036,7 +8089,7 @@ void test_rpg_dialogue_then_money_overlay(
     state.set_u16(0x40f, 8);
     state.set_viewport_x(59);
     state.set_viewport_y(57);
-    state.set_actor_screen_x(38);
+    state.set_actor_screen_x(38);  // world x 79, immediately left of entity five
     state.set_actor_screen_y(80);
     state.set_u16(0x40d, static_cast<std::uint16_t>(
         8U + (57U * 180U + 59U) * 2U));
@@ -8058,11 +8111,11 @@ void test_rpg_dialogue_then_money_overlay(
         black_hash *= 1099511628211ULL;
     }
     require(platform.frame_hashes.size() == 47U &&
-                platform.frame_hashes[2] == 14975520895473487793ULL &&
-                platform.frame_hashes[3] == 9227892872998872915ULL &&
-                platform.frame_hashes[4] == 14733256452010803915ULL &&
+                platform.frame_hashes[2] == 10867719380703706953ULL &&
+                platform.frame_hashes[3] == 2647477145100804958ULL &&
+                platform.frame_hashes[4] == 15292563328515264089ULL &&
                 platform.frame_hashes[5] == platform.frame_hashes[3] &&
-                platform.frame_hashes[6] == 16679286118639561275ULL &&
+                platform.frame_hashes[6] == 1343501415113929938ULL &&
                 platform.frame_hashes[7] != platform.frame_hashes[6] &&
                 platform.frame_hashes[46] == black_hash &&
                 platform.bottom_hashes[2] == platform.bottom_hashes[5] &&
@@ -8078,6 +8131,17 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
         require(location.area.event_archive_path == "CHNA1.EXE" &&
                     swd2::map_entity(location.area, 0).event_directory_offset == 58,
                 "RPG shop confirmation oracle no longer points at CHNA1 entry 29");
+        auto graphics = game_root / swd2::normalize_dos_asset_path(
+            location.area.graphics_path);
+        auto layout = game_root / swd2::normalize_dos_asset_path(
+            location.area.layout_path);
+        graphics.replace_extension();
+        layout.replace_extension();
+        const auto shop_map = swd2::MapResource::load(graphics, layout);
+        require(shop_map.layout().width == 64U &&
+                    shop_map.layout().height == 38U &&
+                    shop_map.cell_base() == 8U,
+                "SWRO7 RAP pointer-directory oracle changed");
         auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
         for (std::size_t slot = 0; slot < 50; ++slot) {
             state.set_u16(0x382 + slot * 2U, 0);
@@ -8087,12 +8151,13 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
         }
         state.set_u16(0x104, 100);
         state.set_u16(0x424, 46);
-        state.set_u16(0x40f, 684);
-        state.set_u16(0x40d, 684);
-        state.set_viewport_x(0);
+        state.set_u16(0x40f, shop_map.cell_base());
+        state.set_viewport_x(20);
         state.set_viewport_y(0);
-        state.set_actor_screen_x(62);
-        state.set_actor_screen_y(64);
+        state.set_u16(0x40d, static_cast<std::uint16_t>(
+            shop_map.cell_base() + 20U * 2U));
+        state.set_actor_screen_x(50);  // world x 46, left of entity x 47
+        state.set_actor_screen_y(72);  // world y 11
         state.set_actor_direction(9);
         state.set_dos_string(0x42d, 22, location.area.graphics_path);
         state.set_dos_string(0x443, 22, location.area.layout_path);
@@ -8128,10 +8193,10 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 no_platform.text_cursor == no_platform.text_actions.size() &&
                 no_platform.direct_updates == 4U &&
                 no_platform.presented == 10U &&
-                no_platform.frame_hashes[4] == 2974691146617333747ULL &&
-                no_platform.frame_hashes[7] == 15896012307976257435ULL &&
+                no_platform.frame_hashes[4] == 17904292883038007920ULL &&
+                no_platform.frame_hashes[7] == 1105031115086362084ULL &&
                 no_platform.frame_hashes[8] == no_platform.frame_hashes[4] &&
-                no_platform.frame_hashes[9] == no_platform.frame_hashes[0],
+                no_platform.frame_hashes[9] == 18126370724235322392ULL,
             "RPG 5884 purchase confirmation did not preserve state on No");
 
     auto [yes_database, yes_state] = prepare();
@@ -8152,10 +8217,10 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 yes_context.shared_state.u16(0x382) == 117U &&
                 yes_platform.cursor == yes_platform.actions.size() &&
                 yes_platform.presented == 9U &&
-                yes_platform.frame_hashes[4] == 2974691146617333747ULL &&
-                yes_platform.frame_hashes[6] == 15896012307976257435ULL &&
-                yes_platform.frame_hashes[7] == 2389578071134734502ULL &&
-                yes_platform.frame_hashes[8] == yes_platform.frame_hashes[0],
+                yes_platform.frame_hashes[4] == 17904292883038007920ULL &&
+                yes_platform.frame_hashes[6] == 1105031115086362084ULL &&
+                yes_platform.frame_hashes[7] == 9156100889548881369ULL &&
+                yes_platform.frame_hashes[8] == 18126370724235322392ULL,
             "RPG 5884 purchase confirmation did not commit the default Yes");
 
     auto [error_database, error_state] = prepare();
@@ -8210,21 +8275,21 @@ void test_rpg_shop_confirmation(const std::filesystem::path& game_root) {
                 sell_context.shared_state.u16(0x382U) == 0U,
             "RPG opcode 17 did not select Sell, repeat its inventory or reload");
     require(sell_platform.frame_hashes.size() == 19U &&
-                sell_platform.frame_hashes[4] == 13513023463937595710ULL &&
-                sell_platform.frame_hashes[5] == 15331958951154741984ULL &&
+                sell_platform.frame_hashes[4] == 10580050217793672947ULL &&
+                sell_platform.frame_hashes[5] == 13164979860911474705ULL &&
                 sell_platform.frame_hashes[6] == sell_platform.frame_hashes[3] &&
-                sell_platform.frame_hashes[8] == 15263479975629331374ULL &&
-                sell_platform.frame_hashes[9] == 14190787542881041504ULL &&
+                sell_platform.frame_hashes[8] == 331949395885289681ULL &&
+                sell_platform.frame_hashes[9] == 7663978963988210671ULL &&
                 sell_platform.frame_hashes[10] ==
                     sell_platform.frame_hashes[12] &&
-                sell_platform.bottom_hashes[10] == 8638034060943885118ULL &&
-                sell_platform.bottom_hashes[11] == 17483802272307405006ULL &&
+                sell_platform.bottom_hashes[10] == 7573880064784883603ULL &&
+                sell_platform.bottom_hashes[11] == 6479326559611137947ULL &&
                 sell_platform.bottom_hashes[12] ==
                     sell_platform.bottom_hashes[10] &&
                 sell_platform.frame_hashes[13] == sell_platform.frame_hashes[0] &&
-                sell_platform.frame_hashes[16] == 7672109878915942062ULL &&
+                sell_platform.frame_hashes[16] == 8466292373318462143ULL &&
                 sell_platform.frame_hashes[17] == sell_platform.frame_hashes[15] &&
-                sell_platform.frame_hashes[18] == sell_platform.frame_hashes[0],
+                sell_platform.frame_hashes[18] == 18126370724235322392ULL,
             "RPG opcode-17 Buy/Sell, empty feedback or reload frames changed");
 
     auto [combined_quit_database, combined_quit_state] = prepare();

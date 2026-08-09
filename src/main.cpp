@@ -16,6 +16,7 @@
 #include "swd2/monster_definition.hpp"
 #include "swd2/rpg_module.hpp"
 #include "swd2/replay_input.hpp"
+#include "swd2/rix_decoder.hpp"
 #include "swd2/runtime.hpp"
 #include "swd2/mz_executable.hpp"
 #include "swd2/planar_sprite_set.hpp"
@@ -911,11 +912,13 @@ void verify_maps(const std::filesystem::path& game_root) {
             overlays += map.overlays().size();
             tiles += map.tile_count();
         } catch (const std::exception& error) {
-            if (std::string(error.what()) == "unsupported RAP tile size") {
+            try {
+                static_cast<void>(swd2::PlanarSpriteSet::load(base));
                 ++animation_sets;
                 continue;
+            } catch (...) {
+                throw std::runtime_error(base.string() + ": " + error.what());
             }
-            throw std::runtime_error(base.string() + ": " + error.what());
         }
     }
     std::size_t de_sets = 0;
@@ -930,12 +933,144 @@ void verify_maps(const std::filesystem::path& game_root) {
     }
     const auto transitions =
         swd2::MapTransitionDatabase::load(game_root / "MAP0.EXE");
+    const auto world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    std::set<std::uint16_t> seen_areas;
+    std::set<std::string> referenced_music;
+    std::set<std::string> referenced_events;
+    std::set<std::string> referenced_fonts;
+    std::map<std::uint16_t, std::pair<std::uint16_t, std::size_t>> area_cells;
+    std::size_t referenced_entities = 0;
+    std::size_t split_layouts = 0;
+    std::size_t inert_off_map_entities = 0;
+    std::size_t inert_off_map_overlays = 0;
+    for (const auto& location : world.locations()) {
+        if (seen_areas.insert(location.area_offset).second) {
+            auto graphics = game_root / swd2::normalize_dos_asset_path(
+                location.area.graphics_path);
+            auto layout = game_root / swd2::normalize_dos_asset_path(
+                location.area.layout_path);
+            graphics.replace_extension();
+            layout.replace_extension();
+            swd2::MapResource resource;
+            try {
+                resource = swd2::MapResource::load(graphics, layout);
+            } catch (const std::exception& error) {
+                throw std::runtime_error(
+                    "MAPA referenced map cannot be decoded at location " +
+                    std::to_string(location.directory_offset) + " (" +
+                    graphics.string() + " / " + layout.string() + "): " +
+                    error.what());
+            }
+            area_cells[location.area_offset] = {
+                resource.cell_base(), resource.cells().size()};
+            for (const auto cell : resource.cells()) {
+                if (cell != 0xffffU &&
+                    (cell & 0x07ffU) >= resource.tile_count()) {
+                    throw std::runtime_error(
+                        "MAPA RAP cell references a tile outside its dictionary");
+                }
+            }
+            for (std::size_t overlay_index = 0;
+                 overlay_index < resource.overlays().size(); ++overlay_index) {
+                const auto& overlay = resource.overlays()[overlay_index];
+                // RPG.EXE:057f/0611 rejects RRO coordinates outside the
+                // current viewport before dereferencing the tile dictionary.
+                // A coordinate outside the map can never enter any legal
+                // viewport, so released garbage records there are inert.
+                if (overlay.x >= resource.layout().width ||
+                    overlay.y >= resource.layout().height) {
+                    ++inert_off_map_overlays;
+                    continue;
+                }
+                if (overlay.tile != 0xffffU &&
+                    (overlay.tile & 0x07ffU) >= resource.tile_count()) {
+                    throw std::runtime_error(
+                        "MAPA RRO cell references a tile outside its dictionary: " +
+                        graphics.string() + ", record " +
+                        std::to_string(overlay_index) + ", tile " +
+                        std::to_string(overlay.tile) + "/" +
+                        std::to_string(resource.tile_count()));
+                }
+            }
+            referenced_entities += location.area.entity_count();
+            split_layouts += graphics != layout;
+            referenced_music.insert(location.area.music_path);
+            referenced_events.insert(location.area.event_archive_path);
+            referenced_fonts.insert(location.area.event_font_path);
+            for (std::size_t entity = 0; entity < location.area.entity_count();
+                 ++entity) {
+                const auto cell = swd2::map_entity(location.area, entity).cell_offset;
+                if (cell < resource.cell_base() ||
+                    ((cell - resource.cell_base()) & 1U) != 0U ||
+                    (cell - resource.cell_base()) / 2U >= resource.cells().size()) {
+                    if (swd2::map_entity(location.area, entity).behavior != 3U) {
+                        throw std::runtime_error(
+                            "active MAPA entity cell is outside its referenced RAP layout: "
+                            "location " + std::to_string(location.directory_offset) +
+                            ", area " + std::to_string(location.area_offset) +
+                            ", entity " + std::to_string(entity) + ", cell " +
+                            std::to_string(cell) + "/" +
+                            std::to_string(resource.cells().size() * 2U));
+                    }
+                    ++inert_off_map_entities;
+                }
+            }
+        }
+        const auto [cell_base, cell_count] = area_cells.at(location.area_offset);
+        if (location.map_position < cell_base ||
+            ((location.map_position - cell_base) & 1U) != 0U ||
+            (location.map_position - cell_base) / 2U >= cell_count) {
+            throw std::runtime_error(
+                "MAPA location placement is outside its referenced RAP layout");
+        }
+    }
+    for (const auto& path : referenced_music) {
+        static_cast<void>(swd2::decode_rix(read_binary_file(
+            game_root / swd2::normalize_dos_asset_path(path))));
+    }
+    for (const auto& path : referenced_events) {
+        static_cast<void>(swd2::ScriptArchive::load(
+            game_root / swd2::normalize_dos_asset_path(path)));
+    }
+    for (const auto& path : referenced_fonts) {
+        static_cast<void>(swd2::LegacyFont::load(
+            game_root / swd2::normalize_dos_asset_path(path)));
+    }
+    if (maps != 129U || tiles != 123958U || cells != 2140501U ||
+        overlays != 71411U || animation_sets != 0U || de_sets != 37U ||
+        de_frames != 971U || transitions.area_count() != 152U ||
+        transitions.record_count() != 481U ||
+        world.locations().size() != 466U || seen_areas.size() != 152U ||
+        referenced_entities != 822U || split_layouts != 2U ||
+        inert_off_map_entities != 4U || inert_off_map_overlays != 2490U ||
+        referenced_music.size() != 22U || referenced_events.size() != 7U ||
+        referenced_fonts.size() != 6U) {
+        throw std::runtime_error(
+            "map/resource coverage changed: maps=" + std::to_string(maps) +
+            ", tiles=" + std::to_string(tiles) + ", cells=" +
+            std::to_string(cells) + ", overlays=" +
+            std::to_string(overlays) + ", placements=" +
+            std::to_string(world.locations().size()) + ", areas=" +
+            std::to_string(seen_areas.size()) + ", entities=" +
+            std::to_string(referenced_entities) + ", split layouts=" +
+            std::to_string(split_layouts) + ", inert entities=" +
+            std::to_string(inert_off_map_entities) + ", inert overlays=" +
+            std::to_string(inert_off_map_overlays) + ", music=" +
+            std::to_string(referenced_music.size()) + ", events=" +
+            std::to_string(referenced_events.size()) + ", fonts=" +
+            std::to_string(referenced_fonts.size()));
+    }
     std::cout << "verified " << maps << " maps: " << tiles << " tiles, " << cells
               << " cells, " << overlays << " overlay records; " << animation_sets
               << " non-map tile sets skipped; " << de_sets << " DE sprite sets, "
               << de_frames << " frames; " << transitions.area_count()
               << " MAP0 areas, " << transitions.record_count()
-              << " transition records\n";
+              << " transition records; " << world.locations().size()
+              << " MAPA placements/" << seen_areas.size() << " unique areas/"
+              << referenced_entities << " entities (" << inert_off_map_entities
+              << " inert off-map), " << inert_off_map_overlays
+              << " inert off-map RRO records and all referenced map/music/script/font"
+                 " assets decoded\n";
 }
 
 void verify_battles(const std::filesystem::path& game_root) {
