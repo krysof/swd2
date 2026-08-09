@@ -101,15 +101,103 @@ def main() -> int:
         audio = data.get("audio")
         if not isinstance(audio, dict):
             fail("trace audio summary is missing")
+        audio_counts: dict[str, int] = {}
         for name in (
             "music_calls",
             "voice_calls",
             "stop_music_calls",
             "stop_audio_calls",
         ):
-            nonnegative_int(audio.get(name), f"audio.{name}")
+            audio_counts[name] = nonnegative_int(audio.get(name), f"audio.{name}")
         digest(audio.get("fnv1a64"), "audio.fnv1a64")
-        nonnegative_int(data.get("delay_milliseconds"), "delay_milliseconds")
+        total_delay = nonnegative_int(
+            data.get("delay_milliseconds"), "delay_milliseconds"
+        )
+
+        timeline = data.get("timeline")
+        if not isinstance(timeline, list) or not timeline:
+            fail("trace unified presentation timeline is missing")
+        event_counts = {
+            "frame": 0,
+            "input": 0,
+            "music": 0,
+            "voice": 0,
+            "stop_music": 0,
+            "stop_audio": 0,
+        }
+        direct_events = 0
+        elapsed = 0
+        for sequence, event in enumerate(timeline):
+            if not isinstance(event, dict) or event.get("sequence") != sequence:
+                fail("trace timeline sequence numbers are not contiguous")
+            at = nonnegative_int(
+                event.get("at_milliseconds"),
+                f"timeline[{sequence}].at_milliseconds",
+            )
+            if at != elapsed:
+                fail(f"timeline event {sequence} is not at the accumulated delay")
+            kind = event.get("kind")
+            if kind == "delay":
+                milliseconds = nonnegative_int(
+                    event.get("milliseconds"),
+                    f"timeline[{sequence}].milliseconds",
+                )
+                if milliseconds == 0:
+                    fail(f"timeline delay {sequence} is empty")
+                elapsed += milliseconds
+                continue
+            if kind not in event_counts:
+                fail(f"timeline event {sequence} has an invalid kind")
+            index_key = "frame" if kind == "frame" else (
+                "input" if kind == "input" else "call"
+            )
+            index = nonnegative_int(
+                event.get(index_key), f"timeline[{sequence}].{index_key}"
+            )
+            if index != event_counts[kind]:
+                fail(f"timeline {kind} indexes are not contiguous")
+            event_counts[kind] += 1
+            if kind == "frame":
+                if not isinstance(event.get("direct"), bool):
+                    fail(f"timeline frame {index} has no direct-update flag")
+                direct_events += int(event["direct"])
+                digest(event.get("fnv1a64"), f"timeline frame {index}")
+                if index >= len(frame_hashes) or event["fnv1a64"] != frame_hashes[index]:
+                    fail(f"timeline frame {index} digest differs from frame list")
+            elif kind == "input":
+                if index >= len(checkpoints):
+                    fail(f"timeline input {index} is outside the checkpoint list")
+                checkpoint = checkpoints[index]
+                if event.get("boundary") != checkpoint.get("boundary") or event.get(
+                    "action"
+                ) != checkpoint.get("action"):
+                    fail(f"timeline input {index} differs from its checkpoint")
+                digest(event.get("state_fnv1a64"), f"timeline input {index} state")
+                if event["state_fnv1a64"] != checkpoint.get("state_fnv1a64"):
+                    fail(f"timeline input {index} state differs from its checkpoint")
+            elif kind in {"music", "voice"}:
+                digest(
+                    event.get("payload_fnv1a64"),
+                    f"timeline {kind} call {index} payload",
+                )
+                if kind == "music" and not isinstance(event.get("loop"), bool):
+                    fail(f"timeline music call {index} has no loop flag")
+
+        if elapsed != total_delay:
+            fail("timeline delays do not add up to delay_milliseconds")
+        if event_counts["frame"] != frames or direct_events != direct:
+            fail("timeline video events differ from the video summary")
+        if event_counts["input"] != consumed:
+            fail("timeline input events differ from the input summary")
+        for kind, summary_name in (
+            ("music", "music_calls"),
+            ("voice", "voice_calls"),
+            ("stop_music", "stop_music_calls"),
+            ("stop_audio", "stop_audio_calls"),
+        ):
+            if event_counts[kind] != audio_counts[summary_name]:
+                fail(f"timeline {kind} events differ from the audio summary")
+
         digest(data.get("state_fnv1a64"), "state_fnv1a64")
         digest(data.get("mapz_fnv1a64"), "mapz_fnv1a64", nullable=True)
 

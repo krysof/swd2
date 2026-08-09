@@ -40,8 +40,9 @@ WASM 或发布 GitHub Pages 都只是阶段检查点，不等于移植完成。
 diff_report，通关至少含 input/original_trace/rewrite_trace/comparison，长期矩阵至少含
 native_log/browser_log/matrix_report。通关脚本会进一步解析现代回放 trace，拒绝未消费
 输入、隐式退出、空帧或没有实际进入 MEO/RPG/FIG/DEMO 四模块的伪“通关”证据。
-随后它会现场重算 original_trace 与 rewrite_trace 的输入检查点、每帧、音频、累计延时、
-最终 SAVE/MAPZ、停止状态和模块切换，并要求结果与带哈希的 comparison 报告完全一致。
+随后它会现场重算 original_trace 与 rewrite_trace 的输入检查点、每帧、音频、逐次延时、
+统一音画/输入时间线、最终 SAVE/MAPZ、停止状态和模块切换，并要求结果与带哈希的
+comparison 报告完全一致。
 像素差分也不是只校验一份手写 JSON：现代回放可把每次提交的 320×200 索引页、VGA
 调色板和直接写页标志保存为带输入序列及完整结尾计数的 `SWD2FRM2` 流；门禁会现场严格解析原版/
 重写捕获，逐帧要求索引像素、调色板、页类型乃至容器字节完全相同，并重算 diff_report。

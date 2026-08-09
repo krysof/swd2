@@ -36,6 +36,7 @@ def main() -> int:
             "video": original.get("video") == rewrite.get("video"),
             "frames": original.get("frame_fnv1a64")
             == rewrite.get("frame_fnv1a64"),
+            "timeline": original.get("timeline") == rewrite.get("timeline"),
             "audio": original.get("audio") == rewrite.get("audio"),
             "delay": original.get("delay_milliseconds")
             == rewrite.get("delay_milliseconds"),
@@ -73,7 +74,7 @@ def main() -> int:
         if not verified:
             failed = [name for name, passed in fields.items() if not passed]
             raise ValueError(f"playthrough traces diverge: {failed}")
-        print("replay comparison: VERIFIED (all frame/state/audio/transition checks match)")
+        print("replay comparison: VERIFIED (all frame/state/audio/timeline checks match)")
         return 0
     except (OSError, json.JSONDecodeError, ValueError) as error:
         print(f"replay comparison: FAIL: {error}", file=sys.stderr)

@@ -259,7 +259,7 @@ ctest --test-dir build --output-on-failure
 语法为 `[WAIT|POLL|TEXT|FRONTEND:]动作[*次数]`，逗号/空白分隔，`#` 到行末为注释。
 例如 `POLL:RIGHT*12, WAIT:CONFIRM, TEXT:NONE*4, FRONTEND:QUIT`。严格回放必须消费全部
 登记动作；输出记录每个输入前的 SAVE/MAPZ 检查点、逐帧摘要、整段帧链、直接写页、
-音频提交、延时、最终状态摘要和模块切换。
+音频提交、每次延时、统一音画/输入时间线、最终状态摘要和模块切换。
 FNV 摘要用于快速确定性比较，最终证据文件本身仍由完成门禁使用 SHA-256 固定。
 `--frame-output` 是可选的逐像素证据流：每页保存页类型、320×200 索引像素和完整 VGA
 调色板，只有严格回放成功消费全部输入后才写 `DONE` 结尾。可用

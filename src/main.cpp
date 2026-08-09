@@ -167,6 +167,27 @@ public:
         std::optional<std::uint64_t> map_digest;
     };
 
+    enum class TimelineKind {
+        frame,
+        input,
+        delay,
+        music,
+        voice,
+        stop_music,
+        stop_audio,
+    };
+
+    struct TimelineEvent {
+        TimelineKind kind{TimelineKind::frame};
+        std::uint64_t at_milliseconds{};
+        std::size_t index{};
+        std::uint64_t digest{};
+        std::uint64_t duration{};
+        bool flag{};
+        swd2::ReplayInputBoundary boundary{swd2::ReplayInputBoundary::any};
+        swd2::InputAction action{swd2::InputAction::none};
+    };
+
     explicit ReplayPlatform(
         std::vector<swd2::ReplayInputStep> steps,
         const std::optional<std::filesystem::path>& frame_output = std::nullopt)
@@ -232,25 +253,42 @@ public:
     swd2::ClockTime clock_time() const override { return {0, 0}; }
     void delay_for(std::chrono::milliseconds duration) override {
         if (duration.count() > 0) {
-            delay_milliseconds += static_cast<std::uint64_t>(duration.count());
+            const auto milliseconds =
+                static_cast<std::uint64_t>(duration.count());
+            timeline.push_back(TimelineEvent{
+                TimelineKind::delay, delay_milliseconds, 0, 0,
+                milliseconds});
+            delay_milliseconds += milliseconds;
         }
     }
     void play_music(std::span<const std::uint8_t> bytes, bool loop) override {
         ++music_calls;
+        timeline.push_back(TimelineEvent{
+            TimelineKind::music, delay_milliseconds, music_calls - 1U,
+            hash(bytes), 0, loop});
         mix(audio_digest, static_cast<std::uint64_t>(loop ? 1U : 0U));
         mix(audio_digest, bytes);
     }
     void play_voice(std::span<const std::uint8_t> bytes) override {
         ++voice_calls;
+        timeline.push_back(TimelineEvent{
+            TimelineKind::voice, delay_milliseconds, voice_calls - 1U,
+            hash(bytes)});
         mix(audio_digest, std::uint64_t{2});
         mix(audio_digest, bytes);
     }
     void stop_music() override {
         ++stop_music_calls;
+        timeline.push_back(TimelineEvent{
+            TimelineKind::stop_music, delay_milliseconds,
+            stop_music_calls - 1U});
         mix(audio_digest, std::uint64_t{3});
     }
     void stop_audio() override {
         ++stop_audio_calls;
+        timeline.push_back(TimelineEvent{
+            TimelineKind::stop_audio, delay_milliseconds,
+            stop_audio_calls - 1U});
         mix(audio_digest, std::uint64_t{4});
     }
 
@@ -272,6 +310,7 @@ public:
     std::uint64_t audio_digest{14695981039346656037ULL};
     std::vector<std::uint64_t> frame_hashes;
     std::vector<InputCheckpoint> input_checkpoints;
+    std::vector<TimelineEvent> timeline;
 
     [[nodiscard]] std::size_t input_count() const noexcept {
         return steps_.size();
@@ -341,6 +380,9 @@ private:
                 context_->map_database->serialized_bytes());
         }
         input_checkpoints.push_back(checkpoint);
+        timeline.push_back(TimelineEvent{
+            TimelineKind::input, delay_milliseconds, cursor_,
+            checkpoint.state_digest, 0, false, boundary, action});
     }
 
     void record_surface(const swd2::IndexedSurfaceView& surface, bool direct) {
@@ -359,6 +401,9 @@ private:
         mix(frame_hash, surface.pixels);
         mix(frame_hash, surface.palette);
         frame_hashes.push_back(frame_hash);
+        timeline.push_back(TimelineEvent{
+            TimelineKind::frame, delay_milliseconds, frames - 1U,
+            frame_hash, 0, direct});
         mix(frame_digest, static_cast<std::uint64_t>(direct ? 1U : 0U));
         mix(frame_digest, static_cast<std::uint64_t>(surface.width));
         mix(frame_digest, static_cast<std::uint64_t>(surface.height));
@@ -498,6 +543,55 @@ void write_replay_trace(const std::filesystem::path& path,
     for (std::size_t index = 0; index < platform.frame_hashes.size(); ++index) {
         output << "    \"" << hex_digest(platform.frame_hashes[index]) << '"';
         if (index + 1U != platform.frame_hashes.size()) output << ',';
+        output << '\n';
+    }
+    output << "  ],\n"
+           << "  \"timeline\": [\n";
+    for (std::size_t sequence = 0; sequence < platform.timeline.size(); ++sequence) {
+        const auto& event = platform.timeline[sequence];
+        output << "    {\"sequence\": " << sequence
+               << ", \"at_milliseconds\": " << event.at_milliseconds;
+        switch (event.kind) {
+        case ReplayPlatform::TimelineKind::frame:
+            output << ", \"kind\": \"frame\", \"frame\": " << event.index
+                   << ", \"direct\": " << (event.flag ? "true" : "false")
+                   << ", \"fnv1a64\": \"" << hex_digest(event.digest) << '"';
+            break;
+        case ReplayPlatform::TimelineKind::input:
+            output << ", \"kind\": \"input\", \"input\": " << event.index
+                   << ", \"boundary\": \""
+                   << swd2::replay_boundary_name(event.boundary)
+                   << "\", \"action\": \""
+                   << swd2::input_action_name(event.action)
+                   << "\", \"state_fnv1a64\": \""
+                   << hex_digest(event.digest) << '"';
+            break;
+        case ReplayPlatform::TimelineKind::delay:
+            output << ", \"kind\": \"delay\", \"milliseconds\": "
+                   << event.duration;
+            break;
+        case ReplayPlatform::TimelineKind::music:
+            output << ", \"kind\": \"music\", \"call\": " << event.index
+                   << ", \"loop\": " << (event.flag ? "true" : "false")
+                   << ", \"payload_fnv1a64\": \""
+                   << hex_digest(event.digest) << '"';
+            break;
+        case ReplayPlatform::TimelineKind::voice:
+            output << ", \"kind\": \"voice\", \"call\": " << event.index
+                   << ", \"payload_fnv1a64\": \""
+                   << hex_digest(event.digest) << '"';
+            break;
+        case ReplayPlatform::TimelineKind::stop_music:
+            output << ", \"kind\": \"stop_music\", \"call\": "
+                   << event.index;
+            break;
+        case ReplayPlatform::TimelineKind::stop_audio:
+            output << ", \"kind\": \"stop_audio\", \"call\": "
+                   << event.index;
+            break;
+        }
+        output << '}';
+        if (sequence + 1U != platform.timeline.size()) output << ',';
         output << '\n';
     }
     output << "  ],\n"
