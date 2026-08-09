@@ -107,7 +107,7 @@ const context = {
   window,
   screen,
   navigator,
-  location: { search: '' },
+  location: { search: '?input-self-test=1' },
   URLSearchParams,
   FS: {
     mkdir() {},
@@ -135,6 +135,10 @@ const context = {
 
 vm.createContext(context);
 vm.runInContext(code, context);
+if (!context.Module.swd2InputSelfTestEnabled ||
+    context.Module.swd2InputDeliveries.length !== 0) {
+  throw new Error('browser input diagnostic was not armed explicitly');
+}
 context.Module.preRun[0]();
 if (!dependencies.has('swd2-user-start') ||
     dependencies.has('swd2-idbfs')) {

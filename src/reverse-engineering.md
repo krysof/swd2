@@ -1358,6 +1358,12 @@ Web 触摸层重新暴露上、下、左、右与 ESC/回车六键；世界主�
 WASM 的阻塞输入循环还必须在每次 `emscripten_sleep(10)` 恢复后重新读取这份 JS 状态：
 触摸方向不会产生 SDL 事件，旧实现只在进入 `wait_for_input` 前采样一次，手指若在菜单已经
 等待后才按下便永远不可见。现在每次协作式恢复均先取快速点击/保持电平，再检查 SDL 队列。
+新增无第三方依赖的真实浏览器边界 runner 会启动已安装的 Chromium/Edge，模拟
+390×844 竖屏、用可信 CDP 鼠标手势越过声音启动页并走到 RPG 世界，然后只发送一次
+`touchStart`、保持一秒、只发送一次 `touchEnd`。`?input-self-test=1` 才启用的有限诊断
+数组由 WASM 内部采样点写入；2026-08-10 的 Edge 151 记录在一次保持中跨过 DOM、
+ASYNCIFY 与 SDL 进入 28 个世界帧，松开后零追加输入。它证明桌面 Edge 的真实浏览器
+链路，不冒充物理 iOS/Android 触摸验收，portable-input 门仍保持 `in_progress`。
 
 五个便携槽实际是 SAVE/MAPZ/NAME 三件套，而不是两件套：原版 `4ce6..4d29` 写
 `SAVE.DAn`、`MAPZ.DAn` 和 `NAME<n>.DSK`，`4c16..4c73` 读三者并把槽位 NAME

@@ -327,6 +327,17 @@ manifest 会分别保存启动 harness 和未修改参考 EXE 的名称及 SHA-2
 `scripts/rpg-system-menu-rgb-reference.json` 还演示了带 `crop=[x,y,width,height]` 的
 完全覆盖面板比较：只比较不会受底层世界动画影响的系统页区域，其余像素不会被误报为已验证。
 
+WASM 构建可在本机已安装的 Chromium/Edge 中执行真实浏览器触摸边界测试。runner 会
+走到 RPG 世界，只发送一次触摸按下、保持一秒、再发送一次松开，并要求 WASM 每个世界
+帧持续收到方向、松开后立即停止：
+
+```sh
+./scripts/verify-wasm-browser-input.mjs build-wasm/site \
+  --output build-wasm/wasm-browser-input-report.json
+```
+
+该测试使用移动视口模拟，不能替代物理 iOS/Android 设备验收；报告会保留这个限制。
+
 模拟并验证启动器协议。列表中的每一项是相应子模块返回的共享标记：
 
 ```sh

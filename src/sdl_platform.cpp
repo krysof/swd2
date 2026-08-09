@@ -84,6 +84,16 @@ InputAction direction_code_action(int direction) {
     }
 }
 
+int direction_action_code(InputAction action) {
+    switch (action) {
+    case InputAction::up: return 1;
+    case InputAction::left: return 2;
+    case InputAction::down: return 3;
+    case InputAction::right: return 4;
+    default: return 0;
+    }
+}
+
 #ifdef __EMSCRIPTEN__
 HeldDirectionRepeatState browser_direction;
 
@@ -99,14 +109,31 @@ InputAction take_browser_direction_action(bool every_frame) {
     const auto held = EM_ASM_INT({
         return Module.swd2HeldDirection | 0;
     });
+    InputAction action = InputAction::none;
     if (every_frame) {
         // RPG's field loop samples the held keyboard level once per rendered
         // frame. A held touch must therefore yield one direction on every
         // poll, not desktop text-entry autorepeat at 180/85 ms. The queued
         // value only preserves a tap that ended between two frame polls.
-        return direction_code_action(held != 0 ? held : queued);
+        action = direction_code_action(held != 0 ? held : queued);
+    } else {
+        action = browser_direction.sample(queued, held, SDL_GetTicks());
     }
-    return browser_direction.sample(queued, held, SDL_GetTicks());
+    if (action != InputAction::none) {
+        EM_ASM({
+            if (Module.swd2InputSelfTestEnabled) {
+                const deliveries = Module.swd2InputDeliveries;
+                if (deliveries.length < 512) {
+                    deliveries.push({
+                        direction: $0,
+                        everyFrame: Boolean($1),
+                        milliseconds: performance.now()
+                    });
+                }
+            }
+        }, direction_action_code(action), every_frame ? 1 : 0);
+    }
+    return action;
 }
 #endif
 

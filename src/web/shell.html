@@ -156,6 +156,8 @@
     const startGate = document.getElementById('start-gate');
     const startButton = document.getElementById('start-button');
     const idbfsSelfTestToken = new URLSearchParams(location.search).get('idbfs-self-test');
+    const inputSelfTestEnabled =
+      new URLSearchParams(location.search).get('input-self-test') === '1';
     const idbfsSelfTestSessionKey = 'swd2-idbfs-self-test-token';
     const idbfsSelfTestPath = '/saves/.swd2-idbfs-restart-probe';
     let startRequested = Boolean(idbfsSelfTestToken);
@@ -293,6 +295,11 @@
     var Module = {
       swd2HeldDirection: 0,
       swd2DirectionQueue: [],
+      // Filled by the WASM polling boundary only for the explicit browser
+      // input diagnostic. This proves that a real DOM hold crossed into the
+      // core rather than merely changing a JavaScript variable.
+      swd2InputSelfTestEnabled: inputSelfTestEnabled,
+      swd2InputDeliveries: [],
       arguments: ['--game', '/game', '--save-dir', '/saves', '--play'],
       canvas,
       preRun: [function() {
