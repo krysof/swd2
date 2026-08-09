@@ -8150,6 +8150,31 @@ void test_rpg_system_value_right_wrap(
             "RPG 4e83 did not wrap Right from the fifth system value to the first");
 }
 
+void test_rpg_system_exit_frontend_close(
+    const std::filesystem::path& game_root) {
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::confirm,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,
+        swd2::InputAction::down,     // Exit DOS
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,     // close while 46cc is visible
+    };
+    platform.text_actions = {swd2::InputAction::confirm};
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::GameContext context{game_root, state, platform};
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
+                platform.cursor == platform.actions.size() &&
+                platform.stop_calls == 1U,
+            "RPG System exit confirmation swallowed frontend close");
+}
+
 void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
@@ -9996,6 +10021,7 @@ int main(int argc, char** argv) {
         test_rpg_system_value_confirmation_escape(argv[1]);
         test_rpg_system_value_left_wrap(argv[1]);
         test_rpg_system_value_right_wrap(argv[1]);
+        test_rpg_system_exit_frontend_close(argv[1]);
         test_rpg_system_menu_save(argv[1]);
         test_rpg_system_menu_save_restricted(argv[1]);
         test_rpg_system_menu_load(argv[1]);

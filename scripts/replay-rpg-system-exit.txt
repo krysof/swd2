@@ -1,0 +1,11 @@
+# Reach the world System page and select Exit DOS.
+WAIT:CONFIRM*3
+WAIT:DOWN
+WAIT:CONFIRM*3
+POLL:CANCEL
+WAIT:CONFIRM
+WAIT:DOWN*6
+WAIT:CONFIRM
+# Skip the remaining reveal delay, then close on the visible Yes/No page.
+TEXT:CONFIRM
+WAIT:QUIT

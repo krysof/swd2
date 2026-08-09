@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The crop locks the fully covered RPG Exit-DOS prompt and default-Yes confirmation cards. The animated world and uncovered System pixels remain outside this RGB check.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG System Exit DOS default Yes",
+      "original": "000225.png",
+      "sha256": "4db60583c08e6c2e4667cc6bce6442f14eee4273995fc436c4b007837ee9c503",
+      "rewrite_frame": 123,
+      "crop": [16, 116, 284, 80]
+    }
+  ]
+}

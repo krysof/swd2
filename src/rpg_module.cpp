@@ -3808,9 +3808,17 @@ private:
                 if (quit_requested_) return false;
                 if (value) state_.set_u16(
                     0x406, static_cast<std::uint16_t>(*value + 1U));
-            } else if (selected == 6U && confirm_system_exit(frame)) {
-                quit_requested_ = true;
-                return false;
+            } else if (selected == 6U) {
+                const auto exit_confirmed = confirm_system_exit(frame);
+                // A frontend close while 46cc is waiting returns false just
+                // like selecting No.  Propagate the separate host-abort flag
+                // before redrawing 4dbd, otherwise a close at this exact page
+                // falls through and consumes another input.
+                if (quit_requested_) return false;
+                if (exit_confirmed) {
+                    quit_requested_ = true;
+                    return false;
+                }
             }
         }
     }
