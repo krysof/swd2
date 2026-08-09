@@ -2,9 +2,23 @@
 
 #include "swd2/platform.hpp"
 
+#include <cstdint>
 #include <memory>
 
 namespace swd2 {
+
+// Deterministic DOS-style repeat policy used by the browser touch bridge.
+// It is public only so the SDL integration test can verify press, hold,
+// release, quick-tap preservation, and the 32-bit timer wrap boundary.
+class HeldDirectionRepeatState {
+public:
+    InputAction sample(int queued_direction, int held_direction,
+                       std::uint32_t now) noexcept;
+
+private:
+    int held_direction_{};
+    std::uint32_t repeat_at_{};
+};
 
 // Portable desktop frontend.  SDL remains outside swd2_core so console,
 // mobile and WebAssembly ports can supply a different PlatformBackend.

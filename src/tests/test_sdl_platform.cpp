@@ -88,6 +88,28 @@ int main() {
         require(virtual_joystick != nullptr,
                 "SDL could not open the virtual controller test device");
 
+        swd2::HeldDirectionRepeatState held_direction;
+        require(held_direction.sample(1, 1, 100) == swd2::InputAction::up,
+                "held direction did not preserve its initial press");
+        require(held_direction.sample(0, 1, 279) == swd2::InputAction::none &&
+                    held_direction.sample(0, 1, 280) == swd2::InputAction::up,
+                "held direction did not repeat after exactly 180 ms");
+        require(held_direction.sample(0, 1, 364) == swd2::InputAction::none &&
+                    held_direction.sample(0, 1, 365) == swd2::InputAction::up,
+                "held direction did not continue at the 85 ms cadence");
+        require(held_direction.sample(0, 0, 366) == swd2::InputAction::none &&
+                    held_direction.sample(2, 0, 400) == swd2::InputAction::left &&
+                    held_direction.sample(0, 0, 700) == swd2::InputAction::none,
+                "direction release or queued quick tap handling failed");
+        swd2::HeldDirectionRepeatState wrapped_direction;
+        require(wrapped_direction.sample(4, 4, 0xffffff80U) ==
+                    swd2::InputAction::right &&
+                    wrapped_direction.sample(0, 4, 0x00000033U) ==
+                    swd2::InputAction::none &&
+                    wrapped_direction.sample(0, 4, 0x00000034U) ==
+                    swd2::InputAction::right,
+                "held direction timer failed across the 32-bit tick wrap");
+
         const std::array<std::pair<SDL_Keycode, swd2::InputAction>, 12> keyboard{{
             {SDLK_UP, swd2::InputAction::up},
             {SDLK_DOWN, swd2::InputAction::down},

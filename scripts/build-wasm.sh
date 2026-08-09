@@ -40,7 +40,24 @@ html, count = pattern.subn(lambda match: match.group(1) + version + match.group(
 if count != 1:
     raise SystemExit(
         f"error: expected one visible Web version element, replaced {count}")
+asset_version = re.compile(
+    r'index\.js(?:\?v=\d{4}\.\d{2}\.\d{2}\.(?:\d+|dev))?')
+html, script_count = asset_version.subn(f"index.js?v={version}", html)
+if script_count == 0:
+    raise SystemExit("error: index.html does not reference the Web loader")
 path.write_text(html, encoding="utf-8")
+
+javascript_path = path.with_name("index.js")
+javascript = javascript_path.read_text(encoding="utf-8")
+for asset in ("index.wasm", "index.data"):
+    asset_pattern = re.compile(
+        re.escape(asset) +
+        r'(?:\?v=\d{4}\.\d{2}\.\d{2}\.(?:\d+|dev))?')
+    javascript, asset_count = asset_pattern.subn(
+        f"{asset}?v={version}", javascript)
+    if asset_count == 0:
+        raise SystemExit(f"error: index.js does not reference {asset}")
+javascript_path.write_text(javascript, encoding="utf-8")
 PY
 touch "$build_dir/site/.nojekyll"
 "$root/scripts/verify-wasm.sh" "$build_dir/site"

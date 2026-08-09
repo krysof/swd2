@@ -70,15 +70,7 @@ InputAction translate_event(const SDL_Event& event) {
     return InputAction::none;
 }
 
-#ifdef __EMSCRIPTEN__
-struct BrowserDirectionState {
-    int held_code{};
-    Uint32 repeat_at{};
-};
-
-BrowserDirectionState browser_direction;
-
-InputAction browser_direction_action(int direction) {
+InputAction direction_code_action(int direction) {
     switch (direction) {
     case 1: return InputAction::up;
     case 2: return InputAction::left;
@@ -87,6 +79,9 @@ InputAction browser_direction_action(int direction) {
     default: return InputAction::none;
     }
 }
+
+#ifdef __EMSCRIPTEN__
+HeldDirectionRepeatState browser_direction;
 
 InputAction take_browser_direction_action() {
     // DOM callbacks only update ordinary JavaScript state. Polling it while
@@ -100,30 +95,34 @@ InputAction take_browser_direction_action() {
     const auto held = EM_ASM_INT({
         return Module.swd2HeldDirection | 0;
     });
-    const auto now = SDL_GetTicks();
-    if (queued != 0) {
-        browser_direction.held_code = held;
-        browser_direction.repeat_at = now + 180U;
-        return browser_direction_action(queued);
-    }
-    if (held == 0) {
-        browser_direction.held_code = 0;
-        return InputAction::none;
-    }
-    if (held != browser_direction.held_code) {
-        browser_direction.held_code = held;
-        browser_direction.repeat_at = now + 180U;
-        return browser_direction_action(held);
-    }
-    if (SDL_TICKS_PASSED(now, browser_direction.repeat_at)) {
-        browser_direction.repeat_at = now + 85U;
-        return browser_direction_action(held);
-    }
-    return InputAction::none;
+    return browser_direction.sample(queued, held, SDL_GetTicks());
 }
 #endif
 
 }  // namespace
+
+InputAction HeldDirectionRepeatState::sample(
+    int queued_direction, int held_direction, std::uint32_t now) noexcept {
+    if (queued_direction != 0) {
+        held_direction_ = held_direction;
+        repeat_at_ = now + 180U;
+        return direction_code_action(queued_direction);
+    }
+    if (held_direction == 0) {
+        held_direction_ = 0;
+        return InputAction::none;
+    }
+    if (held_direction != held_direction_) {
+        held_direction_ = held_direction;
+        repeat_at_ = now + 180U;
+        return direction_code_action(held_direction);
+    }
+    if (static_cast<std::int32_t>(now - repeat_at_) >= 0) {
+        repeat_at_ = now + 85U;
+        return direction_code_action(held_direction);
+    }
+    return InputAction::none;
+}
 
 struct SdlPlatform::Impl {
     SDL_Window* window{};

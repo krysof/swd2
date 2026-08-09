@@ -103,6 +103,21 @@ import re
 import sys
 
 html = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+version_match = re.search(
+    r'<p\b[^>]*\bid=(?:"build-version"|\'build-version\'|build-version)'
+    r'[^>]*>\s*版本\s*(\d{4}\.\d{2}\.\d{2}\.(?:\d+|dev))\s*</p>',
+    html)
+if not version_match:
+    raise SystemExit("error: index.html has no valid visible Web version")
+version = version_match.group(1)
+javascript = pathlib.Path(sys.argv[1]).with_name("index.js").read_text(
+    encoding="utf-8")
+if f"index.js?v={version}" not in html:
+    raise SystemExit("error: Web loader URL is not tied to the visible version")
+for asset in ("index.wasm", "index.data"):
+    if f"{asset}?v={version}" not in javascript:
+        raise SystemExit(
+            f"error: {asset} URL is not tied to the visible version")
 actions = re.search(
     r'<div class=(?:"actions"|\'actions\'|actions)>(.*?)</div>', html, re.S)
 if not actions:
