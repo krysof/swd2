@@ -195,13 +195,43 @@
       });
       canvas.dispatchEvent(event);
     }
+    const directionKeys = new Set(['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown']);
+    const heldControls = new Map();
+    function releaseControl(button, event) {
+      if (event) event.preventDefault();
+      const held = heldControls.get(button);
+      if (!held) return;
+      clearTimeout(held.delay);
+      clearInterval(held.repeat);
+      heldControls.delete(button);
+      emitKey('keyup', button.dataset.key);
+    }
     document.querySelectorAll('[data-key]').forEach(button => {
-      const release = event => { event.preventDefault(); emitKey('keyup', button.dataset.key); };
       button.addEventListener('pointerdown', event => {
-        event.preventDefault(); button.setPointerCapture(event.pointerId); emitKey('keydown', button.dataset.key);
+        event.preventDefault();
+        if (heldControls.has(button)) return;
+        button.setPointerCapture(event.pointerId);
+        const held = { delay: 0, repeat: 0 };
+        heldControls.set(button, held);
+        emitKey('keydown', button.dataset.key);
+        // A physical keyboard generates fresh DOS key events while held. DOM
+        // events synthesized by a touch button do not, so repeat only the four
+        // movement directions after a short initial delay. ESC and Enter stay
+        // single-shot to prevent one press from accepting multiple screens.
+        if (directionKeys.has(button.dataset.key)) {
+          held.delay = setTimeout(() => {
+            emitKey('keydown', button.dataset.key);
+            held.repeat = setInterval(
+              () => emitKey('keydown', button.dataset.key), 85);
+          }, 180);
+        }
       });
-      button.addEventListener('pointerup', release);
-      button.addEventListener('pointercancel', release);
+      button.addEventListener('pointerup', event => releaseControl(button, event));
+      button.addEventListener('pointercancel', event => releaseControl(button, event));
+      button.addEventListener('lostpointercapture', event => releaseControl(button, event));
+    });
+    window.addEventListener('blur', () => {
+      for (const button of [...heldControls.keys()]) releaseControl(button);
     });
     document.addEventListener('swd2-save-sync', event => {
       if (event.detail) errorText.textContent = '浏览器存档写入失败：' + event.detail;

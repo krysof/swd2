@@ -80,6 +80,18 @@ for pattern in \
   }
 done
 
+for pattern in \
+  "const directionKeys" \
+  "heldControls" \
+  "setTimeout" \
+  "setInterval" \
+  "lostpointercapture"; do
+  grep -Fq "$pattern" "$site/index.html" || {
+    echo "error: index.html is missing held-direction touch input: $pattern" >&2
+    exit 1
+  }
+done
+
 # Parsing and rewriting with Binaryen provides an additional structural check
 # when the Emscripten installation exposes wasm-opt. Emscripten emits bulk
 # memory and other standardized features, so enable its complete feature set
