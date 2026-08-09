@@ -30,6 +30,7 @@ def main() -> int:
         rewrite, rewrite_sha = load(args.rewrite)
         fields = {
             "input": original.get("input") == rewrite.get("input"),
+            "boundaries": original.get("boundaries") == rewrite.get("boundaries"),
             "input_checkpoints": original.get("input_checkpoints")
             == rewrite.get("input_checkpoints"),
             "video": original.get("video") == rewrite.get("video"),

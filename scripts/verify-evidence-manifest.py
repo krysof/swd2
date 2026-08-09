@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 REQUIRED_ROLES = {
-    "pixel_diffs": {"baseline", "rewrite_output", "diff_report"},
+    "pixel_diffs": {"input", "baseline", "rewrite_output", "diff_report"},
     "playthrough": {"input", "original_trace", "rewrite_trace", "comparison"},
     "long_run": {"native_log", "browser_log", "matrix_report"},
 }

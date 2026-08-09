@@ -167,8 +167,33 @@ public:
         std::optional<std::uint64_t> map_digest;
     };
 
-    explicit ReplayPlatform(std::vector<swd2::ReplayInputStep> steps)
-        : steps_(std::move(steps)) {}
+    explicit ReplayPlatform(
+        std::vector<swd2::ReplayInputStep> steps,
+        const std::optional<std::filesystem::path>& frame_output = std::nullopt)
+        : steps_(std::move(steps)) {
+        if (!frame_output) return;
+        if (!frame_output->parent_path().empty()) {
+            std::filesystem::create_directories(frame_output->parent_path());
+        }
+        frame_capture_.open(*frame_output,
+                            std::ios::binary | std::ios::trunc);
+        if (!frame_capture_) {
+            throw std::runtime_error("cannot create replay frame capture: " +
+                                     frame_output->string());
+        }
+        constexpr std::array<char, 8> magic{
+            'S', 'W', 'D', '2', 'F', 'R', 'M', '2'};
+        frame_capture_.write(magic.data(),
+                             static_cast<std::streamsize>(magic.size()));
+        write_u64(static_cast<std::uint64_t>(steps_.size()));
+        for (const auto& step : steps_) {
+            frame_capture_.put(static_cast<char>(step.boundary));
+            frame_capture_.put(static_cast<char>(step.action));
+        }
+        if (!frame_capture_) {
+            throw std::runtime_error("cannot write replay frame capture header");
+        }
+    }
 
     void bind_context(const swd2::GameContext& context) noexcept {
         context_ = &context;
@@ -256,6 +281,19 @@ public:
         return steps_.size() - cursor_;
     }
 
+    void finish_frame_capture() {
+        if (!frame_capture_.is_open()) return;
+        constexpr std::array<char, 4> done{'D', 'O', 'N', 'E'};
+        frame_capture_.write(done.data(),
+                             static_cast<std::streamsize>(done.size()));
+        write_u64(static_cast<std::uint64_t>(frames));
+        frame_capture_.flush();
+        if (!frame_capture_) {
+            throw std::runtime_error("failed to finish replay frame capture");
+        }
+        frame_capture_.close();
+    }
+
 private:
     static void mix(std::uint64_t& digest, std::uint8_t value) noexcept {
         digest ^= value;
@@ -275,6 +313,20 @@ private:
         auto digest = std::uint64_t{14695981039346656037ULL};
         mix(digest, bytes);
         return digest;
+    }
+
+    void write_u32(std::uint32_t value) {
+        for (unsigned shift = 0; shift < 32; shift += 8) {
+            frame_capture_.put(
+                static_cast<char>(static_cast<std::uint8_t>(value >> shift)));
+        }
+    }
+
+    void write_u64(std::uint64_t value) {
+        for (unsigned shift = 0; shift < 64; shift += 8) {
+            frame_capture_.put(
+                static_cast<char>(static_cast<std::uint8_t>(value >> shift)));
+        }
     }
 
     void record_input(swd2::ReplayInputBoundary boundary,
@@ -312,6 +364,30 @@ private:
         mix(frame_digest, static_cast<std::uint64_t>(surface.height));
         mix(frame_digest, surface.pixels);
         mix(frame_digest, surface.palette);
+        if (frame_capture_.is_open()) {
+            constexpr std::array<char, 4> frame{'F', 'R', 'A', 'M'};
+            frame_capture_.write(frame.data(),
+                                 static_cast<std::streamsize>(frame.size()));
+            if (surface.width > std::numeric_limits<std::uint32_t>::max() ||
+                surface.height > std::numeric_limits<std::uint32_t>::max()) {
+                throw std::runtime_error("replay frame dimensions are too large");
+            }
+            write_u32(static_cast<std::uint32_t>(surface.width));
+            write_u32(static_cast<std::uint32_t>(surface.height));
+            frame_capture_.put(direct ? '\1' : '\0');
+            frame_capture_.put('\0');
+            frame_capture_.put('\0');
+            frame_capture_.put('\0');
+            frame_capture_.write(
+                reinterpret_cast<const char*>(surface.pixels.data()),
+                static_cast<std::streamsize>(surface.pixels.size()));
+            frame_capture_.write(
+                reinterpret_cast<const char*>(surface.palette.data()),
+                static_cast<std::streamsize>(surface.palette.size()));
+            if (!frame_capture_) {
+                throw std::runtime_error("failed to append replay frame capture");
+            }
+        }
     }
 
     swd2::InputAction consume(swd2::ReplayInputBoundary boundary,
@@ -343,6 +419,7 @@ private:
     }
 
     std::vector<swd2::ReplayInputStep> steps_;
+    std::ofstream frame_capture_;
     const swd2::GameContext* context_{};
     std::size_t cursor_{};
     std::size_t unmatched_nonblocking_calls_{};
@@ -464,8 +541,9 @@ void run_monolithic(const std::filesystem::path& game_root,
                     const std::filesystem::path& save_root, std::uint8_t slot_number,
                     bool write_save,
                     const std::optional<std::filesystem::path>& trace_output,
+                    const std::optional<std::filesystem::path>& frame_output,
                     bool require_all_inputs) {
-    ReplayPlatform platform(std::move(inputs));
+    ReplayPlatform platform(std::move(inputs), frame_output);
     auto slot = swd2::SaveSlot::open(game_root, save_root, slot_number);
     swd2::GameContext context{
         game_root, slot.state(), platform, slot.map_database(),
@@ -487,9 +565,6 @@ void run_monolithic(const std::filesystem::path& game_root,
     modules.add(std::make_unique<swd2::DemoModule>());
     const auto result = swd2::MonolithicRuntime(std::move(modules)).run(context);
     if (write_save) slot.save(context.shared_state);
-    if (trace_output) {
-        write_replay_trace(*trace_output, platform, context, result);
-    }
     if (require_all_inputs && platform.remaining_inputs() != 0U) {
         throw std::runtime_error(
             "replay stopped before consuming all boundary-locked inputs");
@@ -497,6 +572,13 @@ void run_monolithic(const std::filesystem::path& game_root,
     if (require_all_inputs && platform.implicit_quit_calls != 0U) {
         throw std::runtime_error(
             "replay exhausted its input and relied on an implicit quit");
+    }
+    // A capture without its DONE trailer is intentionally invalid. Finalize
+    // only after strict replay invariants pass so an interrupted/partial run
+    // cannot be mistaken for pixel-diff evidence.
+    platform.finish_frame_capture();
+    if (trace_output) {
+        write_replay_trace(*trace_output, platform, context, result);
     }
     for (const auto& transition : result.transitions) {
         std::cout << swd2::module_name(transition.module) << " -> "
@@ -1287,11 +1369,12 @@ void usage(const char* program) {
               << "  " << program << " --trace MT,ED,--,IF,OC,--\n";
     std::cout << "  " << program
               << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save]"
-                 " [--trace-output FILE.json]"
+                 " [--trace-output FILE.json] [--frame-output FILE.swd2frames]"
                  " --run-script CONFIRM,CONFIRM,RIGHT,DOWN,QUIT\n"
               << "  " << program
               << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save]"
-                 " --run-replay INPUT.txt --trace-output FILE.json\n";
+                 " --run-replay INPUT.txt --trace-output FILE.json"
+                 " [--frame-output FILE.swd2frames]\n";
 #ifdef SWD2_HAVE_SDL2
     std::cout << "  " << program
               << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save] --play\n";
@@ -1314,6 +1397,7 @@ int main(int argc, char** argv) {
         std::filesystem::path extract_output;
         std::filesystem::path replay_input;
         std::optional<std::filesystem::path> replay_trace;
+        std::optional<std::filesystem::path> replay_frames;
         bool strict_replay = false;
         std::size_t render_index = 0;
 
@@ -1378,6 +1462,8 @@ int main(int argc, char** argv) {
                 strict_replay = true;
             } else if (argument == "--trace-output" && i + 1 < argc) {
                 replay_trace = std::filesystem::path(argv[++i]);
+            } else if (argument == "--frame-output" && i + 1 < argc) {
+                replay_frames = std::filesystem::path(argv[++i]);
             } else if (argument == "--play") {
                 mode = Mode::play;
             } else if (argument == "--help" || argument == "-h") {
@@ -1391,6 +1477,12 @@ int main(int argc, char** argv) {
         if (save_root.empty()) save_root = game_root / "portable-saves";
         if (replay_trace && mode != Mode::run) {
             throw std::runtime_error("--trace-output requires --run-script or --run-replay");
+        }
+        if (replay_frames && mode != Mode::run) {
+            throw std::runtime_error("--frame-output requires --run-script or --run-replay");
+        }
+        if (replay_frames && !strict_replay) {
+            throw std::runtime_error("--frame-output requires strict --run-replay input");
         }
 
         if (mode == Mode::trace) {
@@ -1421,7 +1513,7 @@ int main(int argc, char** argv) {
                 : trace;
             run_monolithic(game_root, swd2::parse_replay_input(input_text),
                            save_root, slot_number, write_save,
-                           replay_trace, strict_replay);
+                           replay_trace, replay_frames, strict_replay);
         } else if (mode == Mode::play) {
 #ifdef SWD2_HAVE_SDL2
             play_monolithic(game_root, save_root, slot_number, write_save);

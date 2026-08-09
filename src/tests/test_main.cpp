@@ -147,6 +147,14 @@ void test_replay_input() {
         rejected = true;
     }
     require(rejected, "replay parser accepted a gameplay frontend action");
+    rejected = false;
+    try {
+        static_cast<void>(swd2::parse_replay_input(
+            "POLL:NONE*600000 POLL:NONE*600000"));
+    } catch (const std::runtime_error&) {
+        rejected = true;
+    }
+    require(rejected, "replay parser accepted more than one million actions");
 }
 
 void test_rpg_mode_x_event_offset() {

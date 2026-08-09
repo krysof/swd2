@@ -146,8 +146,8 @@
         "差分输入、原版基准、现代输出和容差规则可重复生成",
         "所有登记场景零未解释差异"
       ],
-      "evidence": ["src/tests/test_main.cpp", "src/reverse-engineering.md", "scripts/verify-pixel-diffs.sh", "scripts/verify-evidence-manifest.py"],
-      "remaining": ["登记全部 RPG/FIG 场景和原版基准", "生成通过哈希校验的 pixel_diffs manifest"]
+      "evidence": ["src/main.cpp", "src/tests/test_main.cpp", "src/reverse-engineering.md", "scripts/compare-frame-captures.py", "scripts/verify-pixel-diffs.sh", "scripts/verify-evidence-manifest.py"],
+      "remaining": ["用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准", "生成通过实时精确比较及哈希校验的 pixel_diffs manifest"]
     },
     {
       "id": "full_playthrough",

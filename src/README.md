@@ -252,7 +252,8 @@ ctest --test-dir build --output-on-failure
 
 ```sh
 ./build/src/swd2_rewrite --game game --no-save \
-  --run-replay replay.txt --trace-output replay-trace.json
+  --run-replay replay.txt --trace-output replay-trace.json \
+  --frame-output replay.swd2frames
 ```
 
 语法为 `[WAIT|POLL|TEXT|FRONTEND:]动作[*次数]`，逗号/空白分隔，`#` 到行末为注释。
@@ -260,6 +261,9 @@ ctest --test-dir build --output-on-failure
 登记动作；输出记录每个输入前的 SAVE/MAPZ 检查点、逐帧摘要、整段帧链、直接写页、
 音频提交、延时、最终状态摘要和模块切换。
 FNV 摘要用于快速确定性比较，最终证据文件本身仍由完成门禁使用 SHA-256 固定。
+`--frame-output` 是可选的逐像素证据流：每页保存页类型、320×200 索引像素和完整 VGA
+调色板，只有严格回放成功消费全部输入后才写 `DONE` 结尾。可用
+`scripts/compare-frame-captures.py` 对原版基准和重写输出做零容差、字节级现场比较。
 
 模拟并验证启动器协议。列表中的每一项是相应子模块返回的共享标记：
 

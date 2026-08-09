@@ -177,6 +177,7 @@ if(BUILD_TESTING)
                 --no-save
                 --run-replay "${PROJECT_SOURCE_DIR}/scripts/replay-smoke.txt"
                 --trace-output "${CMAKE_BINARY_DIR}/replay-smoke-trace.json"
+                --frame-output "${CMAKE_BINARY_DIR}/replay-smoke.swd2frames"
     )
     add_test(
         NAME replay_trace_validation
@@ -199,4 +200,26 @@ if(BUILD_TESTING)
     )
     set_tests_properties(replay_trace_comparison PROPERTIES
         DEPENDS replay_trace_smoke)
+    add_test(
+        NAME frame_capture_comparison
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/compare-frame-captures.py"
+                "${CMAKE_BINARY_DIR}/replay-smoke.swd2frames"
+                "${CMAKE_BINARY_DIR}/replay-smoke.swd2frames"
+                --input "${PROJECT_SOURCE_DIR}/scripts/replay-smoke.txt"
+                --output "${CMAKE_BINARY_DIR}/replay-smoke-pixel-diff.json"
+    )
+    set_tests_properties(frame_capture_comparison PROPERTIES
+        DEPENDS replay_trace_smoke)
+    add_test(
+        NAME frame_capture_report_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/compare-frame-captures.py"
+                "${CMAKE_BINARY_DIR}/replay-smoke.swd2frames"
+                "${CMAKE_BINARY_DIR}/replay-smoke.swd2frames"
+                --input "${PROJECT_SOURCE_DIR}/scripts/replay-smoke.txt"
+                --verify-report "${CMAKE_BINARY_DIR}/replay-smoke-pixel-diff.json"
+    )
+    set_tests_properties(frame_capture_report_validation PROPERTIES
+        DEPENDS frame_capture_comparison)
 endif()

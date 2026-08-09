@@ -83,6 +83,9 @@ void append_token(std::vector<ReplayInputStep>& result, std::string token) {
     if (count > std::numeric_limits<std::size_t>::max() - result.size()) {
         throw std::runtime_error("replay input is too large");
     }
+    if (result.size() + count > 1'000'000U) {
+        throw std::runtime_error("replay input exceeds one million actions");
+    }
     result.insert(result.end(), static_cast<std::size_t>(count),
                   ReplayInputStep{boundary, action});
 }
