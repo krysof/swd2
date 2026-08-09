@@ -1671,6 +1671,19 @@ void test_rpg_entity_system(const std::filesystem::path& game_root) {
     require(runtime.delay_remaining[0] == 1 && runtime.code_stream_offset == 2,
             "RPG entity delay counter did not suppress movement-stream consumption");
 
+    // RPG:10fd recopies the eleven MAPZ fields on an area change but never
+    // clears 3cbah/4260h/4580h/4648h. A same-index entity in the destination
+    // therefore inherits the remaining delay and does not consume a new code
+    // word until it expires.
+    auto destination_area = area;
+    destination_area.entity_fields[2][0] = anchor;
+    swd2::advance_rpg_entities(destination_area, map, state, runtime, image);
+    require(destination_area.entity_fields[2][0] == anchor &&
+                runtime.delay_remaining[0] == 0 &&
+                runtime.roam_y[0] == 1 &&
+                runtime.code_stream_offset == 2,
+            "RPG area reload incorrectly cleared autonomous entity BSS state");
+
     area.entity_fields[3][0] = 2;
     area.entity_fields[10][0] = 3;
     runtime.delay_remaining[0] = 0;

@@ -4322,12 +4322,13 @@ Marker RpgModule::run(GameContext& context, Marker) {
     // reload iterative while preserving that no-intermediate-frame boundary.
     bool check_chained_transition_before_present = false;
     while (true) {
-    // RPG:10fd installs a fresh transient entity array for every area load;
-    // the behavior-stream cursor, delays and roam counters beside it are BSS
-    // scratch, not save data. Reusing a runtime merely because two successive
-    // areas happen to have the same entity count carries movement state across
-    // opcode 37 and travel boundaries.
-    entity_runtime = {};
+    // RPG:10fd replaces only the eleven copied MAPZ arrays.  The autonomous
+    // movement cursor at 3cbah and the delay/roam BSS arrays at
+    // 4260h/4580h/4648h are not cleared by that loader.  They therefore keep
+    // their per-index values across ordinary MAP0, opcode-37 and travel area
+    // changes for the lifetime of this RPG process.  RpgModule::run owns the
+    // runtime locally, so returning to FIG and launching a new RPG process
+    // still starts from zero just as the DOS executables did.
     auto graphics_relative = normalize_dos_asset_path(context.shared_state.area_graphics_path());
     auto layout_relative = normalize_dos_asset_path(context.shared_state.area_collision_path());
     graphics_relative.replace_extension();
