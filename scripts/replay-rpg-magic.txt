@@ -7,5 +7,8 @@ WAIT:CONFIRM*3
 POLL:CANCEL
 WAIT:LEFT
 WAIT:CONFIRM*2
-# Stop on the complete initial Magic page.
+# Walk the complete 50-entry ability array. The final extra Down fixes the
+# inclusive last-row clamp after the eight-row window has scrolled 42 times.
+WAIT:DOWN*50
+# Stop on the complete final Magic page.
 WAIT:QUIT

@@ -70,33 +70,39 @@ def main() -> int:
         if data.get("schema_version") != 1:
             raise ValueError("unsupported trace schema")
         if data.get("input") != {
-            "total": 12,
-            "consumed": 12,
+            "total": 62,
+            "consumed": 62,
             "remaining": 0,
             "implicit_quit_calls": 0,
         }:
             raise ValueError("Magic replay input accounting differs")
         if data.get("boundaries") != {
-            "wait": 11,
+            "wait": 61,
             "poll": 1,
             "text": 0,
             "frontend": 105,
         }:
             raise ValueError("Magic replay input boundaries differ")
         video = data.get("video", {})
-        if video.get("frames") != 117 or \
+        if video.get("frames") != 167 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "f363884ef1b59e32":
+                video.get("fnv1a64") != "50dc64e9e31dee40":
             raise ValueError("Magic replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
-        if len(hashes) != 117 or hashes[113:117] != [
+        if len(hashes) != 167 or hashes[113:117] != [
                 "1b0a18f362ed2cb2",  # System/Book-selected field diamond
                 "ea4e949938110458",  # left/Magic-selected field diamond
                 "277b3517e4fd40a2",  # actor-zero selector
                 "3852ea686be2fbf5",  # complete actor-zero Magic list
         ]:
             raise ValueError("Magic selection pages differ")
+        # Frames 116..165 are cursor positions 0..49. The 50th Down redraws
+        # the clamped final row and must therefore reproduce frame 165.
+        if len(set(hashes[116:166])) != 50 or \
+                hashes[165] != "cbd0c738dd911d8d" or \
+                hashes[166] != hashes[165]:
+            raise ValueError("Magic 50-row cursor/scroll sequence differs")
         if (data.get("state_fnv1a64"), data.get("mapz_fnv1a64"),
                 data.get("name_fnv1a64")) != (
                     "54098cf0ca14338b", "827f0f1b725a0958",
@@ -104,7 +110,7 @@ def main() -> int:
             raise ValueError("Magic replay changed the loaded save triple")
 
         frames = load_indexed_frames(args.frames)
-        if len(frames) != 117:
+        if len(frames) != 167:
             raise ValueError("Magic frame capture count differs")
         page = frames[116]
         expected_crops = {
@@ -116,10 +122,16 @@ def main() -> int:
         for crop, expected in expected_crops.items():
             if crop_fnv(page, crop) != expected:
                 raise ValueError(f"Magic indexed crop differs: {crop}")
+        final_page = frames[165]
+        if crop_fnv(final_page, (96, 40, 224, 144)) != \
+                "d9b6314010665d59" or \
+                crop_fnv(final_page, (16, 104, 80, 32)) != \
+                "a372580af0ce94e7":
+            raise ValueError("Magic final list/resource crops differ")
 
         print(
-            "RPG Magic checkpoint: 117 frames, actor portrait/name/resource "
-            "and initial ability list locked")
+            "RPG Magic checkpoint: 167 frames, actor identity and all 50 "
+            "ability cursor/scroll positions locked")
         return 0
     except (OSError, ValueError, json.JSONDecodeError) as error:
         parser.exit(1, f"RPG Magic checkpoint: FAIL: {error}\n")
