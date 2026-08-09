@@ -295,6 +295,7 @@ if(BUILD_TESTING)
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-system-menu.py"
                 "${CMAKE_BINARY_DIR}/rpg-system-menu-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-system-menu-frames.bin"
     )
     set_tests_properties(rpg_system_menu_validation PROPERTIES
         DEPENDS rpg_system_menu_replay)

@@ -13,49 +13,119 @@
       "original": "000125.png",
       "sha256": "ab6844c24fe0b75e3fcb7a0a98a257d212ce98ce32121a57d7a630c32596559f",
       "rewrite_frame": 114,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "45f2fd56985e54a2150b68634db58ad32f3045aa4010b5d6857cbb1f3e78c5dc",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "fd9cd81af728198968f4997f061e356634c5f2f5cf63fe085aff719fb8d8fa01",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System row 1: sound",
       "original": "000140.png",
       "sha256": "10144224ea7031747fe695bb3651662bc7dc9493c5f0f99546346ef00cf2567c",
       "rewrite_frame": 115,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "e78c2de9c860ce7435048ad3c6488b6a58683bf09b252299b3652f3f9b74c7b6",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "c7c8a01e03e03c0b29596a9a26ba7815280bb3f62a2bcf491a886a816dccb9fb",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System row 2: read",
       "original": "000155.png",
       "sha256": "7c97328f59f10e846e44ee1588685e0c94e87497a7912bb4d2fe907b7561709c",
       "rewrite_frame": 116,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "b6440b89dd659a71a5b86cbaef00e82465d3b73eb99c880dceca7d7506b2deab",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "be6198ac4641643ab497e0a611804b673888f0c11428e0d56b21f785f66bfb30",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System row 3: record",
       "original": "000170.png",
       "sha256": "8747e093158dd47345f840d25fa68e570c6abc4b9ca85dd79ab8e42221c75691",
       "rewrite_frame": 117,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "d72e67488a2f31d4483998e88ef38f2f76cb028bfd707d779e39ba2b6d84fe7c",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "23b124db2cdd80749ad3eba1aabe861ed526b66967953cdd6cb6208287dac336",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System row 4: message speed",
       "original": "000185.png",
       "sha256": "7ba78d8e68bb6a345b49600f4da002527a58969fde4fe6ffaff70d04cb29b18e",
       "rewrite_frame": 118,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "09e18cb0400a6f8c03956136bef703e04a294fefc908c489d33b683107f634e0",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "87936c8ca2e9bdc29925d5619c4058289a6b839a64e95fce4ee5cb6a7ecf070f",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System row 5: game speed",
       "original": "000200.png",
       "sha256": "40f4f3960fb9dc6b1b78a3bdb87d59c03154e6e808752b3aa291bdc4a65956e5",
       "rewrite_frame": 119,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "3c372a99ce9c9b3cb5112e0c521aa28f6fffce38bc0a3e2cf9904041f535d4df",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "07db28e974195ffcb8755dee05123efc499b40aaff4917af98c826e1a2dbb288",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     },
     {
       "label": "RPG System row 6: Exit DOS",
       "original": "000215.png",
       "sha256": "dce1cf97ca059329ce5785d398ba4cb4a31de608588c8f0ea4f5f857ebd89139",
       "rewrite_frame": 120,
-      "crop": [80, 10, 186, 122]
+      "crop": [
+        80,
+        10,
+        186,
+        122
+      ],
+      "rewrite_indexed_crop_sha256": "fc92a86fe289883ddae47f0359c62e3fbd2565182fcbf4a1f563d503cabd534f",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_crop_sha256": "c446b2a14c39fdeadc99a0d827e3785244ab042466edfef4dedbcf1e113aead4",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 22692
     }
   ]
 }
