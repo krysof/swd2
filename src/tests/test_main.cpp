@@ -1684,6 +1684,22 @@ void test_rpg_entity_system(const std::filesystem::path& game_root) {
                 runtime.code_stream_offset == 2,
             "RPG area reload incorrectly cleared autonomous entity BSS state");
 
+    swd2::RpgEntityRuntime fixed_bss;
+    fixed_bss.delay_remaining = {3U, 7U};
+    fixed_bss.roam_x = {4U, 9U};
+    fixed_bss.roam_y = {5U, 11U};
+    swd2::MapAreaRecord smaller_area;
+    for (auto& field : smaller_area.entity_fields) field.resize(1);
+    smaller_area.entity_fields[3][0] = 3U;
+    swd2::advance_rpg_entities(smaller_area, map, state, fixed_bss, image);
+    require(fixed_bss.delay_remaining ==
+                std::vector<std::uint16_t>({3U, 7U}) &&
+                fixed_bss.roam_x ==
+                    std::vector<std::uint16_t>({4U, 9U}) &&
+                fixed_bss.roam_y ==
+                    std::vector<std::uint16_t>({5U, 11U}),
+            "RPG smaller area truncated the original fixed entity BSS arrays");
+
     area.entity_fields[3][0] = 2;
     area.entity_fields[10][0] = 3;
     runtime.delay_remaining[0] = 0;

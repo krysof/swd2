@@ -13,7 +13,9 @@ namespace swd2 {
 
 // Transient structure-of-arrays state used by RPG.EXE:506d. It deliberately
 // lives outside MAPZ: changing maps reloads entity records, while these fixed
-// BSS arrays and the code-stream cursor survived inside one RPG process.
+// BSS arrays and the code-stream cursor survived inside one RPG process. The
+// vectors may grow to emulate every index observed by that process, but must
+// never shrink merely because the current map has fewer entities.
 struct RpgEntityRuntime {
     std::vector<std::uint16_t> delay_remaining;
     std::vector<std::uint16_t> roam_x;

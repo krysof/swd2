@@ -75,9 +75,14 @@ bool destination_blocked(const MapAreaRecord& area, std::size_t moving_entity,
 }
 
 void ensure_size(RpgEntityRuntime& runtime, std::size_t size) {
-    runtime.delay_remaining.resize(size);
-    runtime.roam_x.resize(size);
-    runtime.roam_y.resize(size);
+    // These emulate fixed BSS arrays rather than storage owned by the current
+    // MAPZ area. A smaller destination area must not discard higher-index
+    // values that can become visible again after a later map change.
+    if (runtime.delay_remaining.size() < size) {
+        runtime.delay_remaining.resize(size);
+    }
+    if (runtime.roam_x.size() < size) runtime.roam_x.resize(size);
+    if (runtime.roam_y.size() < size) runtime.roam_y.resize(size);
 }
 
 }  // namespace
