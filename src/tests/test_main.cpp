@@ -6544,6 +6544,9 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
             swd2::InputAction::quit,
         };
         auto initial = swd2::SharedState::load(game_root / "SAVE.DAQ");
+        auto selected_name = read_file(game_root / "NAME1.DSK");
+        require(!selected_name.empty(), "distributed NAME1.DSK is empty");
+        selected_name.back() ^= 1U;
         auto selected = std::uint8_t{0};
         auto loads = std::size_t{0};
         swd2::GameContext context{game_root, initial, platform};
@@ -6556,8 +6559,7 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
                 std::make_shared<swd2::MapDatabase>(
                     swd2::MapDatabase::load(
                         game_root / ("MAPZ.DA" + std::to_string(slot)))),
-                read_file(game_root /
-                    ("NAME" + std::to_string(slot) + ".DSK"))};
+                selected_name};
         };
         const auto result = swd2::RpgModule().run(
             context, swd2::Marker::menu_ready);
@@ -6566,6 +6568,7 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
         require(result == swd2::Marker::none &&
                     selected == 1U && loads == 1U &&
                     context.map_database != nullptr &&
+                    context.name_font == selected_name &&
                     context.shared_state.u16(0x2c) == slot_one.u16(0x2c) &&
                     context.shared_state.u16(0x2c) != initial.u16(0x2c) &&
                     platform.presented == 47U && platform.wait_calls == 4U &&
@@ -6585,7 +6588,7 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
                         5188932088196950066ULL &&
                     platform.palette_hashes[46] ==
                         17136998718566118143ULL,
-                "RPG Continue did not select and atomically install SAVE/MAPZ");
+                "RPG Continue did not select and atomically install SAVE/MAPZ/NAME");
     }
 
     {
@@ -8078,7 +8081,7 @@ void test_rpg_system_menu_save(const std::filesystem::path& game_root) {
     require(swd2::RpgModule().run(
                 context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 saves == 1U && saved_slot == 1U,
-            "RPG system Record did not persist the confirmed slot pair");
+            "RPG system Record did not persist the confirmed slot triple");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 11U && platform.stop_calls == 1U &&
                 platform.frame_hashes[6] == 4590673835455086092ULL,
@@ -8134,6 +8137,9 @@ void test_rpg_system_menu_load(const std::filesystem::path& game_root) {
     };
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     const auto loaded_money = static_cast<std::uint16_t>(state.u16(0x104) + 7U);
+    auto loaded_name = read_file(game_root / "NAME2.DSK");
+    require(!loaded_name.empty(), "distributed NAME2.DSK is empty");
+    loaded_name.back() ^= 1U;
     std::size_t loads = 0;
     std::uint8_t loaded_slot = 0;
     swd2::GameContext context{game_root, state, platform};
@@ -8146,14 +8152,15 @@ void test_rpg_system_menu_load(const std::filesystem::path& game_root) {
             std::move(loaded_state),
             std::make_shared<swd2::MapDatabase>(
                 swd2::MapDatabase::load(game_root / "MAPZ.DA1")),
-            read_file(game_root / "NAME2.DSK")};
+            loaded_name};
     };
     require(swd2::RpgModule().run(
                 context, swd2::Marker::continue_rpg) == swd2::Marker::none &&
                 loads == 1U && loaded_slot == 2U &&
                 context.shared_state.u16(0x104) == loaded_money &&
-                context.map_database != nullptr,
-            "RPG system Read did not atomically install the selected SAVE/MAPZ pair");
+                context.map_database != nullptr &&
+                context.name_font == loaded_name,
+            "RPG system Read did not atomically install the selected SAVE/MAPZ/NAME triple");
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 9U && platform.music_calls == 1U &&
                 platform.stop_calls == 1U,

@@ -74,6 +74,16 @@ def video_metadata(ffprobe: str, path: Path) -> dict[str, object]:
     height = int(stream.get("height", 0))
     if width <= 0 or height <= 0:
         raise RuntimeError("DOSBox capture has invalid video dimensions")
+    try:
+        duration = float(stream.get("duration", 0))
+        frame_count = int(stream.get("nb_frames", 0))
+    except (TypeError, ValueError) as error:
+        raise RuntimeError("DOSBox capture has invalid duration/frame metadata") from error
+    if duration <= 0 or frame_count <= 0:
+        raise RuntimeError(
+            "DOSBox capture is empty or incomplete "
+            f"(duration={duration}, frames={frame_count})"
+        )
     return stream
 
 
@@ -168,6 +178,11 @@ def main() -> int:
                 stderr=subprocess.STDOUT,
             )
             log_path.write_text(result.stdout, encoding="utf-8")
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"DOSBox-X exited with status {result.returncode}; "
+                    f"see {log_path}"
+                )
             videos = sorted(captures.glob("*.avi"))
             if len(videos) != 1:
                 raise RuntimeError(
@@ -199,6 +214,8 @@ def main() -> int:
                     "bytes": frame.stat().st_size,
                     "sha256": sha256(frame),
                 })
+            if not frame_artifacts:
+                raise RuntimeError("DOSBox review-frame extraction produced no frames")
 
         autotype_bytes = (args.autotype.read_bytes()
                           if args.autotype is not None else b"")

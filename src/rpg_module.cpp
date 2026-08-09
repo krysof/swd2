@@ -4671,7 +4671,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
 
             // Continue calls the same 4e4b/46cc five-slot selector used by
             // the field/system save pages.  It is drawn over the current
-            // OP01 menu page, then atomically replaces both SAVE and MAPZ.
+            // OP01 menu page, then atomically replaces SAVE, MAPZ and NAME.
             RpgSaveSlotSelector selector;
             while (true) {
                 auto slot_frame = opening_frame;
@@ -4737,6 +4737,10 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                     context.map_database = std::make_shared<MapDatabase>(
                         MapDatabase::load(context.game_root /
                             ("MAPZ.DA" + std::to_string(slot))));
+                    context.name_font = read_file(
+                        context.game_root /
+                        ("NAME" + std::to_string(slot) + ".DSK"));
+                    static_cast<void>(LegacyFont::parse(context.name_font));
                 }
                 context.platform.stop_audio();
                 opening_audio_stopped = true;
