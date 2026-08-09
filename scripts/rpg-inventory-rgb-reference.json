@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "The crops lock the fully covered inventory preview, category, and seven unselected item rows. The world is validated separately as an indexed-pixel grayscale transform because its animated actors differ at the two capture instants.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG inventory item preview body",
+      "original": "000180.png",
+      "sha256": "ef6b4f45744d657357622bf36ffb28f8eb2cee50c080590d976dd5c48ec1412e",
+      "rewrite_frame": 115,
+      "crop": [16, 16, 64, 96]
+    },
+    {
+      "label": "RPG inventory category body",
+      "original": "000180.png",
+      "sha256": "ef6b4f45744d657357622bf36ffb28f8eb2cee50c080590d976dd5c48ec1412e",
+      "rewrite_frame": 115,
+      "crop": [236, 12, 56, 24]
+    },
+    {
+      "label": "RPG inventory unselected item rows",
+      "original": "000180.png",
+      "sha256": "ef6b4f45744d657357622bf36ffb28f8eb2cee50c080590d976dd5c48ec1412e",
+      "rewrite_frame": 115,
+      "crop": [120, 68, 168, 112]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+# MEO: select RPG and confirm twice.
+WAIT:CONFIRM*3
+# RPG: Continue, first slot, and confirm Yes.
+WAIT:DOWN
+WAIT:CONFIRM*3
+# In the world ESC opens the field diamond; choose Item.
+POLL:CANCEL
+WAIT:RIGHT
+WAIT:CONFIRM
+# Submit the initial inventory page, then move the cursor down once.
+WAIT:DOWN
+WAIT:QUIT

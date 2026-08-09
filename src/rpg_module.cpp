@@ -1334,10 +1334,10 @@ public:
             return present_timed(shifted_scene(event_scene(), arguments[0]));
         case 55:
             // RPG:5c35 snapshots DS:5a5c into a private palette table, then
-            // 0dbf:0314 rewrites palette indices 10h..1fh on all four VGA
-            // planes to an inverse-luminance ramp. Keep the transformed page
-            // active for the following positioned text/fade until a new DE
-            // background overwrites it.
+            // 0dbf:0314 rewrites every colour outside the reserved 10h..1fh
+            // range on all four VGA planes into that inverse-luminance ramp.
+            // Keep the transformed page active for the following positioned
+            // text/fade until a new DE background overwrites it.
             {
                 auto frame = event_scene();
                 apply_rpg_event_monochrome_filter(
@@ -1711,6 +1711,17 @@ public:
         auto scroll_cue = RpgListSelection::ScrollCue::none;
         while (true) {
             auto frame = scene_provider_();
+            if (mode != InventoryUiMode::sell) {
+                // RPG:39ed calls the shared far 0dbf:0314 converter after
+                // redrawing the world at 3a3e and before 2ae4/3d1e add the
+                // inventory UI.  Every underlying world index outside the
+                // reserved 10h..1fh ramp is reduced through the saved palette;
+                // MENU/item sprites drawn afterwards retain their normal
+                // colours.  The 3cbe selling branch jumps over this call.
+                apply_rpg_event_monochrome_filter(
+                    frame.pixels,
+                    std::span<const std::uint8_t, 768>(frame.palette));
+            }
             // RPG.EXE:2ae4/3d1e uses the shared selector frame at mode-X
             // (24,36), not two invented packed-pixel rectangles.
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,

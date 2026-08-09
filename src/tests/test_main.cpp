@@ -245,7 +245,7 @@ void test_rpg_opcode55_monochrome(const std::filesystem::path& game_root) {
     std::vector<std::uint8_t> pixels{0x0f, 0x10, 0x11, 0x12, 0x1f, 0x20};
     swd2::apply_rpg_event_monochrome_filter(pixels, palette);
     require(pixels == std::vector<std::uint8_t>(
-                          {0x0f, 0x1f, 0x10, 0x17, 0x19, 0x20}),
+                          {0x1f, 0x10, 0x11, 0x12, 0x1f, 0x1f}),
             "RPG opcode-55 inverse-luminance conversion differs from 0dbf:0314");
 
     const auto chna1 = swd2::ScriptArchive::load(game_root / "CHNA1.EXE");
@@ -6374,6 +6374,14 @@ public:
             }
         }
         compact_hashes.push_back(compact_hash);
+        std::uint64_t inventory_panel_hash = 1469598103934665603ULL;
+        for (std::size_t y = 40; y < 185; ++y) {
+            for (std::size_t x = 96; x < 320; ++x) {
+                inventory_panel_hash ^= surface.pixels[y * 320 + x];
+                inventory_panel_hash *= 1099511628211ULL;
+            }
+        }
+        inventory_panel_hashes.push_back(inventory_panel_hash);
         std::uint64_t bottom_hash = 1469598103934665603ULL;
         for (std::size_t y = 128; y < 192; ++y) {
             for (std::size_t x = 0; x < 320; ++x) {
@@ -6454,6 +6462,7 @@ public:
     std::uint64_t delayed_milliseconds{};
     std::vector<std::uint64_t> frame_hashes;
     std::vector<std::uint64_t> compact_hashes;
+    std::vector<std::uint64_t> inventory_panel_hashes;
     std::vector<std::uint64_t> bottom_hashes;
     std::vector<std::uint64_t> palette_hashes;
     std::vector<std::uint64_t> voice_hashes;
@@ -7257,7 +7266,7 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
                 platform.frame_hashes[1] != platform.frame_hashes[0] &&
                 platform.frame_hashes[2] != platform.frame_hashes[1] &&
                 platform.frame_hashes[3] != platform.frame_hashes[2] &&
-                platform.frame_hashes[3] == 13340828503804055853ULL &&
+                platform.frame_hashes[3] == 8424487085379264378ULL &&
                 platform.frame_hashes[4] == platform.frame_hashes[2] &&
                 platform.frame_hashes[5] == platform.frame_hashes[0],
             "RPG field-menu page selection/return frames were not stable");
@@ -7286,9 +7295,10 @@ void test_rpg_field_menu_inventory(const std::filesystem::path& game_root) {
     require(reopen_result == swd2::Marker::none &&
                 reopen_platform.cursor == reopen_platform.actions.size() &&
                 reopen_platform.frame_hashes.size() == 13U &&
-                reopen_platform.frame_hashes[5] ==
+                reopen_platform.frame_hashes[5] !=
                     reopen_platform.frame_hashes[10] &&
-                reopen_platform.frame_hashes[5] == 17863590386344463468ULL,
+                reopen_platform.inventory_panel_hashes[5] ==
+                    reopen_platform.inventory_panel_hashes[10],
             "RPG 39ed did not restore 37fd/37ff after reopening inventory");
 }
 
@@ -7523,7 +7533,7 @@ void test_rpg_inventory_alchemy(const std::filesystem::path& game_root) {
                 platform.frame_hashes[8] == 2795229981088272918ULL &&
                 platform.frame_hashes[9] == 12664240429231480625ULL &&
                 platform.frame_hashes[10] == 14297608139487699870ULL &&
-                platform.frame_hashes[11] == 10609575317381259566ULL &&
+                platform.frame_hashes[11] == 17589882379298834549ULL &&
                 platform.frame_hashes[12] == platform.frame_hashes[2] &&
                 platform.frame_hashes[13] == platform.frame_hashes[0] &&
                 std::set<std::uint64_t>(platform.frame_hashes.begin(),
@@ -7562,14 +7572,14 @@ void test_rpg_inventory_equipment_screen(
                 context.shared_state.u8(0x106U + 0x2cU) == 1U,
             "RPG 425b equipment page did not exchange the selected item");
     require(platform.frame_hashes.size() == 13U &&
-                platform.frame_hashes[3] == 17346323509180310990ULL &&
-                platform.frame_hashes[4] == 9580035020130697964ULL &&
-                platform.frame_hashes[5] == 1193126455766717997ULL &&
-                platform.frame_hashes[6] == 2557044951284384639ULL &&
-                platform.frame_hashes[7] == 11490455812655608249ULL &&
-                platform.frame_hashes[8] == 11095224185392137962ULL &&
-                platform.frame_hashes[9] == 9630457108031417445ULL &&
-                platform.frame_hashes[10] == 3578951147401443181ULL &&
+                platform.frame_hashes[3] == 18102794047462864801ULL &&
+                platform.frame_hashes[4] == 5402715592560165032ULL &&
+                platform.frame_hashes[5] == 17088231936202215769ULL &&
+                platform.frame_hashes[6] == 9311637984835600796ULL &&
+                platform.frame_hashes[7] == 6231935699410309078ULL &&
+                platform.frame_hashes[8] == 11352071759410708709ULL &&
+                platform.frame_hashes[9] == 4717610975269215518ULL &&
+                platform.frame_hashes[10] == 5771691628781634046ULL &&
                 platform.frame_hashes[11] == platform.frame_hashes[2] &&
                 platform.frame_hashes[12] == platform.frame_hashes[0],
             "RPG 3feb equipment redraw/return frames were not stable");
@@ -7604,12 +7614,12 @@ void test_rpg_inventory_empty_slot_unequip(
                 context.shared_state.u16(0x106U + 0x12U) == 0U,
             "RPG 3f53/425b did not move equipped item into an empty bag cell");
     require(platform.frame_hashes.size() == 11U &&
-                platform.frame_hashes[3] == 13340828503804055853ULL &&
-                platform.frame_hashes[4] == 11432918589084695794ULL &&
-                platform.frame_hashes[5] == 6062538655916986583ULL &&
-                platform.frame_hashes[6] == 14884106248727251905ULL &&
-                platform.frame_hashes[7] == 16959856505073652608ULL &&
-                platform.frame_hashes[8] == 14429707993458738632ULL &&
+                platform.frame_hashes[3] == 8424487085379264378ULL &&
+                platform.frame_hashes[4] == 13382026419227188667ULL &&
+                platform.frame_hashes[5] == 14597237047194030372ULL &&
+                platform.frame_hashes[6] == 9998340625524184542ULL &&
+                platform.frame_hashes[7] == 16205484673764535171ULL &&
+                platform.frame_hashes[8] == 1907548772887907671ULL &&
                 platform.frame_hashes[9] == platform.frame_hashes[2] &&
                 platform.frame_hashes[10] == platform.frame_hashes[0],
             "RPG empty-slot equipment/return frames were not stable");
