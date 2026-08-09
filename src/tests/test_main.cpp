@@ -7941,7 +7941,7 @@ void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
     require(platform.cursor == platform.actions.size() &&
                 platform.presented == 8U && platform.stop_calls == 1U &&
                 platform.frame_hashes[6] != platform.frame_hashes[5] &&
-                platform.frame_hashes[6] == 536414092186444491ULL &&
+                platform.frame_hashes[6] == 11426543797977408070ULL &&
                 platform.frame_hashes[7] != platform.frame_hashes[0],
             "RPG action-29h travel list/map reload frames were not stable");
 }

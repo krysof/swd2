@@ -2223,7 +2223,7 @@ public:
                             travel_index = static_cast<std::uint8_t>(current);
                         }
                     } else if (field_result.status == FieldActionStatus::travel_select) {
-                        travel_index = select_travel_destination(state);
+                        travel_index = select_travel_destination(state, action_frame);
                         if (quit_requested_) {
                             return InventoryUiResult::cancelled;
                         }
@@ -3055,7 +3055,7 @@ private:
     }
 
     std::optional<std::uint8_t> select_travel_destination(
-        SharedState& state) {
+        SharedState& state, const Viewport& source) {
         FieldActionSystem field_actions(state, &field_action_runtime_);
         const auto destinations = field_actions.unlocked_travel_indices();
         if (destinations.empty()) return std::nullopt;
@@ -3063,7 +3063,11 @@ private:
         std::size_t first_visible = 0;
         auto scroll_cue = RpgListSelection::ScrollCue::none;
         while (true) {
-            auto frame = scene_provider_();
+            // 4afc preserves the selected Use page before the effect handler
+            // dispatches through DATA:37a0. Handler 29h (3725) draws its
+            // destination panel onto that retained page; it does not rebuild
+            // a bare map frame between list inputs.
+            auto frame = source;
             const auto visible = std::min<std::size_t>(destinations.size(), 10U);
             draw_rpg_selector_panel(frame.pixels, 320, 200, menu_sprites_,
                                     14, 16, 5, static_cast<int>(visible));
@@ -3367,7 +3371,7 @@ private:
                         travel_index = static_cast<std::uint8_t>(current);
                     }
                 } else if (result.status == FieldActionStatus::travel_select) {
-                    travel_index = select_travel_destination(state_);
+                    travel_index = select_travel_destination(state_, action_frame);
                     if (quit_requested_) return false;
                     if (!travel_index) continue;
                 }
