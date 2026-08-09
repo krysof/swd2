@@ -8,6 +8,8 @@ POLL:CANCEL
 WAIT:RIGHT
 # Enter Item, select the empty physical bag row zero (the original jumps
 # directly to 3f53), and choose actor zero.  The final frame is RPG:3feb's
-# stable equipment page before any slot is changed.
+# stable equipment page before any slot is changed.  Walk all eleven slot
+# cursors to lock 298d's inclusive 0..10 clamp.
 WAIT:CONFIRM*3
+WAIT:DOWN*10
 WAIT:QUIT
