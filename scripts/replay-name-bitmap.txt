@@ -2,6 +2,8 @@
 # MEO -> RPG title path, then leave it without changing the font and continue
 # through DEMO to the first world poll.
 WAIT:CONFIRM*4
+WAIT:PAGEDOWN*2
+WAIT:PAGEUP*2
 WAIT:RIGHT*4
 WAIT:CONFIRM
 WAIT:CANCEL*2

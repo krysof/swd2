@@ -1209,19 +1209,21 @@ SWORD8 标题尾声：装入/淡入调色板、揭示三个人物、等待五秒
   仅退出编辑器。现代输入因此增加独立 `erase` 动作，不能再把 Home/End/PageDown
   猜作清点键。回归通过真实菜单动作验证从 `CHAIN.DSK` 复制 `bffa` 以及置两点、清一
   点后 514 字节 DSK 的精确结果。
-- 原版默认姓名页的独立 DOSBox-X RGB 帧（RPG.EXE SHA-256
-  `f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f`，PNG SHA-256
-  `e02aefecd1c7714561866d7f383908e1df0d1002b2707c067e7ab640a56cf2d7`）与现代启动
-  回放第 109 帧逐 RGB 像素一致，差异为 0/64,000。清单在
-  `scripts/rpg-name-editor-rgb-reference.json`；这仍只是默认可见页的 reference-only
-  证据，不能替代三页、全部光标和放大编辑状态的后续索引像素差分。
+- 原版姓名字符三页的独立 DOSBox-X RGB 帧（RPG.EXE SHA-256
+  `f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f`，三张 PNG
+  SHA-256 分别为 `e02aefecd1c7714561866d7f383908e1df0d1002b2707c067e7ab640a56cf2d7`、
+  `e1d25d3eba182e9999fd9e9e4562f27203b4175e2fe31aecbf7e5b89ec3f7557`、
+  `62aaf393c4c42fa39c5e73aadf275322f04995281b992a0a9dd1c9b049414657`）与现代
+  回放 109/110/111 帧逐 RGB 像素一致，每页差异均为 0/64,000。清单在
+  `scripts/rpg-name-editor-rgb-reference.json`；这仍是 reference-only 证据，不能替代
+  全部光标和编辑后点阵状态的后续索引像素差分。
 - 放大点阵页还揭示了不能复用普通 selector 框的差异：`1880` 以 `(6,33,12,8)`
   调用 `2781`，它用 MENU 80..82 组成 8 像素高的顶部、168..170 组成八个 16 像素
   主行、171..173 收尾，水平方向则以 8 像素单元重复十二次。`281d` 的 MENU 83..93
   selector 是另一套 32 像素宽单元；误用它会把框撑到屏幕右/下边界，虽然内部点阵坐标
   看似正确。现已分出 `draw_rpg_grid_panel`，新捕获的原版放大页 PNG SHA-256 为
   `f1d09e0dcc6553129d960ed53a5e545c2d417c8e42db993e3086fe60c355a285`，与
-  `replay-name-bitmap.txt` 第 114 帧同样达到 0/64,000 RGB 差异；该帧及完整输入/模块
+  `replay-name-bitmap.txt` 第 118 帧同样达到 0/64,000 RGB 差异；该帧及完整输入/模块
   时间线另由 CTest 固定。
 
 硬编码路径同时存在 `C:MENU.RSK`、`C:\\SWD2\\...` 和开发机遗留的 `C:\\RPG\\RIX\\...`。新代码必须通过资源定位层处理，不能继续依赖当前驱动器和 DOS 工作目录。

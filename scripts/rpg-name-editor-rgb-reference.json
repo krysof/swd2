@@ -2,14 +2,26 @@
   "schema_version": 1,
   "kind": "dosbox_rgb_spot_check",
   "status": "reference_only",
-  "limitation": "This locks the visible default RPG name-editor page only. The DOSBox PNG remains external reference evidence and does not prove every cursor, page or bitmap-edit state.",
+  "limitation": "This locks the three visible RPG name-editor character pages only. The DOSBox PNGs remain external reference evidence and do not prove every cursor or edited glyph state.",
   "program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
   "frames": [
     {
-      "label": "RPG new-game default name editor",
+      "label": "RPG name editor character page one",
       "original": "000085.png",
       "sha256": "e02aefecd1c7714561866d7f383908e1df0d1002b2707c067e7ab640a56cf2d7",
       "rewrite_frame": 109
+    },
+    {
+      "label": "RPG name editor character page two",
+      "original": "000091.png",
+      "sha256": "e1d25d3eba182e9999fd9e9e4562f27203b4175e2fe31aecbf7e5b89ec3f7557",
+      "rewrite_frame": 110
+    },
+    {
+      "label": "RPG name editor character page three",
+      "original": "000100.png",
+      "sha256": "62aaf393c4c42fa39c5e73aadf275322f04995281b992a0a9dd1c9b049414657",
+      "rewrite_frame": 111
     }
   ]
 }

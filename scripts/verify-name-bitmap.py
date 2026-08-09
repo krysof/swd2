@@ -28,21 +28,29 @@ def main() -> int:
         if transitions != expected_transitions:
             raise ValueError("name-bitmap module transitions differ")
         if data.get("input") != {
-            "total": 13,
-            "consumed": 13,
+            "total": 17,
+            "consumed": 17,
             "remaining": 0,
             "implicit_quit_calls": 0,
         }:
             raise ValueError("name-bitmap input accounting differs")
-        if data.get("boundaries", {}).get("wait") != 11 or \
+        if data.get("boundaries", {}).get("wait") != 15 or \
                 data.get("boundaries", {}).get("poll") != 2:
             raise ValueError("name-bitmap input boundaries differ")
         video = data.get("video", {})
-        if video.get("frames") != 258 or video.get("direct_updates") != 37:
+        if video.get("frames") != 262 or video.get("direct_updates") != 37:
             raise ValueError("name-bitmap page/timeline counts differ")
         frame_hashes = data.get("frame_fnv1a64", [])
-        if len(frame_hashes) <= 114 or \
-                frame_hashes[114] != "7af8c6a490382b9d":
+        expected_frames = {
+            109: "86d24d180442b751",  # first character page
+            110: "752a7015a76b4413",  # second character page
+            111: "d9e2eb6b2db2ee87",  # third character page
+            113: "86d24d180442b751",  # PageUp returned to first
+            118: "7af8c6a490382b9d",  # 16x15 bitmap editor
+        }
+        if len(frame_hashes) <= max(expected_frames) or any(
+                frame_hashes[index] != expected
+                for index, expected in expected_frames.items()):
             raise ValueError("RPG:1880 default bitmap frame differs")
         if data.get("name_fnv1a64") != "e3d2853e2676513b":
             raise ValueError("cancelled name bitmap unexpectedly changed NAME.DSK")
