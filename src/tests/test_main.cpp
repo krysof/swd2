@@ -2122,6 +2122,37 @@ void test_save_slot(const std::filesystem::path& game_root) {
                     "save-as did not copy one SAVE/MAPZ pair across all five slots");
         }
 
+        const auto legacy_pair_root = temporary / "legacy-two-file-slot";
+        std::filesystem::create_directories(legacy_pair_root);
+        std::filesystem::copy_file(
+            game_root / "SAVE.DA2", legacy_pair_root / "SAVE.DA2");
+        std::filesystem::copy_file(
+            game_root / "MAPZ.DA2", legacy_pair_root / "MAPZ.DA2");
+        {
+            // An interrupted earlier upgrade has no marker and must be
+            // discarded before a fresh NAME is installed atomically.
+            std::ofstream stale_name(
+                legacy_pair_root / ".swd2-slot2-name.tmp",
+                std::ios::binary);
+            stale_name << "partial";
+        }
+        const auto released_state = swd2::SharedState::load(
+            game_root / "SAVE.DA2");
+        const auto released_map_database = swd2::MapDatabase::load(
+            game_root / "MAPZ.DA2");
+        const auto released_map = released_map_database.serialized_bytes();
+        const auto upgraded = swd2::SaveSlot::open(
+            game_root, legacy_pair_root, 2);
+        const auto upgraded_map = upgraded.map_database()->serialized_bytes();
+        require(upgraded.state().bytes() == released_state.bytes() &&
+                    upgraded_map.size() == released_map.size() &&
+                    std::equal(upgraded_map.begin(), upgraded_map.end(),
+                               released_map.begin(), released_map.end()) &&
+                    upgraded.name_font() == read_file(game_root / "NAME2.DSK") &&
+                    !std::filesystem::exists(
+                        legacy_pair_root / ".swd2-slot2-name.tmp"),
+                "legacy SAVE/MAPZ pair upgrade did not atomically add NAME");
+
         const auto partial_root = temporary / "partial-pair";
         std::filesystem::create_directories(partial_root);
         std::filesystem::copy_file(

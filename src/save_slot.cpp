@@ -184,8 +184,19 @@ void seed_pair(const std::filesystem::path& game_root,
     if (state_exists) {
         // This is a save root created by the older two-file frontend. Preserve
         // its SAVE/MAPZ pair and add the released slot's matching NAME file.
-        std::filesystem::copy_file(name_source, paths.name,
-                                   std::filesystem::copy_options::overwrite_existing);
+        // Never copy directly to the canonical filename: an interrupted
+        // browser filesystem write could otherwise turn the missing optional
+        // file into a permanently malformed, apparently-present NAME.
+        static_cast<void>(LegacyFont::load(name_source));
+        try {
+            std::filesystem::copy_file(
+                name_source, paths.name_temporary,
+                std::filesystem::copy_options::overwrite_existing);
+        } catch (...) {
+            remove_file(paths.name_temporary, "uncommitted NAME upgrade");
+            throw;
+        }
+        replace_file(paths.name_temporary, paths.name, "upgraded NAME font");
         return;
     }
     std::filesystem::copy_file(state_source, paths.state_temporary,
