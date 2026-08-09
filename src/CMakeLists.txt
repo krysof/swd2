@@ -223,4 +223,35 @@ if(BUILD_TESTING)
     )
     set_tests_properties(frame_capture_report_validation PROPERTIES
         DEPENDS frame_capture_comparison)
+    add_test(
+        NAME new_game_startup_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/new-game-startup-saves"
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-new-game-startup.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/new-game-startup-trace.json"
+    )
+    add_test(
+        NAME new_game_startup_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-replay-trace.py"
+                "${CMAKE_BINARY_DIR}/new-game-startup-trace.json"
+                --require-module MEO.EXE
+                --require-module RPG.EXE
+                --require-module DEMO.EXE
+                --min-frames 140
+    )
+    set_tests_properties(new_game_startup_validation PROPERTIES
+        DEPENDS new_game_startup_replay)
+    add_test(
+        NAME new_game_startup_checkpoint
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-new-game-startup.py"
+                "${CMAKE_BINARY_DIR}/new-game-startup-trace.json"
+    )
+    set_tests_properties(new_game_startup_checkpoint PROPERTIES
+        DEPENDS new_game_startup_validation)
 endif()

@@ -267,6 +267,18 @@ FNV 摘要用于快速确定性比较，最终证据文件本身仍由完成门�
 调色板，只有严格回放成功消费全部输入后才写 `DONE` 结尾。可用
 `scripts/compare-frame-captures.py` 对原版基准和重写输出做零容差、字节级现场比较。
 
+仓库内的短启动检查点会实际走过 `MEO -> RPG(MT/ED) -> DEMO -> RPG(OM)`，装入
+`SAVE.DAQ/MAPZ.DAQ` 并执行开场实体后才从世界页退出：
+
+```sh
+./build/src/swd2_rewrite --game game --no-save \
+  --run-replay scripts/replay-new-game-startup.txt \
+  --trace-output new-game-startup.json
+./scripts/verify-new-game-startup.py new-game-startup.json
+```
+
+它只证明新游戏启动边界，不是完整通关证据。
+
 原版流程可先用隔离的 DOSBox-X 驱动生成可复查的 RGB 录像和抽帧：
 
 ```sh

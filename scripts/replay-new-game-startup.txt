@@ -1,0 +1,7 @@
+# Deterministic proof of the restored original startup hand-off:
+# MEO -> RPG title/New Game (ED) -> DEMO skip -> RPG (OM) -> DAQ opening
+# event -> first ordinary world poll. This reaches the real new-game world,
+# but is deliberately not represented as a complete playthrough.
+WAIT:CONFIRM*4
+POLL:CONFIRM
+POLL:QUIT
