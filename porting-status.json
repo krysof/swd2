@@ -114,8 +114,8 @@
         "交互输入、非阻塞输入、跳字输入和前端关闭严格分离",
         "桌面、WASM、手柄和触摸路径不丢失或误消费动作"
       ],
-      "evidence": ["src/include/swd2/platform.hpp", "src/sdl_platform.cpp", "src/tests/test_main.cpp"],
-      "remaining": ["审计剩余直接等待/轮询边界", "完成浏览器、桌面和手柄交叉测试"]
+      "evidence": ["src/include/swd2/platform.hpp", "src/sdl_platform.cpp", "src/tests/test_main.cpp", "src/tests/test_sdl_platform.cpp"],
+      "remaining": ["在真实浏览器验证键盘与仅 ESC/回车触摸按钮", "在至少一个真实手柄和非 macOS 桌面后端完成交叉测试"]
     },
     {
       "id": "save_roundtrips",
@@ -168,8 +168,8 @@
         "可达流程不存在占位 UI、伪造帧或未解释的通用回退",
         "静态审计和完整回放均未发现未实现路径"
       ],
-      "evidence": ["src/reverse-engineering.md", "src/tests/test_main.cpp"],
-      "remaining": ["建立可执行静态审计", "随逐场景差分清除剩余近似行为"]
+      "evidence": ["src/reverse-engineering.md", "src/tests/test_main.cpp", "scripts/audit-runtime-sources.py"],
+      "remaining": ["由逐场景差分和完整回放证明所有可达路径没有未标记的近似行为"]
     },
     {
       "id": "long_run_platform_matrix",
@@ -187,6 +187,7 @@
     "cmake --build build -j4",
     "ctest --test-dir build --output-on-failure",
     "build/src/swd2_rewrite --game game --verify-events",
+    "./scripts/audit-runtime-sources.py",
     "./scripts/build-wasm.sh",
     "./scripts/verify-wasm.sh build-wasm/site",
     "./scripts/verify-pixel-diffs.sh",

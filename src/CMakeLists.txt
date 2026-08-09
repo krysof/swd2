@@ -129,6 +129,17 @@ else()
         target_sources(swd2_rewrite PRIVATE sdl_platform.cpp)
         target_link_libraries(swd2_rewrite PRIVATE SDL2::SDL2)
         target_compile_definitions(swd2_rewrite PRIVATE SWD2_HAVE_SDL2=1)
+        if(BUILD_TESTING)
+            add_executable(swd2_sdl_tests
+                tests/test_sdl_platform.cpp
+                sdl_platform.cpp
+            )
+            target_link_libraries(swd2_sdl_tests PRIVATE swd2_core SDL2::SDL2)
+            target_compile_definitions(swd2_sdl_tests PRIVATE SWD2_HAVE_SDL2=1)
+            add_test(NAME sdl_portable_input COMMAND swd2_sdl_tests)
+            set_tests_properties(sdl_portable_input PROPERTIES ENVIRONMENT
+                "SDL_VIDEODRIVER=dummy;SDL_AUDIODRIVER=dummy;SDL_RENDER_DRIVER=software")
+        endif()
     endif()
 endif()
 

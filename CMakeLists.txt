@@ -13,4 +13,9 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/scripts/audit-completion.py"
                 --validate
     )
+    add_test(
+        NAME runtime_source_audit
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/audit-runtime-sources.py"
+    )
 endif()
