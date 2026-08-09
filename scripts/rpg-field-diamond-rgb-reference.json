@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_rgb_spot_check",
+  "status": "reference_only",
+  "limitation": "Each crop is the fully covered selected card at one original directional state. The animated world and party row remain outside this RGB check.",
+  "reference_program": "RPG.EXE",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_program": "RPGOC.COM",
+  "capture_program_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "frames": [
+    {
+      "label": "RPG field diamond initial System/Book card",
+      "original": "000110.png",
+      "sha256": "0dd2c6b1bd7dee2199adceff992bda2a589a5d3ddde8541b72326eba40fb983b",
+      "rewrite_frame": 113,
+      "crop": [64, 8, 64, 32]
+    },
+    {
+      "label": "RPG field diamond left Magic card",
+      "original": "000125.png",
+      "sha256": "ed9fd4a60d48ccfe019dd58b7a91de786379da07cdbd37d1cf2e5f7053ab0768",
+      "rewrite_frame": 114,
+      "crop": [24, 40, 64, 32]
+    },
+    {
+      "label": "RPG field diamond up System/Book card",
+      "original": "000140.png",
+      "sha256": "0dd2c6b1bd7dee2199adceff992bda2a589a5d3ddde8541b72326eba40fb983b",
+      "rewrite_frame": 115,
+      "crop": [64, 8, 64, 32]
+    },
+    {
+      "label": "RPG field diamond down Status card",
+      "original": "000155.png",
+      "sha256": "dbc6cb5487923916dec799394155c6237856945ace3cd3b076f7532d33fbd962",
+      "rewrite_frame": 116,
+      "crop": [64, 72, 64, 32]
+    },
+    {
+      "label": "RPG field diamond right Item card",
+      "original": "000170.png",
+      "sha256": "432b42df44fa5e20f1ed371b04dd99001e7b2a7a99409a514402d98b6ee54791",
+      "rewrite_frame": 117,
+      "crop": [104, 40, 64, 32]
+    }
+  ]
+}

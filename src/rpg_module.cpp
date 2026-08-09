@@ -2388,7 +2388,9 @@ public:
 
     // RPG.EXE:2e63 is the field menu entered by the second action key.  It is
     // a directional diamond, not a conventional vertical host menu: Magic,
-    // Item, System and Status are selected directly by Up/Right/Down/Left.
+    // Item, System/Book and Status are selected directly by
+    // Left/Right/Up/Down.  RPG:3948 maps keyboard flags 6940/6942/693d/6945
+    // to selector values 0/1/2/3 in exactly that spatial order.
     // Each branch connects to its reconstructed state machine.  The Magic
     // branch uses RPG's embedded 20-byte records and actor ability slots;
     // uncommon special handlers still remain explicit instead of being
@@ -2408,10 +2410,10 @@ public:
                 return false;
             }
             if (action == InputAction::cancel) return false;
-            if (action == InputAction::up) selected = 0;
+            if (action == InputAction::left) selected = 0;
             else if (action == InputAction::right) selected = 1;
-            else if (action == InputAction::down) selected = 2;
-            else if (action == InputAction::left) selected = 3;
+            else if (action == InputAction::up) selected = 2;
+            else if (action == InputAction::down) selected = 3;
             else if (action == InputAction::confirm && selected == 0U) {
                 if (run_magic_menu()) return true;
                 if (quit_requested_) return false;
@@ -2859,7 +2861,7 @@ private:
         transparent(57, 34, 49);
 
         static constexpr std::array<std::pair<int, int>, 4> card_positions{{
-            {16, 8}, {26, 40}, {16, 72}, {6, 40},
+            {6, 40}, {26, 40}, {16, 8}, {16, 72},
         }};
         for (std::size_t choice = 0; choice < card_positions.size(); ++choice) {
             if (choice == selected) continue;

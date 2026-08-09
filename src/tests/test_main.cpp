@@ -7629,7 +7629,7 @@ void test_rpg_field_status_menu(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::left,     // Status
+        swd2::InputAction::down,     // Status
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,  // first actor
         swd2::InputAction::page_down,
@@ -7668,7 +7668,7 @@ void test_rpg_field_magic_menu(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,       // Magic
+        swd2::InputAction::left,       // Magic
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,  // first actor
         swd2::InputAction::page_down,
@@ -7699,7 +7699,7 @@ void test_rpg_field_magic_cast(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::right,    // actor one: ability 50 / action 01h
         swd2::InputAction::confirm,
@@ -7730,7 +7730,7 @@ void test_rpg_field_magic_value_error(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::right,    // actor one: ability 50 / action 01h
         swd2::InputAction::confirm,
@@ -7762,7 +7762,7 @@ void test_rpg_field_magic_description(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::right,    // actor one / ability 50
         swd2::InputAction::confirm,
@@ -7793,7 +7793,7 @@ void test_rpg_field_magic_refine(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::right,    // actor one / type-four ability 50
         swd2::InputAction::confirm,
@@ -7827,7 +7827,7 @@ void test_rpg_field_magic_refine_full(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::right,
         swd2::InputAction::confirm,
@@ -7859,7 +7859,7 @@ void test_rpg_field_magic_material_cast(const std::filesystem::path& game_root) 
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,  // ability 41 / five materials
@@ -7898,7 +7898,7 @@ void test_rpg_field_magic_material_error(const std::filesystem::path& game_root)
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
@@ -7932,7 +7932,7 @@ void test_rpg_field_magic_travel(const std::filesystem::path& game_root) {
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,  // actor zero
         swd2::InputAction::confirm,  // ability 99 / action 29h
@@ -7966,7 +7966,7 @@ void test_rpg_field_magic_travel_current(
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,  // ability 98 / action 28h
@@ -7996,7 +7996,7 @@ void test_rpg_field_magic_travel_restricted(
     ScriptedPlatform platform;
     platform.actions = {
         swd2::InputAction::cancel,
-        swd2::InputAction::up,
+        swd2::InputAction::left,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,
         swd2::InputAction::confirm,

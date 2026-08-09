@@ -26,7 +26,7 @@ def main() -> int:
         video = data.get("video", {})
         if video != {
             "frames": 125, "direct_updates": 0, "last_width": 320,
-            "last_height": 200, "fnv1a64": "fdead51d6ca0e943",
+            "last_height": 200, "fnv1a64": "b93bc9d7cd9b834a",
         }:
             raise ValueError("System Record video summary differs")
         expected_pages = [

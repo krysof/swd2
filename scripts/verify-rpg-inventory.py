@@ -84,7 +84,7 @@ def main() -> int:
         if video.get("frames") != 165 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "c2bc45241eba1f35":
+                video.get("fnv1a64") != "2ab5fb8ab5eac3d0":
             raise ValueError("inventory replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
         inventory_pages = [
@@ -115,7 +115,7 @@ def main() -> int:
             "f4602a4eb4105235", "c737ae2763a734f5",
         ]
         if len(hashes) != 165 or hashes[113:115] != [
-                "a2bc9fa38fe088af",  # System-selected field diamond
+                "1b0a18f362ed2cb2",  # System/Book-selected field diamond
                 "ddb26857dd11b4f3",  # Item-selected field diamond
         ] or hashes[115:165] != inventory_pages:
             raise ValueError("inventory selection pages differ")

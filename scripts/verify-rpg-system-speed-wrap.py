@@ -26,7 +26,7 @@ def main() -> int:
         video = data.get("video", {})
         if video != {
             "frames": 125, "direct_updates": 0, "last_width": 320,
-            "last_height": 200, "fnv1a64": "f76add407cedee25",
+            "last_height": 200, "fnv1a64": "befa72ffe91d7114",
         }:
             raise ValueError("System speed video summary differs")
         expected_pages = [

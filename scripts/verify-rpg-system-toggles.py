@@ -26,7 +26,7 @@ def main() -> int:
         video = data.get("video", {})
         if video != {
             "frames": 118, "direct_updates": 0, "last_width": 320,
-            "last_height": 200, "fnv1a64": "541ff8cca029d125",
+            "last_height": 200, "fnv1a64": "d0e9dc3b826cd1ec",
         }:
             raise ValueError("System toggle video summary differs")
         expected_pages = [

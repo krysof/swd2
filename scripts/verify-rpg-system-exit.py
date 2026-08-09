@@ -26,7 +26,7 @@ def main() -> int:
         video = data.get("video", {})
         if video != {
             "frames": 124, "direct_updates": 2, "last_width": 320,
-            "last_height": 200, "fnv1a64": "6b5833d3b26f6d29",
+            "last_height": 200, "fnv1a64": "0d5873d95376d16c",
         }:
             raise ValueError("System exit video summary differs")
         hashes = data.get("frame_fnv1a64", [])

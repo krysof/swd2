@@ -35,7 +35,7 @@ def main() -> int:
         if video.get("frames") != 121 or \
                 video.get("last_width") != 320 or \
                 video.get("last_height") != 200 or \
-                video.get("fnv1a64") != "34eb753a9797c178":
+                video.get("fnv1a64") != "fc43902be360af49":
             raise ValueError("System replay video summary differs")
         hashes = data.get("frame_fnv1a64", [])
         selected_pages = [

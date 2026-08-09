@@ -426,6 +426,27 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_inventory_validation PROPERTIES
         DEPENDS rpg_inventory_replay)
     add_test(
+        NAME rpg_field_diamond_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-field-diamond-saves"
+                --no-save
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-field-diamond.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-field-diamond-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-field-diamond-frames.bin"
+    )
+    add_test(
+        NAME rpg_field_diamond_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-field-diamond.py"
+                "${CMAKE_BINARY_DIR}/rpg-field-diamond-trace.json"
+    )
+    set_tests_properties(rpg_field_diamond_validation PROPERTIES
+        DEPENDS rpg_field_diamond_replay)
+    add_test(
         NAME new_game_exit_checkpoint_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"
