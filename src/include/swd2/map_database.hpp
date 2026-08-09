@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -77,6 +78,12 @@ public:
         std::uint16_t directory_offset);
     [[nodiscard]] std::size_t unique_area_count() const noexcept { return unique_area_count_; }
     [[nodiscard]] bool has_trailing_sentinel() const noexcept { return has_trailing_sentinel_; }
+    // Stable MZ-wrapped byte image used by deterministic replay checkpoints.
+    // Opcode 34 patches this exact buffer before typed areas are reparsed, so
+    // hashing it observes both aligned fields and unaligned/path-pointer writes.
+    [[nodiscard]] std::span<const std::uint8_t> serialized_bytes() const noexcept {
+        return file_bytes_;
+    }
 
     // RPG event opcode 34 addresses an unaligned-capable word as
     // area+6 + field*entity_count*2 + signed_byte_offset. Shipped events may

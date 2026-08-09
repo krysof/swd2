@@ -1453,6 +1453,11 @@ void test_map_database(const std::filesystem::path& game_root) {
     const auto mutable_save = swd2::MapDatabase::load(game_root / "MAPZ.DA1");
     require(immutable.has_trailing_sentinel() && !mutable_save.has_trailing_sentinel(),
             "MAPA and MAPZ end-marker variants were not distinguished");
+    const auto mapz_bytes = read_file(game_root / "MAPZ.DA1");
+    require(std::equal(mapz_bytes.begin(), mapz_bytes.end(),
+                       mutable_save.serialized_bytes().begin(),
+                       mutable_save.serialized_bytes().end()),
+            "MAPZ deterministic checkpoint view differs from serialized bytes");
     require(immutable.locations().size() == 466 && immutable.unique_area_count() == 152,
             "unexpected MAPA world database dimensions");
 

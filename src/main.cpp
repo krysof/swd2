@@ -159,8 +159,20 @@ void trace_launcher(const std::string& marker_script) {
 
 class ReplayPlatform final : public swd2::PlatformBackend {
 public:
+    struct InputCheckpoint {
+        std::size_t index{};
+        swd2::ReplayInputBoundary boundary{swd2::ReplayInputBoundary::any};
+        swd2::InputAction action{swd2::InputAction::none};
+        std::uint64_t state_digest{};
+        std::optional<std::uint64_t> map_digest;
+    };
+
     explicit ReplayPlatform(std::vector<swd2::ReplayInputStep> steps)
         : steps_(std::move(steps)) {}
+
+    void bind_context(const swd2::GameContext& context) noexcept {
+        context_ = &context;
+    }
 
     void present(const swd2::IndexedSurfaceView& surface) override {
         record_surface(surface, false);
@@ -186,7 +198,9 @@ public:
             steps_[cursor_].boundary != swd2::ReplayInputBoundary::frontend) {
             return false;
         }
-        const auto action = steps_[cursor_++].action;
+        const auto action = steps_[cursor_].action;
+        record_input(swd2::ReplayInputBoundary::frontend, action);
+        ++cursor_;
         unmatched_nonblocking_calls_ = 0;
         return action == swd2::InputAction::quit;
     }
@@ -232,6 +246,7 @@ public:
     std::uint64_t frame_digest{14695981039346656037ULL};
     std::uint64_t audio_digest{14695981039346656037ULL};
     std::vector<std::uint64_t> frame_hashes;
+    std::vector<InputCheckpoint> input_checkpoints;
 
     [[nodiscard]] std::size_t input_count() const noexcept {
         return steps_.size();
@@ -254,6 +269,26 @@ private:
         for (unsigned shift = 0; shift < 64; shift += 8) {
             mix(digest, static_cast<std::uint8_t>(value >> shift));
         }
+    }
+
+    static std::uint64_t hash(std::span<const std::uint8_t> bytes) noexcept {
+        auto digest = std::uint64_t{14695981039346656037ULL};
+        mix(digest, bytes);
+        return digest;
+    }
+
+    void record_input(swd2::ReplayInputBoundary boundary,
+                      swd2::InputAction action) {
+        if (context_ == nullptr) {
+            throw std::runtime_error("replay frontend has no bound game context");
+        }
+        InputCheckpoint checkpoint{
+            cursor_, boundary, action, hash(context_->shared_state.bytes()), std::nullopt};
+        if (context_->map_database) {
+            checkpoint.map_digest = hash(
+                context_->map_database->serialized_bytes());
+        }
+        input_checkpoints.push_back(checkpoint);
     }
 
     void record_surface(const swd2::IndexedSurfaceView& surface, bool direct) {
@@ -288,6 +323,7 @@ private:
         const auto& step = steps_[cursor_];
         if (step.boundary == swd2::ReplayInputBoundary::any ||
             step.boundary == boundary) {
+            record_input(boundary, step.action);
             ++cursor_;
             unmatched_nonblocking_calls_ = 0;
             return step.action;
@@ -307,6 +343,7 @@ private:
     }
 
     std::vector<swd2::ReplayInputStep> steps_;
+    const swd2::GameContext* context_{};
     std::size_t cursor_{};
     std::size_t unmatched_nonblocking_calls_{};
 };
@@ -316,23 +353,6 @@ std::uint64_t fnv1a(std::span<const std::uint8_t> bytes) noexcept {
     for (const auto byte : bytes) {
         digest ^= byte;
         digest *= 1099511628211ULL;
-    }
-    return digest;
-}
-
-std::uint64_t fnv1a_file(const std::filesystem::path& path) {
-    std::ifstream input(path, std::ios::binary);
-    if (!input) {
-        throw std::runtime_error("cannot hash replay artifact: " + path.string());
-    }
-    auto digest = std::uint64_t{14695981039346656037ULL};
-    for (char value{}; input.get(value);) {
-        digest ^= static_cast<std::uint8_t>(value);
-        digest *= 1099511628211ULL;
-    }
-    if (!input.eof()) {
-        throw std::runtime_error("failed while hashing replay artifact: " +
-                                 path.string());
     }
     return digest;
 }
@@ -352,16 +372,7 @@ void write_replay_trace(const std::filesystem::path& path,
     }
     std::optional<std::uint64_t> map_digest;
     if (context.map_database) {
-        auto probe = path;
-        probe += ".mapz-probe";
-        context.map_database->save(probe);
-        try {
-            map_digest = fnv1a_file(probe);
-        } catch (...) {
-            std::filesystem::remove(probe);
-            throw;
-        }
-        std::filesystem::remove(probe);
+        map_digest = fnv1a(context.map_database->serialized_bytes());
     }
 
     std::ofstream output(path, std::ios::trunc);
@@ -379,6 +390,27 @@ void write_replay_trace(const std::filesystem::path& path,
            << ", \"poll\": " << platform.poll_calls
            << ", \"text\": " << platform.text_calls
            << ", \"frontend\": " << platform.frontend_calls << "},\n"
+           << "  \"input_checkpoints\": [\n";
+    for (std::size_t index = 0; index < platform.input_checkpoints.size(); ++index) {
+        const auto& checkpoint = platform.input_checkpoints[index];
+        output << "    {\"index\": " << checkpoint.index
+               << ", \"boundary\": \""
+               << swd2::replay_boundary_name(checkpoint.boundary)
+               << "\", \"action\": \""
+               << swd2::input_action_name(checkpoint.action)
+               << "\", \"state_fnv1a64\": \""
+               << hex_digest(checkpoint.state_digest)
+               << "\", \"mapz_fnv1a64\": ";
+        if (checkpoint.map_digest) {
+            output << '"' << hex_digest(*checkpoint.map_digest) << '"';
+        } else {
+            output << "null";
+        }
+        output << '}';
+        if (index + 1U != platform.input_checkpoints.size()) output << ',';
+        output << '\n';
+    }
+    output << "  ],\n"
            << "  \"video\": {\"frames\": " << platform.frames
            << ", \"direct_updates\": " << platform.direct_updates
            << ", \"last_width\": " << platform.last_width
@@ -447,6 +479,7 @@ void run_monolithic(const std::filesystem::path& game_root,
             return swd2::LoadedSaveSlot{slot.state(), slot.map_database()};
         },
     };
+    platform.bind_context(context);
     swd2::ModuleRegistry modules;
     modules.add(std::make_unique<swd2::MeoModule>());
     modules.add(std::make_unique<swd2::RpgModule>());

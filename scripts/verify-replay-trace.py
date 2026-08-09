@@ -54,6 +54,28 @@ def main() -> int:
         if total == 0 or consumed != total or remaining != 0 or implicit != 0:
             fail("trace did not explicitly consume its complete nonempty input")
 
+        checkpoints = data.get("input_checkpoints")
+        if not isinstance(checkpoints, list) or len(checkpoints) != consumed:
+            fail("trace does not contain one state checkpoint per consumed input")
+        for index, checkpoint in enumerate(checkpoints):
+            if not isinstance(checkpoint, dict) or checkpoint.get("index") != index:
+                fail("trace input checkpoint indexes are not contiguous")
+            if checkpoint.get("boundary") not in {
+                "WAIT",
+                "POLL",
+                "TEXT",
+                "FRONTEND",
+            }:
+                fail(f"input checkpoint {index} has an invalid boundary")
+            if not isinstance(checkpoint.get("action"), str):
+                fail(f"input checkpoint {index} has no action")
+            digest(checkpoint.get("state_fnv1a64"), f"input_checkpoints[{index}].state")
+            digest(
+                checkpoint.get("mapz_fnv1a64"),
+                f"input_checkpoints[{index}].mapz",
+                nullable=True,
+            )
+
         boundaries = data.get("boundaries")
         if not isinstance(boundaries, dict):
             fail("trace boundary counters are missing")
