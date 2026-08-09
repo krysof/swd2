@@ -515,8 +515,15 @@ InputAction SdlPlatform::wait_for_input() {
     // A browser cannot block its main thread in SDL_WaitEvent. ASYNCIFY turns
     // emscripten_sleep into a cooperative suspension, allowing DOM events,
     // rendering and WebAudio to continue while the portable core remains
-    // synchronous.
+    // synchronous. DOM touch directions do not create SDL events, so the JS
+    // held/quick-tap state must be sampled again after every suspension. A
+    // one-time sample before entering this loop leaves a direction pressed
+    // while a menu is already waiting permanently invisible to the core.
     for (;;) {
+        if (const auto pending = impl_->take_pending_action(false);
+            pending != InputAction::none) {
+            return pending;
+        }
         while (SDL_PollEvent(&event) != 0) {
             if (const auto action = impl_->process_event(event);
                 action != InputAction::none) {
