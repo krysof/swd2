@@ -192,6 +192,15 @@ if(BUILD_TESTING)
     set_tests_properties(replay_trace_validation PROPERTIES
         DEPENDS replay_trace_smoke)
     add_test(
+        NAME rpg_opening_pixel_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-opening.py"
+                "${CMAKE_BINARY_DIR}/replay-smoke-trace.json"
+                "${CMAKE_BINARY_DIR}/replay-smoke.swd2frames"
+    )
+    set_tests_properties(rpg_opening_pixel_validation PROPERTIES
+        DEPENDS replay_trace_smoke)
+    add_test(
         NAME replay_trace_comparison
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/compare-replay-traces.py"

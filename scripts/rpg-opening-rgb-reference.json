@@ -9,31 +9,56 @@
       "label": "RPG title default New Game",
       "original": "s018.png",
       "sha256": "0332eb1b1da041237419216b7a156ba4693b74111681dd83507d6d6d009849c2",
-      "rewrite_frame": 87
+      "rewrite_frame": 87,
+      "rewrite_indexed_sha256": "bd235d957cd760bbebcec136d3289022201a5c00a28d780ae14ea75e5dc0c929",
+      "rewrite_palette_sha256": "3c5e200ac4b06c21a08908f7f1f1bf3d7aabe2bce810d8f4140d50961c61e282",
+      "matched_original_rgb_sha256": "aed8377f252b69f6f46ec4ba1e52fbbee0efcc6f2ef154cf0abb52d22e4156d7",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 64000
     },
     {
       "label": "RPG title Continue selected",
       "original": "s019.png",
       "sha256": "ac44104a1f6e607d2c990526116a882ab3a1e5f29255c2d6ba88fef7683e3f22",
-      "rewrite_frame": 88
+      "rewrite_frame": 88,
+      "rewrite_indexed_sha256": "d6a7f45ff68f4a88a36ba14a93e8e8d759d29ce6a0838efd41f7729a6d9ce6a4",
+      "rewrite_palette_sha256": "3c5e200ac4b06c21a08908f7f1f1bf3d7aabe2bce810d8f4140d50961c61e282",
+      "matched_original_rgb_sha256": "4f1381fbeb26cfeb558985af1d58a815dca93227e233801752af795b27236650",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 64000
     },
     {
       "label": "RPG Continue five-slot selector",
       "original": "s020.png",
       "sha256": "b6a1fa64925ecbc54745ac3d0d85f96618a02a3a3cae53849614aafceb19ea59",
-      "rewrite_frame": 89
+      "rewrite_frame": 89,
+      "rewrite_indexed_sha256": "3725f91c5d5216e1637dee53cde97864d4098a888a832bda56a8aa64bf49f0c5",
+      "rewrite_palette_sha256": "3c5e200ac4b06c21a08908f7f1f1bf3d7aabe2bce810d8f4140d50961c61e282",
+      "matched_original_rgb_sha256": "a4131be1675ac1968f12cbc6910ddbc166ffcf78e5a774e707607f8dadad9b8d",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 64000
     },
     {
       "label": "RPG Continue confirmation card",
       "original": "s024.png",
       "sha256": "9e63561f79344ca3efb21f50798be0c3f55b53312ee6401128c125b7dbfd47d2",
-      "rewrite_frame": 90
+      "rewrite_frame": 90,
+      "rewrite_indexed_sha256": "177b40c88ae381d3f4d1ceeacff33664d28a3d9df1824f238078fa93c2dd061e",
+      "rewrite_palette_sha256": "3c5e200ac4b06c21a08908f7f1f1bf3d7aabe2bce810d8f4140d50961c61e282",
+      "matched_original_rgb_sha256": "4163fecf88c1325cf43a1455cef29f63ea2ef84464d44839faa604f5a442f8b2",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 64000
     },
     {
       "label": "RPG loaded world page",
       "original": "s033.png",
       "sha256": "839717702c2928956ba56262c66610d53c6e3b2e0984c3ab186576c29f595640",
-      "rewrite_frame": 112
+      "rewrite_frame": 112,
+      "rewrite_indexed_sha256": "37b0bdf857ed52af157432b07f43001be655accdef6bd2e24356cf80bdf11df0",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "matched_original_rgb_sha256": "d8230560337d6713e8bb90031497ff0752cbc50e160e0b9b348e0ec9dd815067",
+      "different_rgb_pixels": 0,
+      "rgb_pixels": 64000
     }
   ]
 }
