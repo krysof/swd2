@@ -191,9 +191,17 @@ void SaveSlot::save_as(const std::filesystem::path& save_root,
 
 void SaveSlot::save(const SharedState& state) {
     if (!map_database_) throw std::runtime_error("save slot has no MAPZ database");
+    save(state, *map_database_);
+}
+
+void SaveSlot::save(const SharedState& state,
+                    const MapDatabase& map_database) {
     save_pair(pair_paths(state_path_.parent_path(), suffix(slot_)), state,
-              *map_database_);
+              map_database);
     state_ = state;
+    // Keep later one-argument saves on the same committed pair even when the
+    // supplied database came from SAVE.DAQ/MAPZ.DAQ or another selected slot.
+    map_database_ = std::make_shared<MapDatabase>(MapDatabase::load(map_path_));
 }
 
 }  // namespace swd2

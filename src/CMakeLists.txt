@@ -254,4 +254,25 @@ if(BUILD_TESTING)
     )
     set_tests_properties(new_game_startup_checkpoint PROPERTIES
         DEPENDS new_game_startup_validation)
+    add_test(
+        NAME new_game_exit_checkpoint_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-saves"
+                --slot 3
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-new-game-startup.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-trace.json"
+    )
+    add_test(
+        NAME new_game_exit_checkpoint_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-live-save-pair.py"
+                "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-trace.json"
+                "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-saves/SAVE.DA3"
+                "${CMAKE_BINARY_DIR}/new-game-exit-checkpoint-saves/MAPZ.DA3"
+    )
+    set_tests_properties(new_game_exit_checkpoint_validation PROPERTIES
+        DEPENDS new_game_exit_checkpoint_replay)
 endif()

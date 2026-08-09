@@ -7,8 +7,9 @@ build="${1:-$root/build}"
 if [[ ! -f "$build/CMakeCache.txt" ]]; then
   cmake -S "$root" -B "$build" -DCMAKE_BUILD_TYPE=Release
 fi
-cmake --build "$build" --target swd2_tests -j4
-ctest --test-dir "$build" --output-on-failure -R '^swd2_tests$'
+cmake --build "$build" --target swd2_tests swd2_rewrite -j4
+ctest --test-dir "$build" --output-on-failure \
+  -R '^(swd2_tests|new_game_exit_checkpoint_(replay|validation))$'
 
 shell="$root/src/web/shell.html"
 main="$root/src/main.cpp"
@@ -41,5 +42,5 @@ for pattern in \
 done
 
 printf '%s\n' \
-  'SAVE/MAPZ verification: native five-slot round trips passed; automatic IDBFS reload probe is built in.' \
+  'SAVE/MAPZ verification: native five-slot and live new-game pair checkpoints passed; automatic IDBFS reload probe is built in.' \
   'Run the WASM site with ?idbfs-self-test=TOKEN in a real browser and require data-idbfs-self-test="pass".'

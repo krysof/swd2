@@ -1995,6 +1995,38 @@ void test_save_slot(const std::filesystem::path& game_root) {
                             .area.entity_fields[3][1] == 0x0800U,
                 "RPG save-item callback could not atomically write a chosen SAVE/MAPZ pair");
 
+        // New Game replaces MAPZ wholesale with MAPZ.DAQ after the frontend
+        // initially opened a numbered slot.  An exit checkpoint must commit
+        // that live pair, not combine the new SAVE block with the slot's stale
+        // database.  Also prove the SaveSlot snapshot follows the replacement
+        // for a subsequent one-argument checkpoint.
+        auto replacement_map = swd2::MapDatabase::load(game_root / "MAPZ.DAQ");
+        auto replacement_state = swd2::SharedState::load(game_root / "SAVE.DAQ");
+        replacement_state.set_u16(0x104, 6789);
+        copied.save(replacement_state, replacement_map);
+        const auto replacement_bytes = replacement_map.serialized_bytes();
+        auto replacement_reopened = swd2::SaveSlot::open(
+            game_root, temporary, 5);
+        auto committed_replacement =
+            replacement_reopened.map_database()->serialized_bytes();
+        require(replacement_reopened.state().u16(0x104) == 6789 &&
+                    committed_replacement.size() == replacement_bytes.size() &&
+                    std::equal(committed_replacement.begin(),
+                               committed_replacement.end(),
+                               replacement_bytes.begin()),
+                "frontend checkpoint paired replacement SAVE with stale MAPZ");
+        replacement_state.set_u16(0x104, 6790);
+        copied.save(replacement_state);
+        replacement_reopened = swd2::SaveSlot::open(game_root, temporary, 5);
+        committed_replacement =
+            replacement_reopened.map_database()->serialized_bytes();
+        require(replacement_reopened.state().u16(0x104) == 6790 &&
+                    committed_replacement.size() == replacement_bytes.size() &&
+                    std::equal(committed_replacement.begin(),
+                               committed_replacement.end(),
+                               replacement_bytes.begin()),
+                "SaveSlot did not retain the live replacement MAPZ snapshot");
+
         const auto matrix_root = temporary / "five-slot-matrix";
         for (std::uint8_t number = 1; number <= 5; ++number) {
             auto matrix_slot = swd2::SaveSlot::open(
@@ -6484,7 +6516,21 @@ void test_rpg_opening_menu(const std::filesystem::path& game_root) {
                     context.shared_state.u16(0x2c) != initial.u16(0x2c) &&
                     platform.presented == 47U && platform.wait_calls == 4U &&
                     platform.poll_calls == 1U &&
-                    platform.music_calls == 2U && platform.stop_calls == 2U,
+                    platform.music_calls == 2U && platform.stop_calls == 2U &&
+                    platform.frame_hashes[21] ==
+                        6322980293999423254ULL &&
+                    platform.frame_hashes[22] ==
+                        17092816181454245754ULL &&
+                    platform.frame_hashes[23] ==
+                        10706129714087963303ULL &&
+                    platform.frame_hashes[24] ==
+                        14165905608805928121ULL &&
+                    platform.palette_hashes[45] ==
+                        17828133145641756547ULL &&
+                    platform.frame_hashes[46] ==
+                        5188932088196950066ULL &&
+                    platform.palette_hashes[46] ==
+                        17136998718566118143ULL,
                 "RPG Continue did not select and atomically install SAVE/MAPZ");
     }
 

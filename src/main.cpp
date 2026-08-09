@@ -659,7 +659,6 @@ void run_monolithic(const std::filesystem::path& game_root,
     modules.add(std::make_unique<swd2::BattleModule>());
     modules.add(std::make_unique<swd2::DemoModule>());
     const auto result = swd2::MonolithicRuntime(std::move(modules)).run(context);
-    if (write_save) slot.save(context.shared_state);
     if (require_all_inputs && platform.remaining_inputs() != 0U) {
         throw std::runtime_error(
             "replay stopped before consuming all boundary-locked inputs");
@@ -667,6 +666,13 @@ void run_monolithic(const std::filesystem::path& game_root,
     if (require_all_inputs && platform.implicit_quit_calls != 0U) {
         throw std::runtime_error(
             "replay exhausted its input and relied on an implicit quit");
+    }
+    if (write_save) {
+        if (!context.map_database) {
+            throw std::runtime_error(
+                "cannot checkpoint current SAVE state without live MAPZ state");
+        }
+        slot.save(context.shared_state, *context.map_database);
     }
     // A capture without its DONE trailer is intentionally invalid. Finalize
     // only after strict replay invariants pass so an interrupted/partial run
@@ -712,7 +718,11 @@ void play_monolithic(const std::filesystem::path& game_root,
     modules.add(std::make_unique<swd2::DemoModule>());
     static_cast<void>(swd2::MonolithicRuntime(std::move(modules)).run(context));
     if (write_save) {
-        slot.save(context.shared_state);
+        if (!context.map_database) {
+            throw std::runtime_error(
+                "cannot checkpoint current SAVE state without live MAPZ state");
+        }
+        slot.save(context.shared_state, *context.map_database);
         persist_browser_saves();
     }
 }

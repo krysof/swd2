@@ -39,6 +39,12 @@ public:
     // caller can observe only the old pair or the complete new pair.
     // GameContext owns the live SharedState and supplies it here.
     void save(const SharedState& state);
+    // The live MAPZ database may have been replaced wholesale by New Game or
+    // Continue after this SaveSlot object was opened.  Frontends performing
+    // an optional exit checkpoint must supply that live half explicitly;
+    // otherwise they could combine a new SAVE block with the stale MAPZ half
+    // that originally seeded the frontend.
+    void save(const SharedState& state, const MapDatabase& map_database);
 
 private:
     std::uint8_t slot_{};
