@@ -959,6 +959,25 @@ BattleRoundResult BattleSession::play_round(
                 finish_successful_ability();
                 continue;
             }
+            if (const auto medium =
+                    fig_medium_from_target_flags(ability.target_flags);
+                medium && !battle_media_[*medium]) {
+                const auto targets_monster = (target_mode & 0x2000U) != 0;
+                auto target_index = targets_monster
+                                        ? first_living_monster(command.target)
+                                        : (command.target < party_count_
+                                               ? command.target
+                                               : actor);
+                if (targets_monster && target_index == no_target) break;
+                add_missing_medium(command.ability_id, ability.effect_code,
+                                   targets_monster, target_index);
+                // Player 4338/58fa does not install a mediator requested by
+                // the ability record's low target_flags byte.  It reports the
+                // same paid failure as an effect-specific missing mediator;
+                // only enemy 23b1 and captured-ally 1048 install this sprite.
+                finish_successful_ability();
+                continue;
+            }
             if (const auto medium = fig_required_medium(ability.effect_code);
                 medium && !battle_media_[*medium]) {
                 const auto targets_monster = (target_mode & 0x2000U) != 0;

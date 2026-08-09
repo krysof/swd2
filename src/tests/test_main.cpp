@@ -4675,6 +4675,39 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     }),
             "FIG 58fa learned ability did not fail/pay without mediator AE");
 
+    // Ability 86/effect 63 has no effect-specific 58fa entry, but its low
+    // target_flags byte requests MENU AG. Player 4338 must report the same
+    // paid missing-medium result; unlike monster 23b1/captured-ally 1048 it
+    // must neither install AG nor apply the speed buff.
+    auto flagged_medium_state = missing_medium_state;
+    flagged_medium_state.set_u8(actor_zero + 0x6d, 86);
+    flagged_medium_state.set_u16(actor_zero + 0x55, 1000);
+    auto flagged_medium_session = swd2::BattleSession::create(
+        flagged_medium_state, selected->get(), items);
+    const auto flagged_medium_initial_speed =
+        flagged_medium_session.party()[0].speed;
+    auto flagged_medium_commands = escape_commands;
+    flagged_medium_commands[0] = {
+        swd2::PlayerCommandKind::ability, 86, 0, 0,
+    };
+    const auto flagged_medium_round = flagged_medium_session.play_round(
+        flagged_medium_commands, abilities, zero_random);
+    require(flagged_medium_session.party()[0].ability_points == 955 &&
+                flagged_medium_session.party()[0].speed ==
+                    flagged_medium_initial_speed &&
+                flagged_medium_session.battle_media() ==
+                    std::array<bool, 3>{false, false, false} &&
+                std::any_of(
+                    flagged_medium_round.events.begin(),
+                    flagged_medium_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::missing_medium &&
+                               event.source == 0 && event.ability_id == 86 &&
+                               event.effect_code == 0x63;
+                    }),
+            "FIG 4338 flagged player medium did not use paid 58fa failure");
+
     auto missing_medium_item_state = missing_medium_state;
     missing_medium_item_state.set_u16(0x382, 194); // type-10 effect 32
     auto missing_medium_item_session = swd2::BattleSession::create(
@@ -9763,11 +9796,10 @@ void test_battle_module(const std::filesystem::path& game_root) {
         std::size_t card_frame;
         std::uint64_t card_hash;
     };
-    // 57d6 is reached by five distinct effect selectors.  Ability 86 first
-    // installs its required mediator, hence its card occurs eight presents
-    // later than the four direct class-three abilities.
-    static constexpr std::array<StatusCardCase, 5> status_card_cases = {{
-        {86, 14, 13171850719366371954ULL},  // effect 63, speed
+    // 57d6 is reached directly by these four class-three status selectors.
+    // Effect 63/ability 86 instead requests an absent medium through its
+    // target_flags and is locked separately as a 58fa failure below.
+    static constexpr std::array<StatusCardCase, 4> status_card_cases = {{
         {35, 6, 16231846622373325418ULL},   // effect 66, defence
         {38, 6, 8595608823063091186ULL},    // effect 67, attack
         {33, 6, 18118597621268180707ULL},   // effect 68, evasion
@@ -9789,9 +9821,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
         }
         status_card_state.set_u8(0x106 + 0x6d, test.ability_id);
         status_card_state.set_u16(0x106 + 0x55, 1000);
-        if (test.ability_id != 86) {
-            status_card_state.set_u16(0x106 + 0x35, 1000);
-        }
+        status_card_state.set_u16(0x106 + 0x35, 1000);
         status_card_state.set_u16(0x106 + 0x37, 1000);
         status_card_state.set_u16(0x106 + 0x57, 1000);
         status_card_state.set_u16(0x106 + 0x2d, 1000);
@@ -9807,6 +9837,37 @@ void test_battle_module(const std::filesystem::path& game_root) {
                         test.card_hash,
                 "FIG 57d6 player-status information card run failed");
     }
+
+    ScriptedPlatform flagged_medium_platform;
+    flagged_medium_platform.actions = {
+        swd2::InputAction::left,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,
+    };
+    auto flagged_medium_visual_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    flagged_medium_visual_state.set_u16(0x4a0, 392);
+    flagged_medium_visual_state.set_u16(0x10, 1);
+    for (std::size_t slot = 0; slot < 50; ++slot) {
+        flagged_medium_visual_state.set_u8(0x106 + 0x6d + slot, 0);
+    }
+    flagged_medium_visual_state.set_u8(0x106 + 0x6d, 86);
+    flagged_medium_visual_state.set_u16(0x106 + 0x37, 1000);
+    flagged_medium_visual_state.set_u16(0x106 + 0x55, 1000);
+    flagged_medium_visual_state.set_u16(0x106 + 0x57, 1000);
+    flagged_medium_visual_state.set_u16(0x106 + 0x2d, 1000);
+    flagged_medium_visual_state.set_u16(0x106 + 0x2f, 1000);
+    flagged_medium_visual_state.set_u16(0x106 + 0x5d, 1000);
+    swd2::GameContext flagged_medium_context{
+        game_root, flagged_medium_visual_state, flagged_medium_platform};
+    require(swd2::BattleModule().run(
+                flagged_medium_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                flagged_medium_platform.frame_hashes.size() == 30U &&
+                flagged_medium_platform.frame_hashes[6] ==
+                    16887872019719067901ULL,
+            "FIG 58fa flagged-medium card did not retain paid pose4 page");
 
     // A frontend close is distinct from a DOS acknowledgement and may arrive
     // during 57d6's fixed 18-tick information-card hold. Keep the queued Quit

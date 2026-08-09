@@ -1459,6 +1459,13 @@ pose4 完成后，FIG 才把 target_flags 指定的资源池扣除，再进入�
 完整 320×200 RGB 上零差异；自动校验同时锁定三页的索引图、调色板、原版 RGB 摘要、
 82 个 frontend 检查边界和 18/70 秒状态卡停留。
 
+同一批原版回放纠正了 ability 86/effect 63 的旧假设。它的 effect selector 本身不在
+`fig_required_medium` 表，但 ability target_flags 低字节为 20h；玩家 `4338` 路径在
+AG 不存在时进入 `58fa`，支付 45 AP、显示“没有媒介！无法用此术！”，既不安装 AG，也
+不施加速度增强。只有敌方 `23b1` 和被捕盟友 `1048` 会安装 target_flags 请求的媒介。
+现代规则现区分这三条入口；缺媒介页继续保留已扣 AP 的 pose4，而不是错误退回 pose0。
+能力 86 的 pose0、pose4 和最终缺媒介页分别与原版第 247、250、277 帧完整 RGB 零差异。
+
 前端可选的退出检查点以前还有一个跨启动分支的配对错误：入口先打开命令行默认槽，`OM`
 随后把核心世界替换为 `SAVE.DAQ/MAPZ.DAQ` 并保留刚编辑的活动 NAME，但退出只把新
 `SharedState` 交给旧 `SaveSlot::save`，于是会把新游戏 SAVE、启动槽旧 MAPZ/NAME

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_flagged_medium",
+  "formation_directory_offset": 392,
+  "ability_id": 86,
+  "effect_code": 99,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-player-status-autotype.txt",
+  "capture_autotype_sha256": "990a3264d14184e457614216edd458621d978a61bf94c45cf4a5ea7d0cb23b61",
+  "fixture_save_sha256": "364ecc89b3ff4bc4414b188d226f02e9774bbc66f667ca5ceb33ec91d2ad0c62",
+  "capture_video_sha256": "db48524dbc16ebbbd592ab19020f0a3a905c942b78a0be1d12aea3195da059de",
+  "capture_manifest_sha256": "84fcb3bb68186701ce7a9d6f368d2930c6881a3a5d9f8d3d3c90cb0b988cea5d",
+  "rewrite_video_fnv1a64": "a2a0365159246b85",
+  "rewrite_state_fnv1a64": "054b5b8fd6c084dc",
+  "rewrite_final_fnv1a64": "bf5e97d678add92f",
+  "matched_frames": [
+    {
+      "kind": "common_pose0",
+      "rewrite_frame": 4,
+      "original_review_frame": 247,
+      "original_png_sha256": "c9057af50379d269382936095e3a822042811761ba5f7e2fbd2a5c661dadb82a",
+      "rewrite_indexed_sha256": "24ba28d0be94212000ec2cb3a41cae6a01cc6ba2bfddba34c720ba31d819f7e1",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "466f6366cec3f10f6eaafe0bce48cb2e90b51a554e4e728130214dfc5e9b675e",
+      "rewrite_rgb_sha256": "466f6366cec3f10f6eaafe0bce48cb2e90b51a554e4e728130214dfc5e9b675e"
+    },
+    {
+      "kind": "common_pose4",
+      "rewrite_frame": 5,
+      "original_review_frame": 250,
+      "original_png_sha256": "16f3fbd09506db571ee2c4b2a1a74f26ef094814d3ea242bc37dc70e380c8f0e",
+      "rewrite_indexed_sha256": "a4920519e1a0f555a206420f0c4bfe09658d42bcfb9436d8bb435f9966b895b7",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "fa8239f684155b6107109ddcbbeb966df045ff9457b6171cec75d82c65f00528",
+      "rewrite_rgb_sha256": "fa8239f684155b6107109ddcbbeb966df045ff9457b6171cec75d82c65f00528"
+    },
+    {
+      "kind": "paid_missing_medium",
+      "rewrite_frame": 6,
+      "original_review_frame": 277,
+      "original_png_sha256": "91a697d5e9354fdcad0ddb55e29cf97fcfbc18576e08f5ae649c33d37807c07e",
+      "rewrite_indexed_sha256": "d18347e4e8456b451686c0273c3b6c08e936081001fcacf1e3543c4e17db960c",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "cc9c18b1aff22261a43f55cc3a717cb3a9d7ac447fa7de8ddd734c4ddaa48fe0",
+      "rewrite_rgb_sha256": "cc9c18b1aff22261a43f55cc3a717cb3a9d7ac447fa7de8ddd734c4ddaa48fe0"
+    }
+  ]
+}

@@ -1824,7 +1824,12 @@ void present_missing_medium_card(
             visual.party_count),
         action_actor);
     if (action_actor) {
-        draw_fighter_pose(frame, fighters, visual.party[*action_actor], 0);
+        // 58fa is reached after 4338 has already left the common pose4 page
+        // visible.  The missing-medium panel does not rewind the actor to
+        // pose0 while rebuilding that page.
+        draw_fighter_pose(
+            frame, fighters, visual.party[*action_actor],
+            fig_player_ability_poses()[1]);
     }
 
     // 58fa programs 384a with x=10h/y=4bh/18 columns, then 7284 writes
@@ -1958,7 +1963,8 @@ bool present_round_events(
         const auto& command = commands[event.source];
         if (command.kind != PlayerCommandKind::ability ||
             command.ability_id >= abilities.abilities().size() ||
-            event.kind != BattleEventKind::player_ability) {
+            (event.kind != BattleEventKind::player_ability &&
+             event.kind != BattleEventKind::missing_medium)) {
             return;
         }
         const auto& ability = abilities.ability(command.ability_id);
@@ -2081,6 +2087,10 @@ bool present_round_events(
                         {}, std::nullopt, encounter_directory_offset);
                     if (!delay(action_delay)) return false;
                 }
+                // 58fa is entered after the ordinary learned-ability debit;
+                // its missing-medium page therefore sees the paid gauge even
+                // though the selected effect body never runs.
+                present_player_resource_cost(event);
             }
             present_missing_medium_card(
                 context, base_surface, encounter, items, fighters,
