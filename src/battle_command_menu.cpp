@@ -109,6 +109,8 @@ void BattleCommandMenu::show_abilities() {
         } else {
             enabled = false;
         }
+        enabled = enabled &&
+                  !fig_ability_has_uninitialized_support_target(ability);
         entries_.push_back({PlayerCommandKind::ability, raw_id, enabled});
     }
 }
@@ -406,6 +408,14 @@ void BattleCommandMenu::input(InputAction action) {
             }
         } else if (!class_five_affordable(session_, ability.cost)) {
             notice_ = BattleCommandNotice::missing_elements;
+            return;
+        }
+        if (fig_ability_has_uninitialized_support_target(ability)) {
+            // The original reaches 5841 with a null DS:2f2b entry and faults
+            // in 5c4c. Refuse the corrupt route only after the original
+            // affordability checks, so its normal missing-resource notices
+            // retain priority.
+            notice_ = BattleCommandNotice::ability_unavailable;
             return;
         }
     }

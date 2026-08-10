@@ -9,6 +9,19 @@
 
 namespace swd2 {
 
+bool fig_ability_has_uninitialized_support_target(
+    const BattleAbility& ability) noexcept {
+    if ((ability.target_flags & 0x3000U) != 0U ||
+        ability.effect_code == 0U || ability.effect_code > 0x30U ||
+        ability.effect_code == 0x28U || ability.effect_code == 0x29U) {
+        return false;
+    }
+    // 0c..0e and 12 use 5c79's all-party loop and never dereference the
+    // per-command target pointer. Every other 01..27 handler enters 5841.
+    return !((ability.effect_code >= 0x0cU && ability.effect_code <= 0x0eU) ||
+             ability.effect_code == 0x12U);
+}
+
 namespace {
 
 std::uint16_t word(std::span<const std::uint8_t> bytes, std::size_t offset) {

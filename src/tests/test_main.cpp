@@ -3688,6 +3688,36 @@ void test_battle_session(const std::filesystem::path& game_root) {
     require(selected.has_value(), "test formation 392 is absent from ORC.EXE");
     const auto items = swd2::ScriptArchive::load(game_root / "ITEM.EXE");
     const auto abilities = swd2::BattleAbilityDatabase::load(game_root / "FIG.EXE");
+    const auto fig_mz = swd2::dos::MzExecutable::load(game_root / "FIG.EXE");
+    const auto fig_file = read_file(game_root / "FIG.EXE");
+    const auto fig_image = std::span<const std::uint8_t>(
+        fig_file.data() + fig_mz.header_size(), fig_mz.load_image_size());
+    const std::array<std::uint8_t, 6> clear_first_target{
+        0xc7, 0x06, 0x2b, 0x2f, 0x00, 0x00};
+    const std::array<std::uint8_t, 14> effect_11_handler{
+        0xc7, 0x06, 0xb9, 0x2b, 0x64, 0x00,
+        0xc7, 0x06, 0xbb, 0x2b, 0x64, 0x00, 0xeb, 0xe0};
+    const std::array<std::uint8_t, 21> target_pointer_divide{
+        0x8b, 0x1e, 0x3a, 0x31, 0xd1, 0xe3,
+        0x8b, 0x87, 0x2b, 0x2f, 0xa3, 0xdd, 0x31,
+        0x2d, 0x06, 0x01, 0xb1, 0x9f, 0xf6, 0xf1, 0xb4};
+    require(fig_image.size() >= 0x5c68U &&
+                std::equal(clear_first_target.begin(), clear_first_target.end(),
+                           fig_image.begin() + 0x02a0U) &&
+                std::equal(effect_11_handler.begin(), effect_11_handler.end(),
+                           fig_image.begin() + 0x45b9U) &&
+                std::equal(target_pointer_divide.begin(),
+                           target_pointer_divide.end(),
+                           fig_image.begin() + 0x5c54U) &&
+                abilities.ability(41).target_flags == 0x0500U &&
+                abilities.ability(41).effect_code == 0x11U &&
+                swd2::fig_ability_has_uninitialized_support_target(
+                    abilities.ability(41)) &&
+                !swd2::fig_ability_has_uninitialized_support_target(
+                    abilities.ability(104)) &&
+                !swd2::fig_ability_has_uninitialized_support_target(
+                    abilities.ability(98)),
+            "FIG ability 41 null-target DIV fault evidence changed");
     auto session = swd2::BattleSession::create(state, selected->get(), items);
     require(session.party_count() == 3 && session.monsters().size() == 1 &&
                 session.monster_definitions()[0].id == 500 &&
@@ -3738,6 +3768,53 @@ void test_battle_session(const std::filesystem::path& game_root) {
     require(element_menu.notice() ==
                 swd2::BattleCommandNotice::missing_elements,
             "FIG missing five-element counters did not enter DATA:2d05 modal");
+
+    auto fault_guard_state = element_state;
+    fault_guard_state.set_u16(0x106 + 0x2d, 100);
+    fault_guard_state.set_u16(0x106 + 0x2f, 1000);
+    for (std::size_t slot = 0; slot < 5; ++slot) {
+        fault_guard_state.set_u16(0x3e6 + slot * 2U, 1);
+    }
+    auto fault_guard_session = swd2::BattleSession::create(
+        fault_guard_state, selected->get(), items);
+    swd2::BattleCommandMenu fault_guard_menu(
+        fault_guard_session, abilities, items);
+    fault_guard_menu.input(swd2::InputAction::left);
+    fault_guard_menu.input(swd2::InputAction::confirm);
+    require(fault_guard_menu.page() ==
+                swd2::BattleCommandMenuPage::abilities &&
+                !fault_guard_menu.entries().empty() &&
+                fault_guard_menu.entries()[0].value == 41U &&
+                !fault_guard_menu.entries()[0].enabled,
+            "FIG ability 41 portable fault guard remained visibly enabled");
+    fault_guard_menu.input(swd2::InputAction::confirm);
+    require(fault_guard_menu.notice() ==
+                swd2::BattleCommandNotice::ability_unavailable,
+            "FIG ability 41 portable fault guard did not use DATA:2cf5");
+
+    auto fault_guard_commands = std::array<swd2::PlayerBattleCommand, 4>{};
+    for (auto& command : fault_guard_commands) {
+        command.kind = swd2::PlayerCommandKind::skip;
+    }
+    fault_guard_commands[0] = {
+        swd2::PlayerCommandKind::ability, 41, 0, 0,
+    };
+    const auto fault_guard_counts = fault_guard_session.special_item_counts();
+    const auto fault_guard_round = fault_guard_session.play_round(
+        fault_guard_commands, abilities,
+        [](std::uint16_t) { return std::uint16_t{0}; });
+    require(fault_guard_session.party()[0].hit_points <= 100U &&
+                fault_guard_session.special_item_counts() ==
+                    fault_guard_counts &&
+                std::any_of(
+                    fault_guard_round.events.begin(),
+                    fault_guard_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::invalid_command &&
+                               event.source == 0 && event.ability_id == 41;
+                    }),
+            "FIG ability 41 portable fault guard healed or paid before refusing");
 
     const auto disabled_ability = std::find_if(
         abilities.abilities().begin() + 1, abilities.abilities().end(),
@@ -4915,6 +4992,7 @@ void test_battle_session(const std::filesystem::path& game_root) {
         }
     }
     std::size_t shipped_player_ability_count = 0;
+    std::vector<std::uint16_t> guarded_shipped_player_abilities;
     std::vector<std::uint16_t> invalid_shipped_player_abilities;
     for (const auto ability_id : reachable_player_abilities) {
         const auto& ability = abilities.ability(ability_id);
@@ -4926,6 +5004,9 @@ void test_battle_session(const std::filesystem::path& game_root) {
             continue;
         }
         ++shipped_player_ability_count;
+        if (swd2::fig_ability_has_uninitialized_support_target(ability)) {
+            guarded_shipped_player_abilities.push_back(ability_id);
+        }
 
         auto exhaustive_state =
             swd2::SharedState::load(game_root / "SAVE.DA1");
@@ -4965,8 +5046,11 @@ void test_battle_session(const std::filesystem::path& game_root) {
     }
     require(reachable_player_abilities.size() == 75 &&
                 shipped_player_ability_count == 71 &&
-                invalid_shipped_player_abilities.empty(),
-            "FIG reachable shipped player-ability domain contains an invalid dispatch");
+                guarded_shipped_player_abilities ==
+                    std::vector<std::uint16_t>{41} &&
+                invalid_shipped_player_abilities ==
+                    guarded_shipped_player_abilities,
+            "FIG reachable player domain did not isolate the shipped ability-41 fault");
 
     // A zero target-mode descriptor still enters the monster-side >30h
     // effect table.  FIG ability 100/effect 54 therefore damages monster

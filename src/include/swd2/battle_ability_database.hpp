@@ -35,6 +35,15 @@ struct BattleAbility {
     std::uint16_t base_power{};    // record +12
 };
 
+// FIG's command collector leaves DS:2f2b target pointers at zero when an
+// ability record has neither the 1000h party-target nor 2000h monster-target
+// bit. Most such selectors are genuinely targetless, but a single-target
+// support handler will later feed that zero pointer to 5c4c's 8-bit DIV and
+// fault. Keep this shipped-data trap explicit so portable frontends can refuse
+// it instead of inventing a self target or reproducing a machine hang.
+[[nodiscard]] bool fig_ability_has_uninitialized_support_target(
+    const BattleAbility& ability) noexcept;
+
 class BattleAbilityDatabase {
 public:
     static constexpr std::size_t ability_count = 151;

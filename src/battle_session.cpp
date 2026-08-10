@@ -978,6 +978,16 @@ BattleRoundResult BattleSession::play_round(
                      command.ability_id});
                 continue;
             }
+            if (fig_ability_has_uninitialized_support_target(ability)) {
+                // FIG would leave this command's DS:2f2b target pointer zero,
+                // then raise an 8086 divide error in 5c4c. A portable core
+                // cannot expose that machine hang; reject it without paying
+                // the cost or fabricating the self-heal used by older builds.
+                result.events.push_back(
+                    {BattleEventKind::invalid_command, false, actor, false,
+                     actor, command.ability_id});
+                continue;
+            }
 
             // Effect 47 deliberately discards the dispatcher/caller return
             // frames before FIG's resource-subtraction routine. It therefore
