@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_player_escape_failure_checkpoint",
+  "status": "exact_rgb_checkpoint",
+  "random_directory_base": 100,
+  "redirected_formation_directory_offset": 288,
+  "monster_definition_id": 368,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "3d475f7e65f187e1820f249ac8a95f333c1e6c95e86dea8538bcc039a7812dbb",
+  "fixture_orc_sha256": "e9dd243bc22afcd93f5474de6f481651fc7e45ead2aaeba8e06f78e9b9befec5",
+  "capture_autotype": "original-fig-player-escape-failure-autotype.txt",
+  "capture_autotype_sha256": "5d522f56f0eeb088b3d4b024e4ddaed411ec535869dc5d06f337a9452528bdc5",
+  "replay_input": "replay-fig-player-escape-failure.txt",
+  "replay_input_sha256": "d76d0a04803a9a452fd9372b1a2cff333ee580b15b5422c71963d131818d427f",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 15,
+  "capture_video_sha256": "3bf379a51c80dc4073dd1c201f25e8efc8aba4488921b5bcbd056f0d0509e05d",
+  "capture_manifest_sha256": "58c340c1ec89748f288ba2ce5de631622eb6b246368cc0aa7b581a69bc287d66",
+  "rewrite_video": {
+    "frames": 32,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "c48c951c3b62ff37"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 1,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "242760f4bf014de9"
+  },
+  "rewrite_delay_milliseconds": 731,
+  "rewrite_state_fnv1a64": "9cde268d9f1319b1",
+  "attack_voice_at_milliseconds": 285,
+  "attack_voice_payload_fnv1a64": "ce3659387971554b",
+  "pages": [
+    {
+      "label": "actor-zero initial command page",
+      "rewrite_frame": 1,
+      "original_review_frame": 298,
+      "original_png_sha256": "ba79ed1c1a0a41fd82abd368949dfef8904951d75dfb45f55121bdb5c7288f9b",
+      "rewrite_indexed_sha256": "ec2002b247aeba3ec3f99f1b45e40a90fdb342e9736430c51ca32ece3aaadb34",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "1282165661da853cbca5374b5591a3160665fab87e645c30d5c781bee479e2d8",
+      "original_rgb_sha256": "1282165661da853cbca5374b5591a3160665fab87e645c30d5c781bee479e2d8"
+    },
+    {
+      "label": "main command cursor moved to tactics",
+      "rewrite_frame": 2,
+      "original_review_frame": 360,
+      "original_png_sha256": "c1a81bfedf33bbcea342ad45f3f538c532b46ab17773542015c32e2efcf2ae3d",
+      "rewrite_indexed_sha256": "f5beee1dea4753001d4912d4e60e1e4e17d69cbfad89289fb22f8bb1d9d8dec3",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "9a1304ae2d5a04cef39251835ec7ce9881ea06da9f7a1d3d2f25d05d3e3c3de4",
+      "original_rgb_sha256": "9a1304ae2d5a04cef39251835ec7ce9881ea06da9f7a1d3d2f25d05d3e3c3de4"
+    },
+    {
+      "label": "random-encounter tactics page",
+      "rewrite_frame": 3,
+      "original_review_frame": 436,
+      "original_png_sha256": "11b555bf5492a5a28d7ea2d88292a5bb1f9b5cbc1a54c56da746fba8eb8be6e3",
+      "rewrite_indexed_sha256": "0d05c5a54fc68c565f9f14403a0d5adc28e9455e581426f2ce27ef4082b84066",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "bb2386678a64933607d83d27103fce9f96f1fc01c689305148a641ac33f18f0c",
+      "original_rgb_sha256": "bb2386678a64933607d83d27103fce9f96f1fc01c689305148a641ac33f18f0c"
+    },
+    {
+      "label": "escape tile selected",
+      "rewrite_frame": 4,
+      "original_review_frame": 509,
+      "original_png_sha256": "6093c715bb86a2686e7edc315f6047fdf27e04b561f33004d4c8e4947fd51264",
+      "rewrite_indexed_sha256": "59c0928231780b926b0b614f821aa8acda24b0a939c77ec39361afe4848ffb37",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "ca3bc4098b427cd1f33d6c09f50456db7797b4d1cd9b1afd58b251f0a6db2561",
+      "original_rgb_sha256": "ca3bc4098b427cd1f33d6c09f50456db7797b4d1cd9b1afd58b251f0a6db2561"
+    },
+    {
+      "label": "09c2 escape base fighter pose",
+      "rewrite_frame": 5,
+      "original_review_frame": 592,
+      "original_png_sha256": "edf807638b080840aee77dd7774d98e5eb8a908604193d0b75d69407d1d439bc",
+      "rewrite_indexed_sha256": "02a1e4c726859d1ac92879ce11dcefe197ee0bae40e076d9c8cd9c09c6f54e06",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "dc027f7ac6c2b2e056ece2dc5bfea3c2b93bb5c2144c0b60f93b5ec43898875c",
+      "original_rgb_sha256": "dc027f7ac6c2b2e056ece2dc5bfea3c2b93bb5c2144c0b60f93b5ec43898875c"
+    },
+    {
+      "label": "09d1 escape pose five",
+      "rewrite_frame": 6,
+      "original_review_frame": 604,
+      "original_png_sha256": "adc465ce72880da0e23ea6078521a0f84a1bcd895ca427bf8b0c0431c70c1e68",
+      "rewrite_indexed_sha256": "9273b50bfe9fc62fe923e3144235df37e47fa952552fb0bb1cbc00d441ccc88d",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "f996d7a9069e740467d344f995123d16f045bd2188338db33041e44c89636292",
+      "original_rgb_sha256": "f996d7a9069e740467d344f995123d16f045bd2188338db33041e44c89636292"
+    },
+    {
+      "label": "0a2f escape-failure card",
+      "rewrite_frame": 7,
+      "original_review_frame": 613,
+      "original_png_sha256": "6b566f5685b0be871066e327d2d3f1f7df7589f846f28b0d69a33c65db87a5fe",
+      "rewrite_indexed_sha256": "d354afc6c265983fc9474e4012539e7a5e68e10ffed51a8c19d6ef5930a293bf",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "c23dd8c4fb9f041e0842e58dd11ab81677231726a3031f35efc11fb6fb683b04",
+      "original_rgb_sha256": "c23dd8c4fb9f041e0842e58dd11ab81677231726a3031f35efc11fb6fb683b04"
+    },
+    {
+      "label": "0d98 bare five-tick action boundary",
+      "rewrite_frame": 8,
+      "original_review_frame": 634,
+      "original_png_sha256": "a6c46d6385f09163354d4d5e50393532f500b4ea43fc11a94ddf960391003d64",
+      "rewrite_indexed_sha256": "f3ee9d9a8471817b20ccef758e25d3adff0de63b8e6ada9a21027acf8a626dbf",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "8e165ac96a810867474843375b0bdcb67c4b8c885e55e5990004b617a4ec51c6",
+      "original_rgb_sha256": "8e165ac96a810867474843375b0bdcb67c4b8c885e55e5990004b617a4ec51c6"
+    },
+    {
+      "label": "296a following monster attack card",
+      "rewrite_frame": 9,
+      "original_review_frame": 656,
+      "original_png_sha256": "a3d918b1cebd9cfccef270c140de5e7e9074f2dfa091308fd9d7810908daa134",
+      "rewrite_indexed_sha256": "3db8ccb00c772512763b270bf754acfa36f622daed037390e7362cea0bf9afee",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "2388594860c4ad720b7948b0c6e0622eeac7e82a538fe3197803428413b238f9",
+      "original_rgb_sha256": "2388594860c4ad720b7948b0c6e0622eeac7e82a538fe3197803428413b238f9"
+    },
+    {
+      "label": "2a71 pre-shake clean party page",
+      "rewrite_frame": 10,
+      "original_review_frame": 669,
+      "original_png_sha256": "87c2e0667644ce1e1fd34e40524b575f0db792f9f9bb2b3917786fa599aee6e7",
+      "rewrite_indexed_sha256": "b7a76f7ce5f5be94cad302de9dbe1eb217830a2260157e0dcb7784dc12e0000b",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2",
+      "original_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2"
+    },
+    {
+      "label": "2939 shifted page step 1",
+      "rewrite_frame": 11,
+      "original_review_frame": 671,
+      "original_png_sha256": "e0c6136fa18b1df5225496a3d855fcd88cd3ff633beb2a0c47ab2b288c445caf",
+      "rewrite_indexed_sha256": "f9b2d2beb7b3c5010f69e408b2e9b4501ff611630de89596e0f9263111f943ae",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "d0bacec7b55a72c655c92e70c181c3d8caba07cee55b7e79531a41cdb98a2150",
+      "original_rgb_sha256": "d0bacec7b55a72c655c92e70c181c3d8caba07cee55b7e79531a41cdb98a2150"
+    },
+    {
+      "label": "2939 clean page step 2",
+      "rewrite_frame": 12,
+      "original_review_frame": 673,
+      "original_png_sha256": "87c2e0667644ce1e1fd34e40524b575f0db792f9f9bb2b3917786fa599aee6e7",
+      "rewrite_indexed_sha256": "b7a76f7ce5f5be94cad302de9dbe1eb217830a2260157e0dcb7784dc12e0000b",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2",
+      "original_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2"
+    },
+    {
+      "label": "2939 shifted page step 3",
+      "rewrite_frame": 13,
+      "original_review_frame": 675,
+      "original_png_sha256": "e0c6136fa18b1df5225496a3d855fcd88cd3ff633beb2a0c47ab2b288c445caf",
+      "rewrite_indexed_sha256": "f9b2d2beb7b3c5010f69e408b2e9b4501ff611630de89596e0f9263111f943ae",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "d0bacec7b55a72c655c92e70c181c3d8caba07cee55b7e79531a41cdb98a2150",
+      "original_rgb_sha256": "d0bacec7b55a72c655c92e70c181c3d8caba07cee55b7e79531a41cdb98a2150"
+    },
+    {
+      "label": "2939 clean page step 4",
+      "rewrite_frame": 14,
+      "original_review_frame": 677,
+      "original_png_sha256": "87c2e0667644ce1e1fd34e40524b575f0db792f9f9bb2b3917786fa599aee6e7",
+      "rewrite_indexed_sha256": "b7a76f7ce5f5be94cad302de9dbe1eb217830a2260157e0dcb7784dc12e0000b",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2",
+      "original_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2"
+    },
+    {
+      "label": "2939 shifted page step 5",
+      "rewrite_frame": 15,
+      "original_review_frame": 679,
+      "original_png_sha256": "e0c6136fa18b1df5225496a3d855fcd88cd3ff633beb2a0c47ab2b288c445caf",
+      "rewrite_indexed_sha256": "f9b2d2beb7b3c5010f69e408b2e9b4501ff611630de89596e0f9263111f943ae",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "d0bacec7b55a72c655c92e70c181c3d8caba07cee55b7e79531a41cdb98a2150",
+      "original_rgb_sha256": "d0bacec7b55a72c655c92e70c181c3d8caba07cee55b7e79531a41cdb98a2150"
+    },
+    {
+      "label": "2939 clean page step 6",
+      "rewrite_frame": 16,
+      "original_review_frame": 681,
+      "original_png_sha256": "87c2e0667644ce1e1fd34e40524b575f0db792f9f9bb2b3917786fa599aee6e7",
+      "rewrite_indexed_sha256": "b7a76f7ce5f5be94cad302de9dbe1eb217830a2260157e0dcb7784dc12e0000b",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2",
+      "original_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2"
+    },
+    {
+      "label": "2939 shifted page step 7",
+      "rewrite_frame": 17,
+      "original_review_frame": 679,
+      "original_png_sha256": "e0c6136fa18b1df5225496a3d855fcd88cd3ff633beb2a0c47ab2b288c445caf",
+      "rewrite_indexed_sha256": "f9b2d2beb7b3c5010f69e408b2e9b4501ff611630de89596e0f9263111f943ae",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "d0bacec7b55a72c655c92e70c181c3d8caba07cee55b7e79531a41cdb98a2150",
+      "original_rgb_sha256": "d0bacec7b55a72c655c92e70c181c3d8caba07cee55b7e79531a41cdb98a2150"
+    },
+    {
+      "label": "2939 clean page step 8",
+      "rewrite_frame": 18,
+      "original_review_frame": 683,
+      "original_png_sha256": "87c2e0667644ce1e1fd34e40524b575f0db792f9f9bb2b3917786fa599aee6e7",
+      "rewrite_indexed_sha256": "b7a76f7ce5f5be94cad302de9dbe1eb217830a2260157e0dcb7784dc12e0000b",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2",
+      "original_rgb_sha256": "7d037da7497e0cc77ec7b79755a01cc1fea418d9f49a39c39530db4979a18aa2"
+    },
+    {
+      "label": "2ac7 damage rise page 1",
+      "rewrite_frame": 19,
+      "original_review_frame": 685,
+      "original_png_sha256": "33a357fc99390492db4fa884cb540e08cc85bcd6f8d2eed03cd1738c4c329efb",
+      "rewrite_indexed_sha256": "9f4bd902f53e8b92c382af609d7efb6ea789f59b40715386619a533866d99199",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "9ed56671fb332f412640d1d3d1676e2407f0b35153af8243f6a2ea2d6960f5e6",
+      "original_rgb_sha256": "9ed56671fb332f412640d1d3d1676e2407f0b35153af8243f6a2ea2d6960f5e6"
+    },
+    {
+      "label": "2ac7 damage rise page 2",
+      "rewrite_frame": 20,
+      "original_review_frame": 687,
+      "original_png_sha256": "599f8cadb8779965f4d69958ad0eeb4d7a8ad865b82370f1c17b1ff3ada9b45d",
+      "rewrite_indexed_sha256": "21d6e1888e014afe9c9570f6492ee9676b13669c70e1ec06a142dbf8cc1b7224",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "8ae20efbb564b11b8a3602f9e459f56c89fadce424a86d84fcf1e8a0a6e35710",
+      "original_rgb_sha256": "8ae20efbb564b11b8a3602f9e459f56c89fadce424a86d84fcf1e8a0a6e35710"
+    },
+    {
+      "label": "2ac7 damage rise page 3",
+      "rewrite_frame": 21,
+      "original_review_frame": 689,
+      "original_png_sha256": "1b09803f810d2ecf0ef1533053459ef3c51b3312aa747b4acc0a1a982606fc1c",
+      "rewrite_indexed_sha256": "1eff067319bc75995677e6f97e1e192b637d4da79ed5b7886c32d73edebfb36f",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "2d96b518d764273001c2e40444cf3743b18d0f84fb78ca32a165631a3816a2dc",
+      "original_rgb_sha256": "2d96b518d764273001c2e40444cf3743b18d0f84fb78ca32a165631a3816a2dc"
+    },
+    {
+      "label": "2ac7 damage rise page 4",
+      "rewrite_frame": 22,
+      "original_review_frame": 691,
+      "original_png_sha256": "1a8b704757f916fca85401a18587d5dbf001e40648474759187d24baa47decd5",
+      "rewrite_indexed_sha256": "f5a38457336d161590c088ac2d41cc6c0283ff49a6c77c9dd1d8d928be367658",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "1a2e67ab997654663362d550c95434a65a1cd63c281d165b7c80209ca289fce5",
+      "original_rgb_sha256": "1a2e67ab997654663362d550c95434a65a1cd63c281d165b7c80209ca289fce5"
+    },
+    {
+      "label": "2ac7 damage rise page 5",
+      "rewrite_frame": 23,
+      "original_review_frame": 693,
+      "original_png_sha256": "fa3ebe7d58eefe29e79f054b8ddd2b2b51ca310f897e493194887430b55281f6",
+      "rewrite_indexed_sha256": "84ff830817ac4a33fafe1371366fe00e5ef86aa2c0ed3840bceb677370b141b4",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "958a1b0248368e28b534b7e25abf17bc5c3e30b34720ab11e25f65824dc106a1",
+      "original_rgb_sha256": "958a1b0248368e28b534b7e25abf17bc5c3e30b34720ab11e25f65824dc106a1"
+    },
+    {
+      "label": "2ac7 damage rise page 6",
+      "rewrite_frame": 24,
+      "original_review_frame": 695,
+      "original_png_sha256": "1522862b0d6a0361bdeb5ecba50d8566b4ded8923e5afb34b4c11f44e7c0313c",
+      "rewrite_indexed_sha256": "d13ef06d86d4f5ba7b82e905f431f4c4ad25aa952a6bd76fcf9d96d7bc8b69be",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "094a0433734bcec67e55f7139647e69c7739ec0c2da1eb0054297c7ab0c71989",
+      "original_rgb_sha256": "094a0433734bcec67e55f7139647e69c7739ec0c2da1eb0054297c7ab0c71989"
+    },
+    {
+      "label": "2ac7 damage rise page 7",
+      "rewrite_frame": 25,
+      "original_review_frame": 697,
+      "original_png_sha256": "6efa7c55de7de0749581e7bce8d444e81d087008b684931930fe768312c8e7ad",
+      "rewrite_indexed_sha256": "7fb7ea34e624d8bdb85c952da5fdab583897c1cd5a9c994d906cc634ff152f00",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "1cd14941ebf36a1062f17e6b9da94ed4dca112de2d365095fef11ef67995260a",
+      "original_rgb_sha256": "1cd14941ebf36a1062f17e6b9da94ed4dca112de2d365095fef11ef67995260a"
+    },
+    {
+      "label": "2ac7 damage rise page 8",
+      "rewrite_frame": 26,
+      "original_review_frame": 699,
+      "original_png_sha256": "ba48ede1d3d52dd986ab67efdcef9a87a0cf0fb5ba0466911055dae906336126",
+      "rewrite_indexed_sha256": "2546454ffe31bad2fdb1e92eb1923b95f87f898dd112336d8f5b710b396224cc",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "b3a4fc083c645669bc92de937d0effc48dce0327cc153e118762e99f5d0c865c",
+      "original_rgb_sha256": "b3a4fc083c645669bc92de937d0effc48dce0327cc153e118762e99f5d0c865c"
+    },
+    {
+      "label": "2ac7 damage rise page 9",
+      "rewrite_frame": 27,
+      "original_review_frame": 701,
+      "original_png_sha256": "1f635f80420f9bb58cd434130a53457b82dc5014c1550d6fe00aaa8c4e5db218",
+      "rewrite_indexed_sha256": "dffd4b37f0e2dfc971f3ebea841c1c502fa02d7c9a5aa8394235c4c8c648d2a0",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "c14a3eb881098c8c1fb3f6cea542300488bdb3a8562487650b25d06574aa9081",
+      "original_rgb_sha256": "c14a3eb881098c8c1fb3f6cea542300488bdb3a8562487650b25d06574aa9081"
+    },
+    {
+      "label": "2ac7 damage rise page 10",
+      "rewrite_frame": 28,
+      "original_review_frame": 705,
+      "original_png_sha256": "33fc6ceed50d5b59d0d59acc4df8e8c7cd4d640a736d9ce6fde0095147492f19",
+      "rewrite_indexed_sha256": "e3011aa16a9ec26946f51200199a87fb37ad1fbdcb3fa317424a594e64ebb3e5",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "21b12e86656457d7fc3fd915b078d76655d7af97e803aa1a4e162e67cdf98af7",
+      "original_rgb_sha256": "21b12e86656457d7fc3fd915b078d76655d7af97e803aa1a4e162e67cdf98af7"
+    },
+    {
+      "label": "2ac7 retained result page",
+      "rewrite_frame": 29,
+      "original_review_frame": 707,
+      "original_png_sha256": "46edb46c492ba5f0c3e8357f627b17f22fdc6fb3ac33bd5904d6e60e332837ae",
+      "rewrite_indexed_sha256": "07d41d849e68a2008836a02ecf9b9c6b9523a9247e06d82ba45a35880df2fbfb",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "0b5561a3cdd51ce4f1ed6f54c29af1334b43110673e35c14a9fbc25fe3476f99",
+      "original_rgb_sha256": "0b5561a3cdd51ce4f1ed6f54c29af1334b43110673e35c14a9fbc25fe3476f99"
+    },
+    {
+      "label": "22e0 bare monster-turn cleanup",
+      "rewrite_frame": 30,
+      "original_review_frame": 739,
+      "original_png_sha256": "a6c46d6385f09163354d4d5e50393532f500b4ea43fc11a94ddf960391003d64",
+      "rewrite_indexed_sha256": "f3ee9d9a8471817b20ccef758e25d3adff0de63b8e6ada9a21027acf8a626dbf",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "8e165ac96a810867474843375b0bdcb67c4b8c885e55e5990004b617a4ec51c6",
+      "original_rgb_sha256": "8e165ac96a810867474843375b0bdcb67c4b8c885e55e5990004b617a4ec51c6"
+    },
+    {
+      "label": "next-round command page",
+      "rewrite_frame": 31,
+      "original_review_frame": 760,
+      "original_png_sha256": "1fdff00230820e2525b2b48ed76d2e505e18ee814d27c3835b4a349eea70dcce",
+      "rewrite_indexed_sha256": "c4b1712f404125a8ce321d3f9276ec429942f2c5b1f13ae49b96c3ec83e612f2",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "bd89983093d86ac0467280d74379c53930fd97832e356f6cdb92e48bcd443b0d",
+      "original_rgb_sha256": "bd89983093d86ac0467280d74379c53930fd97832e356f6cdb92e48bcd443b0d"
+    }
+  ]
+}

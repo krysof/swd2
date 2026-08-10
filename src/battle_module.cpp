@@ -3095,6 +3095,21 @@ bool present_round_events(
                     menu_sprites, font, fallback, visual, event, abilities,
                     encounter_directory_offset);
                 if (!delay(ward_card_delay)) return false; // five ticks
+
+                // 09b8's failure branch rejoins 0c41 rather than returning
+                // from FIG. With no expiring player status, 0d98 still
+                // executes a bare 2db8 page flip and holds it for five ticks
+                // before the initiative loop chooses the next actor. This is
+                // observable between the failure card and the following
+                // monster action; do not jump directly from one card to the
+                // other or retain the bottom party cards on the boundary.
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                if (!delay(ward_card_delay)) return false;
             }
             continue;
         }
