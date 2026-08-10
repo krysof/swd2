@@ -2131,27 +2131,54 @@ bool present_round_events(
             return;
         }
         const auto& command = commands[event.source];
-        if (command.kind != PlayerCommandKind::ability ||
-            command.ability_id >= abilities.abilities().size() ||
-            (event.kind != BattleEventKind::player_ability &&
-             event.kind != BattleEventKind::missing_medium)) {
+        if (event.kind != BattleEventKind::player_ability &&
+            event.kind != BattleEventKind::missing_medium) {
             return;
         }
-        const auto& ability = abilities.ability(command.ability_id);
-        if (ability.effect_code == 0x47U) return;
-        const auto resource_class = static_cast<std::uint8_t>(
-            (ability.target_flags >> 8U) & 0x0fU);
+        auto cost = std::uint16_t{};
+        auto resource_class = std::uint8_t{};
+        if (command.kind == PlayerCommandKind::ability &&
+            command.ability_id < abilities.abilities().size()) {
+            const auto& ability = abilities.ability(command.ability_id);
+            if (ability.effect_code == 0x47U) return;
+            cost = ability.cost;
+            resource_class = static_cast<std::uint8_t>(
+                (ability.target_flags >> 8U) & 0x0fU);
+        } else if (command.kind == PlayerCommandKind::item &&
+                   event.resulting_player_support_state &&
+                   event.ability_id >= 0x8cU &&
+                   static_cast<std::size_t>(event.ability_id) + 2U <
+                       items.entry_count()) {
+            // The 447b..478f support handlers are the proven direct-item
+            // path that rejoins 585e here. Other item selectors own distinct
+            // restoration epilogues and remain locked by their own captures.
+            const auto item = BattleItemDefinition::parse(
+                event.ability_id,
+                items.entry(static_cast<std::size_t>(event.ability_id) + 2U));
+            const auto embedded_id = static_cast<std::size_t>(
+                event.ability_id - 0x8cU);
+            if (item.type != 0x10U || item.effect_code == 0x47U ||
+                embedded_id >= abilities.abilities().size()) {
+                return;
+            }
+            const auto& ability = abilities.ability(embedded_id);
+            cost = ability.cost;
+            resource_class = static_cast<std::uint8_t>(
+                (ability.target_flags >> 8U) & 0x0fU);
+        } else {
+            return;
+        }
         auto& member = visual.party[event.source];
         if (resource_class == 1U || resource_class == 4U) {
             member.ability_points = static_cast<std::uint16_t>(
-                ability.cost >= member.ability_points
+                cost >= member.ability_points
                     ? 0U
-                    : member.ability_points - ability.cost);
+                    : member.ability_points - cost);
         } else if (resource_class == 2U || resource_class == 3U) {
             member.secondary_points = static_cast<std::uint16_t>(
-                ability.cost >= member.secondary_points
+                cost >= member.secondary_points
                     ? 0U
-                    : member.secondary_points - ability.cost);
+                    : member.secondary_points - cost);
         }
         player_resource_cost_presented[event.source] = true;
     };
@@ -3544,16 +3571,37 @@ bool present_round_events(
                     resource_class = static_cast<std::uint8_t>(
                         (abilities.ability(command.ability_id).target_flags >>
                          8U) & 0x0fU);
+                } else if (command.kind == PlayerCommandKind::item &&
+                           event.ability_id >= 0x8cU &&
+                           static_cast<std::size_t>(event.ability_id) + 2U <
+                               items.entry_count()) {
+                    // 1138 turns a type-10 ITEM wrapper into ability
+                    // item_id-8c before entering the same 447b..478f
+                    // support handler used by a learned ability. Recover the
+                    // embedded resource class so its result snapshot stays
+                    // on the pre-debit page until the shared 585e return; the
+                    // command's ability_id field is the inventory slot here.
+                    const auto item = BattleItemDefinition::parse(
+                        event.ability_id,
+                        items.entry(static_cast<std::size_t>(
+                                        event.ability_id) + 2U));
+                    const auto embedded_id = static_cast<std::size_t>(
+                        event.ability_id - 0x8cU);
+                    if (item.type == 0x10U &&
+                        embedded_id < abilities.abilities().size()) {
+                        resource_class = static_cast<std::uint8_t>(
+                            (abilities.ability(embedded_id).target_flags >>
+                             8U) & 0x0fU);
+                    }
                 }
             }
             const auto apply_support_visual = [&](const auto& shown) {
                 apply_visual_event(visual, shown, abilities);
                 if (event.source >= visual.party_count) return;
-                // The support result snapshot comes from the already-paid
-                // rules state, but 585e does not debit the visible gauge until
-                // after the handler's last 58a9 page. Keep only that charged
-                // resource at its pre-action value while preserving any other
-                // resource recovery performed by the support effect itself.
+                // The support result snapshot is captured inside the handler,
+                // before 585e debits the selected pool. Keep that charged
+                // resource at its pre-action value through the final 58a9
+                // page while preserving recovery of every other pool.
                 if (resource_class == 1U || resource_class == 4U) {
                     visual.party[event.source].ability_points =
                         source_ability_points;
