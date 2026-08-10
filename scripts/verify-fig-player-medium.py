@@ -12,12 +12,21 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
-EXPECTED_PAGES = (
-    "first_item_pose0", "first_medium_flight", "installed_next_command",
-    "dismiss_item_pose0", "dismiss_retained_dark", "dismiss_restoration",
-    "restored_medium_visible", "clean_medium_removed",
-    "monster_action_no_medium", "next_command_paid",
-)
+EXPECTED_PAGES = {
+    "original_fig_player_medium_install_dismiss": (
+        "first_item_pose0", "first_medium_flight", "installed_next_command",
+        "dismiss_item_pose0", "dismiss_retained_dark", "dismiss_restoration",
+        "restored_medium_visible", "clean_medium_removed",
+        "monster_action_no_medium", "next_command_paid",
+    ),
+    "original_fig_learned_medium_install_dismiss": (
+        "install_pose0", "install_pose4", "medium_flight_start",
+        "medium_flight_installed", "installed_next_command", "dismiss_pose0",
+        "dismiss_pose4", "dismiss_retained_dark", "dismiss_restored_medium",
+        "clean_medium_removed", "monster_action_no_medium",
+        "next_command_paid",
+    ),
+}
 
 
 def sha256(data: bytes) -> str:
@@ -41,36 +50,44 @@ def main() -> int:
     args = parser.parse_args()
     try:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
-        identity = (
-            expected.get("install_item_id"),
+        kind = expected.get("kind")
+        direct_item = kind == "original_fig_player_medium_install_dismiss"
+        learned = kind == "original_fig_learned_medium_install_dismiss"
+        common_identity = (
             expected.get("install_ability_id"),
             expected.get("install_effect_code"),
             expected.get("install_resource_cost"),
-            expected.get("dismiss_item_id"),
             expected.get("dismiss_ability_id"),
             expected.get("dismiss_effect_code"),
             expected.get("dismiss_resource_cost"),
-            expected.get("medium_slot"),
-            expected.get("medium_sprite"),
-            expected.get("payment_pool"),
+            expected.get("medium_slot"), expected.get("medium_sprite"),
+        ) == (51, 0x31, 10, 53, 0x3D, 20, 0, 0xAE)
+        identity_ok = common_identity and (
+            (direct_item and
+             (expected.get("install_item_id"),
+              expected.get("dismiss_item_id"),
+              expected.get("payment_pool")) ==
+             (191, 193, "ability_points")) or
+            (learned and expected.get("resource_class") == 4)
         )
-        if expected.get("schema_version") != 1 or \
-                expected.get("kind") != \
-                "original_fig_player_medium_install_dismiss" or \
+        capture_boundary = (
+            expected.get("capture_wait_seconds"),
+            expected.get("capture_pace_seconds"),
+            expected.get("capture_time_limit_seconds"),
+            expected.get("capture_review_fps"),
+            expected.get("capture_review_frames"),
+        )
+        expected_boundary = ((5, 6, 48, 70, 3363) if direct_item else
+                             (5, 6, 54, 70, 3784))
+        if expected.get("schema_version") != 1 or not identity_ok or \
                 expected.get("formation_directory_offset") != 392 or \
-                identity != (191, 51, 0x31, 10, 193, 53, 0x3D, 20,
-                             0, 0xAE, "ability_points") or \
-                (expected.get("capture_wait_seconds"),
-                 expected.get("capture_pace_seconds"),
-                 expected.get("capture_time_limit_seconds"),
-                 expected.get("capture_review_fps"),
-                 expected.get("capture_review_frames")) != \
-                (5, 6, 48, 70, 3363):
+                capture_boundary != expected_boundary:
             raise ValueError("unsupported FIG player-medium reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"] or \
-                sha256((args.game / "ITEM.EXE").read_bytes()) != \
-                expected["item_archive_sha256"]:
+                (direct_item and
+                 sha256((args.game / "ITEM.EXE").read_bytes()) !=
+                 expected["item_archive_sha256"]):
             raise ValueError("FIG/ITEM data differs from player-medium reference")
         autotype = args.reference.with_name(expected["capture_autotype"])
         replay = args.reference.with_name(expected["replay"])
@@ -128,7 +145,7 @@ def main() -> int:
         pages = expected.get("matched_frames")
         if len(frames) != expected["rewrite_video"]["frames"] or \
                 not isinstance(pages, list) or tuple(
-                    page.get("kind") for page in pages) != EXPECTED_PAGES:
+                    page.get("kind") for page in pages) != EXPECTED_PAGES[kind]:
             raise ValueError("FIG player-medium page set differs")
         for page in pages:
             pixels, palette = frames[page["rewrite_frame"]]
@@ -143,9 +160,10 @@ def main() -> int:
         for name in ("capture_harness_sha256", "capture_video_sha256",
                      "capture_manifest_sha256"):
             digest(expected.get(name), name)
+        source = "items 191/193" if direct_item else "learned abilities 51/53"
         print(
-            "FIG player-medium checkpoint: items 191/193 install and dismiss "
-            "AE, pay 10+20 AP, and match ten original 320x200 RGB pages")
+            f"FIG player-medium checkpoint: {source} install and dismiss AE, "
+            "pay 10+20 AP, and match original 320x200 RGB pages")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:
