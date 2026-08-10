@@ -3075,12 +3075,17 @@ bool present_round_events(
             !event.target_is_monster && !status_text.empty() &&
             fig_effect_leaves_player_status_card(event.effect_code) &&
             effect_code && *effect_code > 0x30;
+        const auto retained_player_barrier_handler =
+            player_dispatcher_action &&
+            event.block_reason == AbilityBlockReason::none &&
+            !event.target_is_monster && effect_code && *effect_code == 0x62;
         const auto retained_player_support_handler =
             player_dispatcher_action && event.resulting_player_support_state &&
             effect_code && *effect_code <= 0x30;
         const auto retained_fading_handler =
             retained_immunity_handler || retained_monster_status_handler ||
-            retained_player_status_handler || retained_monster_damage_handler;
+            retained_player_status_handler || retained_player_barrier_handler ||
+            retained_monster_damage_handler;
         if (action_first && !retained_fading_handler &&
             !retained_player_support_handler) {
             // Non-fading learned handlers expose the paid pool after the
@@ -3208,13 +3213,32 @@ bool present_round_events(
             }
         }
         std::optional<BattleSurface> retained_effect_surface;
+        if (retained_player_barrier_handler) {
+            // 55fd does not leave the acting fighter in pose 4 underneath
+            // SP338.  After 43ce has darkened C0h..DFh it copies the current
+            // page to A800, calls 5c4c (which temporarily selects the party
+            // target and runs ordinary 2bb5), flips that target-card page,
+            // and only then starts the four-frame barrier archive.  This
+            // target page is observable before frame zero and is also the
+            // scratch background restored between 49c1 iterations.
+            retained_effect_surface = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event, std::nullopt,
+                {}, std::nullopt, encounter_directory_offset);
+            if (dispatcher_palette_override) {
+                retained_effect_surface->palette =
+                    *dispatcher_palette_override;
+            }
+            present_battle_surface(context, *retained_effect_surface);
+        }
         while (effect_cursor < effect_frames.size()) {
             const auto& effect = effect_frames[effect_cursor++];
             // 4338/436a leave the acting fighter in pose 4 while DS:2bbd
             // renders the selected learned/item effect. Rebuilding these
             // pages with the ordinary portrait loses both frame 180's action
             // backing and FMAN, and also gives 59a1 the wrong page to retain.
-            const auto retained_pose = player_dispatcher_action
+            const auto retained_pose = player_dispatcher_action &&
+                                               !retained_player_barrier_handler
                                            ? std::optional<std::size_t>{4}
                                            : std::nullopt;
             retained_effect_surface = compose_event_frame(
@@ -3475,10 +3499,33 @@ bool present_round_events(
         if (effect_code && fig_effect_tail_hold_ticks(*effect_code) != 0 &&
             event.block_reason == AbilityBlockReason::none &&
             !event.source_is_monster) {
-            // 55fd's learned/item barrier handler presents four SP338 frames,
-            // holds the last for four ticks, and returns without a clean page.
+            // 55fd increments +3164 before the visual body, presents four
+            // SP338 frames over 5c4c's ordinary target card, and holds the
+            // last for four ticks.  The common 585e debit and 4417 palette
+            // restoration happen only after that handler returns.  4417
+            // draws pose 4 on the opposite page, so the visible page during
+            // its five colour steps remains the final barrier frame.  The
+            // ordinary player caller then reaches 0c41/0d98 and exposes a
+            // bare battlefield for five ticks before initiative advances.
             apply_visual_event(visual, event, abilities);
             if (!delay(monster_action_card_delay)) return false;
+            present_player_resource_cost(event);
+            if (retained_effect_surface) {
+                auto restored = *retained_effect_surface;
+                for (auto step = 0; step < 5; ++step) {
+                    brighten_fig_dispatcher_palette(
+                        restored, base_surface.palette);
+                    present_battle_surface(context, restored);
+                    if (!delay(effect_delay)) return false;
+                }
+            }
+            const auto clean = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event,
+                std::nullopt, {}, std::nullopt,
+                encounter_directory_offset, std::nullopt, false, false);
+            present_battle_surface(context, clean);
+            if (!delay(ward_card_delay)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::player_attack && event.evaded) {

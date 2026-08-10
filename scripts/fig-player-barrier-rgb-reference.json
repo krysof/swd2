@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_player_barrier",
+  "formation_directory_offset": 392,
+  "ability_id": 64,
+  "effect_code": 98,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-player-barrier-autotype.txt",
+  "capture_autotype_sha256": "8ab94270c233a1620cce0bf4eb21bb3f66610f22cc3a9e7ced41c019f96d3e31",
+  "capture_time_limit_seconds": 15,
+  "fixture_save_sha256": "b887647aa8149f3d2116de0972cb2073c0c5288832d63a9aec9ca039fe5444fd",
+  "capture_video_sha256": "db855637bd07c6a094e4d05069910ee31782a4809299ba8e2ead095ae44302ab",
+  "capture_manifest_sha256": "cd2949456e4cf6384a958fd0f3bc7f577c2253811b2fd8d504c27417ab47d39f",
+  "capture_limitation": "RGB checkpoints stop at the stable final dark SP338 page. Subsequent ZMBV frames are not used because VGA DAC updates are observed as inter-frame palette artifacts; the 585e/4417/0d98 tail is locked by disassembly plus the deterministic indexed replay.",
+  "replay": "replay-fig-player-barrier.txt",
+  "rewrite_input": {
+    "total": 5,
+    "consumed": 5,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 5,
+    "poll": 0,
+    "text": 0,
+    "frontend": 105
+  },
+  "rewrite_video": {
+    "frames": 46,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "b7a8ec26120518ad"
+  },
+  "rewrite_delay_milliseconds": 913,
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 2,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "8cfea53e5596cfa4"
+  },
+  "rewrite_state_fnv1a64": "484fc51bf89c0958",
+  "rewrite_final_fnv1a64": "d28edb25f665f757",
+  "matched_frames": [
+    {
+      "kind": "common_pose0",
+      "rewrite_frame": 5,
+      "original_review_frame": 584,
+      "original_png_sha256": "1151578a07a5fbcc867ffba3c3ca8885b38fb8cd8512de50740654d99c075f52",
+      "rewrite_indexed_sha256": "0a0476dbddc3e624cec1321437bf06e48d864e605dc289287a9179f07b4cb82a",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "a40240a4defc4cad9fd84e28fa7741d8debeeaf2cb33ade038dfb035214b2adb",
+      "rewrite_rgb_sha256": "a40240a4defc4cad9fd84e28fa7741d8debeeaf2cb33ade038dfb035214b2adb"
+    },
+    {
+      "kind": "common_pose4",
+      "rewrite_frame": 6,
+      "original_review_frame": 596,
+      "original_png_sha256": "28312db4390940684181ef5a4bad932433253a5cfae6b4e4a5d4518215c6bd89",
+      "rewrite_indexed_sha256": "f85c2e5c6513e74b7043c311dabcff01bfc1f73f8557b57d7dce2b132c386fe0",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "9979359b5699aa51c0708f94d8b7b4eb00ed91369d7892c42cf8bdf7e7b61e6b",
+      "rewrite_rgb_sha256": "9979359b5699aa51c0708f94d8b7b4eb00ed91369d7892c42cf8bdf7e7b61e6b"
+    },
+    {
+      "kind": "darkened_pose4",
+      "rewrite_frame": 11,
+      "original_review_frame": 617,
+      "original_png_sha256": "8bec140f81a95f5ad9cb26bb6d4d16a59ac47b6ee83d41c0e1ed3c56cff02f80",
+      "rewrite_indexed_sha256": "f85c2e5c6513e74b7043c311dabcff01bfc1f73f8557b57d7dce2b132c386fe0",
+      "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+      "original_rgb_sha256": "9b591e53967b74ad19991fdfd8270ad8e8e2c1b8cd11af29501639f48a2c821a",
+      "rewrite_rgb_sha256": "9b591e53967b74ad19991fdfd8270ad8e8e2c1b8cd11af29501639f48a2c821a"
+    },
+    {
+      "kind": "ordinary_target_card",
+      "rewrite_frame": 12,
+      "original_review_frame": 647,
+      "original_png_sha256": "7e555a7b40d9aeb9dd620b2063a762d5e59c11de4305a7a02176cfa7a72d3c85",
+      "rewrite_indexed_sha256": "327b96abc15a63fe7b542be062ff2715e46c237bbc17e6522812e58b6b800a66",
+      "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+      "original_rgb_sha256": "ee6d5d186c39afe8ba2a6b6205485b8c7c76aff4ab020d45e8c9b9b560fac1c0",
+      "rewrite_rgb_sha256": "ee6d5d186c39afe8ba2a6b6205485b8c7c76aff4ab020d45e8c9b9b560fac1c0"
+    },
+    {
+      "kind": "sp338_frame0",
+      "rewrite_frame": 13,
+      "original_review_frame": 654,
+      "original_png_sha256": "eb9124d515aade8fdb7155b42d7559c9fa57726db3b6c969de84d645270290a7",
+      "rewrite_indexed_sha256": "6b3d80c1f50864e083e4e5776881f88b057b43f418a9b0fdf4f21683a71f7f37",
+      "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+      "original_rgb_sha256": "0462bbf7062b38e6a1d0704e10d158783b1d3a8bc919f307f0e57723aa337ebd",
+      "rewrite_rgb_sha256": "0462bbf7062b38e6a1d0704e10d158783b1d3a8bc919f307f0e57723aa337ebd"
+    },
+    {
+      "kind": "sp338_frame1",
+      "rewrite_frame": 14,
+      "original_review_frame": 655,
+      "original_png_sha256": "a9ff08490abd0ecffa2e7718f4a4e65080a98f06b4c2c34248963347cd0aea20",
+      "rewrite_indexed_sha256": "6c98ffdaf6a1089abc11a0ef3660252feeb83a0885398b4ce2720cd4acb2cda8",
+      "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+      "original_rgb_sha256": "1cd187ba32976a146c02de6316c3e3b5c3e2ff7a8061cbf3f3992303659b3169",
+      "rewrite_rgb_sha256": "1cd187ba32976a146c02de6316c3e3b5c3e2ff7a8061cbf3f3992303659b3169"
+    },
+    {
+      "kind": "sp338_frame2",
+      "rewrite_frame": 15,
+      "original_review_frame": 658,
+      "original_png_sha256": "202331e952916f74589ff14deff747532ef93eac2bb1b60df8c3c01ea74bbeff",
+      "rewrite_indexed_sha256": "695b39984071a5ea32df678c0b02e4236ff644317d7c63e726f97c32c089024c",
+      "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+      "original_rgb_sha256": "ae3cc4448011cbf2f1ca50caa0bf47cc967783bfd79d3d8f949f696b42577f84",
+      "rewrite_rgb_sha256": "ae3cc4448011cbf2f1ca50caa0bf47cc967783bfd79d3d8f949f696b42577f84"
+    },
+    {
+      "kind": "sp338_frame3",
+      "rewrite_frame": 16,
+      "original_review_frame": 662,
+      "original_png_sha256": "dcd30cc60e9d45bb61197eca757c09586dbc417643292eaa30e09e486050288d",
+      "rewrite_indexed_sha256": "89252e9b6b151c9133862ac9f3ea379b099dd013d192f425fee19944010c7663",
+      "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+      "original_rgb_sha256": "a33ec986b67c4ed4e9efa301cca7a1f84e8b8bbf5f58345639e73ca5d819c75c",
+      "rewrite_rgb_sha256": "a33ec986b67c4ed4e9efa301cca7a1f84e8b8bbf5f58345639e73ca5d819c75c"
+    }
+  ]
+}

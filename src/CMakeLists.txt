@@ -993,6 +993,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_support_all_validation PROPERTIES
         DEPENDS fig_player_support_all_prepare)
     add_test(
+        NAME fig_player_barrier_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-barrier-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-barrier-save"
+    )
+    add_test(
+        NAME fig_player_barrier_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-barrier.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-barrier-save"
+                "${CMAKE_BINARY_DIR}/fig-player-barrier"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-barrier-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_barrier_validation PROPERTIES
+        DEPENDS fig_player_barrier_prepare)
+    add_test(
         NAME fig_flagged_medium_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-flagged-medium-fixture.py"

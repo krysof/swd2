@@ -927,7 +927,11 @@ std::vector<FigEffectStep> fig_effect_timeline(std::uint16_t effect) {
         append_frames(result, 337, 3, -7, -40, true);
         break;
     case 0x62:
-        append_frames(result, 338, 4, 2, 130);
+        // 55fd first calls 5c4c/2bb5.  That card compositor leaves 4325 at
+        // party*18+8; the handler then adds two columns and passes the result
+        // directly to 49c1.  The generic player-target anchor is
+        // party*18+12, so the exact relative offset here is -2, not +2.
+        append_frames(result, 338, 4, -2, 130);
         break;
     case 0x63:
         append_frames(result, 339, 4, -2, 185);
