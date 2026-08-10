@@ -1,0 +1,5 @@
+# Select the default attack and the only monster, resolve one complete round,
+# then stop when the following command collection begins.
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:QUIT

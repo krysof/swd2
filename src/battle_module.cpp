@@ -1800,7 +1800,8 @@ void present_monster_ability_name_card(
     const SpriteArchive& menu_sprites, const LegacyFont& font,
     const LegacyFont& fallback, const BattleVisualState& visual,
     const BattleSessionEvent& event, const BattleAbilityDatabase& abilities,
-    std::uint16_t encounter_directory_offset) {
+    std::uint16_t encounter_directory_offset,
+    bool include_party_cards = true) {
     if (event.source >= visual.monsters.size() ||
         event.ability_id >= abilities.abilities().size()) {
         return;
@@ -1820,7 +1821,8 @@ void present_monster_ability_name_card(
     present_monster_compact_card(
         context, base_surface, encounter, items, menu_sprites,
         font, fallback, visual, source_event, name,
-        encounter_directory_offset, columns, 0x00, 10);
+        encounter_directory_offset, columns, 0x00, 10, nullptr,
+        include_party_cards);
 }
 
 void present_summoned_ally_action_card(
@@ -2576,10 +2578,22 @@ bool present_round_events(
             (event.kind == BattleEventKind::monster_ability ||
              event.kind == BattleEventKind::monster_heal);
         if (monster_named_action) {
+            if (event.kind == BattleEventKind::monster_heal) {
+                // 20e7 begins every enemy turn by flipping a bare 2db8 page
+                // and copying it to scratch before the low-HP decision. Keep
+                // that real page in front of 262f even though the portable
+                // session has already resolved the decision atomically.
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+            }
             present_monster_ability_name_card(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, abilities,
-                encounter_directory_offset);
+                encounter_directory_offset,
+                event.kind != BattleEventKind::monster_heal);
         }
         const auto player_identity =
             event.kind == BattleEventKind::player_attack &&
@@ -2629,6 +2643,24 @@ bool present_round_events(
                     menu_sprites, font, fallback, visual, event, std::nullopt,
                     {}, std::nullopt, encounter_directory_offset);
             }
+        }
+        if (event.kind == BattleEventKind::monster_heal) {
+            // 26af's self-heal branch commits HP immediately after 262f and
+            // returns through 2938. It never enters 2ac7/144e, so there is no
+            // floating healing number. Both the name card and 22e0 cleanup
+            // inherit the bare 2db8 battlefield; party cards reappear only
+            // when the next player action composes 137a.
+            apply_visual_event(visual, event, abilities);
+            if (finish_monster_action_here) {
+                if (!delay(ward_card_delay)) return false;
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                if (!delay(action_delay)) return false;
+            }
+            continue;
         }
         const auto monster_side_dispatcher = event.source_is_monster &&
             (event.kind == BattleEventKind::monster_ability ||
@@ -3467,12 +3499,19 @@ bool present_round_events(
             // next action. If this is the round's last event, the caller's
             // initiative-loop rejoin immediately owns the bare 2db8 page, so
             // do not expose an intermediate card page the original never
-            // displays on the victory/round boundary.
+            // displays on the victory/round boundary. The low-HP self-heal
+            // sample retains 137a's acting pose for this one flip before the
+            // following enemy turn replaces it with its bare 20e7 page.
             if (event_index + 1U < result.events.size()) {
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
-                    std::nullopt, {}, std::nullopt,
+                    pose_count != 0 &&
+                            result.events[event_index + 1U].kind ==
+                                BattleEventKind::monster_heal
+                        ? std::optional<std::size_t>{poses[pose_count - 1U]}
+                        : std::nullopt,
+                    {}, std::nullopt,
                     encounter_directory_offset);
             }
             continue;

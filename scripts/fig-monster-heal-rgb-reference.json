@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_monster_self_heal_sequence",
+  "status": "exact_rgb_checkpoint",
+  "formation_directory_offset": 288,
+  "monster_definition_id": 368,
+  "healing_ability_id": 50,
+  "healing_value": 52,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "8dfd222cc35a185fb1c7a6face289bfb8b88a1d385bc85fa48b9c73071a96e06",
+  "capture_autotype": "original-fig-monster-heal-autotype.txt",
+  "capture_autotype_sha256": "2df2c21a639d298945d194b650978dfa150887c0dc626e0df1de81ec9a9c2df0",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 30,
+  "capture_video_sha256": "8b1e5d8a426e0893045e4ba8ea6b84196e946ca6b81dd681640a4b76c1f9cda7",
+  "capture_manifest_sha256": "b8f9a3c3e317e5fadebbe656e4e5092a9086048c91e84dc28e653639da79d8f5",
+  "rewrite_video": {
+    "frames": 51,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "2228dac7ccc105a1"
+  },
+  "rewrite_audio": {
+    "music_calls": 2,
+    "voice_calls": 3,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "f92e3cd250050875"
+  },
+  "rewrite_delay_milliseconds": 1082,
+  "rewrite_state_fnv1a64": "e020bd851ad0f8bd",
+  "pages": [
+    {
+      "label": "player damage result retained before self-heal turn",
+      "rewrite_frame": 23,
+      "original_review_frame": 505,
+      "original_png_sha256": "7015dc23c23e613a0fb9d0218b31f7895c15852311891bd096022ab281f14ec8",
+      "rewrite_indexed_sha256": "c624643f145a9ecac30dd6001625714a8044c24e48b6c66df3b76f218f72bae9",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "9fe253a595146a712c03093e8cc5c318940af621450ca974c5167b883a06f554",
+      "original_rgb_sha256": "9fe253a595146a712c03093e8cc5c318940af621450ca974c5167b883a06f554"
+    },
+    {
+      "label": "player cleanup retains the acting pose",
+      "rewrite_frame": 24,
+      "original_review_frame": 529,
+      "original_png_sha256": "d5be2c21f24b8b7d639c6a7a4f19a6ad2f242b6389653e3dc78d470b7423e771",
+      "rewrite_indexed_sha256": "8da916b414a7173ee765416472642565c2d40b85ccf223c711cae5479fd35be1",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "123f68e82bd3e54f9d380028e100737ac5cb01ae45d5ed919ddd14f79f5ec4d5",
+      "original_rgb_sha256": "123f68e82bd3e54f9d380028e100737ac5cb01ae45d5ed919ddd14f79f5ec4d5"
+    },
+    {
+      "label": "monster-turn bare preparation page",
+      "rewrite_frame": 25,
+      "original_review_frame": 531,
+      "original_png_sha256": "a6c46d6385f09163354d4d5e50393532f500b4ea43fc11a94ddf960391003d64",
+      "rewrite_indexed_sha256": "f3ee9d9a8471817b20ccef758e25d3adff0de63b8e6ada9a21027acf8a626dbf",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "8e165ac96a810867474843375b0bdcb67c4b8c885e55e5990004b617a4ec51c6",
+      "original_rgb_sha256": "8e165ac96a810867474843375b0bdcb67c4b8c885e55e5990004b617a4ec51c6"
+    },
+    {
+      "label": "self-heal name card on the bare battlefield",
+      "rewrite_frame": 26,
+      "original_review_frame": 550,
+      "original_png_sha256": "7c32d393f53b76421d9f7965c01acdb355ef008730dd4d2924447cab90d313b1",
+      "rewrite_indexed_sha256": "6705adb4710055ae52e0bfc6b545bed9267e413422e26d167410c1bb53757be9",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "8e13e93912850634ba2e5e9e4fa2338c0d39f5a21a1a8f3d493bc229008dad10",
+      "original_rgb_sha256": "8e13e93912850634ba2e5e9e4fa2338c0d39f5a21a1a8f3d493bc229008dad10"
+    },
+    {
+      "label": "self-heal clean tail without a floating number",
+      "rewrite_frame": 27,
+      "original_review_frame": 576,
+      "original_png_sha256": "a6c46d6385f09163354d4d5e50393532f500b4ea43fc11a94ddf960391003d64",
+      "rewrite_indexed_sha256": "f3ee9d9a8471817b20ccef758e25d3adff0de63b8e6ada9a21027acf8a626dbf",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "8e165ac96a810867474843375b0bdcb67c4b8c885e55e5990004b617a4ec51c6",
+      "original_rgb_sha256": "8e165ac96a810867474843375b0bdcb67c4b8c885e55e5990004b617a4ec51c6"
+    },
+    {
+      "label": "following player pose reinstalls the party card",
+      "rewrite_frame": 28,
+      "original_review_frame": 585,
+      "original_png_sha256": "15eb818718f4a826526f4964263ef52644fe9978e3716d9b55bc5dd371ec33fc",
+      "rewrite_indexed_sha256": "71142a4f6b5ec33467c98a04faa4b19c4e41dcc70febc1f552d986893e5f427e",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "70e52f5c11a469cd04beeaaa5725ebd1482febeb6c606f6ebb497aba829030b0",
+      "original_rgb_sha256": "70e52f5c11a469cd04beeaaa5725ebd1482febeb6c606f6ebb497aba829030b0"
+    }
+  ]
+}
