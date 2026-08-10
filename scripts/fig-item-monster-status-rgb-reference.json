@@ -163,8 +163,8 @@
       "formation_directory_offset": 392,
       "outcome": "resisted",
       "fixture_save_sha256": "aa83ffdd7f19dc7acb3276f1ac30930adee355e8e60dc19687ecb245a39aa19f",
-      "capture_video_sha256": "a9a3c727d8970c0c7f55695ee23598d7c8b5273313bd34918f04e1a78107049d",
-      "capture_manifest_sha256": "4a76dc47239746b3fafd3d2fe1285c916ae9b77cf2f0c0f8aaecda61c339e080",
+      "capture_video_sha256": "c0fd2137f0136f46b0f90d887779c76d4385f8658423b2be8e308a1d7290d252",
+      "capture_manifest_sha256": "5f54ab6d647437ca5f3b0b3523fa6fac7f45eeae83fc51e25f9bc2924b39040c",
       "rewrite_input": {
         "total": 4,
         "consumed": 4,
@@ -175,16 +175,16 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 107
+        "frontend": 112
       },
       "rewrite_video": {
         "frames": 49,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "712d7832df3178db"
+        "fnv1a64": "07e71bf797a94bd4"
       },
-      "rewrite_delay_milliseconds": 912,
+      "rewrite_delay_milliseconds": 983,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,

@@ -3665,6 +3665,8 @@ bool present_round_events(
                 present_battle_surface(context, restored);
                 if (!delay(effect_delay)) return false;
             }
+            // The direct/learned caller's existing round tail owns the
+            // subsequent 0d98 page. Do not add a second bare hold here.
             continue;
         }
         if (event.kind == BattleEventKind::monster_attack &&
@@ -3959,10 +3961,11 @@ bool present_round_events(
             if (retained_immunity_handler) {
                 // 5b06 finishes 5a91 by replacing the immunity card with a
                 // clean dispatcher-anchor page. Only after that handler
-                // returns does 585e debit the pool; 4417 then restores
-                // colours C0h..DFh while the already visible pre-debit clean
-                // page remains. The anchor is pose 4 after learned entry
-                // 4338, but remains pose 0 after direct ITEM entry 1138.
+                // returns does 585e debit the pool; 4417 then redraws the
+                // dispatcher anchor with the paid resource bar before it
+                // restores colours C0h..DFh. The anchor is pose 4 after
+                // learned entry 4338, but remains pose 0 after direct ITEM
+                // entry 1138.
                 auto restored = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
@@ -3974,12 +3977,32 @@ bool present_round_events(
                 }
                 present_battle_surface(context, restored);
                 present_player_resource_cost(event);
+                restored = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::optional<std::size_t>{dispatcher_effect_pose}, {},
+                    std::nullopt,
+                    encounter_directory_offset);
+                if (dispatcher_palette_override) {
+                    restored.palette = *dispatcher_palette_override;
+                }
                 for (auto step = 0; step < 5; ++step) {
                     brighten_fig_dispatcher_palette(
                         restored, base_surface.palette);
                     present_battle_surface(context, restored);
                     if (!delay(effect_delay)) return false;
                 }
+                // The resisted handler returns through the same 0c41/0d98
+                // player tail as a successful status application. Preserve
+                // its five-tick bare boundary before the next initiative.
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                if (!delay(ward_card_delay)) return false;
+                continue;
             }
         }
         if (!status_text.empty() &&

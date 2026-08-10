@@ -12,6 +12,15 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
+EXPECTED_KINDS = (
+    "target_pose0", "target_pose4", "darkened_pose4",
+    "effect_first", "effect_last", "immunity_card",
+    "restoration_step2", "restoration_step3", "restoration_step4",
+    "restoration_step5", "player_boundary_bare",
+    "round_boundary_bare", "next_command_page",
+)
+
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -62,6 +71,9 @@ def main() -> int:
         if trace.get("input") != expected["rewrite_input"] or \
                 trace.get("boundaries") != expected["rewrite_boundaries"] or \
                 trace.get("video") != expected["rewrite_video"] or \
+                trace.get("delay_milliseconds") != \
+                expected["rewrite_delay_milliseconds"] or \
+                trace.get("audio") != expected["rewrite_audio"] or \
                 trace.get("frame_fnv1a64", [])[-1:] != [
                     expected["rewrite_final_fnv1a64"]]:
             raise ValueError("FIG monster-immunity replay differs")
@@ -79,9 +91,17 @@ def main() -> int:
         if len(frames) != expected["rewrite_video"]["frames"]:
             raise ValueError("FIG monster-immunity frame count differs")
         matched = expected.get("matched_frames")
-        if not isinstance(matched, list) or len(matched) != 6:
+        if not isinstance(matched, list) or tuple(
+                page.get("kind") for page in matched) != EXPECTED_KINDS:
             raise ValueError("FIG monster-immunity page set differs")
+        previous_rewrite = -1
+        previous_original = -1
         for page in matched:
+            if page["rewrite_frame"] <= previous_rewrite or \
+                    page["original_review_frame"] <= previous_original:
+                raise ValueError("FIG monster-immunity page order differs")
+            previous_rewrite = page["rewrite_frame"]
+            previous_original = page["original_review_frame"]
             pixels, palette = frames[page["rewrite_frame"]]
             rgb = expand_rgb(pixels, palette)
             if sha256(pixels) != page["rewrite_indexed_sha256"] or \
@@ -97,9 +117,12 @@ def main() -> int:
         for name in ("capture_harness_sha256", "capture_video_sha256",
                      "capture_manifest_sha256"):
             digest(expected.get(name), name)
+        limitation = expected.get("capture_limitation")
+        if not isinstance(limitation, str) or "DAC" not in limitation:
+            raise ValueError("FIG monster-immunity capture limitation missing")
         print(
-            "FIG monster-immunity checkpoint: target pose, five-step darken, "
-            "SP332, and 59a1 card exactly match original RGB")
+            "FIG monster-immunity checkpoint: 13 stable pose/SP332/card/"
+            "restoration/boundary pages exactly match original RGB")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:
