@@ -1108,6 +1108,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_item_damage_validation PROPERTIES
         DEPENDS fig_item_damage_prepare)
     add_test(
+        NAME fig_item_barrier_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-item-barrier-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-item-barrier-save"
+    )
+    add_test(
+        NAME fig_item_barrier_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-item-barrier.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-item-barrier-save"
+                "${CMAKE_BINARY_DIR}/fig-item-barrier"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-item-barrier-rgb-reference.json"
+    )
+    set_tests_properties(fig_item_barrier_validation PROPERTIES
+        DEPENDS fig_item_barrier_prepare)
+    add_test(
         NAME fig_flagged_medium_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-flagged-medium-fixture.py"
