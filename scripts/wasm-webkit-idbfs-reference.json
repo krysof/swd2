@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "wasm_webkit_idbfs_restart",
+  "status": "verified",
+  "limitation": "Headless Playwright WebKit is not a physical iOS device or branded Safari test.",
+  "browser": "Playwright WebKit 26.5",
+  "host": {
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "device_scale_factor": 2
+  },
+  "idbfs": {
+    "initial_sync": "completed",
+    "exact_probe_write": "completed",
+    "top_level_navigations": 2,
+    "restored_bytes": "exact",
+    "cleanup_sync": "completed",
+    "intentional_reload_abort_errors": 1,
+    "result": "pass"
+  },
+  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Safari/605.1.15",
+  "assets": {
+    "index.html": "ab07d8d571fa0ca64b99c5fd21abfd76ef423679e51b197fdf2ab6cc6e0088f5",
+    "index.js": "382829f604ae852b2cc4ffbaa6be624d826565409c7c74e803b7c7a6cfb77f19",
+    "index.wasm": "386ffc085fba725331bcd8a586e93995cc28a3314bdc708f6c3d8d6cabe766f3",
+    "index.data": "cc57db3e8963aaabed56cd2cf9a774da1575175c4182046bebfe828687760321"
+  },
+  "captured_at": "2026-08-10T16:00:32+09:00"
+}

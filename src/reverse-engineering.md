@@ -1491,6 +1491,11 @@ ASYNCIFY 与 SDL 进入 28 个世界帧，松开后零追加输入。它证明�
 `syncfs(false)` 后重载，第二页 `syncfs(true)`、逐字节比较、删除并再次提交；只有完整
 两次页面生命周期成功才写 `data-idbfs-self-test=pass`。Edge 151 已通过该真实浏览器
 往返，但其他主流浏览器仍未进入矩阵，save-roundtrips 门不提前改为 `verified`。
+现在另用 `verify-wasm-webkit-idbfs.mjs` 启动 Playwright WebKit 26.5 的实际进程，以
+390x844/2x 上下文执行相同的两文档周期；它记录恰好两次顶层导航、精确恢复、清理提交和
+`pass`。WebKit 会在主动重载第一文档时报告一次预期的 `TypeError: Load failed`（被中止的
+WASM/data loader），runner 只允许这一条且拒绝额外页面错误。该证据独立于 Chromium，
+但仍明确不是品牌 Safari 或物理 iOS，不能据此关闭移动浏览器验收项。
 
 五个便携槽实际是 SAVE/MAPZ/NAME 三件套，而不是两件套：原版 `4ce6..4d29` 写
 `SAVE.DAn`、`MAPZ.DAn` 和 `NAME<n>.DSK`，`4c16..4c73` 读三者并把槽位 NAME

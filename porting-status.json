@@ -125,8 +125,8 @@
         "五个槽位 SAVE、MAPZ 和 NAME 作为同一事务保存/读取",
         "桌面文件系统与浏览器 IDBFS 重启往返均无字节或状态丢失"
       ],
-      "evidence": ["src/save_slot.cpp", "src/legacy_font.cpp", "src/rpg_module.cpp", "src/main.cpp", "src/web/shell.html", "src/tests/test_main.cpp", "scripts/verify-save-roundtrips.sh", "scripts/verify-live-save-pair.py", "scripts/verify-explicit-save-routing.py", "scripts/verify-no-save-mode.py", "scripts/replay-new-game-startup.txt", "scripts/replay-explicit-save.txt"],
-      "remaining": ["在 Edge 以外的主流浏览器矩阵记录 data-idbfs-self-test=pass", "在物理移动浏览器重启后复核三件套存档往返"]
+      "evidence": ["src/save_slot.cpp", "src/legacy_font.cpp", "src/rpg_module.cpp", "src/main.cpp", "src/web/shell.html", "src/tests/test_main.cpp", "scripts/verify-save-roundtrips.sh", "scripts/verify-live-save-pair.py", "scripts/verify-explicit-save-routing.py", "scripts/verify-no-save-mode.py", "scripts/replay-new-game-startup.txt", "scripts/replay-explicit-save.txt", "scripts/verify-wasm-browser-input.mjs", "scripts/wasm-browser-input-reference.json", "scripts/verify-wasm-webkit-idbfs.mjs", "scripts/wasm-webkit-idbfs-reference.json"],
+      "remaining": ["已通过 Edge 151 与独立 WebKit 26.5；继续补品牌 Firefox/Safari 等主流浏览器矩阵", "在物理移动浏览器重启后复核三件套存档往返"]
     },
     {
       "id": "native_and_wasm_builds",

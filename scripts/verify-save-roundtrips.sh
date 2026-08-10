@@ -46,4 +46,5 @@ fi
 
 printf '%s\n' \
   'SAVE/MAPZ/NAME verification: native five-slot, live new-game slot, explicit Record routing, --no-save isolation, and simulated IDBFS reload passed.' \
-  'Run the WASM site with ?idbfs-self-test=TOKEN in a real browser and require data-idbfs-self-test="pass".'
+  'Run verify-wasm-browser-input.mjs for Chromium/Edge and verify-wasm-webkit-idbfs.mjs for an independent WebKit IDBFS restart boundary.' \
+  'Physical iOS/Android restart checks remain required before the completion gate can close.'

@@ -379,6 +379,18 @@ WASM 构建可在本机已安装的 Chromium/Edge 中执行真实浏览器触摸
   --output build-wasm/wasm-browser-input-report.json
 ```
 
+另有独立的 WebKit/IDBFS runner，不把 Chromium 的同一实现重复算成第二个浏览器。
+它启动 Playwright WebKit 的实际浏览器进程，要求第一次文档写入并提交探针、自动重载，
+第二次文档逐字节恢复、删除并再次提交；它只证明桌面 WebKit 内核的持久化边界，不冒充
+品牌 Safari 或物理 iPhone。若 Playwright 未安装在当前 Node 搜索路径，可显式给包目录：
+
+```sh
+./scripts/verify-wasm-webkit-idbfs.mjs build-wasm/site \
+  --playwright /path/to/node_modules/playwright \
+  --reference scripts/wasm-webkit-idbfs-reference.json \
+  --output build-wasm/wasm-webkit-idbfs-report.json
+```
+
 该测试使用移动视口模拟，不能替代物理 iOS/Android 设备验收；报告会保留这个限制。
 
 模拟并验证启动器协议。列表中的每一项是相应子模块返回的共享标记：
