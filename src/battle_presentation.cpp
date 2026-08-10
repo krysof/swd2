@@ -18,6 +18,11 @@ bool fig_same_presented_action(const BattleSessionEvent& left,
         case BattleEventKind::player_ability: return 1;
         case BattleEventKind::monster_ability: return 2;
         case BattleEventKind::ally_ability: return 3;
+        case BattleEventKind::medium_summoned:
+        case BattleEventKind::medium_dismissed:
+            return event.source_is_summoned_ally
+                       ? 3
+                       : (event.source_is_monster ? 2 : 1);
         case BattleEventKind::missing_medium:
             return event.source_is_summoned_ally
                        ? 3
@@ -498,6 +503,16 @@ std::optional<std::size_t> fig_medium_from_target_flags(
     if ((target_flags & 0x0040U) != 0) return 1;
     if ((target_flags & 0x0020U) != 0) return 2;
     return std::nullopt;
+}
+
+std::optional<std::size_t> fig_summoned_medium(
+    std::uint16_t effect_code) noexcept {
+    switch (effect_code) {
+    case 0x31: return 0;
+    case 0x3b: return 1;
+    case 0x3c: return 2;
+    default: return std::nullopt;
+    }
 }
 
 std::optional<std::size_t> fig_dismissed_medium(

@@ -397,6 +397,26 @@ BattleRoundResult BattleSession::play_round(
                 event.effect_code = effect_code;
                 result.events.push_back(event);
             };
+            const auto apply_player_medium = [&](std::uint16_t effect_code,
+                                                 std::uint16_t presentation_id) {
+                const auto medium = fig_summoned_medium(effect_code);
+                if (!medium) return false;
+
+                // 4792/47c6/47fa call 5b41 unconditionally and store the
+                // final AEh/AFh/B0h coordinates in the persistent slot.
+                // Recasting an installed medium therefore still flies it;
+                // this is not 58fa's target-flag prerequisite failure.
+                battle_media_[*medium] = true;
+                BattleSessionEvent event;
+                event.kind = BattleEventKind::medium_summoned;
+                event.source = actor;
+                event.target = *medium;
+                event.ability_id = presentation_id;
+                event.effect_code = effect_code;
+                event.action_anchor_is_target = false;
+                result.events.push_back(event);
+                return true;
+            };
             // Both learned abilities and type-10 ITEM wrappers enter the same
             // FIG effect table.  Keep the state-bearing tactical entries in a
             // single adapter so composite selector 6b can dispatch them from
@@ -457,6 +477,9 @@ BattleRoundResult BattleSession::play_round(
                                               : actor;
                 for (const auto effect_code : nested) {
                     if (monsters_[target_index].hit_points == 0) break;
+                    if (apply_player_medium(effect_code, presentation_id)) {
+                        continue;
+                    }
                     if (const auto medium = fig_required_medium(effect_code);
                         medium && !battle_media_[*medium]) {
                         // 58fa discards only the selected visual handler's
@@ -804,6 +827,8 @@ BattleRoundResult BattleSession::play_round(
                         BattleEventKind::player_ability, false, actor,
                         item.targets_monster(), command.target, item.id,
                     });
+                } else if (apply_player_medium(item.effect_code, item.id)) {
+                    applied = true;
                 } else if (item.targets_monster()) {
                     const auto target_index = first_living_monster(command.target);
                     if (target_index == no_target) break;
@@ -1032,6 +1057,11 @@ BattleRoundResult BattleSession::play_round(
                                    targets_monster, target_index);
                 // Resource subtraction follows the effect dispatcher in FIG;
                 // 58fa's stack exit suppresses the effect, not command payment.
+                finish_successful_ability();
+                continue;
+            }
+            if (apply_player_medium(ability.effect_code,
+                                    command.ability_id)) {
                 finish_successful_ability();
                 continue;
             }

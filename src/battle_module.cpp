@@ -2016,10 +2016,14 @@ bool present_medium_summon_animation(
     const SpriteArchive& menu_sprites, const LegacyFont& font,
     const LegacyFont& fallback, const BattleVisualState& visual,
     const BattleSessionEvent& event,
-    std::uint16_t encounter_directory_offset) {
+    std::uint16_t encounter_directory_offset,
+    BattleSurface* retained_player_surface = nullptr) {
     const auto summoned_source = event.source_is_summoned_ally;
-    if ((!summoned_source && event.source >= visual.monsters.size()) ||
+    const auto player_source = !event.source_is_monster && !summoned_source;
+    if ((event.source_is_monster && event.source >= visual.monsters.size()) ||
         (summoned_source && event.source >= visual.summoned_ally_present.size()) ||
+        (player_source && (event.source >= visual.party_count ||
+                           retained_player_surface == nullptr)) ||
         event.target >= visual.media.size()) {
         return true;
     }
@@ -2035,6 +2039,10 @@ bool present_medium_summon_animation(
         const auto action = fig_summoned_action_card_placement(event.source);
         current_x = static_cast<std::uint16_t>(action.left / 4 + 0x0f);
         current_y = 0x0f;
+    } else if (player_source) {
+        // 4792/47c6/47fa copy DS:31e3 and fix y=160 before 5b41.
+        current_x = static_cast<std::uint16_t>(12U + event.source * 18U);
+        current_y = 0xa0;
     } else {
         const auto [source_left, source_top] = monster_visual_center(
             encounter, items, context.game_root, event.source);
@@ -2050,17 +2058,24 @@ bool present_medium_summon_animation(
     if (horizontal_step > 0x50U) horizontal_step = 0x14U;
     horizontal_step = static_cast<std::uint16_t>(horizontal_step / 0x14U);
     if (horizontal_step == 0) horizontal_step = 1;
+    const auto player_background = player_source
+                                       ? std::optional<BattleSurface>{
+                                             *retained_player_surface}
+                                       : std::nullopt;
 
     for (std::size_t guard = 0; guard < 512U; ++guard) {
-        auto frame = base_surface;
-        draw_battle_media(frame, menu_sprites, visual.media);
-        draw_summoned_ally_name_cards(
-            frame, menu_sprites, font, fallback, visual);
-        draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
-                     visual.monsters,
-                     summoned_source ? std::nullopt
-                                     : std::optional<std::size_t>(event.source),
-                     encounter_directory_offset);
+        auto frame = player_source ? *player_background : base_surface;
+        if (!player_source) {
+            draw_battle_media(frame, menu_sprites, visual.media);
+            draw_summoned_ally_name_cards(
+                frame, menu_sprites, font, fallback, visual);
+            draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
+                         visual.monsters,
+                         summoned_source
+                             ? std::nullopt
+                             : std::optional<std::size_t>(event.source),
+                         encounter_directory_offset);
+        }
         blit(frame, menu_sprites, sprite_frame,
              static_cast<int>(current_x) * 4, static_cast<int>(current_y));
         if (summoned_source) {
@@ -2073,6 +2088,7 @@ bool present_medium_summon_animation(
             320, 200, frame.pixels,
             std::span<const std::uint8_t, 768>(frame.palette),
         });
+        if (player_source) *retained_player_surface = frame;
         if (!delay_for_or_frontend_quit(
                 context.platform, std::chrono::milliseconds(14))) {
             return false;
@@ -2132,7 +2148,9 @@ bool present_round_events(
         }
         const auto& command = commands[event.source];
         if (event.kind != BattleEventKind::player_ability &&
-            event.kind != BattleEventKind::missing_medium) {
+            event.kind != BattleEventKind::missing_medium &&
+            event.kind != BattleEventKind::medium_summoned &&
+            event.kind != BattleEventKind::medium_dismissed) {
             return;
         }
         auto cost = std::uint16_t{};
@@ -2145,7 +2163,9 @@ bool present_round_events(
             resource_class = static_cast<std::uint8_t>(
                 (ability.target_flags >> 8U) & 0x0fU);
         } else if (command.kind == PlayerCommandKind::item &&
-                   event.resulting_player_support_state &&
+                   (event.resulting_player_support_state ||
+                    event.kind == BattleEventKind::medium_summoned ||
+                    event.kind == BattleEventKind::medium_dismissed) &&
                    event.ability_id >= 0x8cU &&
                    static_cast<std::size_t>(event.ability_id) + 2U <
                        items.entry_count()) {
@@ -2391,6 +2411,83 @@ bool present_round_events(
             continue;
         }
         if (event.kind == BattleEventKind::medium_summoned) {
+            if (!event.source_is_monster &&
+                !event.source_is_summoned_ally &&
+                event.source < visual.party_count) {
+                // Player selectors 31h/3bh/3ch share one 4338/1138 caller
+                // envelope even when 57f2 dispatches two of them. Compose
+                // the pose and 43ce darkening once, run each 5b41 flight on
+                // the retained dark page, then perform the single 585e/4417
+                // payment/restoration and 0d98 clean tail.
+                auto group_end = event_index;
+                while (group_end + 1U < result.events.size()) {
+                    const auto& next = result.events[group_end + 1U];
+                    if (next.kind != BattleEventKind::medium_summoned ||
+                        next.source_is_monster ||
+                        next.source_is_summoned_ally ||
+                        !fig_same_presented_action(event, next)) {
+                        break;
+                    }
+                    ++group_end;
+                }
+
+                const auto direct_item =
+                    event.source < commands.size() &&
+                    commands[event.source].kind == PlayerCommandKind::item;
+                auto pose_event = event;
+                pose_event.kind = BattleEventKind::player_ability;
+                pose_event.target_is_monster = false;
+                pose_event.target = event.source;
+                pose_event.action_anchor_is_target = false;
+                const auto ability_poses = fig_player_ability_poses();
+                const auto pose_count = direct_item ? 1U : 2U;
+                BattleSurface retained;
+                for (std::size_t phase = 0; phase < pose_count; ++phase) {
+                    retained = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, pose_event,
+                        ability_poses[phase], {}, std::nullopt,
+                        encounter_directory_offset);
+                    present_battle_surface(context, retained);
+                    if (!delay(action_delay)) return false;
+                }
+                for (auto step = 0; step < 5; ++step) {
+                    darken_fig_dispatcher_palette(retained);
+                    present_battle_surface(context, retained);
+                    if (!delay(effect_delay)) return false;
+                }
+                for (auto index = event_index; index <= group_end; ++index) {
+                    const auto& medium_event = result.events[index];
+                    play_voice_cue(context, {FigVoiceFile::sp, 0x31,
+                                             FigVoiceTiming::before_action});
+                    if (!present_medium_summon_animation(
+                            context, base_surface, encounter, items,
+                            menu_sprites, font, fallback, visual,
+                            medium_event, encounter_directory_offset,
+                            &retained)) {
+                        frontend_abort = true;
+                        return false;
+                    }
+                    apply_visual_event(visual, medium_event, abilities);
+                }
+
+                present_player_resource_cost(event);
+                for (auto step = 0; step < 5; ++step) {
+                    brighten_fig_dispatcher_palette(
+                        retained, base_surface.palette);
+                    present_battle_surface(context, retained);
+                    if (!delay(effect_delay)) return false;
+                }
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                if (!delay(ward_card_delay)) return false;
+                event_index = group_end;
+                continue;
+            }
             if (event.source_is_summoned_ally) {
                 // 0fa7 has already selected the ability and 10fc displays the
                 // fixed “奇術” ally card for nine ticks.  1048 then starts

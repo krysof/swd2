@@ -3005,6 +3005,10 @@ void test_fig_effect_timeline(const std::filesystem::path& game_root) {
                 swd2::fig_medium_from_target_flags(0x0060) == 1 &&
                 swd2::fig_medium_from_target_flags(0x0020) == 2 &&
                 !swd2::fig_medium_from_target_flags(0x0010) &&
+                swd2::fig_summoned_medium(0x31) == 0 &&
+                swd2::fig_summoned_medium(0x3b) == 1 &&
+                swd2::fig_summoned_medium(0x3c) == 2 &&
+                !swd2::fig_summoned_medium(0x3d) &&
                 swd2::fig_dismissed_medium(0x35) == 0 &&
                 swd2::fig_dismissed_medium(0x43) == 1 &&
                 swd2::fig_dismissed_medium(0x53) == 2 &&
@@ -4580,6 +4584,40 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 tactical_nested == std::vector<std::uint16_t>{0x66, 0x69},
             "FIG targetless composite item did not dispatch both tactical effects");
 
+    // Item 195's 6bh pair is not two inert visual-only records. Selectors
+    // 31h/3ch call 5b41 and install AEh/B0h persistently, while 57f2 retains
+    // the ITEM namespace and pays the embedded ability-55 cost only once.
+    auto medium_item_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    medium_item_state.set_u16(0x10, 1);
+    medium_item_state.set_u16(0x382, 195);
+    medium_item_state.set_u16(actor_zero + 0x55, 1000);
+    medium_item_state.set_u16(actor_zero + 0x57, 1000);
+    medium_item_state.set_u16(actor_zero + 0x5d, 1000);
+    auto medium_item_session = swd2::BattleSession::create(
+        medium_item_state, selected->get(), items);
+    auto medium_item_commands = escape_commands;
+    medium_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto medium_item_round = medium_item_session.play_round(
+        medium_item_commands, abilities, zero_random);
+    std::vector<std::pair<std::uint16_t, std::size_t>> installed_media;
+    for (const auto& event : medium_item_round.events) {
+        if (event.kind == swd2::BattleEventKind::medium_summoned &&
+            !event.source_is_monster && !event.source_is_summoned_ally &&
+            event.source == 0 && event.ability_id == 195) {
+            installed_media.emplace_back(event.effect_code, event.target);
+        }
+    }
+    require(medium_item_session.inventory()[0] == 0 &&
+                medium_item_session.party()[0].ability_points == 966 &&
+                medium_item_session.battle_media() ==
+                    std::array<bool, 3>{true, false, true} &&
+                installed_media ==
+                    std::vector<std::pair<std::uint16_t, std::size_t>>{
+                        {0x31, 0}, {0x3c, 2}},
+            "FIG item 195 did not install/pay its two persistent media");
+
     // Direct ITEM selectors enter the same tactical handlers as learned and
     // nested abilities. Cover the unflagged player/self side (62/69) and the
     // monster-buff removal side (61) using the shipped records. Item 226's
@@ -4682,12 +4720,14 @@ void test_battle_session(const std::filesystem::path& game_root) {
         wrapped_composite_commands, abilities, zero_random);
     std::vector<std::uint16_t> wrapped_effects;
     for (const auto& event : wrapped_composite_round.events) {
-        if (event.kind == swd2::BattleEventKind::player_ability &&
+        if (event.kind == swd2::BattleEventKind::medium_summoned &&
             event.source == 0 && event.ability_id == 54) {
             wrapped_effects.push_back(event.effect_code);
         }
     }
     require(wrapped_composite_session.inventory()[0] == 0 &&
+                wrapped_composite_session.battle_media() ==
+                    std::array<bool, 3>{true, true, false} &&
                 wrapped_effects == std::vector<std::uint16_t>{0x31, 0x3b},
             "FIG direct composite item below 8ch did not wrap to its own record");
 
