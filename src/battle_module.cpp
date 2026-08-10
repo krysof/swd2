@@ -4485,8 +4485,12 @@ BattleSurface compose_settlement_scene(
     const ScriptArchive& items, const std::filesystem::path& game_root,
     const SpriteArchive& menu_sprites,
     std::span<const BattlePartyMember> party,
-    std::span<const MonsterBattleState> monsters = {}) {
+    std::span<const MonsterBattleState> monsters = {},
+    const std::array<bool, 3>* media = nullptr) {
     auto frame = base_surface;
+    if (media != nullptr) {
+        draw_battle_media(frame, menu_sprites, *media);
+    }
     if (!monsters.empty()) {
         draw_enemies(frame, encounter, items, game_root, menu_sprites, monsters);
     }
@@ -4505,7 +4509,7 @@ std::optional<BattleSurface> present_victory_summary(
     auto frame = compose_settlement_scene(
         base_surface, encounter, items, context.game_root, menu_sprites,
         std::span<const BattlePartyMember>(session.party()).first(
-            session.party_count()));
+            session.party_count()), {}, &session.battle_media());
     // FIG 04d4: 10x3 compact panel at x=25/y=75; 7284 prints the three
     // DATA:2e0b rows from x=27/y=84, then 3c77 uses digit set 6f.
     draw_message_panel(frame, menu_sprites, 25, 75, 10, 3);
@@ -4565,7 +4569,7 @@ bool present_level_ups(
     const BattleEncounter& encounter, const ScriptArchive& items,
     const SpriteArchive& menu_sprites, const LegacyFont& font,
     const LegacyFont& fallback, const BattleAbilityDatabase& abilities,
-    const BattleDatabase& database) {
+    const BattleDatabase& database, const std::array<bool, 3>& media) {
     const auto party_count = std::min<std::size_t>(
         context.shared_state.u16(0x10), 4U);
     for (std::size_t actor = 0; actor < party_count; ++actor) {
@@ -4587,7 +4591,8 @@ bool present_level_ups(
             auto frame = compose_settlement_scene(
                 base_surface, encounter, items, context.game_root,
                 menu_sprites,
-                std::span<const BattlePartyMember>(party).first(party_count));
+                std::span<const BattlePartyMember>(party).first(party_count),
+                {}, &media);
             draw_message_panel(frame, menu_sprites, 23, 10, 14, 10);
 
             auto title = std::vector<std::uint8_t>(
@@ -5080,7 +5085,8 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             if (!frontend_quit) {
                 frontend_quit = !present_level_ups(
                     context, base_surface, encounter, items, menu_sprites,
-                    command_font, command_name_font, abilities, database);
+                    command_font, command_name_font, abilities, database,
+                    session.battle_media());
             }
             if (frontend_quit) {
                 context.platform.stop_audio();
