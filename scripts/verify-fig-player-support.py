@@ -22,6 +22,12 @@ EXPECTED_CASES = {
         "support_after_all", "player_action_boundary",
         "following_monster_action_card",
     ),
+    (81, 0x03): (
+        "target_selector", "common_pose0", "common_pose4",
+        "support_result", "player_action_boundary",
+        "following_monster_action_card", "monster_action_first",
+        "rising_damage_final", "next_command",
+    ),
 }
 
 
@@ -120,8 +126,8 @@ def main() -> int:
             digest(expected.get(name), name)
         print(
             "FIG player-support checkpoint: selector "
-            f"{expected['effect_code']:02x}h before/after cards, "
-            "deferred gauge debit and 0d98 boundary exactly match original RGB")
+            f"{expected['effect_code']:02x}h target/pose/result pages, "
+            "deferred gauge debit and action tail exactly match original RGB")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:
