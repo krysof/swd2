@@ -2163,8 +2163,10 @@ bool present_round_events(
             }
             const auto& ability = abilities.ability(embedded_id);
             cost = ability.cost;
-            resource_class = static_cast<std::uint8_t>(
-                (ability.target_flags >> 8U) & 0x0fU);
+            // 184f and the direct-item return both hard-wire actor +55 AP.
+            // item_id-8c selects the embedded cost/effect, but its learned-
+            // ability resource nibble does not redirect an ITEM payment.
+            resource_class = 4U;
         } else {
             return;
         }
@@ -3589,9 +3591,9 @@ bool present_round_events(
                         event.ability_id - 0x8cU);
                     if (item.type == 0x10U &&
                         embedded_id < abilities.abilities().size()) {
-                        resource_class = static_cast<std::uint8_t>(
-                            (abilities.ability(embedded_id).target_flags >>
-                             8U) & 0x0fU);
+                        // The direct-item caller always pays actor +55 AP,
+                        // even when the embedded learned record is class 5.
+                        resource_class = 4U;
                     }
                 }
             }

@@ -4136,6 +4136,75 @@ void test_battle_session(const std::filesystem::path& game_root) {
     require(!poor_item_menu.entries()[0].enabled,
             "FIG type-10 item menu ignored the embedded ability affordability check");
 
+    // Direct ITEM 242 wraps ability 102, whose learned-command resource
+    // nibble is class five. FIG 184f/1138 nevertheless price the inventory
+    // object against actor +55 AP; the five elemental counters are neither
+    // required nor consumed on this entry path.
+    constexpr auto direct_class_five_item_id = std::uint16_t{242};
+    const auto direct_class_five_record = items.entry(
+        static_cast<std::size_t>(direct_class_five_item_id) + 2U);
+    const auto direct_class_five_item = swd2::BattleItemDefinition::parse(
+        direct_class_five_item_id, direct_class_five_record);
+    constexpr auto direct_class_five_ability_id = std::size_t{102};
+    const auto& direct_class_five_ability =
+        abilities.ability(direct_class_five_ability_id);
+    require(direct_class_five_item.type == 0x10U &&
+                direct_class_five_item.effect_code == 0x0aU &&
+                ((direct_class_five_ability.target_flags >> 8U) & 0x0fU) == 5U &&
+                direct_class_five_ability.cost == 30U,
+            "ITEM 242 no longer provides the direct class-five discriminator");
+    auto direct_class_five_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    direct_class_five_state.set_u16(0x10, 1);
+    direct_class_five_state.set_u16(0x382, direct_class_five_item_id);
+    direct_class_five_state.set_u16(0x106 + 0x55,
+                                    direct_class_five_ability.cost);
+    direct_class_five_state.set_u16(0x106 + 0x57, 1000);
+    direct_class_five_state.set_u16(0x106 + 0x5d, 1000);
+    for (std::size_t index = 0; index < 5; ++index) {
+        direct_class_five_state.set_u16(0x3e6 + index * 2U, 0);
+    }
+    auto direct_class_five_session = swd2::BattleSession::create(
+        direct_class_five_state, selected->get(), items);
+    swd2::BattleCommandMenu direct_class_five_menu(
+        direct_class_five_session, abilities, items);
+    direct_class_five_menu.input(swd2::InputAction::right);
+    direct_class_five_menu.input(swd2::InputAction::confirm);
+    require(direct_class_five_menu.entries()[0].enabled,
+            "FIG item 242 incorrectly required class-five counters instead of AP");
+
+    auto direct_class_five_poor_state = direct_class_five_state;
+    direct_class_five_poor_state.set_u16(
+        0x106 + 0x55,
+        static_cast<std::uint16_t>(direct_class_five_ability.cost - 1U));
+    for (std::size_t index = 0; index < 5; ++index) {
+        direct_class_five_poor_state.set_u16(0x3e6 + index * 2U, 2);
+    }
+    auto direct_class_five_poor_session = swd2::BattleSession::create(
+        direct_class_five_poor_state, selected->get(), items);
+    swd2::BattleCommandMenu direct_class_five_poor_menu(
+        direct_class_five_poor_session, abilities, items);
+    direct_class_five_poor_menu.input(swd2::InputAction::right);
+    direct_class_five_poor_menu.input(swd2::InputAction::confirm);
+    require(!direct_class_five_poor_menu.entries()[0].enabled,
+            "FIG item 242 accepted elemental counters in place of AP");
+
+    std::array<swd2::PlayerBattleCommand, 4> direct_class_five_commands{};
+    for (auto& command : direct_class_five_commands) {
+        command = {swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+    direct_class_five_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    direct_class_five_session.play_round(
+        direct_class_five_commands, abilities, zero_random);
+    require(direct_class_five_session.party()[0].ability_points == 0 &&
+                std::all_of(
+                    direct_class_five_session.special_item_counts().begin(),
+                    direct_class_five_session.special_item_counts().end(),
+                    [](std::uint16_t count) { return count == 0; }),
+            "FIG item 242 did not charge AP while preserving elemental counters");
+
     // FIG resource class five treats the ability "cost" as a mask over the
     // five shared counters at +3e6 rather than subtracting a numeric pool.
     auto class_five_state = swd2::SharedState::load(game_root / "SAVE.DA1");

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay and lock item 190's selector-01h pages and deferred AP debit."""
+"""Replay and lock direct type-10 support-item pages and deferred AP debit."""
 
 from __future__ import annotations
 
@@ -17,6 +17,10 @@ EXPECTED_PAGES = (
     "player_action_boundary", "post_debit_monster_action_card",
     "post_debit_monster_attack_pose",
 )
+EXPECTED_ITEMS = {
+    190: (50, 0x01, 4, 7),
+    242: (102, 0x0A, 5, 30),
+}
 
 
 def sha256(data: bytes) -> str:
@@ -40,16 +44,28 @@ def main() -> int:
     args = parser.parse_args()
     try:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
+        item_id = expected.get("item_id")
         if expected.get("schema_version") != 1 or \
                 expected.get("kind") != "original_fig_direct_item_support" or \
                 expected.get("formation_directory_offset") != 392 or \
-                (expected.get("item_id"), expected.get("canonical_ability_id"),
+                item_id not in EXPECTED_ITEMS or \
+                (expected.get("canonical_ability_id"),
                  expected.get("effect_code"), expected.get("resource_class"),
-                 expected.get("resource_cost")) != (190, 50, 1, 4, 7) or \
+                 expected.get("resource_cost")) != EXPECTED_ITEMS[item_id] or \
+                expected.get("payment_pool") != "ability_points" or \
                 expected.get("capture_wait_seconds") != 5 or \
                 expected.get("capture_pace_seconds") != 0.5 or \
                 expected.get("capture_time_limit_seconds") != 15:
             raise ValueError("unsupported FIG item-support reference")
+        if item_id == 242:
+            for name in ("zero_ap_capture_video_sha256",
+                         "zero_ap_capture_manifest_sha256",
+                         "zero_ap_fixture_save_sha256",
+                         "zero_ap_notice_png_sha256",
+                         "zero_ap_notice_rgb_sha256"):
+                digest(expected.get(name), name)
+            if expected.get("zero_ap_notice_review_frame") != 450:
+                raise ValueError("FIG class-5 item zero-AP review frame differs")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"] or \
                 sha256((args.game / "ITEM.EXE").read_bytes()) != \
@@ -119,9 +135,10 @@ def main() -> int:
                      "capture_manifest_sha256"):
             digest(expected.get(name), name)
         print(
-            "FIG direct item-support checkpoint: item 190 keeps pose0 and "
-            "pre-debit AP through selector 01h, then exposes the 7-point "
-            "585e debit before the next monster action")
+            f"FIG direct item-support checkpoint: item {item_id} keeps pose0 "
+            "and pre-debit AP through its support selector, then exposes the "
+            f"{expected['resource_cost']}-point 585e AP debit before the next "
+            "monster action")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:

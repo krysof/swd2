@@ -1127,6 +1127,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_item_support_validation PROPERTIES
         DEPENDS fig_item_support_prepare)
     add_test(
+        NAME fig_item_support_class5_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-item-support-class5-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-item-support-class5-save"
+    )
+    add_test(
+        NAME fig_item_support_class5_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-item-support.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-item-support-class5-save"
+                "${CMAKE_BINARY_DIR}/fig-item-support-class5"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-item-support-class5-rgb-reference.json"
+    )
+    set_tests_properties(fig_item_support_class5_validation PROPERTIES
+        DEPENDS fig_item_support_class5_prepare)
+    add_test(
         NAME fig_item_barrier_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-item-barrier-fixture.py"
