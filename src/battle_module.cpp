@@ -2652,6 +2652,12 @@ bool present_round_events(
             event.block_reason == AbilityBlockReason::none &&
             event.target_is_monster && event.status_duration != 0 &&
             effect_code && *effect_code > 0x30;
+        const auto retained_monster_damage_handler =
+            player_dispatcher_action &&
+            event.block_reason == AbilityBlockReason::none &&
+            event.target_is_monster && event.status_duration == 0 &&
+            (event.damage != 0 || event.healing != 0) &&
+            effect_code && *effect_code > 0x30;
         const auto status_text = abilities.player_status_text(event.effect_code);
         const auto retained_player_status_handler =
             player_dispatcher_action &&
@@ -2661,7 +2667,7 @@ bool present_round_events(
             effect_code && *effect_code > 0x30;
         const auto retained_fading_handler =
             retained_immunity_handler || retained_monster_status_handler ||
-            retained_player_status_handler;
+            retained_player_status_handler || retained_monster_damage_handler;
         if (action_first && !retained_fading_handler) {
             // Non-fading learned handlers expose the paid pool after the
             // common pose0/pose4 pages. The verified 43ce status/immunity
@@ -3170,12 +3176,62 @@ bool present_round_events(
                 placements = fig_party_number_timeline(event.target);
             }
             for (const auto& placement : placements) {
-                present_event_frame(
-                    context, base_surface, encounter, items, fighters,
-                    menu_sprites, font, fallback, visual, event, std::nullopt, {}, placement,
-                    encounter_directory_offset);
+                if (retained_monster_damage_handler) {
+                    // 144e runs inside the >30h dispatcher handler, before
+                    // 585e charges the selected resource.  Keep both 137a's
+                    // target-anchored pose 4 and 43ce's darkest palette on
+                    // every floating-number page.
+                    auto number_frame = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::optional<std::size_t>{4}, {}, placement,
+                        encounter_directory_offset);
+                    if (dispatcher_palette_override) {
+                        number_frame.palette = *dispatcher_palette_override;
+                    }
+                    present_battle_surface(context, number_frame);
+                } else {
+                    present_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, placement,
+                        encounter_directory_offset);
+                }
                 if (!delay(effect_delay)) return false;
             }
+        }
+        if (retained_monster_damage_handler) {
+            // The selected 144e handler commits monster HP and leaves one
+            // clean, dark pose-4 page.  The common 585e/4417 epilogue then
+            // debits the pool and restores C0h..DFh in five steps without
+            // dropping the action anchor between those pages.
+            apply_visual_event(visual, event, abilities);
+            auto restored = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event,
+                std::optional<std::size_t>{4}, {}, std::nullopt,
+                encounter_directory_offset);
+            if (dispatcher_palette_override) {
+                restored.palette = *dispatcher_palette_override;
+            }
+            present_battle_surface(context, restored);
+            present_player_resource_cost(event);
+            restored = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event,
+                std::optional<std::size_t>{4}, {}, std::nullopt,
+                encounter_directory_offset);
+            if (dispatcher_palette_override) {
+                restored.palette = *dispatcher_palette_override;
+            }
+            present_battle_surface(context, restored);
+            for (auto step = 0; step < 5; ++step) {
+                brighten_fig_dispatcher_palette(
+                    restored, base_surface.palette);
+                present_battle_surface(context, restored);
+                if (!delay(effect_delay)) return false;
+            }
+            continue;
         }
         if (!event.target_is_monster && presented_result_number &&
             (dispatcher_event ||
