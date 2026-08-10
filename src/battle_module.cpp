@@ -3886,7 +3886,7 @@ bool present_round_events(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
                     retained_monster_damage_handler
-                        ? std::optional<std::size_t>{4}
+                        ? std::optional<std::size_t>{dispatcher_effect_pose}
                         : std::nullopt,
                     {}, std::nullopt,
                     encounter_directory_offset, std::nullopt,
@@ -3917,12 +3917,14 @@ bool present_round_events(
                     // 585e charges the selected resource.  A800h preserves
                     // the one-shot reaction sprite on every number page;
                     // 5ed8 rotates its E0h..E4h colour ramp every second
-                    // flip while pose 4 and 43ce's dark C0h..DFh survive.
+                    // flip while the dispatcher action anchor and 43ce's
+                    // dark C0h..DFh survive. Learned actions retain pose 4;
+                    // direct items retain the pose-0 page left by 1138.
                     auto number_frame = compose_event_frame(
                         context, base_surface, encounter, items, fighters,
                         menu_sprites, font, fallback, visual, event,
                         retained_monster_damage_handler
-                            ? std::optional<std::size_t>{4}
+                            ? std::optional<std::size_t>{dispatcher_effect_pose}
                             : std::nullopt,
                         {}, placement,
                         encounter_directory_offset, std::nullopt,
@@ -3968,14 +3970,15 @@ bool present_round_events(
         }
         if (retained_monster_damage_handler) {
             // The selected 144e handler commits monster HP and leaves one
-            // clean, dark pose-4 page.  The common 585e/4417 epilogue then
-            // debits the pool and restores C0h..DFh in five steps without
-            // dropping the action anchor between those pages.
+            // clean, dark dispatcher-anchor page. The common 585e/4417
+            // epilogue then debits the pool and restores C0h..DFh in five
+            // steps without dropping the action anchor between those pages.
             apply_visual_event(visual, event, abilities);
             auto restored = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event,
-                std::optional<std::size_t>{4}, {}, std::nullopt,
+                std::optional<std::size_t>{dispatcher_effect_pose}, {},
+                std::nullopt,
                 encounter_directory_offset);
             if (dispatcher_palette_override) {
                 restored.palette = *dispatcher_palette_override;
@@ -3985,7 +3988,8 @@ bool present_round_events(
             restored = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event,
-                std::optional<std::size_t>{4}, {}, std::nullopt,
+                std::optional<std::size_t>{dispatcher_effect_pose}, {},
+                std::nullopt,
                 encounter_directory_offset);
             if (dispatcher_palette_override) {
                 restored.palette = *dispatcher_palette_override;
