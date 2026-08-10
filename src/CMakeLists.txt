@@ -1456,6 +1456,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_effect54_kill_validation PROPERTIES
         DEPENDS fig_player_effect54_kill_prepare)
     add_test(
+        NAME fig_player_effect5b_kill_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-effect5b-kill-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-effect5b-kill-save"
+    )
+    add_test(
+        NAME fig_player_effect5b_kill_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-effect5b-kill.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-effect5b-kill-save"
+                "${CMAKE_BINARY_DIR}/fig-player-effect5b-kill"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-effect5b-kill-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_effect5b_kill_validation PROPERTIES
+        DEPENDS fig_player_effect5b_kill_prepare)
+    add_test(
         NAME fig_player_support_effect07_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect07-fixture.py"
