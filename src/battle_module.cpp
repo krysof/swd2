@@ -2639,12 +2639,18 @@ bool present_round_events(
             player_dispatcher_action &&
             event.block_reason == AbilityBlockReason::resistance &&
             event.target_is_monster && effect_code && *effect_code > 0x30;
-        if (action_first && !retained_immunity_handler) {
-            // Learned abilities enter the selected handler only after FIG has
-            // completed the common pose0/pose4 pages and debited the pool
-            // selected by target_flags' resource class.  Keep those two pose
-            // pages on the pre-command gauges, then expose the paid pool to
-            // every handler/result card belonging to this action.
+        const auto retained_monster_status_handler =
+            player_dispatcher_action &&
+            event.block_reason == AbilityBlockReason::none &&
+            event.target_is_monster && event.status_duration != 0 &&
+            effect_code && *effect_code > 0x30;
+        const auto retained_fading_handler =
+            retained_immunity_handler || retained_monster_status_handler;
+        if (action_first && !retained_fading_handler) {
+            // Non-fading learned handlers expose the paid pool after the
+            // common pose0/pose4 pages. The verified 43ce status/immunity
+            // handlers instead retain their pre-debit page through the SP
+            // sequence and are charged explicitly after the handler below.
             present_player_resource_cost(event);
         }
         if (player_dispatcher_action) {
@@ -2660,7 +2666,7 @@ bool present_round_events(
         }
         std::optional<std::array<std::uint8_t, 768>>
             dispatcher_palette_override;
-        if (retained_immunity_handler && retained_dispatcher_pose_surface) {
+        if (retained_fading_handler && retained_dispatcher_pose_surface) {
             auto faded = *retained_dispatcher_pose_surface;
             for (auto step = 0; step < 5; ++step) {
                 darken_fig_dispatcher_palette(faded);
@@ -2769,6 +2775,40 @@ bool present_round_events(
             }
             present_battle_surface(context, *retained_effect_surface);
             if (!delay(effect_delay)) return false;
+        }
+        if (retained_monster_status_handler) {
+            // 5a91 commits the new monster timer before 5b06 rebuilds the
+            // action page, so 2deb's persistent icon is already visible on
+            // the first clean page after the final SP frame. 585e then debits
+            // the resource and 4417 restores C0h..DFh in five palette steps
+            // while the same pose-4/status page remains selected.
+            apply_visual_event(visual, event, abilities);
+            auto restored = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event,
+                std::optional<std::size_t>{4}, {}, std::nullopt,
+                encounter_directory_offset);
+            if (dispatcher_palette_override) {
+                restored.palette = *dispatcher_palette_override;
+            }
+            present_battle_surface(context, restored);
+            present_player_resource_cost(event);
+            restored = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event,
+                std::optional<std::size_t>{4}, {}, std::nullopt,
+                encounter_directory_offset);
+            if (dispatcher_palette_override) {
+                restored.palette = *dispatcher_palette_override;
+            }
+            present_battle_surface(context, restored);
+            for (auto step = 0; step < 5; ++step) {
+                brighten_fig_dispatcher_palette(
+                    restored, base_surface.palette);
+                present_battle_surface(context, restored);
+                if (!delay(effect_delay)) return false;
+            }
+            continue;
         }
         if (event.kind == BattleEventKind::monster_attack &&
             event.damage != 0 && !event.evaded) {

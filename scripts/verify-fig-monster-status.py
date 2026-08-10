@@ -15,7 +15,7 @@ from swd2_frame_capture import expand_rgb, load_indexed_frames
 ABILITY_IDS = (6, 72, 93, 56, 58)
 EFFECT_CODES = (0x5E, 0x5F, 0x60, 0x64, 0x65)
 ICON_FRAMES = (0xA1, 0xA4, 0x9E, 0xA5, 0x9F)
-FRONTEND_BOUNDARIES = (84, 88, 119, 108, 132)
+FRONTEND_BOUNDARIES = (104, 108, 119, 128, 152)
 
 
 def sha256(data: bytes) -> str:
@@ -114,6 +114,36 @@ def main() -> int:
                     sha256(rgb) != case["original_rgb_sha256"]:
                 raise ValueError(
                     f"FIG monster-status ability {ability_id} no longer matches original")
+            action_frames = case.get("action_frames", [])
+            if case_index == 0:
+                expected_kinds = (
+                    "target_pose0", "target_pose4", "darkened_pose4",
+                    "effect_first", "effect_last", "restored_status_pose",
+                )
+                if not isinstance(action_frames, list) or \
+                        tuple(page.get("kind") for page in action_frames) != \
+                        expected_kinds:
+                    raise ValueError("FIG monster-status action page set differs")
+                for page in action_frames:
+                    action_pixels, action_palette = frames[page["rewrite_frame"]]
+                    action_rgb = expand_rgb(action_pixels, action_palette)
+                    if sha256(action_pixels) != \
+                            page["rewrite_indexed_sha256"] or \
+                            sha256(action_palette) != \
+                            page["rewrite_palette_sha256"] or \
+                            sha256(action_rgb) != page["rewrite_rgb_sha256"] or \
+                            sha256(action_rgb) != page["original_rgb_sha256"]:
+                        raise ValueError(
+                            "FIG monster-status "
+                            f"{page['kind']} no longer matches original")
+                    digest(page.get("original_png_sha256"),
+                           f"{ability_id}/{page['kind']}/original_png_sha256")
+                    if not isinstance(page.get("original_review_frame"), int):
+                        raise ValueError(
+                            "FIG monster-status action review frame differs")
+            elif action_frames:
+                raise ValueError(
+                    f"unexpected FIG monster-status action pages for {ability_id}")
             for name in ("capture_video_sha256", "capture_manifest_sha256",
                          "original_png_sha256"):
                 digest(case.get(name), f"{ability_id}/{name}")
