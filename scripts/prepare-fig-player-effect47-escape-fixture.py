@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 EXPECTED_SAVE = "f0c704b15e79441619fecbd629aa9fc7e07a935aee696ba8182eae60ecf1f564"
+EXPECTED_ITEM_SAVE = "5cde7abfd7106bd2611e708349bd2ac0a0ad40ecb801f0fd19608a128ab90937"
 EXPECTED_ORC = "e9dd243bc22afcd93f5474de6f481651fc7e45ead2aaeba8e06f78e9b9befec5"
 
 
@@ -25,6 +26,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--item", action="store_true",
+        help="stage type-10 item 237 instead of learned ability 7")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -45,9 +49,12 @@ def main() -> int:
                 (0x5D, 30000), (0x5F, 30000)):
             word(save, actor + offset, value)
         save[actor + 0x6D:actor + 0x6D + 50] = bytes(50)
-        save[actor + 0x6D] = 7     # 逃遁術, selector 47h
+        if not args.item:
+            save[actor + 0x6D] = 7  # 逃遁術, selector 47h
         for slot in range(50):
             word(save, 0x382 + slot * 2, 0)
+        if args.item:
+            word(save, 0x382, 237)  # type-10 selector 47h wrapper
 
         # Redirect all eight hundredths-selected random directory words to the
         # shipped one-monster formation at directory offset 288. Preserve the
@@ -74,7 +81,8 @@ def main() -> int:
 
         save_digest = sha256(save)
         orc_digest = sha256(orc)
-        if save_digest != EXPECTED_SAVE:
+        expected_save = EXPECTED_ITEM_SAVE if args.item else EXPECTED_SAVE
+        if save_digest != expected_save:
             raise ValueError(f"FIG player-effect-47 SAVE differs: {save_digest}")
         if orc_digest != EXPECTED_ORC:
             raise ValueError(f"FIG player-effect-47 ORC differs: {orc_digest}")
