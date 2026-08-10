@@ -295,12 +295,37 @@ void BattleSession::add_player_death_reaction(
     events.push_back(event);
 }
 
+void BattleSession::compact_inventory() noexcept {
+    // FIG's item-removal tail runs the same stable 50-word compactor used by
+    // the RPG inventory.  This happens after the complete initiative list has
+    // resolved, so the physical item-slot indices reserved by the other party
+    // commands remain valid for the current round while the next command page
+    // starts at a packed slot zero.  Keep the parsed definition arrays in lock
+    // step with their item words.
+    std::size_t destination = 0;
+    for (std::size_t source = 0; source < inventory_.size(); ++source) {
+        if (inventory_[source] == 0) continue;
+        if (destination != source) {
+            inventory_[destination] = inventory_[source];
+            battle_items_[destination] = std::move(battle_items_[source]);
+            summon_items_[destination] = std::move(summon_items_[source]);
+        }
+        ++destination;
+    }
+    for (; destination < inventory_.size(); ++destination) {
+        inventory_[destination] = 0;
+        battle_items_[destination].reset();
+        summon_items_[destination].reset();
+    }
+}
+
 BattleRoundResult BattleSession::play_round(
     const std::array<PlayerBattleCommand, 4>& commands,
     const BattleAbilityDatabase& abilities, const BattleRandom& random) {
     BattleRoundResult result;
     result.outcome = outcome();
     if (result.outcome != BattleOutcome::ongoing) return result;
+    bool inventory_removed = false;
 
     // FIG 2bb5/2bd9 redraws every party card before command collection. For
     // each living actor that presentation routine also owns gameplay bit
@@ -659,6 +684,7 @@ BattleRoundResult BattleSession::play_round(
                         ally.summon_slot = installed_slot;
                         summoned_allies_.push_back(std::move(ally));
                         inventory_[slot] = 0;
+                        inventory_removed = true;
                         summon_items_[slot].reset();
                         battle_items_[slot].reset();
                     }
@@ -749,6 +775,7 @@ BattleRoundResult BattleSession::play_round(
                         }
                         if (item.consumed_on_use()) {
                             inventory_[slot] = 0;
+                            inventory_removed = true;
                             battle_items_[slot].reset();
                         }
                         finish_player_turn(actor, result.events);
@@ -868,6 +895,7 @@ BattleRoundResult BattleSession::play_round(
                 }
                 if (item.consumed_on_use()) {
                     inventory_[slot] = 0;
+                    inventory_removed = true;
                     battle_items_[slot].reset();
                 }
                 finish_player_turn(actor, result.events);
@@ -1513,6 +1541,7 @@ BattleRoundResult BattleSession::play_round(
         }
     }
 
+    if (inventory_removed) compact_inventory();
     result.outcome = outcome();
     return result;
 }

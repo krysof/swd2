@@ -1220,4 +1220,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_ally_zero_validation PROPERTIES
         DEPENDS fig_ally_zero_prepare)
+    add_test(
+        NAME fig_summon_replace_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-summon-replace-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-summon-replace-save"
+    )
+    add_test(
+        NAME fig_summon_replace_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-summon-replace.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-summon-replace-save"
+                "${CMAKE_BINARY_DIR}/fig-summon-replace"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-summon-replace-rgb-reference.json"
+    )
+    set_tests_properties(fig_summon_replace_validation PROPERTIES
+        DEPENDS fig_summon_replace_prepare)
 endif()

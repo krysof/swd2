@@ -234,6 +234,7 @@ private:
                             std::vector<BattleSessionEvent>& events);
     void add_player_death_reaction(
         std::vector<BattleSessionEvent>& events, const BattleRandom& random);
+    void compact_inventory() noexcept;
 
     std::array<BattlePartyMember, 4> party_{};
     std::size_t party_count_{};

@@ -634,24 +634,34 @@ void draw_menu_number_right(BattleSurface& surface,
                      digit_base);
 }
 
+void draw_fighter_pose(BattleSurface& surface, const SpriteArchive& fighters,
+                       const BattlePartyMember& member, std::size_t pose,
+                       std::optional<int> mode_x_anchor = std::nullopt);
+
 BattleSurface compose_command_frame(
     const BattleSurface& scene, const BattleSession& session,
     const BattleCommandMenu& menu, const BattleEncounter& encounter,
     const BattleAbilityDatabase& abilities, const LegacyFont& font,
     const LegacyFont& fallback, const SpriteArchive& menu_sprites,
-    const ScriptArchive& items, const std::filesystem::path& game_root,
+    const SpriteArchive& fighters, const ScriptArchive& items,
+    const std::filesystem::path& game_root,
     std::optional<std::size_t> notice_text_bytes = std::nullopt,
     std::optional<std::size_t> notice_marker = std::size_t{149}) {
     auto result = scene;
-    draw_fig_party_cards(
-        result, menu_sprites,
-        std::span<const BattlePartyMember>(session.party()).first(
-            session.party_count()));
     const auto active_page = menu.page();
     const auto selecting_target =
         active_page == BattleCommandMenuPage::monster_target ||
         active_page == BattleCommandMenuPage::party_target;
     const auto page = selecting_target ? menu.target_return_page() : active_page;
+    const auto action_actor = page == BattleCommandMenuPage::summon_replace &&
+                                      menu.actor() < session.party_count()
+                                  ? std::optional<std::size_t>{menu.actor()}
+                                  : std::nullopt;
+    draw_fig_party_cards(
+        result, menu_sprites,
+        std::span<const BattlePartyMember>(session.party()).first(
+            session.party_count()),
+        action_actor);
     const auto cursor = selecting_target ? menu.target_return_cursor() : menu.cursor();
     const auto entries = selecting_target ? menu.target_return_entries()
                                           : menu.entries();
@@ -706,7 +716,8 @@ BattleSurface compose_command_frame(
     };
 
     // FIG 176f uses MENU frame 178 as the current-actor marker.
-    if (menu.actor() < session.party_count()) {
+    if (page != BattleCommandMenuPage::summon_replace &&
+        menu.actor() < session.party_count()) {
         blit(result, menu_sprites, 178,
              (static_cast<int>(menu.actor()) * 18 + 13) * 4, 137);
     }
@@ -743,6 +754,12 @@ BattleSurface compose_command_frame(
                       abilities.summon_replacement_text(), 0x1c, 0x54);
         blit(result, menu_sprites, 143,
              static_cast<int>(cursor) * 0x14 * 4, 10);
+        // 111b3 is entered by 1138 after the acting fighter's base pose has
+        // replaced the command portrait.  Although the portable collector
+        // asks for the slot before resolution, preserve that observable page.
+        if (menu.actor() < session.party_count()) {
+            draw_fighter_pose(result, fighters, session.party()[menu.actor()], 0);
+        }
         return finish_frame();
     }
 
@@ -1083,7 +1100,7 @@ bool present_story_battle_setup(GameContext& context,
 
 void draw_fighter_pose(BattleSurface& surface, const SpriteArchive& fighters,
                        const BattlePartyMember& member, std::size_t pose,
-                       std::optional<int> mode_x_anchor = std::nullopt) {
+                       std::optional<int> mode_x_anchor) {
     auto placement = fig_fighter_placement(
         member.identity, member.party_index, pose, fighters.sprites().size());
     if (placement.frame >= fighters.sprites().size()) return;
@@ -4055,7 +4072,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                             const auto frame = compose_command_frame(
                                 surface, session, menu, encounter, abilities,
                                 command_font, command_name_font, menu_sprites,
-                                items, context.game_root, glyph_end,
+                                fighters, items, context.game_root, glyph_end,
                                 std::nullopt);
                             context.platform.present_direct_update({
                                 320, 200, frame.pixels,
@@ -4090,7 +4107,8 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                             const auto frame = compose_command_frame(
                                 surface, session, menu, encounter, abilities,
                                 command_font, command_name_font, menu_sprites,
-                                items, context.game_root, notice_text.size(),
+                                fighters, items, context.game_root,
+                                notice_text.size(),
                                 std::nullopt);
                             context.platform.present_direct_update({
                                 320, 200, frame.pixels,
@@ -4103,7 +4121,8 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                             const auto frame = compose_command_frame(
                                 surface, session, menu, encounter, abilities,
                                 command_font, command_name_font, menu_sprites,
-                                items, context.game_root, std::nullopt, marker);
+                                fighters, items, context.game_root,
+                                std::nullopt, marker);
                             context.platform.present({
                                 320, 200, frame.pixels,
                                 std::span<const std::uint8_t, 768>(frame.palette),
@@ -4127,7 +4146,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                     const auto frame = compose_command_frame(
                         surface, session, menu, encounter, abilities,
                         command_font, command_name_font, menu_sprites,
-                        items, context.game_root);
+                        fighters, items, context.game_root);
                     context.platform.present({
                         320, 200, frame.pixels,
                         std::span<const std::uint8_t, 768>(frame.palette),

@@ -5220,23 +5220,22 @@ void test_battle_session(const std::filesystem::path& game_root) {
     };
     static_cast<void>(replace_session.play_round(
         replace_commands, abilities, one_random));
-    replace_commands[0].item_slot = 1;
+    // FIG compacts the first consumed capture item after the round, so the
+    // next capture item has moved into physical slot zero.
+    replace_commands[0].item_slot = 0;
     static_cast<void>(replace_session.play_round(
         replace_commands, abilities, one_random));
     require(replace_session.summoned_allies().size() == 2 &&
                 replace_session.summoned_allies()[0].item_id == 319 &&
                 replace_session.summoned_allies()[1].item_id == 320 &&
-                replace_session.inventory()[0] == 0 &&
-                replace_session.inventory()[1] == 0 &&
-                replace_session.inventory()[2] == 321,
+                replace_session.inventory()[0] == 321 &&
+                replace_session.inventory()[1] == 0,
             "FIG full-slot summon regression setup did not pack two allies");
 
     swd2::BattleCommandMenu replace_cancel_menu(
         replace_session, abilities, items);
     replace_cancel_menu.input(swd2::InputAction::right);
     replace_cancel_menu.input(swd2::InputAction::confirm);
-    replace_cancel_menu.input(swd2::InputAction::down);
-    replace_cancel_menu.input(swd2::InputAction::down);
     replace_cancel_menu.input(swd2::InputAction::confirm);
     require(replace_cancel_menu.page() ==
                 swd2::BattleCommandMenuPage::summon_replace &&
@@ -5244,21 +5243,19 @@ void test_battle_session(const std::filesystem::path& game_root) {
             "FIG 5d24 full-slot summon did not enter the two-slot selector");
     replace_cancel_menu.input(swd2::InputAction::cancel);
     require(replace_cancel_menu.page() == swd2::BattleCommandMenuPage::items &&
-                replace_cancel_menu.cursor() == 2,
+                replace_cancel_menu.cursor() == 0,
             "FIG 5d24 cancel did not restore the selected inventory cursor");
 
     swd2::BattleCommandMenu replace_menu(replace_session, abilities, items);
     replace_menu.input(swd2::InputAction::right);
     replace_menu.input(swd2::InputAction::confirm);
-    replace_menu.input(swd2::InputAction::down);
-    replace_menu.input(swd2::InputAction::down);
     replace_menu.input(swd2::InputAction::confirm);
     replace_menu.input(swd2::InputAction::right);
     replace_menu.input(swd2::InputAction::confirm);
     require(replace_menu.complete() &&
                 replace_menu.commands()[0].kind ==
                     swd2::PlayerCommandKind::item &&
-                replace_menu.commands()[0].item_slot == 2 &&
+                replace_menu.commands()[0].item_slot == 0 &&
                 replace_menu.commands()[0].target == 1,
             "FIG 5d24 replacement choice was not retained in the command");
     const auto resource_before_replace =
@@ -5268,7 +5265,7 @@ void test_battle_session(const std::filesystem::path& game_root) {
     require(replace_session.summoned_allies().size() == 2 &&
                 replace_session.summoned_allies()[0].item_id == 319 &&
                 replace_session.summoned_allies()[1].item_id == 321 &&
-                replace_session.inventory()[2] == 320 &&
+                replace_session.inventory()[0] == 320 &&
                 replace_session.party()[0].secondary_points ==
                     resource_before_replace - 72 &&
                 std::any_of(

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_summon_replacement",
+  "formation_directory_offset": 100,
+  "initial_captured_items": [420, 419, 418],
+  "installed_captured_items": [420, 418],
+  "replacement_item": 419,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-summon-replace-autotype.txt",
+  "capture_autotype_sha256": "6626e10d5351b5d1854cb7508d2fb34d68b2c80b781cd5a11c223c006b359b39",
+  "capture_video_sha256": "af638cadeddd55fd5ec8afc60fdf0888ab8d2f016339f7fd67dea5bef7906b2d",
+  "capture_manifest_sha256": "20b9918243267b498497d23249a71a32414c5baa8a17b22d8a00079e599b5830",
+  "capture_review_frame": 6339,
+  "capture_review_png_sha256": "b1e373d1616bc11079ebeb65e31002c668056ac6c21141535339caa31c086875",
+  "capture_rgb_sha256": "4e9d06f0965d0549ad265e30006bbe7386842d40b49a9bd5a8a7358c21a64b7b",
+  "fixture_save_sha256": "2423009791daeda8d92ca060e71893d75ed7392521828a92a929112578cd1d1d",
+  "rewrite_replay": "replay-fig-summon-replace.txt",
+  "rewrite_input": {
+    "total": 12,
+    "consumed": 12,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 11,
+    "poll": 1,
+    "text": 36,
+    "frontend": 272
+  },
+  "rewrite_video": {
+    "frames": 151,
+    "direct_updates": 36,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "c7475f8878a1afeb"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 7,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "a7bf5872603514bb"
+  },
+  "rewrite_delay_milliseconds": 3018,
+  "rewrite_state_fnv1a64": "dad6e6c6d37b913b",
+  "rewrite_mapz_fnv1a64": "827f0f1b725a0958",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "rewrite_final_frame": 150,
+  "rewrite_final_fnv1a64": "8708cf2467159b22",
+  "rewrite_indexed_sha256": "9d947e2784bdac03d6015c428469e2bff3d1f649d0823428705ebbd197707291",
+  "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+  "rewrite_rgb_sha256": "4e9d06f0965d0549ad265e30006bbe7386842d40b49a9bd5a8a7358c21a64b7b"
+}
