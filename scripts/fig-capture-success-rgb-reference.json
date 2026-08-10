@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_random_capture_success_sequence",
+  "status": "exact_rgb_checkpoint",
+  "random_directory_base": 100,
+  "redirected_formation_directory_offset": 288,
+  "monster_definition_id": 368,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "7a6aa873909e024a30b704345213cccec2a28dce6c476c3c799ca8dfbc1342c3",
+  "fixture_orc_sha256": "e9dd243bc22afcd93f5474de6f481651fc7e45ead2aaeba8e06f78e9b9befec5",
+  "capture_autotype": "original-fig-capture-success-autotype.txt",
+  "capture_autotype_sha256": "2f08be139f11a452cb6ac44fd31d90bd30cc049a8a794ad3bd46c43db6355db5",
+  "replay_input": "replay-fig-capture-success.txt",
+  "replay_input_sha256": "227eaa9e16ebb43a82160300635e1c8fa1ec01ba50dd296df0febdc8ce8a3d92",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 15,
+  "capture_video_sha256": "7ce039f6a56d19d69077b9b857f179f3344efd20a3cb8746ddbe5754ae61d2ca",
+  "capture_manifest_sha256": "514692c0ad557ef04f699ad9dc515f8707f660c72465695d0f55141cdbb1b246",
+  "rewrite_video": {
+    "frames": 10,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "51c5ea6ad3f68122"
+  },
+  "rewrite_audio": {
+    "music_calls": 2,
+    "voice_calls": 2,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "6b2a0aa289c3cec6"
+  },
+  "rewrite_delay_milliseconds": 466,
+  "rewrite_state_fnv1a64": "0afbe72af596acc9",
+  "voice_checkpoints": [
+    {
+      "call": 0,
+      "at_milliseconds": 0,
+      "payload_fnv1a64": "56054b2c8ee75346",
+      "resource": "SP016.VOC"
+    },
+    {
+      "call": 1,
+      "at_milliseconds": 257,
+      "payload_fnv1a64": "9cfd5f74c6cf3fed",
+      "resource": "SP015.VOC"
+    }
+  ],
+  "pages": [
+    {
+      "label": "actor-zero initial command page",
+      "rewrite_frame": 1,
+      "original_review_frame": 298,
+      "original_png_sha256": "ba79ed1c1a0a41fd82abd368949dfef8904951d75dfb45f55121bdb5c7288f9b",
+      "rewrite_indexed_sha256": "ec2002b247aeba3ec3f99f1b45e40a90fdb342e9736430c51ca32ece3aaadb34",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "1282165661da853cbca5374b5591a3160665fab87e645c30d5c781bee479e2d8",
+      "original_rgb_sha256": "1282165661da853cbca5374b5591a3160665fab87e645c30d5c781bee479e2d8"
+    },
+    {
+      "label": "main command cursor moved to tactics",
+      "rewrite_frame": 2,
+      "original_review_frame": 360,
+      "original_png_sha256": "c1a81bfedf33bbcea342ad45f3f538c532b46ab17773542015c32e2efcf2ae3d",
+      "rewrite_indexed_sha256": "f5beee1dea4753001d4912d4e60e1e4e17d69cbfad89289fb22f8bb1d9d8dec3",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "9a1304ae2d5a04cef39251835ec7ce9881ea06da9f7a1d3d2f25d05d3e3c3de4",
+      "original_rgb_sha256": "9a1304ae2d5a04cef39251835ec7ce9881ea06da9f7a1d3d2f25d05d3e3c3de4"
+    },
+    {
+      "label": "random-encounter tactics page",
+      "rewrite_frame": 3,
+      "original_review_frame": 436,
+      "original_png_sha256": "11b555bf5492a5a28d7ea2d88292a5bb1f9b5cbc1a54c56da746fba8eb8be6e3",
+      "rewrite_indexed_sha256": "0d05c5a54fc68c565f9f14403a0d5adc28e9455e581426f2ce27ef4082b84066",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "bb2386678a64933607d83d27103fce9f96f1fc01c689305148a641ac33f18f0c",
+      "original_rgb_sha256": "bb2386678a64933607d83d27103fce9f96f1fc01c689305148a641ac33f18f0c"
+    },
+    {
+      "label": "capture tile selected",
+      "rewrite_frame": 4,
+      "original_review_frame": 509,
+      "original_png_sha256": "b4a5f4bd564b504e428ce04151a5fb1602b867971f163e79b97c82afe4fc51a5",
+      "rewrite_indexed_sha256": "507a61812373f416843ac2f162f789e6580bbaba8e40e930d37c95dbcbf40d61",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "e85275d85918929e28e9b205e5a897277724f827c82d418ba44e81beeb79b630",
+      "original_rgb_sha256": "e85275d85918929e28e9b205e5a897277724f827c82d418ba44e81beeb79b630"
+    },
+    {
+      "label": "0ded target-anchored base fighter pose",
+      "rewrite_frame": 5,
+      "original_review_frame": 588,
+      "original_png_sha256": "15eb818718f4a826526f4964263ef52644fe9978e3716d9b55bc5dd371ec33fc",
+      "rewrite_indexed_sha256": "71142a4f6b5ec33467c98a04faa4b19c4e41dcc70febc1f552d986893e5f427e",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "70e52f5c11a469cd04beeaaa5725ebd1482febeb6c606f6ebb497aba829030b0",
+      "original_rgb_sha256": "70e52f5c11a469cd04beeaaa5725ebd1482febeb6c606f6ebb497aba829030b0"
+    },
+    {
+      "label": "0da7 target-anchored capture card",
+      "rewrite_frame": 6,
+      "original_review_frame": 600,
+      "original_png_sha256": "4e85e34a6ebee04f356766f401cc8e96ee0378d6a008c410e64c7b973658cfd7",
+      "rewrite_indexed_sha256": "32c4f690dbceb2ada58157b49c8eb86dbc95b979e67c6eadaed766feea07df7a",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "742fdc36b6b8ac5123103fb4e13cbc26b2e4ff615998de841583ca5ee2ef103b",
+      "original_rgb_sha256": "742fdc36b6b8ac5123103fb4e13cbc26b2e4ff615998de841583ca5ee2ef103b"
+    },
+    {
+      "label": "0e84 captured monster removed after eighteen ticks",
+      "rewrite_frame": 7,
+      "original_review_frame": 635,
+      "original_png_sha256": "e57d47a9792f556f82be1b56eaa41fafa1ed3dac6535649315046d7f59e073ed",
+      "rewrite_indexed_sha256": "5c60e8040fc67c47add1d53a0a595b12c24a7b779e93c07f025aed24ba292236",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "d0bf045a840b6d6e3dfbaaddef7239900d705e5d1df5d18750e5d60e4c8cea1d",
+      "original_rgb_sha256": "d0bf045a840b6d6e3dfbaaddef7239900d705e5d1df5d18750e5d60e4c8cea1d"
+    },
+    {
+      "label": "capture success clean page after nine ticks",
+      "rewrite_frame": 8,
+      "original_review_frame": 650,
+      "original_png_sha256": "cfdd43160f7acb37ccf01d6c99c69d1c57344395bfe57346f4270879401bb514",
+      "rewrite_indexed_sha256": "626f1e3e724ff6b298728905cd6b1832133d6cce0135a8aae126036a52366e1a",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "aebab7b7068348b83e9d477b21a3c834266f77a22dd68e6532209780ba3e0d0b",
+      "original_rgb_sha256": "aebab7b7068348b83e9d477b21a3c834266f77a22dd68e6532209780ba3e0d0b"
+    },
+    {
+      "label": "victory page after capture removed the only monster",
+      "rewrite_frame": 9,
+      "original_review_frame": 680,
+      "original_png_sha256": "ec4e52b72b1d8be94b02b60a32091fef95aeb1710420b1f69608a3b6c27826ce",
+      "rewrite_indexed_sha256": "3349cfe2e59609244901af2dce344b6dd82d1c6844a5d299567ce8667744d460",
+      "rewrite_palette_sha256": "03ce583af42e7f3212bf37ff98bacbb6b09f78e32207beaffbeaaa43a8f13f8c",
+      "rewrite_rgb_sha256": "b1308f019d7294254be2abbaaa43ad090cd14f5194fd5dee753c6c829cd6c648",
+      "original_rgb_sha256": "b1308f019d7294254be2abbaaa43ad090cd14f5194fd5dee753c6c829cd6c648"
+    }
+  ]
+}

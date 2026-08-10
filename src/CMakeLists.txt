@@ -1392,6 +1392,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_special_buff_validation PROPERTIES
         DEPENDS fig_monster_special_buff_prepare)
     add_test(
+        NAME fig_capture_success_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-capture-success-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-capture-success-game"
+    )
+    add_test(
+        NAME fig_capture_success_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-capture-success.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-capture-success-game"
+                "${CMAKE_BINARY_DIR}/fig-capture-success-game"
+                "${CMAKE_BINARY_DIR}/fig-capture-success"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-capture-success-rgb-reference.json"
+    )
+    set_tests_properties(fig_capture_success_validation PROPERTIES
+        DEPENDS fig_capture_success_prepare)
+    add_test(
         NAME fig_medium_dismiss_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-medium-dismiss-fixture.py"

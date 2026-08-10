@@ -1895,32 +1895,30 @@ void present_capture_action_card(
     const BattleAbilityDatabase& abilities,
     std::uint16_t encounter_directory_offset, bool failed) {
     if (event.source >= visual.party_count) return;
-    auto frame = base_surface;
-    draw_battle_media(frame, menu_sprites, visual.media);
-    draw_summoned_ally_name_cards(
-        frame, menu_sprites, font, fallback, visual);
-    draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
-                 visual.monsters,
-                 std::nullopt, encounter_directory_offset);
-    draw_fig_party_cards(
-        frame, menu_sprites,
-        std::span<const BattlePartyMember>(visual.party).first(
-            visual.party_count),
-        event.source);
-    draw_fighter_pose(frame, fighters, visual.party[event.source], 0);
-
-    // 0da7: 137a leaves x=actor*18+8; subtracting eight places the
-    // four-column pot card at actor*18/y=120 and the label at +2/y=129.
-    const auto actor_column = static_cast<int>(event.source) * 18;
-    draw_message_panel(frame, menu_sprites, actor_column, 120, 4);
+    // 0ded calls 137a with DS:31e3 still anchored on the selected monster.
+    // Thus both the actor's base pose/card and 0da7's pot card move under the
+    // target; they do not return to actor*18 before the capture resolves.
+    auto frame = compose_event_frame(
+        context, base_surface, encounter, items, fighters, menu_sprites,
+        font, fallback, visual, event, 0, {}, std::nullopt,
+        encounter_directory_offset);
+    const auto [target_x, target_y] = event_target_center(
+        encounter, items, context.game_root, visual, event, fighters);
+    static_cast<void>(target_y);
+    const auto action_column = target_x / 4 - 3;
+    auto panel_column = action_column - 8;
+    // 0dbb uses an unsigned comparison after subtracting eight, so both an
+    // underflow and a value at/above 64h reset the panel to column zero.
+    if (panel_column < 0 || panel_column >= 100) panel_column = 0;
+    draw_message_panel(frame, menu_sprites, panel_column, 120, 4);
     draw_big5(frame, font, fallback, abilities.capture_action_text(),
-              (actor_column + 2) * 4, 129, 0x00);
+              (panel_column + 2) * 4, 129, 0x00);
     if (failed) {
         // 0e42 offsets the preserved 0da7 rectangle by +4 columns/+15 lines,
         // then prints DATA:2c95 at another +4 columns in colour 6b.
-        draw_message_panel(frame, menu_sprites, actor_column + 4, 135, 4);
+        draw_message_panel(frame, menu_sprites, panel_column + 4, 135, 4);
         draw_big5(frame, font, fallback, abilities.physical_failure_text(),
-                  (actor_column + 8) * 4, 144, 0x6b);
+                  (panel_column + 8) * 4, 144, 0x6b);
     }
     context.platform.present({
         320, 200, frame.pixels,
