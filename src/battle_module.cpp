@@ -3424,6 +3424,7 @@ bool present_round_events(
                 if (!delay(effect_delay)) return false;
             }
         }
+        std::optional<BattleSurface> retained_player_attack_surface;
         if (action_first && event.kind == BattleEventKind::player_attack &&
             event.source < visual.party_count && pose_count != 0) {
             // 14b1 follows the three 13e8 fighter poses. Each 152a/155c hand
@@ -3463,6 +3464,7 @@ bool present_round_events(
                 }
                 prior_weapon_frame = reaction_frame;
             }
+            retained_player_attack_surface = std::move(prior_weapon_frame);
         }
         std::optional<BattleSurface> retained_effect_surface;
         if (retained_player_barrier_handler) {
@@ -3893,7 +3895,10 @@ bool present_round_events(
             present_monster_compact_card(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, abilities.evasion_text(),
-                encounter_directory_offset, 2, 0x6b, 8);
+                encounter_directory_offset, 2, 0x6b, 8,
+                retained_player_attack_surface
+                    ? &*retained_player_attack_surface
+                    : nullptr);
             if (!delay(immunity_card_delay)) return false;
             // 130d tail-jumps into 2a28; that card's RET returns from the
             // entire physical handler. There is no zero number or additional
