@@ -1392,6 +1392,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_special_buff_validation PROPERTIES
         DEPENDS fig_monster_special_buff_prepare)
     add_test(
+        NAME fig_medium_dismiss_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-medium-dismiss-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-medium-dismiss-game"
+    )
+    add_test(
+        NAME fig_medium_dismiss_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-medium-dismiss.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-medium-dismiss-game"
+                "${CMAKE_BINARY_DIR}/fig-medium-dismiss-game"
+                "${CMAKE_BINARY_DIR}/fig-medium-dismiss"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-medium-dismiss-rgb-reference.json"
+    )
+    set_tests_properties(fig_medium_dismiss_validation PROPERTIES
+        DEPENDS fig_medium_dismiss_prepare)
+    add_test(
         NAME long_run_checkpoint_validation
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-long-run-checkpoint.py"

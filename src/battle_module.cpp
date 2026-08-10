@@ -95,6 +95,37 @@ void blit(BattleSurface& surface, const SpriteArchive& archive, std::size_t inde
     }
 }
 
+void blit_mode0_stencil(BattleSurface& surface,
+                        const SpriteArchive& archive, std::size_t index,
+                        int left, int top) {
+    const auto& sprite = archive.sprites().at(index);
+    if ((sprite.width & 3U) != 0) {
+        throw std::runtime_error("FIG mode-0 sprite width is not planar");
+    }
+    const auto source = archive.pixels(index);
+    const auto plane_width = static_cast<std::size_t>(sprite.width) / 4U;
+    const auto plane_size = plane_width * sprite.height;
+    // 65f1 -> 684f visits the four Mode-X planes separately. Source bytes are
+    // used only as FEh transparency masks; every covered plane byte is filled
+    // with 0fh. Re-interleave those plane-major masks onto the linear surface.
+    for (std::size_t plane = 0; plane < 4U; ++plane) {
+        for (std::size_t y = 0; y < sprite.height; ++y) {
+            for (std::size_t column = 0; column < plane_width; ++column) {
+                if (source[plane * plane_size + y * plane_width + column] ==
+                    0xfeU) {
+                    continue;
+                }
+                const auto x = left + static_cast<int>(column * 4U + plane);
+                const auto row = top + static_cast<int>(y);
+                if (x >= 0 && x < 320 && row >= 0 && row < 200) {
+                    surface.pixels[static_cast<std::size_t>(row) * 320U +
+                                   static_cast<std::size_t>(x)] = 0x0f;
+                }
+            }
+        }
+    }
+}
+
 void blit_mirrored(BattleSurface& surface, const SpriteArchive& archive,
                    std::size_t index, int left, int top,
                    bool transparent = true) {
@@ -1719,7 +1750,8 @@ void present_monster_compact_card(
     std::uint16_t encounter_directory_offset, int columns = 4,
     std::uint8_t color = 0x00, int center_offset = 10,
     const BattleSurface* retained_surface = nullptr,
-    bool include_party_cards = true) {
+    bool include_party_cards = true,
+    BattleSurface* captured_surface = nullptr) {
     if (!event.target_is_monster || event.target >= visual.monsters.size() ||
         text.empty()) {
         return;
@@ -1750,6 +1782,7 @@ void present_monster_compact_card(
     const auto left = center_x / 4 - center_offset;
     draw_message_panel(frame, menu_sprites, left, 50, columns);
     draw_big5(frame, font, fallback, text, (left + 2) * 4, 59, color);
+    if (captured_surface != nullptr) *captured_surface = frame;
     context.platform.present({
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
@@ -1801,7 +1834,8 @@ void present_monster_ability_name_card(
     const LegacyFont& fallback, const BattleVisualState& visual,
     const BattleSessionEvent& event, const BattleAbilityDatabase& abilities,
     std::uint16_t encounter_directory_offset,
-    bool include_party_cards = true) {
+    bool include_party_cards = true,
+    BattleSurface* captured_surface = nullptr) {
     if (event.source >= visual.monsters.size() ||
         event.ability_id >= abilities.abilities().size()) {
         return;
@@ -1822,7 +1856,7 @@ void present_monster_ability_name_card(
         context, base_surface, encounter, items, menu_sprites,
         font, fallback, visual, source_event, name,
         encounter_directory_offset, columns, 0x00, 10, nullptr,
-        include_party_cards);
+        include_party_cards, captured_surface);
 }
 
 void present_summoned_ally_action_card(
@@ -2027,10 +2061,12 @@ bool present_medium_summon_animation(
                      encounter_directory_offset);
         blit(frame, menu_sprites, sprite_frame,
              static_cast<int>(current_x) * 4, static_cast<int>(current_y));
-        draw_fig_party_cards(
-            frame, menu_sprites,
-            std::span<const BattlePartyMember>(visual.party).first(
-                visual.party_count));
+        if (summoned_source) {
+            draw_fig_party_cards(
+                frame, menu_sprites,
+                std::span<const BattlePartyMember>(visual.party).first(
+                    visual.party_count));
+        }
         context.platform.present({
             320, 200, frame.pixels,
             std::span<const std::uint8_t, 768>(frame.palette),
@@ -2063,6 +2099,7 @@ bool present_medium_summon_animation(
 
 bool present_round_events(
     GameContext& context, const BattleSurface& base_surface,
+    const BattleSurface& previous_page,
     const BattleEncounter& encounter, const ScriptArchive& items,
     const BattleAbilityDatabase& abilities, const LegacyFont& font,
     const LegacyFont& fallback, const SpriteArchive& fighters,
@@ -2117,6 +2154,7 @@ bool present_round_events(
         player_resource_cost_presented[event.source] = true;
     };
     auto frontend_abort = false;
+    auto alternate_page = previous_page;
     const auto delay = [&](std::chrono::milliseconds duration) {
         if (delay_for_or_frontend_quit(context.platform, duration)) return true;
         frontend_abort = true;
@@ -2276,10 +2314,28 @@ bool present_round_events(
                     encounter_directory_offset);
                 if (!delay(summoned_action_card_delay)) return false;
             } else {
+                auto summon_name_event = event;
+                static constexpr std::array<std::uint16_t, 3>
+                    summon_name_ids = {0x33, 0x42, 0x52};
+                if (event.target < summon_name_ids.size()) {
+                    // 23b1 substitutes the fixed mediator-install record; it
+                    // does not display the generic ability that requested the
+                    // missing mediator.
+                    summon_name_event.ability_id =
+                        summon_name_ids[event.target];
+                }
+                if (action_first) {
+                    present_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false, false);
+                }
                 present_monster_ability_name_card(
                     context, base_surface, encounter, items, menu_sprites,
-                    font, fallback, visual, event, abilities,
-                    encounter_directory_offset);
+                    font, fallback, visual, summon_name_event, abilities,
+                    encounter_directory_offset, false, &alternate_page);
+                if (!delay(std::chrono::milliseconds(100))) return false;
             }
             play_voice_cue(context, {FigVoiceFile::sp, 0x31,
                                      FigVoiceTiming::before_action});
@@ -2291,34 +2347,84 @@ bool present_round_events(
                 return false;
             }
             apply_visual_event(visual, event, abilities);
-            present_event_frame(
-                context, base_surface, encounter, items, fighters,
-                menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
-                encounter_directory_offset);
             if (event.source_is_summoned_ally) {
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event, std::nullopt,
+                    {}, std::nullopt, encounter_directory_offset);
                 // The captured-ally caller 0fb9 redraws the newly persistent
                 // mediator and holds that clean page for five ticks.
                 if (!delay(ward_card_delay)) return false;
             } else if (finish_monster_action_here) {
-                if (!present_monster_turn_tail(event)) return false;
+                // 2439 returns straight to 22e0. The flight's destination page
+                // remains visible for five ticks, then 2db8 replaces it with a
+                // bare page containing the newly persistent mediator.
+                if (!delay(ward_card_delay)) return false;
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                if (!delay(action_delay)) return false;
             }
             continue;
         }
         if (event.kind == BattleEventKind::medium_dismissed) {
+            // 20e7 first exposes a bare 2db8 page. 2731 is reached before the
+            // ordinary named-action dispatcher below, so this branch must
+            // reproduce its own 262f setup rather than inheriting the party
+            // cards from the command page.
+            if (action_first) {
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+            }
+            BattleSurface dismissal_name_page;
             present_monster_ability_name_card(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, abilities,
-                encounter_directory_offset);
+                encounter_directory_offset, false, &dismissal_name_page);
+            // 262f suppresses the normal ability voice for 35h/43h/53h but
+            // still retains the name card for seven 70-Hz ticks.
+            if (!delay(std::chrono::milliseconds(100))) return false;
             play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
                                      FigVoiceTiming::before_action});
+
+            // 275b..278c backs up both Mode-X pages, removes the mediator from
+            // battle state, redraws its old AEh/AFh/B0h sprite on the name-card
+            // page, and flips eight times. Consequently the visible result is
+            // four one-tick alternations between the retained 262f name page
+            // and the last command/target page; the mediator remains visible
+            // on both. Only 22e0's later clean redraw makes it disappear.
             apply_visual_event(visual, event, abilities);
-            present_event_frame(
-                context, base_surface, encounter, items, fighters,
-                menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
-                encounter_directory_offset);
-            if (!delay(immunity_card_delay)) return false; // eight ticks
+            const auto medium_frame = 174U + event.target;
+            if (medium_frame < menu_sprites.sprites().size()) {
+                const auto placement = fig_medium_placement(event.target);
+                blit_mode0_stencil(
+                    dismissal_name_page, menu_sprites, medium_frame,
+                    placement.left, placement.top);
+            }
+            present_battle_surface(context, alternate_page);
+            for (std::size_t flip = 0; flip < 8U; ++flip) {
+                if ((flip & 1U) == 0) {
+                    present_battle_surface(context, dismissal_name_page);
+                } else {
+                    present_battle_surface(context, alternate_page);
+                }
+                if (!delay(effect_delay)) return false;
+            }
             if (finish_monster_action_here) {
-                if (!present_monster_turn_tail(event)) return false;
+                // 22e0's 2db8 cleanup is bare: unlike the generic event
+                // compositor it does not restore 2bb5's bottom party cards.
+                if (!delay(ward_card_delay)) return false;
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                if (!delay(action_delay)) return false;
             }
             continue;
         }
@@ -4209,6 +4315,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
         // deterministic session instead of launching or emulating FIG.EXE.
         for (std::size_t round = 0;
              round < 1000 && session.outcome() == BattleOutcome::ongoing; ++round) {
+            auto previous_page = surface;
             if (automatic_target &&
                 context.platform.poll_input() != InputAction::none) {
                 // FIG's timer ISR writes DS:3ca3 on any pending key. The next
@@ -4321,6 +4428,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                         surface, session, menu, encounter, abilities,
                         command_font, command_name_font, menu_sprites,
                         fighters, items, context.game_root);
+                    previous_page = frame;
                     context.platform.present({
                         320, 200, frame.pixels,
                         std::span<const std::uint8_t, 768>(frame.palette),
@@ -4348,7 +4456,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             const auto round_result =
                 session.play_round(round_commands, abilities, random.function());
             if (!present_round_events(
-                    context, base_surface, encounter, items,
+                    context, base_surface, previous_page, encounter, items,
                     abilities, command_font, command_name_font,
                     fighters, menu_sprites, visual, round_result,
                     encounter_offset, round_commands)) {
