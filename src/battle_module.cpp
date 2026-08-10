@@ -4277,13 +4277,13 @@ bool present_round_events(
             apply_visual_event(visual, event, abilities);
         }
         if (event.kind == BattleEventKind::player_attack) {
-            // 1358 uses 2db8/137a to restore ordinary party cards before the
-            // next action. If this is the round's last event, the caller's
-            // initiative-loop rejoin immediately owns the bare 2db8 page, so
-            // do not expose an intermediate card page the original never
-            // displays on the victory/round boundary. The low-HP self-heal
-            // sample retains 137a's acting pose for this one flip before the
-            // following enemy turn replaces it with its bare 20e7 page.
+            // 1358 uses 2db8/137a for the no-number commit page before the
+            // next action. The physical-action flag remains live for that
+            // flip, so 137a retains the final fighter pose instead of
+            // restoring the ordinary portrait. If this is the round's last
+            // event, the caller's initiative-loop rejoin immediately owns
+            // the bare 2db8 page; the separate fatal-tail capture covers that
+            // boundary.
             if (show_physical_zero) {
                 // 12d5's immunity/insufficient-attack branch still rejoins
                 // 1358 after the ten red zero pages. 137a consumes the
@@ -4311,9 +4311,7 @@ bool present_round_events(
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
-                    pose_count != 0 &&
-                            result.events[event_index + 1U].kind ==
-                                BattleEventKind::monster_heal
+                    pose_count != 0
                         ? std::optional<std::size_t>{poses[pose_count - 1U]}
                         : std::nullopt,
                     {}, std::nullopt,
