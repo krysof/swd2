@@ -24,11 +24,11 @@
     "frontend": 283
   },
   "rewrite_video": {
-    "frames": 150,
+    "frames": 151,
     "direct_updates": 36,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "655c3e7f0fa16afc"
+    "fnv1a64": "4348a97d9d013431"
   },
   "rewrite_audio": {
     "music_calls": 1,
@@ -43,7 +43,7 @@
   "full_modern_frames": [
     {
       "kind": "bare_prepare",
-      "rewrite_frame": 134,
+      "rewrite_frame": 135,
       "rewrite_indexed_sha256": "612640753435f4f308eba1d9cb5ec5d79f931ad69e7229ba008fbb41abe676a2",
       "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
       "rewrite_rgb_sha256": "847b9a6a96b151beae0efae0a6a4f073ae19e5e74c4e72dc70e6445ba751336a",
@@ -53,7 +53,7 @@
     },
     {
       "kind": "ally_action",
-      "rewrite_frame": 135,
+      "rewrite_frame": 136,
       "rewrite_indexed_sha256": "417122abcebd748b04a4f7ede37b2700f3317cb55d34393ac05f344ec43dfd02",
       "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
       "rewrite_rgb_sha256": "5ebce9d416679e56064559b56c5ac23d6b9df3341d6f62fa04b0576285940b77",
@@ -63,7 +63,7 @@
     },
     {
       "kind": "number_prepare",
-      "rewrite_frame": 136,
+      "rewrite_frame": 137,
       "rewrite_indexed_sha256": "612640753435f4f308eba1d9cb5ec5d79f931ad69e7229ba008fbb41abe676a2",
       "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
       "rewrite_rgb_sha256": "847b9a6a96b151beae0efae0a6a4f073ae19e5e74c4e72dc70e6445ba751336a",
@@ -73,14 +73,14 @@
     },
     {
       "kind": "result_page_1",
-      "rewrite_frame": 137,
+      "rewrite_frame": 138,
       "rewrite_indexed_sha256": "310f2f23e04580b10f954421fbf19796d6bc7feb4c6045ea7244bf44e036978f",
       "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
       "rewrite_rgb_sha256": "96626cef4226cef489c101b25659771e9e0d0d529068157791cb6a3ed73132a4"
     },
     {
       "kind": "result_page_2",
-      "rewrite_frame": 138,
+      "rewrite_frame": 139,
       "rewrite_indexed_sha256": "59895672c572253f566d3e2b0e4c00bbe9b43b00333c30c08216c4094da910c1",
       "rewrite_palette_sha256": "8381457f840eae8b691d65f2edc04facabd696c62657f66c1665b5d5ca4b63a3",
       "rewrite_rgb_sha256": "275ecb3b83ed9ea94440e81e342aff51ec7950a08a5fd85fd26f35c1661ae440",
@@ -90,7 +90,7 @@
     },
     {
       "kind": "result_page_3",
-      "rewrite_frame": 139,
+      "rewrite_frame": 140,
       "rewrite_indexed_sha256": "68264839166e00ee0297d22d9ff763da0cb8d339d1527da1c32cee8474d8110c",
       "rewrite_palette_sha256": "8381457f840eae8b691d65f2edc04facabd696c62657f66c1665b5d5ca4b63a3",
       "rewrite_rgb_sha256": "9c6a8942fc7bdc458e93d839224502f133f9ae01c89191a4aef3a241dad997fe",
@@ -100,7 +100,7 @@
     },
     {
       "kind": "result_page_4",
-      "rewrite_frame": 140,
+      "rewrite_frame": 141,
       "rewrite_indexed_sha256": "12795dc738cab9304a0ec1c78377ebfcf15a435f4f52088181fe63aeaf7f3e6a",
       "rewrite_palette_sha256": "af03bc59b3bad308b3968402fcff20e291bbb7e0485e39ae039b442b1bbf1401",
       "rewrite_rgb_sha256": "333a289874ad8ffb86250343f65ec81566131739b6af1162cd42be7fb52cd39d",
@@ -110,7 +110,7 @@
     },
     {
       "kind": "result_page_5",
-      "rewrite_frame": 141,
+      "rewrite_frame": 142,
       "rewrite_indexed_sha256": "487f01db82cd848cfb8ed447410f928ddc99f3e962b4617f57fa51de4734dc4d",
       "rewrite_palette_sha256": "af03bc59b3bad308b3968402fcff20e291bbb7e0485e39ae039b442b1bbf1401",
       "rewrite_rgb_sha256": "25b17e956c915533b94db32684b617057ace1265cf891d04a3273f7d6923a461",
@@ -120,7 +120,7 @@
     },
     {
       "kind": "result_page_6",
-      "rewrite_frame": 142,
+      "rewrite_frame": 143,
       "rewrite_indexed_sha256": "db0f314d7308d81486ce9be6c5694520587992469ef0394fa191f90f7c83e350",
       "rewrite_palette_sha256": "8b3573c72beb49322f8855a6635a1b2b3c870a0307c60c97e128bfdfba259c72",
       "rewrite_rgb_sha256": "c5b99bef2d80769b1a70ff932c9337e7b00bf8c3d1b327954201e9fc1cb9fdda",
@@ -130,7 +130,7 @@
     },
     {
       "kind": "result_page_7",
-      "rewrite_frame": 143,
+      "rewrite_frame": 144,
       "rewrite_indexed_sha256": "6971d1dc238f27654cb8dcd2f81d489f0fc8c7ef012127c5870679c936e6dce0",
       "rewrite_palette_sha256": "8b3573c72beb49322f8855a6635a1b2b3c870a0307c60c97e128bfdfba259c72",
       "rewrite_rgb_sha256": "165784ec7527caba325dd8bb30074cb88b8e0d31d638a18aa579db6562da0da7",
@@ -140,7 +140,7 @@
     },
     {
       "kind": "result_page_8",
-      "rewrite_frame": 144,
+      "rewrite_frame": 145,
       "rewrite_indexed_sha256": "fa2a08e6a321ac7c14043b117a71f5ce3496d56d620b2616e5aeba153b88836c",
       "rewrite_palette_sha256": "80101044fb49ca39b086257aa9111b92e812c7aa558b8bccd193ea910d699455",
       "rewrite_rgb_sha256": "d31606591f2ed238e5a17f07561b3a5b2ebb5e076ef42fe4134e07bf4727815c",
@@ -150,7 +150,7 @@
     },
     {
       "kind": "result_page_9",
-      "rewrite_frame": 145,
+      "rewrite_frame": 146,
       "rewrite_indexed_sha256": "2f0812f1c8fbf10ce1b439044079717c925b9bde853e41bceb5e4c27d564697c",
       "rewrite_palette_sha256": "80101044fb49ca39b086257aa9111b92e812c7aa558b8bccd193ea910d699455",
       "rewrite_rgb_sha256": "54c1f640913984b3a35d78199f9fc668adfa91152a294b2fe4ca559c6aae358a",
@@ -160,7 +160,7 @@
     },
     {
       "kind": "result_page_10",
-      "rewrite_frame": 146,
+      "rewrite_frame": 147,
       "rewrite_indexed_sha256": "d476fbb4ee7674a8f9d7c5c4ddb15deb529eb12815f39ccebe24500ac82a2e1b",
       "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
       "rewrite_rgb_sha256": "b71ef308fff8209d9c6f4394ee21805532c7a70034b46cd3c873caf7e932205d",
@@ -170,7 +170,7 @@
     },
     {
       "kind": "bare_clean",
-      "rewrite_frame": 147,
+      "rewrite_frame": 148,
       "rewrite_indexed_sha256": "612640753435f4f308eba1d9cb5ec5d79f931ad69e7229ba008fbb41abe676a2",
       "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
       "rewrite_rgb_sha256": "847b9a6a96b151beae0efae0a6a4f073ae19e5e74c4e72dc70e6445ba751336a",
@@ -180,7 +180,7 @@
     },
     {
       "kind": "round_end_bare",
-      "rewrite_frame": 148,
+      "rewrite_frame": 149,
       "rewrite_indexed_sha256": "612640753435f4f308eba1d9cb5ec5d79f931ad69e7229ba008fbb41abe676a2",
       "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
       "rewrite_rgb_sha256": "847b9a6a96b151beae0efae0a6a4f073ae19e5e74c4e72dc70e6445ba751336a",

@@ -4284,6 +4284,29 @@ bool present_round_events(
             // displays on the victory/round boundary. The low-HP self-heal
             // sample retains 137a's acting pose for this one flip before the
             // following enemy turn replaces it with its bare 20e7 page.
+            if (show_physical_zero) {
+                // 12d5's immunity/insufficient-attack branch still rejoins
+                // 1358 after the ten red zero pages. 137a consumes the
+                // still-live physical-action flag, so its no-number commit
+                // page retains the final pose rather than restoring the
+                // ordinary portrait. The initiative-loop rejoin then exposes
+                // one bare 2db8 page before the next actor's card.
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    pose_count != 0
+                        ? std::optional<std::size_t>{poses[pose_count - 1U]}
+                        : std::nullopt,
+                    {}, std::nullopt, encounter_directory_offset);
+                if (event_index + 1U < result.events.size()) {
+                    present_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false, false);
+                }
+                continue;
+            }
             if (event_index + 1U < result.events.size()) {
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,

@@ -17,7 +17,7 @@ PAGE_KINDS = (
     *(f"result_page_{index}" for index in range(1, 11)),
     "bare_clean", "round_end_bare",
 )
-PAGE_INDICES = tuple(range(134, 149))
+PAGE_INDICES = tuple(range(135, 150))
 EXACT_ORIGINAL_KINDS = tuple(
     kind for kind in PAGE_KINDS if kind != "result_page_1"
 )

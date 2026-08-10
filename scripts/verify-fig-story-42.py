@@ -37,7 +37,7 @@ def main() -> int:
                 expected.get("formation_directory_offset") != 0x42 or \
                 not isinstance(pages, list) or len(pages) != 9 or \
                 [p.get("rewrite_frame") for p in pages] != [
-                    30, 33, 42, 44, 45, 47, 49, 50, 53]:
+                    33, 34, 43, 45, 46, 48, 50, 51, 54]:
             raise ValueError("unsupported FIG story-42 reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:
@@ -67,7 +67,7 @@ def main() -> int:
                     "wait": 3, "poll": 2, "text": 2, "frontend": 115}:
             raise ValueError("FIG story-42 input boundaries differ")
         if trace.get("video") != {
-                "frames": 54, "direct_updates": 4,
+                "frames": 55, "direct_updates": 4,
                 "last_width": 320, "last_height": 200,
                 "fnv1a64": expected["rewrite_video_fnv1a64"]} or \
                 trace.get("frame_fnv1a64", [])[-1:] != [
@@ -90,7 +90,7 @@ def main() -> int:
             raise ValueError("FIG story-42 quit boundary differs")
 
         frames = load_indexed_frames(frame_path)
-        if len(frames) != 54:
+        if len(frames) != 55:
             raise ValueError("FIG story-42 frame count differs")
         for page in pages:
             pixels, palette = frames[page["rewrite_frame"]]
