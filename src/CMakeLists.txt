@@ -2585,6 +2585,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_victory_validation PROPERTIES
         DEPENDS fig_victory_prepare)
     add_test(
+        NAME fig_player_critical_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-critical-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-critical-save"
+    )
+    add_test(
+        NAME fig_player_critical_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-critical.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-critical-save"
+                "${CMAKE_BINARY_DIR}/fig-player-critical"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-critical-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_critical_validation PROPERTIES
+        DEPENDS fig_player_critical_prepare)
+    add_test(
         NAME fig_defeat_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-defeat-fixture.py"
