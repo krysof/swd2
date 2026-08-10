@@ -2676,6 +2676,24 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_critical_hit_validation PROPERTIES
         DEPENDS fig_player_critical_hit_prepare)
     add_test(
+        NAME fig_player_attack_basic_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-attack-basic-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-basic-save"
+    )
+    add_test(
+        NAME fig_player_attack_basic_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-attack-basic.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-basic-save"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-basic"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-attack-basic-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_attack_basic_validation PROPERTIES
+        DEPENDS fig_player_attack_basic_prepare)
+    add_test(
         NAME fig_defeat_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-defeat-fixture.py"
