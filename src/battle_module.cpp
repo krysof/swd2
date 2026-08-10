@@ -2484,6 +2484,19 @@ bool present_round_events(
                     menu_sprites, font, fallback, visual, event, abilities,
                     encounter_directory_offset, true);
                 if (!delay(ward_card_delay)) return false;
+
+                // 0e83 returns to the same 0c41 player-action tail as a
+                // failed ordinary escape. With no expiring status, 0d98
+                // still flips a bare 2db8 battlefield for five ticks before
+                // the next initiative entry. The capture-failure card must
+                // not remain underneath the following monster action.
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                if (!delay(ward_card_delay)) return false;
                 continue;
             }
             apply_visual_event(visual, event, abilities);

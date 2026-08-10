@@ -12,11 +12,11 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
-SEQUENCE_FRAMES = tuple(range(5, 31))
+SEQUENCE_FRAMES = tuple(range(5, 32))
 SEQUENCE_TIMES = (
-    0, 0, 257, 328, 385, 385, 399, 413, 427, 441, 455, 469,
-    483, 497, 511, 525, 539, 553, 567, 581, 595, 609, 623, 708,
-    751, 831,
+    0, 0, 257, 328, 399, 456, 456, 470, 484, 498, 512, 526,
+    540, 554, 568, 582, 596, 610, 624, 638, 652, 666, 680, 694,
+    779, 822, 902,
 )
 
 
@@ -91,7 +91,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 5, "consumed": 5, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 5, "poll": 0, "text": 0, "frontend": 79}:
+                    "wait": 5, "poll": 0, "text": 0, "frontend": 84}:
             raise ValueError("FIG capture-failure replay boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \
@@ -148,7 +148,8 @@ def main() -> int:
 
         print(
             "FIG capture-failure checkpoint: target-anchored pot/failure cards, "
-            "18/5-tick holds and following enemy turn all match original RGB")
+            "18/5-tick holds, 0d98 bare boundary and following enemy turn all "
+            "match original RGB")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:
