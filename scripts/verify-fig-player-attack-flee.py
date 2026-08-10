@@ -21,11 +21,12 @@ EXPECTED_KINDS = (
     *(f"player_damage_rise{index}" for index in range(1, 11)),
     "player_result_background_clear",
     "player_result_commit_retains_pose2",
+    "player_round_bare_boundary",
     "monster_flee_card", "post_flee_bare_battlefield",
     "victory_boundary_bare_battlefield", "victory_reward_summary",
 )
 EXPECTED_REWRITE_FRAMES = (
-    *range(1, 11), *range(14, 30),
+    *range(1, 11), *range(14, 31),
 )
 
 
@@ -188,7 +189,7 @@ def main() -> int:
         print(
             "FIG player-flee checkpoint: physical poses/wipes, ten player "
             "damage pages, bare-background/pose-2 commit, monster flee card, "
-            "post-flee/victory bare pages and reward summary match 26 "
+            "post-flee/victory bare pages and reward summary match 27 "
             "original RGB pages")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,

@@ -2864,7 +2864,9 @@ bool present_round_events(
         }
         if (event.kind == BattleEventKind::monster_attack) {
             // FIG 296a begins every physical enemy action with 2b08's
-            // two-column "攻 擊" card at x=center-8/y=50.
+            // two-column "攻 擊" card at x=center-8/y=50. The initiative
+            // loop's preceding bare page is owned by the path that rejoins
+            // this action rather than by 296a itself.
             auto attacker_event = event;
             attacker_event.target_is_monster = true;
             attacker_event.target = event.source;
@@ -4307,12 +4309,18 @@ bool present_round_events(
                 }
                 continue;
             }
-            if (event_index + 1U < result.events.size()) {
+            auto successor_index = event_index + 1U;
+            while (successor_index < result.events.size() &&
+                   result.events[successor_index].kind ==
+                       BattleEventKind::skipped) {
+                ++successor_index;
+            }
+            if (successor_index < result.events.size()) {
                 // 20e7's low-HP self-heal decision is entered before the
                 // ordinary initiative rejoin, so that successor consumes the
                 // retained pose directly. Other surviving-monster actions
                 // expose 2db8's empty page first.
-                if (result.events[event_index + 1U].kind !=
+                if (result.events[successor_index].kind !=
                     BattleEventKind::monster_heal) {
                     present_battle_surface(context, base_surface);
                 }
@@ -4324,6 +4332,21 @@ bool present_round_events(
                         : std::nullopt,
                     {}, std::nullopt,
                     encounter_directory_offset);
+                const auto successor = result.events[successor_index].kind;
+                if (successor == BattleEventKind::monster_attack ||
+                    successor == BattleEventKind::monster_fled ||
+                    successor == BattleEventKind::monster_escape_failed) {
+                    // The ordinary initiative rejoin exposes a monster-only
+                    // 2db8 page between 137a's retained physical pose and
+                    // 296a/212a. Generic/single-target and self-heal paths
+                    // already own their corresponding 20e7 preparation page.
+                    present_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                }
             }
             continue;
         }
