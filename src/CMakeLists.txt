@@ -1182,4 +1182,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_implicit_damage_validation PROPERTIES
         DEPENDS fig_implicit_damage_prepare)
+    add_test(
+        NAME fig_periodic_zero_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-periodic-zero-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-periodic-zero-save"
+    )
+    add_test(
+        NAME fig_periodic_zero_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-periodic-zero.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-periodic-zero-save"
+                "${CMAKE_BINARY_DIR}/fig-periodic-zero"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-periodic-zero-rgb-reference.json"
+    )
+    set_tests_properties(fig_periodic_zero_validation PROPERTIES
+        DEPENDS fig_periodic_zero_prepare)
 endif()

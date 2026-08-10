@@ -195,6 +195,28 @@ void brighten_fig_dispatcher_palette(
     }
 }
 
+void rotate_fig_existing_result_palette(
+    std::array<std::uint8_t, 768>& palette,
+    std::size_t page_index) {
+    // The autonomous slot-two path enters 5ed8 without calling 14a3 first.
+    // Rotate the five E0h..E4h colours already installed by the preceding
+    // action instead of replacing them with a canonical ability ramp.
+    constexpr auto colors = std::size_t{5};
+    constexpr auto first = std::size_t{0xe0} * 3U;
+    std::array<std::uint8_t, colors * 3U> source{};
+    std::copy_n(palette.begin() + static_cast<std::ptrdiff_t>(first),
+                source.size(), source.begin());
+    const auto shift = ((page_index + 1U) / 2U) % colors;
+    for (std::size_t destination = 0; destination < colors; ++destination) {
+        const auto source_color =
+            (destination + colors - shift) % colors;
+        std::copy_n(
+            source.begin() + static_cast<std::ptrdiff_t>(source_color * 3U),
+            3, palette.begin() + static_cast<std::ptrdiff_t>(
+                   first + destination * 3U));
+    }
+}
+
 void draw_big5(BattleSurface& surface, const LegacyFont& font,
                const LegacyFont& fallback, std::span<const std::uint8_t> text,
                int left, int top, std::uint8_t color) {
@@ -1456,7 +1478,8 @@ BattleSurface compose_event_frame(
     std::optional<FigNumberPlacement> result_number,
     std::uint16_t encounter_directory_offset,
     std::optional<FigWeaponAnimation> weapon_animation = std::nullopt,
-    bool force_monster_reaction = false) {
+    bool force_monster_reaction = false,
+    bool include_party_cards = true) {
     auto frame = base_surface;
     const auto [target_x, target_y] = event_target_center(
         encounter, items, context.game_root, visual, event, fighters);
@@ -1499,12 +1522,14 @@ BattleSurface compose_event_frame(
         draw_weapon_overlay(frame, *weapon_animation, context.game_root,
                             target_x, target_y);
     }
-    draw_fig_party_cards(
-        frame, menu_sprites,
-        std::span<const BattlePartyMember>(visual.party).first(
-            visual.party_count),
-        action_actor, action_mode_x_anchor);
-    if (fighter_pose && player_actor_event(event.kind) &&
+    if (include_party_cards) {
+        draw_fig_party_cards(
+            frame, menu_sprites,
+            std::span<const BattlePartyMember>(visual.party).first(
+                visual.party_count),
+            action_actor, action_mode_x_anchor);
+    }
+    if (include_party_cards && fighter_pose && player_actor_event(event.kind) &&
         event.source < visual.party_count) {
         draw_fighter_pose(frame, fighters, visual.party[event.source],
                           *fighter_pose, action_mode_x_anchor);
@@ -1537,16 +1562,22 @@ BattleSurface compose_event_frame(
     const auto resistance_zero =
         event.block_reason == AbilityBlockReason::resistance &&
         !event.target_is_monster;
-    const auto physical_zero = event.kind == BattleEventKind::player_attack &&
-                               event.damage == 0 && !event.evaded;
+    const auto physical_zero =
+        (event.kind == BattleEventKind::player_attack ||
+         event.kind == BattleEventKind::ally_attack) &&
+        event.damage == 0 && !event.evaded;
+    const auto periodic_zero =
+        event.kind == BattleEventKind::status_damage &&
+        event.target_is_monster && event.damage == 0;
     if (result_number &&
         (event.damage != 0 || event.healing != 0 || resistance_zero ||
-         physical_zero)) {
+         physical_zero || periodic_zero)) {
         const auto value = event.damage != 0 ? event.damage : event.healing;
         draw_menu_number(frame, menu_sprites, value,
                          result_number->mode_x_column,
                          result_number->top,
-                         event.damage != 0 || resistance_zero || physical_zero
+                         event.damage != 0 || resistance_zero || physical_zero ||
+                                 periodic_zero
                              ? 121U
                              : 111U);
     }
@@ -2601,11 +2632,24 @@ bool present_round_events(
         }
         std::size_t effect_cursor = 0;
         if (pose_count == 0 && effect_frames.empty() && !dispatcher_event) {
-            present_event_frame(context, base_surface, encounter, items,
-                                fighters, menu_sprites, font, fallback, visual,
-                                event, std::nullopt,
-                                {}, std::nullopt,
-                                encounter_directory_offset);
+            if (event.kind == BattleEventKind::status_damage &&
+                event.target_is_monster) {
+                // 0b94 enters the periodic slot-two handler through bare
+                // 2db8. Unlike ordinary actions, this clean preparation page
+                // does not reinstall 2bb5's bottom party cards.
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+            } else {
+                present_event_frame(context, base_surface, encounter, items,
+                                    fighters, menu_sprites, font, fallback,
+                                    visual, event, std::nullopt, {},
+                                    std::nullopt,
+                                    encounter_directory_offset);
+            }
             if (event.kind != BattleEventKind::monster_attack &&
                 event.kind != BattleEventKind::ally_attack &&
                 event.kind != BattleEventKind::status_damage) {
@@ -3181,6 +3225,9 @@ bool present_round_events(
         const auto presented_result_number =
             result_value != 0 || show_resistance_zero || show_physical_zero ||
             show_monster_status_zero;
+        const auto retained_status_damage_handler =
+            event.kind == BattleEventKind::status_damage &&
+            event.target_is_monster && presented_result_number;
         if (presented_result_number) {
             std::array<FigNumberPlacement, 10> placements{};
             if (event.target_is_monster) {
@@ -3191,7 +3238,8 @@ bool present_round_events(
             } else {
                 placements = fig_party_number_timeline(event.target);
             }
-            if (retained_monster_damage_handler) {
+            if (retained_monster_damage_handler ||
+                retained_status_damage_handler) {
                 // 144e first performs one complete 2db8/137a/flip and saves
                 // that reaction page in A800h before drawing any digits.  It
                 // has no timer wait, but it is a real visible page and is the
@@ -3199,8 +3247,12 @@ bool present_round_events(
                 auto reaction_frame = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
-                    std::optional<std::size_t>{4}, {}, std::nullopt,
-                    encounter_directory_offset, std::nullopt, true);
+                    retained_monster_damage_handler
+                        ? std::optional<std::size_t>{4}
+                        : std::nullopt,
+                    {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, true,
+                    !retained_status_damage_handler);
                 if (dispatcher_palette_override) {
                     reaction_frame.palette = *dispatcher_palette_override;
                 }
@@ -3208,13 +3260,17 @@ bool present_round_events(
                     apply_fig_monster_result_palette(
                         reaction_frame.palette,
                         *retained_damage_target_flags, 0);
+                } else if (retained_status_damage_handler) {
+                    rotate_fig_existing_result_palette(
+                        reaction_frame.palette, 0);
                 }
                 present_battle_surface(context, reaction_frame);
             }
             for (std::size_t page_index = 0;
                  page_index < placements.size(); ++page_index) {
                 const auto& placement = placements[page_index];
-                if (retained_monster_damage_handler) {
+                if (retained_monster_damage_handler ||
+                    retained_status_damage_handler) {
                     // 144e runs inside the >30h dispatcher handler, before
                     // 585e charges the selected resource.  A800h preserves
                     // the one-shot reaction sprite on every number page;
@@ -3223,8 +3279,12 @@ bool present_round_events(
                     auto number_frame = compose_event_frame(
                         context, base_surface, encounter, items, fighters,
                         menu_sprites, font, fallback, visual, event,
-                        std::optional<std::size_t>{4}, {}, placement,
-                        encounter_directory_offset, std::nullopt, true);
+                        retained_monster_damage_handler
+                            ? std::optional<std::size_t>{4}
+                            : std::nullopt,
+                        {}, placement,
+                        encounter_directory_offset, std::nullopt, true,
+                        !retained_status_damage_handler);
                     if (dispatcher_palette_override) {
                         number_frame.palette = *dispatcher_palette_override;
                     }
@@ -3232,6 +3292,9 @@ bool present_round_events(
                         apply_fig_monster_result_palette(
                             number_frame.palette,
                             *retained_damage_target_flags, page_index);
+                    } else if (retained_status_damage_handler) {
+                        rotate_fig_existing_result_palette(
+                            number_frame.palette, page_index);
                     }
                     present_battle_surface(context, number_frame);
                 } else {
@@ -3332,12 +3395,24 @@ bool present_round_events(
             }
             continue;
         }
-        present_event_frame(context, base_surface, encounter, items, fighters,
-                            menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
-                            encounter_directory_offset);
         if (event.kind == BattleEventKind::status_damage) {
+            // 0bf4 commits HP, repeats the same bare 2db8 composition and
+            // leaves that card-free page visible for four timer ticks.
+            const auto clean = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event, std::nullopt,
+                {}, std::nullopt, encounter_directory_offset, std::nullopt,
+                false, false);
+            present_battle_surface(context, clean);
             if (!delay(monster_action_card_delay)) return false;
-        } else if (monster_all_target_action) {
+        } else {
+            present_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event, std::nullopt,
+                {}, std::nullopt, encounter_directory_offset);
+        }
+        if (event.kind != BattleEventKind::status_damage &&
+            monster_all_target_action) {
             if (!delay_monster_all_target_slots()) return false;
         }
         if (finish_monster_action_here) {
