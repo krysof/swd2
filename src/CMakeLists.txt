@@ -1070,6 +1070,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_item_status_validation PROPERTIES
         DEPENDS fig_item_status_prepare)
     add_test(
+        NAME fig_item_monster_status_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-item-monster-status-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-item-monster-status-save"
+    )
+    add_test(
+        NAME fig_item_monster_status_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-item-monster-status.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-item-monster-status-save"
+                "${CMAKE_BINARY_DIR}/fig-item-monster-status"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-item-monster-status-rgb-reference.json"
+    )
+    set_tests_properties(fig_item_monster_status_validation PROPERTIES
+        DEPENDS fig_item_monster_status_prepare)
+    add_test(
         NAME fig_flagged_medium_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-flagged-medium-fixture.py"

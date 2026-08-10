@@ -3294,10 +3294,11 @@ bool present_round_events(
         }
         while (effect_cursor < effect_frames.size()) {
             const auto& effect = effect_frames[effect_cursor++];
-            // 4338/436a leave the acting fighter in pose 4 while DS:2bbd
-            // renders the selected learned/item effect. Rebuilding these
-            // pages with the ordinary portrait loses both frame 180's action
-            // backing and FMAN, and also gives 59a1 the wrong page to retain.
+            // 4338/436a leave a learned caster in pose 4 while DS:2bbd
+            // renders the selected effect; direct-item entry 1138 instead
+            // leaves the same anchor in pose 0. Rebuilding these pages with
+            // the ordinary portrait loses both frame 180's action backing and
+            // FMAN, and also gives 59a1 the wrong page to retain.
             const auto retained_pose = player_dispatcher_action &&
                                                !retained_player_barrier_handler
                                            ? std::optional<std::size_t>{
@@ -3442,12 +3443,15 @@ bool present_round_events(
             // action page, so 2deb's persistent icon is already visible on
             // the first clean page after the final SP frame. 585e then debits
             // the resource and 4417 restores C0h..DFh in five palette steps
-            // while the same pose-4/status page remains selected.
+            // while the same dispatcher-anchor/status page remains selected.
+            // 4338's learned-ability entry advances that anchor to pose 4;
+            // direct ITEM entry 1138 leaves DS:31e1 at pose 0 instead.
             apply_visual_event(visual, event, abilities);
             auto restored = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event,
-                std::optional<std::size_t>{4}, {}, std::nullopt,
+                std::optional<std::size_t>{dispatcher_effect_pose}, {},
+                std::nullopt,
                 encounter_directory_offset);
             if (dispatcher_palette_override) {
                 restored.palette = *dispatcher_palette_override;
@@ -3457,7 +3461,8 @@ bool present_round_events(
             restored = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event,
-                std::optional<std::size_t>{4}, {}, std::nullopt,
+                std::optional<std::size_t>{dispatcher_effect_pose}, {},
+                std::nullopt,
                 encounter_directory_offset);
             if (dispatcher_palette_override) {
                 restored.palette = *dispatcher_palette_override;
@@ -3741,13 +3746,16 @@ bool present_round_events(
             if (!delay(immunity_card_delay)) return false;
             if (retained_immunity_handler) {
                 // 5b06 finishes 5a91 by replacing the immunity card with a
-                // clean pose-4 page. Only after that handler returns does
-                // 585e debit the pool; 4417 then restores colours C0h..DFh
-                // while the already visible pre-debit clean page remains.
+                // clean dispatcher-anchor page. Only after that handler
+                // returns does 585e debit the pool; 4417 then restores
+                // colours C0h..DFh while the already visible pre-debit clean
+                // page remains. The anchor is pose 4 after learned entry
+                // 4338, but remains pose 0 after direct ITEM entry 1138.
                 auto restored = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
-                    std::optional<std::size_t>{4}, {}, std::nullopt,
+                    std::optional<std::size_t>{dispatcher_effect_pose}, {},
+                    std::nullopt,
                     encounter_directory_offset);
                 if (dispatcher_palette_override) {
                     restored.palette = *dispatcher_palette_override;
