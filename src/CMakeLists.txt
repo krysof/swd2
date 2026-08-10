@@ -1608,6 +1608,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_effect5e_resistance_validation PROPERTIES
         DEPENDS fig_player_effect5e_resistance_prepare)
     add_test(
+        NAME fig_player_effect5f_status_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-effect5f-status-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-effect5f-status-save"
+    )
+    add_test(
+        NAME fig_player_effect5f_status_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-effect5f-status.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-effect5f-status-save"
+                "${CMAKE_BINARY_DIR}/fig-player-effect5f-status"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-effect5f-status-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_effect5f_status_validation PROPERTIES
+        DEPENDS fig_player_effect5f_status_prepare)
+    add_test(
         NAME fig_player_support_effect07_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect07-fixture.py"
