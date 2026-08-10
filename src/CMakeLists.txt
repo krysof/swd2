@@ -1183,6 +1183,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_support_effect19_validation PROPERTIES
         DEPENDS fig_player_support_effect19_prepare)
     add_test(
+        NAME fig_player_support_effect1a_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect1a-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect1a-save"
+    )
+    add_test(
+        NAME fig_player_support_effect1a_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-support.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect1a-save"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect1a"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-support-effect1a-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_support_effect1a_validation PROPERTIES
+        DEPENDS fig_player_support_effect1a_prepare)
+    add_test(
         NAME fig_player_support_effect07_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect07-fixture.py"
