@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_monster_flee_sequence",
+  "status": "exact_rgb_checkpoint",
+  "formation_directory_offset": 100,
+  "random_region_map": 10,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "source_orc_sha256": "454912f918eaebe0e80cfdddb76a8f48daed9aab7e4d475acdb62e458518ccae",
+  "pinned_capture_orc_sha256": "270dca68142b91a0d90215a27178338d27830b93fd2b7b88b18e94ad44a3c85d",
+  "fixture_save_sha256": "ecba11f1625862dd877a5252609615fd5ceb896f12be159d501676b06ed63756",
+  "capture_autotype": "original-fig-monster-flee-autotype.txt",
+  "capture_autotype_sha256": "e2334382d51acf82e2ff159cd93f31d0963a4bd19ec4ef4af2f74f35ca21f962",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 3,
+  "capture_video_sha256": "25079d88ad295ad2fa8e795103a1e0831cfd75be8f174057e27d0195c8f77595",
+  "capture_manifest_sha256": "fdf8dbff403113e27d2e8992ed7b24922a19c72a1f1f95ff84f1852ae67775b1",
+  "rewrite_video": {
+    "frames": 66,
+    "direct_updates": 36,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "3673bda7921a113b"
+  },
+  "rewrite_audio": {
+    "music_calls": 2,
+    "voice_calls": 2,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "586ed92181232ec4"
+  },
+  "rewrite_delay_milliseconds": 1171,
+  "rewrite_state_fnv1a64": "408048db6fabed68",
+  "pages": [
+    {
+      "label": "AI type-two flee card without party cards",
+      "rewrite_frame": 41,
+      "original_review_frame": 1864,
+      "original_png_sha256": "4f51cae1c7ab35a7da2e470a5a80090213bff20d86218c72bbcac7abd8ee95ac",
+      "rewrite_indexed_sha256": "4faa6503068e483cad9adce4f84d36df2f10d4bd5fc6977003f967b1f156875e",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "b56aa9ea12bb0ebc65806fe72eff2aede56ffa0376c5443e72ded2b2a4303270",
+      "original_rgb_sha256": "b56aa9ea12bb0ebc65806fe72eff2aede56ffa0376c5443e72ded2b2a4303270"
+    },
+    {
+      "label": "post-flee bare battlefield",
+      "rewrite_frame": 42,
+      "original_review_frame": 1883,
+      "original_png_sha256": "8f0c86c0f98ff951870ac06d43e3a95723f48e018492b6f3a662acc340d6b227",
+      "rewrite_indexed_sha256": "07cf3a479c904717e23a7a025f9f71b3213d97d55e6d5d12374a9c127b1347dd",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "29ad5822e720fe05a9f4a49e10063757c515dc85fe81851ae6e82196af0f8499",
+      "original_rgb_sha256": "29ad5822e720fe05a9f4a49e10063757c515dc85fe81851ae6e82196af0f8499"
+    },
+    {
+      "label": "following player pose reinstalls party card",
+      "rewrite_frame": 43,
+      "original_review_frame": 1892,
+      "original_png_sha256": "bd30564d5ae7595e1be6e40195767891e739ab8ca5eaea2b1a0e0f4a289cb9e8",
+      "rewrite_indexed_sha256": "b6f29b81babab0042dfb703ea5d418836e002a4530f7edb6f93677b801009b06",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "6ae220530b2d23ff2213d23f641fa5f646539f8198d619f4714829145276177d",
+      "original_rgb_sha256": "6ae220530b2d23ff2213d23f641fa5f646539f8198d619f4714829145276177d"
+    },
+    {
+      "label": "physical result first exact captured page",
+      "rewrite_frame": 54,
+      "original_review_frame": 1928,
+      "original_png_sha256": "92feb6bb87f23f3ebf18771b3b91dc1698621b786821fc1926968d5117d9565c",
+      "rewrite_indexed_sha256": "d7e98ec1daba886a9aed5c33f8b95de43ab88a6c6409f09651f7d43923eb066c",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "fdf4f4b2ddb78f125fb01902d4248c1595f247f5b24ae1f372b9336dad28cc6b",
+      "original_rgb_sha256": "fdf4f4b2ddb78f125fb01902d4248c1595f247f5b24ae1f372b9336dad28cc6b"
+    },
+    {
+      "label": "physical result last exact captured page",
+      "rewrite_frame": 63,
+      "original_review_frame": 1957,
+      "original_png_sha256": "a431f0caf2b376ee2274efffc24d02307796b41eb76a492238760ef9b49787d9",
+      "rewrite_indexed_sha256": "cde4d39aab0cd6885084369cb1a414835ddb1969adc557eb4e0ab515cb6263b0",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "5fd0b544252de7a70afe5dcad6f6503c758488315d7a0fc33b774dccd573e2b6",
+      "original_rgb_sha256": "5fd0b544252de7a70afe5dcad6f6503c758488315d7a0fc33b774dccd573e2b6"
+    },
+    {
+      "label": "victory-boundary bare battlefield",
+      "rewrite_frame": 64,
+      "original_review_frame": 1981,
+      "original_png_sha256": "58ce1e6f0c9b7a69ad160d2ad7556e62c8063d8d3854feef692f51d01e0f8174",
+      "rewrite_indexed_sha256": "836a0b86facaea4da9c31a1faa917c1e812f46bcd2a2587c685b4d4e62cf8bf0",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "27b64ba21c98b88f8f464f08bfaf8617dabd9299826b20f55e84238c7af1bb1c",
+      "original_rgb_sha256": "27b64ba21c98b88f8f464f08bfaf8617dabd9299826b20f55e84238c7af1bb1c"
+    },
+    {
+      "label": "victory reward summary",
+      "rewrite_frame": 65,
+      "original_review_frame": 2012,
+      "original_png_sha256": "037532ca7f8bf8b19d4a0be97c21bea15c96f5d61bf3502af35c7a25049dfb0d",
+      "rewrite_indexed_sha256": "3f22ad7f23e02948d8fa44edb5058cdbbceac486191c07093b255a89da2dca61",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "7ed775a6dc3b5f59ab8af4be8d6fb11298aca2eb2548410143c2f8636dc5e9a7",
+      "original_rgb_sha256": "7ed775a6dc3b5f59ab8af4be8d6fb11298aca2eb2548410143c2f8636dc5e9a7"
+    }
+  ]
+}

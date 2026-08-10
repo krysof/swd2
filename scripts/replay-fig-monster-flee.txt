@@ -1,0 +1,5 @@
+# Skip the opening text, choose the default attack and its first target.
+POLL:CONFIRM
+WAIT:CONFIRM*3
+# Stop on the victory summary after the faster AI-type-two monster fled.
+WAIT:QUIT

@@ -1620,12 +1620,13 @@ void present_event_frame(
     std::optional<FigNumberPlacement> result_number,
     std::uint16_t encounter_directory_offset,
     std::optional<FigWeaponAnimation> weapon_animation = std::nullopt,
-    bool force_monster_reaction = false) {
+    bool force_monster_reaction = false,
+    bool include_party_cards = true) {
     const auto frame = compose_event_frame(
         context, base_surface, encounter, items, fighters, menu_sprites,
         font, fallback, visual, event, fighter_pose, effect_layers,
         result_number, encounter_directory_offset, weapon_animation,
-        force_monster_reaction);
+        force_monster_reaction, include_party_cards);
     present_battle_surface(context, frame);
 }
 
@@ -1717,7 +1718,8 @@ void present_monster_compact_card(
     const BattleSessionEvent& event, std::span<const std::uint8_t> text,
     std::uint16_t encounter_directory_offset, int columns = 4,
     std::uint8_t color = 0x00, int center_offset = 10,
-    const BattleSurface* retained_surface = nullptr) {
+    const BattleSurface* retained_surface = nullptr,
+    bool include_party_cards = true) {
     if (!event.target_is_monster || event.target >= visual.monsters.size() ||
         text.empty()) {
         return;
@@ -1730,10 +1732,12 @@ void present_monster_compact_card(
         draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
                      visual.monsters,
                      std::nullopt, encounter_directory_offset);
-        draw_fig_party_cards(
-            frame, menu_sprites,
-            std::span<const BattlePartyMember>(visual.party).first(
-                visual.party_count));
+        if (include_party_cards) {
+            draw_fig_party_cards(
+                frame, menu_sprites,
+                std::span<const BattlePartyMember>(visual.party).first(
+                    visual.party_count));
+        }
     }
 
     // FIG 2375 uses the selected monster's runtime x centre (+321d), moves
@@ -2299,7 +2303,7 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event,
                 abilities.monster_escape_text(succeeded),
-                encounter_directory_offset, 4, 0x6b);
+                encounter_directory_offset, 4, 0x6b, 10, nullptr, false);
             if (succeeded) {
                 play_voice_cue(context, {FigVoiceFile::sv3, 0,
                                          FigVoiceTiming::before_action});
@@ -2311,7 +2315,7 @@ bool present_round_events(
             present_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
-                encounter_directory_offset);
+                encounter_directory_offset, std::nullopt, false, false);
             if (!delay(action_delay)) return false;
             continue;
         }
