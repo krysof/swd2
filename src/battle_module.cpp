@@ -2150,7 +2150,8 @@ bool present_round_events(
         if (event.kind != BattleEventKind::player_ability &&
             event.kind != BattleEventKind::missing_medium &&
             event.kind != BattleEventKind::medium_summoned &&
-            event.kind != BattleEventKind::medium_dismissed) {
+            event.kind != BattleEventKind::medium_dismissed &&
+            event.kind != BattleEventKind::medium_dismissal_empty) {
             return;
         }
         auto cost = std::uint16_t{};
@@ -2165,7 +2166,8 @@ bool present_round_events(
         } else if (command.kind == PlayerCommandKind::item &&
                    (event.resulting_player_support_state ||
                     event.kind == BattleEventKind::medium_summoned ||
-                    event.kind == BattleEventKind::medium_dismissed) &&
+                    event.kind == BattleEventKind::medium_dismissed ||
+                    event.kind == BattleEventKind::medium_dismissal_empty) &&
                    event.ability_id >= 0x8cU &&
                    static_cast<std::size_t>(event.ability_id) + 2U <
                        items.entry_count()) {
@@ -2555,7 +2557,8 @@ bool present_round_events(
             }
             continue;
         }
-        if (event.kind == BattleEventKind::medium_dismissed) {
+        if (event.kind == BattleEventKind::medium_dismissed ||
+            event.kind == BattleEventKind::medium_dismissal_empty) {
             if (!event.source_is_monster &&
                 !event.source_is_summoned_ally &&
                 event.source < visual.party_count) {
@@ -2587,14 +2590,20 @@ bool present_round_events(
                 play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
                                          FigVoiceTiming::before_action});
 
-                // 482e/4886/4894 retain the old mediator on the page saved by
-                // 3c15, clear its persistent x coordinate, then flip that
-                // retained pair eight times.  Its disappearance is visible
+                // A present medium retains the old sprite on the page saved
+                // by 3c15 while 482e/4886/4894 clear its persistent x and
+                // flip that pair eight times. Its disappearance is visible
                 // only on the ordinary 0d98 recomposition after 585e/4417.
-                apply_visual_event(visual, event, abilities);
-                for (std::size_t flip = 0; flip < 8U; ++flip) {
-                    present_battle_surface(context, retained);
-                    if (!delay(effect_delay)) return false;
+                if (event.kind == BattleEventKind::medium_dismissed) {
+                    apply_visual_event(visual, event, abilities);
+                    for (std::size_t flip = 0; flip < 8U; ++flip) {
+                        present_battle_surface(context, retained);
+                        if (!delay(effect_delay)) return false;
+                    }
+                } else {
+                    // 4844 observes the empty slot's x sentinel (50h), waits
+                    // five ticks and returns without 3c15/65f1 page flips.
+                    if (!delay(ward_card_delay)) return false;
                 }
                 present_player_resource_cost(event);
                 for (auto step = 0; step < 5; ++step) {

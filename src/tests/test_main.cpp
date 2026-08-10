@@ -4673,6 +4673,30 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     }),
             "FIG standalone 3dh item did not pay/remove medium AE");
 
+    // 482e still runs selector 3dh when AE is absent. Its 50h x sentinel
+    // skips the eight mode-0 flips, but the direct item is paid and consumed.
+    auto empty_medium_state = medium_remove_state;
+    empty_medium_state.set_u16(0x382, 193);
+    empty_medium_state.set_u16(0x384, 0);
+    auto empty_medium_session = swd2::BattleSession::create(
+        empty_medium_state, selected->get(), items);
+    const auto empty_medium_round = empty_medium_session.play_round(
+        medium_remove_commands, abilities, zero_random);
+    require(empty_medium_session.battle_media() ==
+                    std::array<bool, 3>{false, false, false} &&
+                empty_medium_session.inventory()[0] == 0 &&
+                empty_medium_session.party()[0].ability_points == 980 &&
+                std::any_of(
+                    empty_medium_round.events.begin(),
+                    empty_medium_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind == swd2::BattleEventKind::
+                                                 medium_dismissal_empty &&
+                               event.ability_id == 193 &&
+                               event.effect_code == 0x3d && event.target == 0;
+                    }),
+            "FIG empty 3dh item did not run/pay the sentinel return path");
+
     // Direct ITEM selectors enter the same tactical handlers as learned and
     // nested abilities. Cover the unflagged player/self side (62/69) and the
     // monster-buff removal side (61) using the shipped records. Item 226's

@@ -401,9 +401,11 @@ BattleRoundResult BattleSession::play_round(
                                                  std::uint16_t presentation_id) {
                 auto medium = fig_summoned_medium(effect_code);
                 const auto summoned = medium.has_value();
+                auto dismissal_present = false;
                 if (!medium) {
                     medium = fig_player_dismissed_medium(effect_code);
-                    if (!medium || !battle_media_[*medium]) return false;
+                    if (!medium) return false;
+                    dismissal_present = battle_media_[*medium];
                 }
 
                 // 4792/47c6/47fa call 5b41 unconditionally and store the
@@ -413,8 +415,11 @@ BattleRoundResult BattleSession::play_round(
                 // Neither is 58fa's target-flag prerequisite failure.
                 battle_media_[*medium] = summoned;
                 BattleSessionEvent event;
-                event.kind = summoned ? BattleEventKind::medium_summoned
-                                      : BattleEventKind::medium_dismissed;
+                event.kind = summoned
+                                 ? BattleEventKind::medium_summoned
+                                 : (dismissal_present
+                                        ? BattleEventKind::medium_dismissed
+                                        : BattleEventKind::medium_dismissal_empty);
                 event.source = actor;
                 event.target = *medium;
                 event.ability_id = presentation_id;

@@ -20,6 +20,7 @@ bool fig_same_presented_action(const BattleSessionEvent& left,
         case BattleEventKind::ally_ability: return 3;
         case BattleEventKind::medium_summoned:
         case BattleEventKind::medium_dismissed:
+        case BattleEventKind::medium_dismissal_empty:
             return event.source_is_summoned_ally
                        ? 3
                        : (event.source_is_monster ? 2 : 1);

@@ -64,6 +64,7 @@ enum class BattleEventKind {
     monster_escape_failed,
     medium_summoned,
     medium_dismissed,
+    medium_dismissal_empty,
     missing_medium,
 };
 
