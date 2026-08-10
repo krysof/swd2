@@ -754,8 +754,18 @@ BattleRoundResult BattleSession::play_round(
                     continue;
                 }
                 if (item.effect_code != 0x6b) {
-                    if (const auto medium = fig_required_medium(item.effect_code);
-                        medium && !battle_media_[*medium]) {
+                    auto missing_medium =
+                        fig_required_medium(item.effect_code);
+                    if (item.type == 0x10) {
+                        if (const auto flagged_medium =
+                                fig_medium_from_target_flags(
+                                    abilities.ability(item_ability_id)
+                                        .target_flags);
+                            flagged_medium && !battle_media_[*flagged_medium]) {
+                            missing_medium = flagged_medium;
+                        }
+                    }
+                    if (missing_medium && !battle_media_[*missing_medium]) {
                         auto target_index = command.target;
                         if (item.targets_monster()) {
                             target_index = first_living_monster(command.target);

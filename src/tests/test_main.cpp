@@ -4435,19 +4435,20 @@ void test_battle_session(const std::filesystem::path& game_root) {
             "FIG targetless composite item did not dispatch both tactical effects");
 
     // Direct ITEM selectors enter the same tactical handlers as learned and
-    // nested abilities. Cover both the player/self side (62/63/69) and the
-    // monster-buff removal side (61) using the shipped records.
+    // nested abilities. Cover the unflagged player/self side (62/69) and the
+    // monster-buff removal side (61) using the shipped records. Item 226's
+    // 63h wrapper is tested separately because embedded ability 86 requests
+    // a mediator through target_flags before that tactical body may run.
     struct DirectTacticalItemCase {
         std::uint16_t item;
         std::uint16_t effect;
         bool targets_monster;
         bool consumed;
     };
-    const std::array<DirectTacticalItemCase, 4> direct_tactical_items{{
+    const std::array<DirectTacticalItemCase, 3> direct_tactical_items{{
         {186, 0x69, false, false}, // 辟邪戒指
         {204, 0x62, false, true},  // 代形符
         {211, 0x61, true, true},   // 破法符
-        {226, 0x63, false, true},  // 踏風符
     }};
     for (const auto& test : direct_tactical_items) {
         auto direct_state = swd2::SharedState::load(game_root / "SAVE.DA1");
@@ -4460,7 +4461,6 @@ void test_battle_session(const std::filesystem::path& game_root) {
         direct_state.set_u16(actor_zero + 0x5d, 1);
         auto direct_session = swd2::BattleSession::create(
             direct_state, selected->get(), items);
-        const auto speed_before = direct_session.party()[0].speed;
         auto direct_commands = skip_commands;
         direct_commands[0] = {
             swd2::PlayerCommandKind::item, 0, 0, 0,
@@ -4481,11 +4481,40 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     direct_session.inventory()[0] ==
                         (test.consumed ? 0 : test.item),
                 "FIG direct tactical item remained an invalid command");
-        if (test.item == 226) {
-            require(direct_session.party()[0].speed > speed_before,
-                    "FIG direct effect-63 item did not apply its speed buff");
-        }
     }
+
+    auto flagged_item_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    flagged_item_state.set_u16(0x10, 1);
+    flagged_item_state.set_u16(0x382, 226); // 踏風符 -> ability 86 / AG
+    flagged_item_state.set_u16(actor_zero + 0x55, 1000);
+    flagged_item_state.set_u16(actor_zero + 0x57, 1000);
+    flagged_item_state.set_u16(actor_zero + 0x2d, 60000);
+    flagged_item_state.set_u16(actor_zero + 0x2f, 60000);
+    flagged_item_state.set_u16(actor_zero + 0x5d, 1000);
+    auto flagged_item_session = swd2::BattleSession::create(
+        flagged_item_state, selected->get(), items);
+    const auto flagged_item_speed = flagged_item_session.party()[0].speed;
+    auto flagged_item_commands = skip_commands;
+    flagged_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto flagged_item_round = flagged_item_session.play_round(
+        flagged_item_commands, abilities, zero_random);
+    require(flagged_item_session.party()[0].ability_points == 955 &&
+                flagged_item_session.party()[0].speed == flagged_item_speed &&
+                flagged_item_session.inventory()[0] == 0 &&
+                flagged_item_session.battle_media() ==
+                    std::array<bool, 3>{false, false, false} &&
+                std::any_of(
+                    flagged_item_round.events.begin(),
+                    flagged_item_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::missing_medium &&
+                               event.source == 0 && event.ability_id == 226 &&
+                               event.effect_code == 0x63;
+                    }),
+            "FIG direct target-flag item did not use paid/consumed 58fa failure");
 
     // 1138 subtracts 8ch from every direct 6b item and 57f2 adds it back.
     // Item 54 proves the 16-bit underflow case still resolves its own record,

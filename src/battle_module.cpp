@@ -1969,7 +1969,10 @@ void present_missing_medium_card(
     const LegacyFont& font, const LegacyFont& fallback,
     const BattleVisualState& visual, const BattleSessionEvent& event,
     const BattleAbilityDatabase& abilities,
-    std::uint16_t encounter_directory_offset) {
+    std::uint16_t encounter_directory_offset,
+    std::optional<std::size_t> player_pose = std::nullopt,
+    const std::array<std::uint8_t, 768>* palette_override = nullptr,
+    BattleSurface* captured_surface = nullptr) {
     auto frame = base_surface;
     draw_battle_media(frame, menu_sprites, visual.media);
     draw_summoned_ally_name_cards(
@@ -1987,12 +1990,11 @@ void present_missing_medium_card(
             visual.party_count),
         action_actor);
     if (action_actor) {
-        // 58fa is reached after 4338 has already left the common pose4 page
-        // visible.  The missing-medium panel does not rewind the actor to
-        // pose0 while rebuilding that page.
+        // Learned abilities reach 58fa after 4338 has left pose4 visible.
+        // Direct items can instead enter it from 1138 with pose0 retained.
         draw_fighter_pose(
             frame, fighters, visual.party[*action_actor],
-            fig_player_ability_poses()[1]);
+            player_pose.value_or(fig_player_ability_poses()[1]));
     }
 
     // 58fa programs 384a with x=10h/y=4bh/18 columns, then 7284 writes
@@ -2000,6 +2002,8 @@ void present_missing_medium_card(
     draw_message_panel(frame, menu_sprites, 0x10, 0x4b, 0x12);
     draw_fig_text(frame, font, fallback, abilities.missing_medium_text(),
                   0x12, 0x54);
+    if (palette_override != nullptr) frame.palette = *palette_override;
+    if (captured_surface != nullptr) *captured_surface = frame;
     context.platform.present({
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
@@ -2271,17 +2275,61 @@ bool present_round_events(
                 if (!delay(summoned_action_card_delay)) return false;
             } else if (!event.source_is_monster &&
                        event.source < visual.party_count) {
-                // Player abilities/items already pass 4338 before their
-                // selected handler enters 58fa. Preserve both common fighter
-                // poses even though the missing-medium event has its own kind.
+                const auto direct_item =
+                    event.source < commands.size() &&
+                    commands[event.source].kind == PlayerCommandKind::item;
                 auto pose_event = event;
                 pose_event.kind = BattleEventKind::player_ability;
-                for (const auto pose : fig_player_ability_poses()) {
+                const auto pose_count = direct_item ? 1U : 2U;
+                const auto poses = fig_player_ability_poses();
+                for (std::size_t phase = 0; phase < pose_count; ++phase) {
                     present_event_frame(
                         context, base_surface, encounter, items, fighters,
-                        menu_sprites, font, fallback, visual, pose_event, pose,
+                        menu_sprites, font, fallback, visual, pose_event,
+                        poses[phase],
                         {}, std::nullopt, encounter_directory_offset);
                     if (!delay(action_delay)) return false;
+                }
+                if (direct_item) {
+                    // 1138 dispatches target-flag failures through the same
+                    // >30h table as a successful tactical item: retain pose0,
+                    // run 43ce's five darkening ticks, let 58fa hold the dark
+                    // panel for nine ticks, then preserve it through 4417's
+                    // five restoration ticks before 0d98's bare tail.
+                    auto faded = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, pose_event,
+                        poses[0], {}, std::nullopt,
+                        encounter_directory_offset);
+                    for (auto step = 0; step < 5; ++step) {
+                        darken_fig_dispatcher_palette(faded);
+                        present_battle_surface(context, faded);
+                        if (!delay(effect_delay)) return false;
+                    }
+                    BattleSurface missing;
+                    present_missing_medium_card(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event, abilities,
+                        encounter_directory_offset, poses[0], &faded.palette,
+                        &missing);
+                    play_voice_cue(context, {FigVoiceFile::sp, 2,
+                                             FigVoiceTiming::before_action});
+                    if (!delay(summoned_action_card_delay)) return false;
+                    for (auto step = 0; step < 5; ++step) {
+                        brighten_fig_dispatcher_palette(
+                            missing, base_surface.palette);
+                        present_battle_surface(context, missing);
+                        if (!delay(effect_delay)) return false;
+                    }
+                    const auto clean = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                    present_battle_surface(context, clean);
+                    if (!delay(ward_card_delay)) return false;
+                    continue;
                 }
                 // 58fa is entered after the ordinary learned-ability debit;
                 // its missing-medium page therefore sees the paid gauge even
@@ -3344,8 +3392,10 @@ bool present_round_events(
         if (retained_player_status_handler) {
             // 57d6 first draws 2338's compact card on the dark handler page
             // with the ordinary party portrait and holds it for 18 ticks.
-            // Once it returns, 585e debits the pool; 4417 rebuilds the card
-            // with 137a's pose 4 and restores C0h..DFh in five steps.
+            // Once it returns, 585e debits the pool; 4417 calls 137a with
+            // DS:31e1 unchanged and restores C0h..DFh in five steps. 4338's
+            // learned-ability entry advanced that anchor to pose 4, whereas
+            // 1138's direct-item entry deliberately leaves it at pose 0.
             present_player_status_card(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, status_text,
@@ -3361,7 +3411,8 @@ bool present_round_events(
             present_player_status_card(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, status_text,
-                encounter_directory_offset, 4, 0x6b, 6, 8, &fighters, 4,
+                encounter_directory_offset, 4, 0x6b, 6, 8, &fighters,
+                dispatcher_effect_pose,
                 dispatcher_palette_override
                     ? &*dispatcher_palette_override
                     : nullptr,
