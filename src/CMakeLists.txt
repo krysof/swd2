@@ -2732,6 +2732,24 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_attack_flee_failed_validation PROPERTIES
         DEPENDS fig_player_attack_flee_failed_prepare)
     add_test(
+        NAME fig_player_attack_special_silent_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-attack-special-silent-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-special-silent-save"
+    )
+    add_test(
+        NAME fig_player_attack_special_silent_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-attack-special-silent.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-special-silent-save"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-special-silent"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-attack-special-silent-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_attack_special_silent_validation PROPERTIES
+        DEPENDS fig_player_attack_special_silent_prepare)
+    add_test(
         NAME fig_defeat_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-defeat-fixture.py"
