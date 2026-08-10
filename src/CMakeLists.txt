@@ -2102,6 +2102,14 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_effect65_status_validation PROPERTIES
         DEPENDS fig_player_effect65_status_prepare)
     add_test(
+        NAME fig_player_effect_coverage
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-effect-coverage.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_CURRENT_SOURCE_DIR}/battle_presentation.cpp"
+                "${PROJECT_SOURCE_DIR}/scripts"
+    )
+    add_test(
         NAME fig_player_support_effect07_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect07-fixture.py"
