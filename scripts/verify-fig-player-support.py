@@ -13,6 +13,12 @@ from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
 EXPECTED_CASES = {
+    (45, 0x01): (
+        "target_selector", "common_pose0", "common_pose4",
+        "support_result", "player_action_boundary",
+        "following_monster_action_card", "monster_action_first",
+        "rising_damage_final", "next_command",
+    ),
     (68, 0x02): (
         "target_selector", "common_pose0", "common_pose4",
         "support_result", "player_action_boundary",
@@ -29,6 +35,12 @@ EXPECTED_CASES = {
         "following_monster_action_card",
     ),
     (81, 0x03): (
+        "target_selector", "common_pose0", "common_pose4",
+        "support_result", "player_action_boundary",
+        "following_monster_action_card", "monster_action_first",
+        "rising_damage_final", "next_command",
+    ),
+    (101, 0x03): (
         "target_selector", "common_pose0", "common_pose4",
         "support_result", "player_action_boundary",
         "following_monster_action_card", "monster_action_first",
@@ -75,6 +87,18 @@ EXPECTED_CASES = {
         "rising_damage_final", "next_command",
     ),
     (46, 0x19): (
+        "target_selector", "common_pose0", "common_pose4",
+        "support_result", "player_action_boundary",
+        "following_monster_action_card", "monster_action_first",
+        "rising_damage_final", "next_command",
+    ),
+    (108, 0x02): (
+        "target_selector", "common_pose0", "common_pose4",
+        "support_result", "player_action_boundary",
+        "following_monster_action_card", "monster_action_first",
+        "rising_damage_final", "next_command",
+    ),
+    (109, 0x19): (
         "target_selector", "common_pose0", "common_pose4",
         "support_result", "player_action_boundary",
         "following_monster_action_card", "monster_action_first",

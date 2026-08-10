@@ -1221,6 +1221,89 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_support_effect1e_validation PROPERTIES
         DEPENDS fig_player_support_effect1e_prepare)
     add_test(
+        NAME fig_player_support_effect01_class5_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect01-class5-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect01-class5-save"
+    )
+    add_test(
+        NAME fig_player_support_effect01_class5_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-support.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect01-class5-save"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect01-class5"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-support-effect01-class5-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_support_effect01_class5_validation PROPERTIES
+        DEPENDS fig_player_support_effect01_class5_prepare)
+    add_test(
+        NAME fig_player_support_effect03_reachable_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect03-reachable-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect03-reachable-save"
+    )
+    add_test(
+        NAME fig_player_support_effect03_reachable_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-support.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect03-reachable-save"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect03-reachable"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-support-effect03-reachable-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_support_effect03_reachable_validation PROPERTIES
+        DEPENDS fig_player_support_effect03_reachable_prepare)
+    add_test(
+        NAME fig_player_support_effect02_class1_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect02-class1-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect02-class1-save"
+    )
+    add_test(
+        NAME fig_player_support_effect02_class1_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-support.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect02-class1-save"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect02-class1"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-support-effect02-class1-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_support_effect02_class1_validation PROPERTIES
+        DEPENDS fig_player_support_effect02_class1_prepare)
+    add_test(
+        NAME fig_player_support_effect19_class2_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect19-class2-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect19-class2-save"
+    )
+    add_test(
+        NAME fig_player_support_effect19_class2_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-support.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect19-class2-save"
+                "${CMAKE_BINARY_DIR}/fig-player-support-effect19-class2"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-support-effect19-class2-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_support_effect19_class2_validation PROPERTIES
+        DEPENDS fig_player_support_effect19_class2_prepare)
+    add_test(
+        NAME fig_reachable_support_coverage
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-reachable-support-coverage.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${PROJECT_SOURCE_DIR}/scripts"
+    )
+    add_test(
         NAME fig_player_support_effect07_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-support-effect07-fixture.py"
