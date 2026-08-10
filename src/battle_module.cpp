@@ -169,6 +169,32 @@ void fill_rect(BattleSurface& surface, int left, int top, int width, int height,
     }
 }
 
+void darken_fig_dispatcher_palette(BattleSurface& surface) {
+    // 43f9 walks 60h DAC bytes from DS:3eec, i.e. palette colours C0h..DFh,
+    // and subtracts three with saturation. 43ce invokes it five times before
+    // entering every >30h player effect handler.
+    constexpr auto first = 0xc0U * 3U;
+    constexpr auto finish = 0xe0U * 3U;
+    for (auto offset = first; offset < finish; ++offset) {
+        surface.palette[offset] = static_cast<std::uint8_t>(
+            surface.palette[offset] <= 3U ? 0U : surface.palette[offset] - 3U);
+    }
+}
+
+void brighten_fig_dispatcher_palette(
+    BattleSurface& surface,
+    const std::array<std::uint8_t, 768>& original_palette) {
+    // 4456 reverses one fade step by adding three and clamping to the saved
+    // BA palette at DS:420c.
+    constexpr auto first = 0xc0U * 3U;
+    constexpr auto finish = 0xe0U * 3U;
+    for (auto offset = first; offset < finish; ++offset) {
+        surface.palette[offset] = static_cast<std::uint8_t>(std::min<unsigned>(
+            static_cast<unsigned>(surface.palette[offset]) + 3U,
+            original_palette[offset]));
+    }
+}
+
 void draw_big5(BattleSurface& surface, const LegacyFont& font,
                const LegacyFont& fallback, std::span<const std::uint8_t> text,
                int left, int top, std::uint8_t color) {
@@ -211,8 +237,11 @@ std::uint16_t rotate_left_word(std::uint16_t value, unsigned count) {
 void draw_fig_party_card(BattleSurface& surface,
                          const SpriteArchive& menu_sprites,
                          const BattlePartyMember& member,
-                         bool action_background = false) {
-    const auto left = (8 + static_cast<int>(member.party_index) * 18) * 4;
+                         bool action_background = false,
+                         std::optional<int> action_mode_x_anchor = std::nullopt) {
+    const auto left = action_background && action_mode_x_anchor
+                          ? (*action_mode_x_anchor - 4) * 4
+                          : (8 + static_cast<int>(member.party_index) * 18) * 4;
     constexpr int top = 150;
     const auto portrait = action_background
                               ? std::size_t{180}
@@ -293,10 +322,14 @@ void draw_fig_party_card(BattleSurface& surface,
 void draw_fig_party_cards(BattleSurface& surface,
                           const SpriteArchive& menu_sprites,
                           std::span<const BattlePartyMember> party,
-                          std::optional<std::size_t> action_actor = std::nullopt) {
+                          std::optional<std::size_t> action_actor = std::nullopt,
+                          std::optional<int> action_mode_x_anchor = std::nullopt) {
     for (const auto& member : party) {
         draw_fig_party_card(surface, menu_sprites, member,
-                            action_actor == member.party_index);
+                            action_actor == member.party_index,
+                            action_actor == member.party_index
+                                ? action_mode_x_anchor
+                                : std::nullopt);
     }
 }
 
@@ -1027,10 +1060,16 @@ bool present_story_battle_setup(GameContext& context,
 }
 
 void draw_fighter_pose(BattleSurface& surface, const SpriteArchive& fighters,
-                       const BattlePartyMember& member, std::size_t pose) {
-    const auto placement = fig_fighter_placement(
+                       const BattlePartyMember& member, std::size_t pose,
+                       std::optional<int> mode_x_anchor = std::nullopt) {
+    auto placement = fig_fighter_placement(
         member.identity, member.party_index, pose, fighters.sprites().size());
     if (placement.frame >= fighters.sprites().size()) return;
+    if (mode_x_anchor) {
+        const auto normal_anchor =
+            12 + static_cast<int>(member.party_index) * 18;
+        placement.left += (*mode_x_anchor - normal_anchor) * 4;
+    }
     blit(surface, fighters, placement.frame, placement.left, placement.top);
 }
 
@@ -1445,15 +1484,22 @@ BattleSurface compose_event_frame(
                                       event.source < visual.party_count
                                   ? std::optional<std::size_t>(event.source)
                                   : std::nullopt;
+    const auto action_mode_x_anchor = action_actor
+                                          ? std::optional<int>{
+                                                event.target_is_monster
+                                                    ? target_x / 4 - 3
+                                                    : 12 + static_cast<int>(
+                                                               event.target) * 18}
+                                          : std::nullopt;
     draw_fig_party_cards(
         frame, menu_sprites,
         std::span<const BattlePartyMember>(visual.party).first(
             visual.party_count),
-        action_actor);
+        action_actor, action_mode_x_anchor);
     if (fighter_pose && player_actor_event(event.kind) &&
         event.source < visual.party_count) {
         draw_fighter_pose(frame, fighters, visual.party[event.source],
-                          *fighter_pose);
+                          *fighter_pose, action_mode_x_anchor);
     }
     if (weapon_animation) {
         draw_weapon_overlay(frame, *weapon_animation, context.game_root,
@@ -1607,22 +1653,25 @@ void present_monster_compact_card(
     const LegacyFont& fallback, const BattleVisualState& visual,
     const BattleSessionEvent& event, std::span<const std::uint8_t> text,
     std::uint16_t encounter_directory_offset, int columns = 4,
-    std::uint8_t color = 0x00, int center_offset = 10) {
+    std::uint8_t color = 0x00, int center_offset = 10,
+    const BattleSurface* retained_surface = nullptr) {
     if (!event.target_is_monster || event.target >= visual.monsters.size() ||
         text.empty()) {
         return;
     }
-    auto frame = base_surface;
-    draw_battle_media(frame, menu_sprites, visual.media);
-    draw_summoned_ally_name_cards(
-        frame, menu_sprites, font, fallback, visual);
-    draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
-                 visual.monsters,
-                 std::nullopt, encounter_directory_offset);
-    draw_fig_party_cards(
-        frame, menu_sprites,
-        std::span<const BattlePartyMember>(visual.party).first(
-            visual.party_count));
+    auto frame = retained_surface != nullptr ? *retained_surface : base_surface;
+    if (retained_surface == nullptr) {
+        draw_battle_media(frame, menu_sprites, visual.media);
+        draw_summoned_ally_name_cards(
+            frame, menu_sprites, font, fallback, visual);
+        draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
+                     visual.monsters,
+                     std::nullopt, encounter_directory_offset);
+        draw_fig_party_cards(
+            frame, menu_sprites,
+            std::span<const BattlePartyMember>(visual.party).first(
+                visual.party_count));
+    }
 
     // FIG 2375 uses the selected monster's runtime x centre (+321d), moves
     // ten Mode-X columns left, and opens a four-column panel at scanline 50.
@@ -2518,6 +2567,7 @@ bool present_round_events(
             event.kind != BattleEventKind::monster_heal;
         std::array<std::size_t, 3> poses{};
         std::size_t pose_count = 0;
+        std::optional<BattleSurface> retained_dispatcher_pose_surface;
         const auto normal_escape_action =
             action_first && event.ability_id == 0 &&
             (event.kind == BattleEventKind::player_escaped ||
@@ -2556,11 +2606,15 @@ bool present_round_events(
                                         ? std::span<const LoadedBattleEffectLayer>(
                                               effect_frames[effect_cursor].layers)
                                         : std::span<const LoadedBattleEffectLayer>{};
-                present_event_frame(
+                auto pose_surface = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual,
                     event, poses[phase], layers, std::nullopt,
                     encounter_directory_offset);
+                present_battle_surface(context, pose_surface);
+                if (player_dispatcher_action && phase + 1U == pose_count) {
+                    retained_dispatcher_pose_surface = std::move(pose_surface);
+                }
                 if (!layers.empty()) ++effect_cursor;
                 if (phase == 0) {
                     for (const auto& cue : non_effect_voices) {
@@ -2581,7 +2635,11 @@ bool present_round_events(
                 play_voice_cue(context, cue);
             }
         }
-        if (action_first) {
+        const auto retained_immunity_handler =
+            player_dispatcher_action &&
+            event.block_reason == AbilityBlockReason::resistance &&
+            event.target_is_monster && effect_code && *effect_code > 0x30;
+        if (action_first && !retained_immunity_handler) {
             // Learned abilities enter the selected handler only after FIG has
             // completed the common pose0/pose4 pages and debited the pool
             // selected by target_flags' resource class.  Keep those two pose
@@ -2599,6 +2657,17 @@ bool present_round_events(
                     play_battle_voice(context, path);
                 }
             }
+        }
+        std::optional<std::array<std::uint8_t, 768>>
+            dispatcher_palette_override;
+        if (retained_immunity_handler && retained_dispatcher_pose_surface) {
+            auto faded = *retained_dispatcher_pose_surface;
+            for (auto step = 0; step < 5; ++step) {
+                darken_fig_dispatcher_palette(faded);
+                present_battle_surface(context, faded);
+                if (!delay(effect_delay)) return false;
+            }
+            dispatcher_palette_override = faded.palette;
         }
         if (dispatcher_escape_action) {
             // 4ef3 is just the common actor setup, SP071, five ticks, and a
@@ -2680,12 +2749,25 @@ bool present_round_events(
                 prior_weapon_frame = reaction_frame;
             }
         }
+        std::optional<BattleSurface> retained_effect_surface;
         while (effect_cursor < effect_frames.size()) {
             const auto& effect = effect_frames[effect_cursor++];
-            present_event_frame(context, base_surface, encounter, items,
-                                fighters, menu_sprites, font, fallback, visual, event, std::nullopt,
-                                effect.layers, std::nullopt,
-                                encounter_directory_offset);
+            // 4338/436a leave the acting fighter in pose 4 while DS:2bbd
+            // renders the selected learned/item effect. Rebuilding these
+            // pages with the ordinary portrait loses both frame 180's action
+            // backing and FMAN, and also gives 59a1 the wrong page to retain.
+            const auto retained_pose = player_dispatcher_action
+                                           ? std::optional<std::size_t>{4}
+                                           : std::nullopt;
+            retained_effect_surface = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event, retained_pose,
+                effect.layers, std::nullopt, encounter_directory_offset);
+            if (dispatcher_palette_override) {
+                retained_effect_surface->palette =
+                    *dispatcher_palette_override;
+            }
+            present_battle_surface(context, *retained_effect_surface);
             if (!delay(effect_delay)) return false;
         }
         if (event.kind == BattleEventKind::monster_attack &&
@@ -2876,8 +2958,31 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event,
                 abilities.monster_immunity_text(),
-                encounter_directory_offset, 2, 0x00, 8);
+                encounter_directory_offset, 2, 0x00, 8,
+                retained_effect_surface ? &*retained_effect_surface : nullptr);
             if (!delay(immunity_card_delay)) return false;
+            if (retained_immunity_handler) {
+                // 5b06 finishes 5a91 by replacing the immunity card with a
+                // clean pose-4 page. Only after that handler returns does
+                // 585e debit the pool; 4417 then restores colours C0h..DFh
+                // while the already visible pre-debit clean page remains.
+                auto restored = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::optional<std::size_t>{4}, {}, std::nullopt,
+                    encounter_directory_offset);
+                if (dispatcher_palette_override) {
+                    restored.palette = *dispatcher_palette_override;
+                }
+                present_battle_surface(context, restored);
+                present_player_resource_cost(event);
+                for (auto step = 0; step < 5; ++step) {
+                    brighten_fig_dispatcher_palette(
+                        restored, base_surface.palette);
+                    present_battle_surface(context, restored);
+                    if (!delay(effect_delay)) return false;
+                }
+            }
         }
         const auto status_text = abilities.player_status_text(event.effect_code);
         if (!status_text.empty() &&

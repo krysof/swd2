@@ -15,7 +15,7 @@ from swd2_frame_capture import expand_rgb, load_indexed_frames
 ABILITY_IDS = (6, 72, 93, 56, 58)
 EFFECT_CODES = (0x5E, 0x5F, 0x60, 0x64, 0x65)
 ICON_FRAMES = (0xA1, 0xA4, 0x9E, 0xA5, 0x9F)
-FRONTEND_BOUNDARIES = (84, 88, 99, 108, 132)
+FRONTEND_BOUNDARIES = (84, 88, 119, 108, 132)
 
 
 def sha256(data: bytes) -> str:

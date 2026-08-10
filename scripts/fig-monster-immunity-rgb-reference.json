@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_monster_immunity",
+  "formation_directory_offset": 392,
+  "ability_id": 6,
+  "effect_code": 94,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-monster-status-autotype.txt",
+  "capture_autotype_sha256": "990a3264d14184e457614216edd458621d978a61bf94c45cf4a5ea7d0cb23b61",
+  "fixture_save_sha256": "e6e09422b9bd1b6aa7abb3221404dbdb1a1240258f6fef069f88854deb24fd23",
+  "capture_video_sha256": "f8f1a8b5f1c87fe91f9103308ae1dad196e0ecb067693f5727acd301eda6d562",
+  "capture_manifest_sha256": "2e135e407c7f93959fe4b253dc719c82438fc49fbc91fc9a14f592fefd155633",
+  "rewrite_input": {"total": 4, "consumed": 4, "remaining": 0, "implicit_quit_calls": 0},
+  "rewrite_boundaries": {"wait": 4, "poll": 0, "text": 0, "frontend": 111},
+  "rewrite_video": {"frames": 50, "direct_updates": 0, "last_width": 320, "last_height": 200, "fnv1a64": "49b2f2354c65f418"},
+  "rewrite_state_fnv1a64": "07fea39dd8e8bda1",
+  "rewrite_final_fnv1a64": "66c2ac096b2d0187",
+  "matched_frames": [
+    {"kind": "target_pose0", "rewrite_frame": 25, "original_review_frame": 509, "original_png_sha256": "df6cdbfe532bdd698ba2578fc353fc93930c03d4ff60b85acd541e5e24b70c05", "rewrite_indexed_sha256": "22dcdb47b780410b0e94ad0cabef8aed443d73c70fdd09da3cd7f6b495f1944a", "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a", "original_rgb_sha256": "3c9a831996d7961b31d8fe5b2d5954e790108234e964fc94aa0e5df9b01d000c", "rewrite_rgb_sha256": "3c9a831996d7961b31d8fe5b2d5954e790108234e964fc94aa0e5df9b01d000c"},
+    {"kind": "target_pose4", "rewrite_frame": 26, "original_review_frame": 521, "original_png_sha256": "51a7a29f6414ee0068465c0722634068afd34db2a41cac45f10a854555a28154", "rewrite_indexed_sha256": "ee41bbcccf2f7254ab741dc519f252494b795c6fb646dc0859b2cfe7a5eab1d7", "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a", "original_rgb_sha256": "12ade59433d9cb2c8217951b2cd11c500dbacbee486b97c4069e05896ba5c222", "rewrite_rgb_sha256": "12ade59433d9cb2c8217951b2cd11c500dbacbee486b97c4069e05896ba5c222"},
+    {"kind": "darkened_pose4", "rewrite_frame": 31, "original_review_frame": 556, "original_png_sha256": "04d0bc82e2338df296cf3192e4c2d21ca35711bf0f7d372db8de096faa3885ee", "rewrite_indexed_sha256": "ee41bbcccf2f7254ab741dc519f252494b795c6fb646dc0859b2cfe7a5eab1d7", "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df", "original_rgb_sha256": "a4a7e1a8f851f234716efc131422972fe414890e087197f4794dec9dd8b38e7a", "rewrite_rgb_sha256": "a4a7e1a8f851f234716efc131422972fe414890e087197f4794dec9dd8b38e7a"},
+    {"kind": "effect_first", "rewrite_frame": 32, "original_review_frame": 578, "original_png_sha256": "c10f06056603068d3de893c39824439da3eabb929f5bd9fec51a2e4c5afae45e", "rewrite_indexed_sha256": "7b1945a350aa2722390ea0be7ddd5da2ab3354ba8d4166db334018175e9348bf", "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df", "original_rgb_sha256": "f10144136c0c494db20599ff2fcb79d12c322b6a1d2d92e0c870fb621db6c93d", "rewrite_rgb_sha256": "f10144136c0c494db20599ff2fcb79d12c322b6a1d2d92e0c870fb621db6c93d"},
+    {"kind": "effect_last", "rewrite_frame": 39, "original_review_frame": 603, "original_png_sha256": "075a7b30555cdae1fe459d6eac2034d82172798637bad0972c8a54a5418bb4d7", "rewrite_indexed_sha256": "aad412b27326dd1e0caa61c844025043b3602796dc1e4efd59d49c838e42cb6f", "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df", "original_rgb_sha256": "3421598399905c4a98d1abfd122ade956d4ff9400fedeed94420386106b57bbd", "rewrite_rgb_sha256": "3421598399905c4a98d1abfd122ade956d4ff9400fedeed94420386106b57bbd"},
+    {"kind": "immunity_card", "rewrite_frame": 40, "original_review_frame": 608, "original_png_sha256": "c7e0b6e07c808052b2bfa1b8e6db2783e2f1b6efbc880dac7d125e6948b48090", "rewrite_indexed_sha256": "abb4149bd972f1f4906cfb61218186c34dd0f7d23e65d85d960d4c45f3b24ba1", "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df", "original_rgb_sha256": "781343de7b74494d30801ca768246dee434b1d6c9a8de3e9956bc4b4d3c049aa", "rewrite_rgb_sha256": "781343de7b74494d30801ca768246dee434b1d6c9a8de3e9956bc4b4d3c049aa"}
+  ]
+}
