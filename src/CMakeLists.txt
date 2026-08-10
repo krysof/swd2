@@ -1589,6 +1589,24 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_effect46_validation PROPERTIES
         DEPENDS fig_player_effect46_prepare)
     add_test(
+        NAME fig_player_effect47_escape_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-effect47-escape-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-effect47-escape-game"
+    )
+    add_test(
+        NAME fig_player_effect47_escape_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-effect47-escape.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-effect47-escape-game"
+                "${CMAKE_BINARY_DIR}/fig-player-effect47-escape"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-effect47-escape-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_effect47_escape_validation PROPERTIES
+        DEPENDS fig_player_effect47_escape_prepare)
+    add_test(
         NAME fig_player_effect48_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-effect48-fixture.py"
