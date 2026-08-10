@@ -1,0 +1,5 @@
+# Enter the fixed encounter, select the default attack, resolve one round,
+# then stop at the following command collection.
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:QUIT

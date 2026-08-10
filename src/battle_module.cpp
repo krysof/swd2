@@ -2577,12 +2577,17 @@ bool present_round_events(
         const auto monster_named_action = action_first &&
             (event.kind == BattleEventKind::monster_ability ||
              event.kind == BattleEventKind::monster_heal);
+        const auto monster_generic_single_target =
+            monster_named_action && event.monster_generic_path &&
+            event.ability_id < abilities.abilities().size() &&
+            (abilities.ability(event.ability_id).target_flags & 0x2000U) != 0;
         if (monster_named_action) {
-            if (event.kind == BattleEventKind::monster_heal) {
+            if (event.kind == BattleEventKind::monster_heal ||
+                monster_generic_single_target) {
                 // 20e7 begins every enemy turn by flipping a bare 2db8 page
-                // and copying it to scratch before the low-HP decision. Keep
-                // that real page in front of 262f even though the portable
-                // session has already resolved the decision atomically.
+                // and copying it to scratch before either the low-HP decision
+                // or 2464's single-target generic dispatcher. 2485's all-party
+                // path has already installed the four cards at this point.
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
@@ -2593,7 +2598,8 @@ bool present_round_events(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, abilities,
                 encounter_directory_offset,
-                event.kind != BattleEventKind::monster_heal);
+                event.kind != BattleEventKind::monster_heal &&
+                    !monster_generic_single_target);
         }
         const auto player_identity =
             event.kind == BattleEventKind::player_attack &&
@@ -2634,10 +2640,18 @@ bool present_round_events(
         if (monster_named_action) {
             if (!delay(std::chrono::milliseconds(100))) return false; // 7/70 s
             if (event.monster_generic_path) {
-                // 2464/2485 replace the compact ability-name page with a clean
-                // battle page (one selected card or the full party) before
-                // 25ee. Special 26af handlers instead return from their own
-                // name/status card and must not receive this clean page.
+                // 2464 first flips the bare scratch page that 262f restored;
+                // the single-target path then composes its selected card page.
+                // 2485's all-target path already has all cards and exposes no
+                // corresponding bare flip.
+                if (monster_generic_single_target) {
+                    present_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                }
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event, std::nullopt,
