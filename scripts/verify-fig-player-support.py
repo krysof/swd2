@@ -63,6 +63,11 @@ EXPECTED_CASES = {
         "support_after_all", "player_action_boundary",
         "following_monster_action_card",
     ),
+    (113, 0x0E): (
+        "common_pose0", "common_pose4", "support_before_all",
+        "support_after_all", "player_action_boundary",
+        "following_monster_action_card",
+    ),
     (49, 0x0F): (
         "target_selector", "common_pose0", "common_pose4",
         "support_result", "player_action_boundary",
