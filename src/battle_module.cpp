@@ -3254,6 +3254,18 @@ bool present_round_events(
                 present_battle_surface(context, restored);
                 if (!delay(effect_delay)) return false;
             }
+
+            // 57d6/4417 return to the ordinary player caller, which always
+            // runs 0c41. In the no-expiry case, 0d98 still replaces the
+            // restored pose/status page with a bare 2db8 battlefield and
+            // holds it for five ticks before initiative advances.
+            const auto clean = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event,
+                std::nullopt, {}, std::nullopt,
+                encounter_directory_offset, std::nullopt, false, false);
+            present_battle_surface(context, clean);
+            if (!delay(ward_card_delay)) return false;
             continue;
         }
         if (retained_monster_status_handler) {

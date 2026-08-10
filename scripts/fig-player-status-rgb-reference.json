@@ -13,6 +13,10 @@
       "fixture_save_sha256": "2d59f72ee7242ab46fe31056afd6ec27810ffb1c774ff9ad7cf0805489c95218",
       "capture_video_sha256": "ee4f27c068065cb98d983f5667fafbe2a330b876b9dc5a06ceaecb6472b731ca",
       "capture_manifest_sha256": "d60199ecf7fab3a1a78f43e0fecefd62b10f8d7e0e7e86f4eabd52145b1d32f2",
+      "boundary_capture_autotype": "original-fig-flagged-medium-autotype.txt",
+      "boundary_capture_autotype_sha256": "1cd62f071cb5692a8aa78645d40a2d7b3cfe22f8a04b535fbd92b911eb825e0c",
+      "boundary_capture_video_sha256": "8805594a716a74c2a284a26301d1cbcabd4dfee8cd2b47a2de0b5751379989d7",
+      "boundary_capture_manifest_sha256": "7b423196d77854a56cced81792fed212b04b0cfdfdb9723fb67f05e8eae949bd",
       "rewrite_input": {
         "total": 4,
         "consumed": 4,
@@ -23,14 +27,22 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 102
+        "frontend": 107
       },
       "rewrite_video": {
-        "frames": 41,
+        "frames": 42,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "58825f3b14464f6c"
+        "fnv1a64": "7022514a9ae6f759"
+      },
+      "rewrite_delay_milliseconds": 1057,
+      "rewrite_audio": {
+        "music_calls": 1,
+        "voice_calls": 2,
+        "stop_music_calls": 0,
+        "stop_audio_calls": 1,
+        "fnv1a64": "7f76aec884e857e8"
       },
       "rewrite_state_fnv1a64": "b70c38ea21872739",
       "rewrite_final_fnv1a64": "739e22162d4bbbed",
@@ -84,6 +96,16 @@
           "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
           "original_rgb_sha256": "272bc623f0074a929a0e85c90a4705a91b0ab4fc6d8c494b4600a75e3959f6af",
           "rewrite_rgb_sha256": "272bc623f0074a929a0e85c90a4705a91b0ab4fc6d8c494b4600a75e3959f6af"
+        },
+        {
+          "kind": "player_action_boundary",
+          "rewrite_frame": 18,
+          "original_review_frame": 647,
+          "original_png_sha256": "af50e9212e6bd18f37ff021ca6207a7648727e9425c8c4b690221e058204df39",
+          "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",
+          "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+          "original_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3",
+          "rewrite_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3"
         }
       ]
     },
@@ -103,14 +125,22 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 102
+        "frontend": 107
       },
       "rewrite_video": {
-        "frames": 41,
+        "frames": 42,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "39c997487ca4c417"
+        "fnv1a64": "d995a4d3d81dad02"
+      },
+      "rewrite_delay_milliseconds": 1057,
+      "rewrite_audio": {
+        "music_calls": 1,
+        "voice_calls": 2,
+        "stop_music_calls": 0,
+        "stop_audio_calls": 1,
+        "fnv1a64": "7f76aec884e857e8"
       },
       "rewrite_state_fnv1a64": "9f3157f8feaafb05",
       "rewrite_final_fnv1a64": "dea110a93457767f",
@@ -163,14 +193,22 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 73
+        "frontend": 78
       },
       "rewrite_video": {
-        "frames": 23,
+        "frames": 24,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "ab548a83a561f4aa"
+        "fnv1a64": "43d95ebb1100c923"
+      },
+      "rewrite_delay_milliseconds": 919,
+      "rewrite_audio": {
+        "music_calls": 1,
+        "voice_calls": 1,
+        "stop_music_calls": 0,
+        "stop_audio_calls": 1,
+        "fnv1a64": "b3d22a49d85dfa95"
       },
       "rewrite_state_fnv1a64": "7fc882cac23118fd",
       "rewrite_final_fnv1a64": "684d924363157741",
@@ -223,14 +261,22 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 102
+        "frontend": 107
       },
       "rewrite_video": {
-        "frames": 41,
+        "frames": 42,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "53bc875c4e7749cd"
+        "fnv1a64": "6d3a1c9931961db8"
+      },
+      "rewrite_delay_milliseconds": 1057,
+      "rewrite_audio": {
+        "music_calls": 1,
+        "voice_calls": 2,
+        "stop_music_calls": 0,
+        "stop_audio_calls": 1,
+        "fnv1a64": "e7d8d0927cde07b8"
       },
       "rewrite_state_fnv1a64": "b488e81253be2445",
       "rewrite_final_fnv1a64": "b03589e09ca99a25",

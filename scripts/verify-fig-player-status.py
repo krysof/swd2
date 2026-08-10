@@ -79,6 +79,11 @@ def main() -> int:
                         case["rewrite_final_fnv1a64"]]:
                 raise ValueError(
                     f"FIG player-status ability {ability_id} video differs")
+            if trace.get("delay_milliseconds") != \
+                    case["rewrite_delay_milliseconds"] or \
+                    trace.get("audio") != case["rewrite_audio"]:
+                raise ValueError(
+                    f"FIG player-status ability {ability_id} timeline differs")
             if (trace.get("state_fnv1a64"), trace.get("mapz_fnv1a64"),
                     trace.get("name_fnv1a64")) != (
                         case["rewrite_state_fnv1a64"],
@@ -97,7 +102,7 @@ def main() -> int:
                     f"FIG player-status ability {ability_id} frame count differs")
             matched = case.get("matched_frames")
             if not isinstance(matched, list) or \
-                    len(matched) != (5 if case_index == 0 else 3):
+                    len(matched) != (6 if case_index == 0 else 3):
                 raise ValueError("FIG player-status reference page set differs")
             for page in matched:
                 pixels, palette = frames[page["rewrite_frame"]]
@@ -112,10 +117,21 @@ def main() -> int:
                        f"{ability_id}/{page['kind']}.original_png_sha256")
             for name in ("capture_video_sha256", "capture_manifest_sha256"):
                 digest(case.get(name), f"{ability_id}/{name}")
+            if case_index == 0:
+                boundary_autotype = args.reference.with_name(
+                    case["boundary_capture_autotype"])
+                if sha256(boundary_autotype.read_bytes()) != \
+                        case["boundary_capture_autotype_sha256"]:
+                    raise ValueError(
+                        "original player-status boundary input differs")
+                for name in ("boundary_capture_video_sha256",
+                             "boundary_capture_manifest_sha256"):
+                    digest(case.get(name), f"{ability_id}/{name}")
         digest(expected.get("capture_harness_sha256"), "capture_harness_sha256")
         print(
             "FIG player-status checkpoint: abilities 35/38/33/37, plus the "
-            "five-step ability-35 dispatcher envelope, exactly match original RGB")
+            "five-step ability-35 dispatcher envelope and ordinary player-action "
+            "boundary, exactly match original RGB")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:
