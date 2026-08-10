@@ -6,19 +6,19 @@
   "effect_code": 99,
   "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
   "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
-  "capture_autotype": "original-fig-player-status-autotype.txt",
-  "capture_autotype_sha256": "990a3264d14184e457614216edd458621d978a61bf94c45cf4a5ea7d0cb23b61",
+  "capture_autotype": "original-fig-flagged-medium-autotype.txt",
+  "capture_autotype_sha256": "1cd62f071cb5692a8aa78645d40a2d7b3cfe22f8a04b535fbd92b911eb825e0c",
   "fixture_save_sha256": "364ecc89b3ff4bc4414b188d226f02e9774bbc66f667ca5ceb33ec91d2ad0c62",
-  "capture_video_sha256": "db48524dbc16ebbbd592ab19020f0a3a905c942b78a0be1d12aea3195da059de",
-  "capture_manifest_sha256": "84fcb3bb68186701ce7a9d6f368d2930c6881a3a5d9f8d3d3c90cb0b988cea5d",
-  "rewrite_video_fnv1a64": "770a33caa003e2ac",
+  "capture_video_sha256": "af78d958cff2250880cc51e36e7343bad5e20d87f4597c3c0fdc2e609b5a95f5",
+  "capture_manifest_sha256": "cdc58af21a3871bc92d7344fbef750fd5d1f8875e37c02ce37827548ecdcd6f8",
+  "rewrite_video_fnv1a64": "5b1bf6fd6ae92269",
   "rewrite_state_fnv1a64": "054b5b8fd6c084dc",
   "rewrite_final_fnv1a64": "bf5e97d678add92f",
   "matched_frames": [
     {
       "kind": "common_pose0",
       "rewrite_frame": 4,
-      "original_review_frame": 247,
+      "original_review_frame": 511,
       "original_png_sha256": "c9057af50379d269382936095e3a822042811761ba5f7e2fbd2a5c661dadb82a",
       "rewrite_indexed_sha256": "24ba28d0be94212000ec2cb3a41cae6a01cc6ba2bfddba34c720ba31d819f7e1",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -28,7 +28,7 @@
     {
       "kind": "common_pose4",
       "rewrite_frame": 5,
-      "original_review_frame": 250,
+      "original_review_frame": 523,
       "original_png_sha256": "16f3fbd09506db571ee2c4b2a1a74f26ef094814d3ea242bc37dc70e380c8f0e",
       "rewrite_indexed_sha256": "a4920519e1a0f555a206420f0c4bfe09658d42bcfb9436d8bb435f9966b895b7",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -38,12 +38,49 @@
     {
       "kind": "paid_missing_medium",
       "rewrite_frame": 6,
-      "original_review_frame": 277,
+      "original_review_frame": 605,
       "original_png_sha256": "91a697d5e9354fdcad0ddb55e29cf97fcfbc18576e08f5ae649c33d37807c07e",
       "rewrite_indexed_sha256": "d18347e4e8456b451686c0273c3b6c08e936081001fcacf1e3543c4e17db960c",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
       "original_rgb_sha256": "cc9c18b1aff22261a43f55cc3a717cb3a9d7ac447fa7de8ddd734c4ddaa48fe0",
       "rewrite_rgb_sha256": "cc9c18b1aff22261a43f55cc3a717cb3a9d7ac447fa7de8ddd734c4ddaa48fe0"
+    },
+    {
+      "kind": "player_action_boundary",
+      "rewrite_frame": 7,
+      "original_review_frame": 635,
+      "original_png_sha256": "af50e9212e6bd18f37ff021ca6207a7648727e9425c8c4b690221e058204df39",
+      "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3",
+      "rewrite_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3"
+    }
+  ],
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 15,
+  "replay_input": "replay-fig-player-status.txt",
+  "replay_input_sha256": "28ad52c198488dde04b9580e94a5e63bf1e131026ded45467e224b8814da2e84",
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 2,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "90c3d55487c97850"
+  },
+  "rewrite_delay_milliseconds": 789,
+  "voice_checkpoints": [
+    {
+      "call": 0,
+      "at_milliseconds": 86,
+      "payload_fnv1a64": "2956be0892aeb426",
+      "resource": "SP002.VOC"
+    },
+    {
+      "call": 1,
+      "at_milliseconds": 343,
+      "payload_fnv1a64": "ce3659387971554b",
+      "resource": "SP106.VOC"
     }
   ]
 }

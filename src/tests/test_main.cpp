@@ -10004,11 +10004,13 @@ void test_battle_module(const std::filesystem::path& game_root) {
         game_root, flagged_medium_visual_state, flagged_medium_platform};
     require(swd2::BattleModule().run(
                 flagged_medium_context, swd2::Marker::open_figure) ==
-                swd2::Marker::none &&
-                flagged_medium_platform.frame_hashes.size() == 30U &&
+                    swd2::Marker::none &&
+                flagged_medium_platform.frame_hashes.size() == 31U &&
                 flagged_medium_platform.frame_hashes[6] ==
-                    16887872019719067901ULL,
-            "FIG 58fa flagged-medium card did not retain paid pose4 page");
+                    16887872019719067901ULL &&
+                flagged_medium_platform.frame_hashes[7] ==
+                    7635234367554152546ULL,
+            "FIG 58fa card/0d98 boundary did not retain the original pages");
 
     // A frontend close is distinct from a DOS acknowledgement and may arrive
     // during 57d6's fixed 18-tick information-card hold. Keep the queued Quit

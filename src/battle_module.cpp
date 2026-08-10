@@ -2297,6 +2297,20 @@ bool present_round_events(
             play_voice_cue(context, {FigVoiceFile::sp, 2,
                                      FigVoiceTiming::before_action});
             if (!delay(summoned_action_card_delay)) return false;
+            if (!event.source_is_monster &&
+                !event.source_is_summoned_ally &&
+                event.source < visual.party_count) {
+                // 58fa returns through the ordinary player-action caller and
+                // then 0c41. Even without an expiring status, 0d98 exposes a
+                // bare 2db8 page for five ticks before initiative advances.
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                if (!delay(ward_card_delay)) return false;
+            }
             continue;
         }
         if (event.kind == BattleEventKind::medium_summoned) {
