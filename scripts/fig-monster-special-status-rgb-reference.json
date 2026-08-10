@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_monster_special_status_sequence",
+  "status": "exact_rgb_checkpoint",
+  "formation_directory_offset": 962,
+  "monster_definition_id": 456,
+  "ability_id": 117,
+  "effect_code": 100,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "686178c3ba08afaa8e9f2432b6917e4612092b63dd94f4cd0c47d904659ebdc9",
+  "capture_autotype": "original-fig-monster-special-status-autotype.txt",
+  "capture_autotype_sha256": "7f36aa1d27d399fe237e6f99b1c012c0be40da931a5fb6bdcdd7235a1a3cf607",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 30,
+  "capture_video_sha256": "64ca2f0615b5e7d7021e466fdc4ebb8fa2a0052eb483e17e3ef82dd254243eae",
+  "capture_manifest_sha256": "c7d3a42995f6f03e5e3af226ae39b54edc558f27d18a7495a5d64779f65738cc",
+  "rewrite_video": {
+    "frames": 34,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "9b596a20d72fd3d7"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 2,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "450ef3f42497c910"
+  },
+  "rewrite_delay_milliseconds": 1045,
+  "rewrite_state_fnv1a64": "02a62c2f9390f055",
+  "pages": [
+    {
+      "label": "target selection immediately before the status action",
+      "rewrite_frame": 3,
+      "original_review_frame": 437,
+      "original_png_sha256": "28cd0e5b9a352569b490dd368b1950ed287ce2dc65dc4ef50c7995d8a32fa805",
+      "rewrite_indexed_sha256": "6d3e2e2d18f8195cd622341d19ae1e34793ed4c783e0e9fdc4913e743b0f8ea3",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "e213d2f66f273a86e16b8ef3c69e192f753c7f56e9f37de458b50c24c28ef6ae",
+      "original_rgb_sha256": "e213d2f66f273a86e16b8ef3c69e192f753c7f56e9f37de458b50c24c28ef6ae"
+    },
+    {
+      "label": "20e7 bare preparation page",
+      "rewrite_frame": 4,
+      "original_review_frame": 506,
+      "original_png_sha256": "9c2cf406d6f599d885309819214111043e611009f405facc793c8ecb084b1899",
+      "rewrite_indexed_sha256": "ed31a6ef96e4cacee43e28dabc9704e49725ff3d76af71e8f52bb5622fb0cef0",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002",
+      "original_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002"
+    },
+    {
+      "label": "26f3 selected-party card preparation",
+      "rewrite_frame": 5,
+      "original_review_frame": 516,
+      "original_png_sha256": "8873a53b7eb40472c65c9c08f65526d90a57584e27ae453a4be031c4dde6c32f",
+      "rewrite_indexed_sha256": "9f18a4c628041c7ff06e42176e840566ab24ca265068659d0435f49115758899",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "9d360658a885d182a437a8cc4c5db42ed7c54565aefd118fcafc0d6fa7ece592",
+      "original_rgb_sha256": "9d360658a885d182a437a8cc4c5db42ed7c54565aefd118fcafc0d6fa7ece592"
+    },
+    {
+      "label": "262f ability-name card over the party card",
+      "rewrite_frame": 6,
+      "original_review_frame": 517,
+      "original_png_sha256": "aadac5c575186a56b96dfa3473611cc3fd89a1d6ad9856799750903659e64232",
+      "rewrite_indexed_sha256": "d3447f0a07b85b145d70bba11b4d1a07b2a21f79877f3ee2d518f6adfecaa3ad",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "f0c390e99cb262796c2c34263d16042652e6ac360e366a78238fb3c81a21c290",
+      "original_rgb_sha256": "f0c390e99cb262796c2c34263d16042652e6ac360e366a78238fb3c81a21c290"
+    },
+    {
+      "label": "status icon committed while retaining the name card",
+      "rewrite_frame": 7,
+      "original_review_frame": 531,
+      "original_png_sha256": "2d509cd035ec9138fa8c310f4b81073886e81d803e82aacdd50583bf48afd750",
+      "rewrite_indexed_sha256": "cbfc3329711c3dd8f46fba9dd05908f510711718f3331e6abbe8ea7b10279fc4",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "732dc2c913afd4be698165023369eb72700cb2f6305c309126bce28d5a4e0cf9",
+      "original_rgb_sha256": "732dc2c913afd4be698165023369eb72700cb2f6305c309126bce28d5a4e0cf9"
+    },
+    {
+      "label": "22e0 bare cleanup page",
+      "rewrite_frame": 8,
+      "original_review_frame": 546,
+      "original_png_sha256": "9c2cf406d6f599d885309819214111043e611009f405facc793c8ecb084b1899",
+      "rewrite_indexed_sha256": "ed31a6ef96e4cacee43e28dabc9704e49725ff3d76af71e8f52bb5622fb0cef0",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002",
+      "original_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002"
+    },
+    {
+      "label": "following monster physical-attack card",
+      "rewrite_frame": 9,
+      "original_review_frame": 559,
+      "original_png_sha256": "ec84eb9782a5dcfb82b2ea0a7d54d1147ca5feb3cec5cecf32490ec632230a3e",
+      "rewrite_indexed_sha256": "0cf9d074e8fb2e54b690c9dd00994738a0924d92b606fc7839dde60e4bd5c607",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "82e4890bf4d9b5e8a039882981749e21b9a82b8f862c3985039816ef60db7dde",
+      "original_rgb_sha256": "82e4890bf4d9b5e8a039882981749e21b9a82b8f862c3985039816ef60db7dde"
+    }
+  ]
+}

@@ -2605,18 +2605,35 @@ bool present_round_events(
             monster_named_action && event.monster_generic_path &&
             event.ability_id < abilities.abilities().size() &&
             (abilities.ability(event.ability_id).target_flags & 0x2000U) != 0;
+        const auto monster_special_player_status =
+            monster_named_action &&
+            event.kind == BattleEventKind::monster_ability &&
+            !event.monster_generic_path && !event.target_is_monster &&
+            event.status_duration != 0;
         if (monster_named_action) {
             if (event.kind == BattleEventKind::monster_heal ||
-                monster_generic_single_target) {
+                monster_generic_single_target ||
+                monster_special_player_status) {
                 // 20e7 begins every enemy turn by flipping a bare 2db8 page
                 // and copying it to scratch before either the low-HP decision
-                // or 2464's single-target generic dispatcher. 2485's all-party
-                // path has already installed the four cards at this point.
+                // or either single-target dispatcher. 2485's all-party path
+                // has already installed the four cards at this point.
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
                     std::nullopt, {}, std::nullopt,
                     encounter_directory_offset, std::nullopt, false, false);
+            }
+            if (monster_special_player_status) {
+                // 26f3 switches to the other page, runs 2bb5 for the selected
+                // party card, and switches back before 262f overlays the
+                // ability name. The card-only page is observable even though
+                // no timer wait separates these two flips.
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset);
             }
             present_monster_ability_name_card(
                 context, base_surface, encounter, items, menu_sprites,
@@ -2689,6 +2706,28 @@ bool present_round_events(
             // inherit the bare 2db8 battlefield; party cards reappear only
             // when the next player action composes 137a.
             apply_visual_event(visual, event, abilities);
+            if (finish_monster_action_here) {
+                if (!delay(ward_card_delay)) return false;
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                if (!delay(action_delay)) return false;
+            }
+            continue;
+        }
+        if (monster_special_player_status) {
+            // After 262f's seven ticks, 2707..272a commit the timer/status bit
+            // and call 2bb5 on the opposite page without erasing the ability
+            // panel. Thus the status icon appears while the name card remains
+            // visible. 22e0 then holds that page five ticks and replaces it
+            // with a genuinely bare 2db8 page for the final three ticks.
+            apply_visual_event(visual, event, abilities);
+            present_monster_ability_name_card(
+                context, base_surface, encounter, items, menu_sprites,
+                font, fallback, visual, event, abilities,
+                encounter_directory_offset, true);
             if (finish_monster_action_here) {
                 if (!delay(ward_card_delay)) return false;
                 present_event_frame(

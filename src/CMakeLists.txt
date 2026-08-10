@@ -1335,6 +1335,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_special_silent_validation PROPERTIES
         DEPENDS fig_monster_special_silent_prepare)
     add_test(
+        NAME fig_monster_special_status_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-special-status-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-status-save"
+    )
+    add_test(
+        NAME fig_monster_special_status_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-special-status.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-status-save"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-status"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-special-status-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_special_status_validation PROPERTIES
+        DEPENDS fig_monster_special_status_prepare)
+    add_test(
         NAME long_run_checkpoint_validation
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-long-run-checkpoint.py"
