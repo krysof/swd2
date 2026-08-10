@@ -2616,11 +2616,18 @@ bool present_round_events(
             !event.monster_generic_path && !event.target_is_monster &&
             event.resisted &&
             (event.effect_code == 0x5e || event.effect_code == 0x64);
+        const auto monster_special_self_buff =
+            monster_named_action &&
+            event.kind == BattleEventKind::monster_ability &&
+            !event.monster_generic_path &&
+            (event.effect_code == 0x67 || event.effect_code == 0x68 ||
+             event.effect_code == 0x69);
         if (monster_named_action) {
             if (event.kind == BattleEventKind::monster_heal ||
                 monster_generic_single_target ||
                 monster_special_player_status ||
-                monster_special_player_resistance) {
+                monster_special_player_resistance ||
+                monster_special_self_buff) {
                 // 20e7 begins every enemy turn by flipping a bare 2db8 page
                 // and copying it to scratch before either the low-HP decision
                 // or either single-target dispatcher. 2485's all-party path
@@ -2649,7 +2656,8 @@ bool present_round_events(
                     font, fallback, visual, event, abilities,
                     encounter_directory_offset,
                     event.kind != BattleEventKind::monster_heal &&
-                        !monster_generic_single_target);
+                        !monster_generic_single_target &&
+                        !monster_special_self_buff);
             }
         }
         const auto player_identity =
@@ -2735,6 +2743,23 @@ bool present_round_events(
             // 262f's name card, voice, status write and seven-tick hold are all
             // skipped. The common 22e0 tail retains that card for five ticks,
             // then replaces it with a bare battlefield for three ticks.
+            if (finish_monster_action_here) {
+                if (!delay(ward_card_delay)) return false;
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                if (!delay(action_delay)) return false;
+            }
+            continue;
+        }
+        if (monster_special_self_buff) {
+            // 27ee/281a's successful 67h..69h branches call 262f directly on
+            // the bare page installed by 20e7, update only the monster's
+            // hidden runtime counter/stat, and RET without another redraw.
+            // The common 22e0 tail therefore retains the bare name card for
+            // five ticks, then exposes a genuinely bare battlefield for three.
             if (finish_monster_action_here) {
                 if (!delay(ward_card_delay)) return false;
                 present_event_frame(

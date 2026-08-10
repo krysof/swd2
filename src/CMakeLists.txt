@@ -1373,6 +1373,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_special_resistance_validation PROPERTIES
         DEPENDS fig_monster_special_resistance_prepare)
     add_test(
+        NAME fig_monster_special_buff_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-special-buff-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-buff-save"
+    )
+    add_test(
+        NAME fig_monster_special_buff_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-special-buff.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-buff-save"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-buff"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-special-buff-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_special_buff_validation PROPERTIES
+        DEPENDS fig_monster_special_buff_prepare)
+    add_test(
         NAME long_run_checkpoint_validation
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-long-run-checkpoint.py"
