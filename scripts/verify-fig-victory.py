@@ -12,8 +12,20 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
+PHYSICAL_KINDS = (
+    "pose0", "pose1", "pose2", "weapon_wipe_2", "weapon_wipe_3",
+    "weapon_wipe_4", *(f"result_page_{index}" for index in range(1, 11)),
+    "round_clean", "victory_summary",
+)
+
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def valid_digest(value: object) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(
+        character in "0123456789abcdef" for character in value)
 
 
 def main() -> int:
@@ -29,9 +41,9 @@ def main() -> int:
         if expected.get("schema_version") != 1 or \
                 expected.get("kind") != "original_fig_victory_summary" or \
                 expected.get("formation_directory_offset") != 392 or \
-                expected.get("rewrite_frame") != 26 or \
-                expected.get("clean_rewrite_frame") != 25 or \
-                expected.get("clean_original_review_frame") != 453:
+                expected.get("rewrite_frame") != 25 or \
+                expected.get("clean_rewrite_frame") != 24 or \
+                expected.get("clean_original_review_frame") != 528:
             raise ValueError("unsupported FIG victory reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:
@@ -66,7 +78,7 @@ def main() -> int:
                     "wait": 3, "poll": 0, "text": 0, "frontend": 56}:
             raise ValueError("FIG victory input boundaries differ")
         if trace.get("video") != {
-                "frames": 27, "direct_updates": 0,
+                "frames": 26, "direct_updates": 0,
                 "last_width": 320, "last_height": 200,
                 "fnv1a64": expected["rewrite_video_fnv1a64"]} or \
                 trace.get("frame_fnv1a64", [])[-1:] != [
@@ -83,8 +95,24 @@ def main() -> int:
             raise ValueError("FIG victory did not use direct IF entry")
 
         frames = load_indexed_frames(frame_path)
-        if len(frames) != 27:
+        if len(frames) != 26:
             raise ValueError("FIG victory frame count differs")
+        matched = expected.get("physical_matched_frames")
+        if not isinstance(matched, list) or \
+                tuple(page.get("kind") for page in matched) != PHYSICAL_KINDS:
+            raise ValueError("FIG physical-attack page set differs")
+        for page in matched:
+            page_pixels, page_palette = frames[page["rewrite_frame"]]
+            page_rgb = expand_rgb(page_pixels, page_palette)
+            if sha256(page_pixels) != page["rewrite_indexed_sha256"] or \
+                    sha256(page_palette) != page["rewrite_palette_sha256"] or \
+                    sha256(page_rgb) != page["rewrite_rgb_sha256"] or \
+                    sha256(page_rgb) != page["original_rgb_sha256"]:
+                raise ValueError(
+                    f"FIG physical attack {page['kind']} differs from original")
+            if not valid_digest(page.get("original_png_sha256")) or \
+                    not isinstance(page.get("original_review_frame"), int):
+                raise ValueError("malformed physical-attack frame evidence")
         clean_pixels, clean_palette = frames[expected["clean_rewrite_frame"]]
         clean_rgb = expand_rgb(clean_pixels, clean_palette)
         if sha256(clean_pixels) != expected["clean_rewrite_indexed_sha256"] or \
@@ -109,9 +137,9 @@ def main() -> int:
             if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
                 raise ValueError(f"malformed victory evidence digest {name}")
         print(
-            "FIG victory checkpoint: original card-free 2db8 clean page, "
-            "defeated formation, reward panel, money, experience share, "
-            "indexed VGA, and complete original RGB match")
+            "FIG victory checkpoint: physical poses, SW wipe, ten pose-retained "
+            "144e result pages, card-free 2db8 clean page, reward panel, "
+            "money, experience share, indexed VGA, and original RGB match")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:

@@ -18,13 +18,14 @@
       "original_review_frame": 249,
       "original_png_sha256": "4336a176709ca3229f4c51719dfce23aedd4aded7cec705fb4dc33db1cb26746",
       "original_rgb_sha256": "4c3fb864bf41cad16d14a78f081d19585e0a467db2e03e7086462924f463a751",
-      "rewrite_frame": 27,
-      "rewrite_video_fnv1a64": "defa96fc6a3d7d03",
+      "rewrite_frame": 26,
+      "rewrite_video_fnv1a64": "1bfa554d36380c07",
       "rewrite_state_fnv1a64": "534aad6f4b6caf9b",
       "rewrite_final_fnv1a64": "e090293fdecf08d6",
       "rewrite_indexed_sha256": "2415157707364c99f638167fe19d7684eced0e2f501eb948c4f4d790867a2831",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "rewrite_rgb_sha256": "4c3fb864bf41cad16d14a78f081d19585e0a467db2e03e7086462924f463a751"
+      "rewrite_rgb_sha256": "4c3fb864bf41cad16d14a78f081d19585e0a467db2e03e7086462924f463a751",
+      "rewrite_frames": 27
     },
     {
       "label": "learned_ability_9",
@@ -38,13 +39,14 @@
       "original_review_frame": 249,
       "original_png_sha256": "f65d42cd02bc69ead44a45f0ce22c3ecb526802fae4c56f7262aea343cd25737",
       "original_rgb_sha256": "f05d674c82227fb3cbfd2f2c44ee8de125f5e9ae02304c2872a986403ab494f7",
-      "rewrite_frame": 27,
-      "rewrite_video_fnv1a64": "f46b1e8565863337",
+      "rewrite_frame": 26,
+      "rewrite_video_fnv1a64": "7bcb15b79042946b",
       "rewrite_state_fnv1a64": "58c3f3a24eae5b65",
       "rewrite_final_fnv1a64": "af4095842f3dae02",
       "rewrite_indexed_sha256": "8704d6023ab5ca7d616329ca112e6c358e343cce6b632f4729722053489b0d0c",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "rewrite_rgb_sha256": "f05d674c82227fb3cbfd2f2c44ee8de125f5e9ae02304c2872a986403ab494f7"
+      "rewrite_rgb_sha256": "f05d674c82227fb3cbfd2f2c44ee8de125f5e9ae02304c2872a986403ab494f7",
+      "rewrite_frames": 27
     }
   ]
 }

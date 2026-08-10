@@ -1492,6 +1492,13 @@ BattleSurface compose_event_frame(
                          : 12 + static_cast<int>(event.target) * 18)
                   : 12 + static_cast<int>(event.source) * 18}
         : std::nullopt;
+    if (weapon_animation) {
+        // 152a/155c install the SW page before 137a redraws the action card.
+        // Their overlap is observable with tall SW122: the first two weapon
+        // rows inside y=150 are covered again by the party card.
+        draw_weapon_overlay(frame, *weapon_animation, context.game_root,
+                            target_x, target_y);
+    }
     draw_fig_party_cards(
         frame, menu_sprites,
         std::span<const BattlePartyMember>(visual.party).first(
@@ -1501,10 +1508,6 @@ BattleSurface compose_event_frame(
         event.source < visual.party_count) {
         draw_fighter_pose(frame, fighters, visual.party[event.source],
                           *fighter_pose, action_mode_x_anchor);
-    }
-    if (weapon_animation) {
-        draw_weapon_overlay(frame, *weapon_animation, context.game_root,
-                            target_x, target_y);
     }
     const auto target_mode_x_anchor = !event.action_anchor_is_target
                                           ? 12 + static_cast<int>(event.source) * 18
@@ -3232,10 +3235,15 @@ bool present_round_events(
                     }
                     present_battle_surface(context, number_frame);
                 } else {
+                    const auto result_pose =
+                        event.kind == BattleEventKind::player_attack &&
+                                pose_count != 0
+                            ? std::optional<std::size_t>{poses[pose_count - 1U]}
+                            : std::nullopt;
                     present_event_frame(
                         context, base_surface, encounter, items, fighters,
                         menu_sprites, font, fallback, visual, event,
-                        std::nullopt, {}, placement,
+                        result_pose, {}, placement,
                         encounter_directory_offset);
                 }
                 if (!delay(effect_delay)) return false;
@@ -3308,6 +3316,21 @@ bool present_round_events(
         }
         if (result_value == 0 || event.target_is_monster) {
             apply_visual_event(visual, event, abilities);
+        }
+        if (event.kind == BattleEventKind::player_attack) {
+            // 1358 uses 2db8/137a to restore ordinary party cards before the
+            // next action. If this is the round's last event, the caller's
+            // initiative-loop rejoin immediately owns the bare 2db8 page, so
+            // do not expose an intermediate card page the original never
+            // displays on the victory/round boundary.
+            if (event_index + 1U < result.events.size()) {
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset);
+            }
+            continue;
         }
         present_event_frame(context, base_surface, encounter, items, fighters,
                             menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,

@@ -15,13 +15,14 @@
   "original_review_frame": 1841,
   "original_png_sha256": "72e3f2c6a0b6f3507f4f895b5dd54ce70118092caba892bce434905d28634f52",
   "original_rgb_sha256": "46da3d6c7261d93274ee841095a6430e18ea65a662ad86f7d62360ef4f4d9956",
-  "rewrite_frame": 93,
-  "rewrite_video_fnv1a64": "cf18b870c7f5e42a",
+  "rewrite_frame": 92,
+  "rewrite_video_fnv1a64": "699a44c02b3c65ad",
   "rewrite_final_fnv1a64": "a78cae640e2d1a55",
   "rewrite_victory_ack_state_fnv1a64": "ba19229b77ab53f7",
   "rewrite_reward_ack_state_fnv1a64": "7d0248d991da888e",
   "rewrite_state_fnv1a64": "fff1874aa1886c02",
   "rewrite_indexed_sha256": "ef8c588478f7e085e014b3c561c8eb8584118d26895bbf866e1ac0c8d25f6228",
   "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
-  "rewrite_rgb_sha256": "46da3d6c7261d93274ee841095a6430e18ea65a662ad86f7d62360ef4f4d9956"
+  "rewrite_rgb_sha256": "46da3d6c7261d93274ee841095a6430e18ea65a662ad86f7d62360ef4f4d9956",
+  "rewrite_frames": 93
 }

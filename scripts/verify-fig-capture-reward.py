@@ -35,7 +35,8 @@ def main() -> int:
                 expected.get("kind") != "original_fig_encounter_capture_reward" or \
                 expected.get("formation_directory_offset") != 100 or \
                 expected.get("encounter_capture_item") != 83 or \
-                expected.get("rewrite_frame") != 93:
+                expected.get("rewrite_frames") != 93 or \
+                expected.get("rewrite_frame") != 92:
             raise ValueError("unsupported FIG capture-reward reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:
@@ -65,7 +66,7 @@ def main() -> int:
                     "wait": 11, "poll": 1, "text": 36, "frontend": 106}:
             raise ValueError("FIG capture-reward input boundaries differ")
         if trace.get("video") != {
-                "frames": 94, "direct_updates": 36,
+                "frames": expected["rewrite_frames"], "direct_updates": 36,
                 "last_width": 320, "last_height": 200,
                 "fnv1a64": expected["rewrite_video_fnv1a64"]} or \
                 trace.get("frame_fnv1a64", [])[-1:] != [
@@ -96,7 +97,7 @@ def main() -> int:
             raise ValueError("FIG capture-reward quit boundary differs")
 
         frames = load_indexed_frames(frame_path)
-        if len(frames) != 94:
+        if len(frames) != expected["rewrite_frames"]:
             raise ValueError("FIG capture-reward frame count differs")
         pixels, palette = frames[expected["rewrite_frame"]]
         rgb = expand_rgb(pixels, palette)

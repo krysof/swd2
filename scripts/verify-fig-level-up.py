@@ -25,8 +25,10 @@ def verify_case(
         executable: Path, game: Path, save_root: Path, output: Path,
         replay: Path, expected: dict[str, object]) -> None:
     label = expected.get("label")
+    rewrite_frames = expected.get("rewrite_frames")
     if not isinstance(label, str) or not label or \
-            expected.get("rewrite_frame") != 27:
+            rewrite_frames not in (27, 28) or \
+            expected.get("rewrite_frame") != rewrite_frames - 1:
         raise ValueError("unsupported FIG level-up case")
     case_save = save_root / str(expected["save_subdirectory"])
     if sha256((case_save / "SAVE.DA1").read_bytes()) != \
@@ -51,7 +53,7 @@ def verify_case(
                 "wait": 4, "poll": 0, "text": 0, "frontend": 56}:
         raise ValueError(f"FIG {label} input boundaries differ")
     if trace.get("video") != {
-            "frames": 28, "direct_updates": 0,
+            "frames": rewrite_frames, "direct_updates": 0,
             "last_width": 320, "last_height": 200,
             "fnv1a64": expected["rewrite_video_fnv1a64"]} or \
             trace.get("frame_fnv1a64", [])[-1:] != [
@@ -74,7 +76,7 @@ def verify_case(
         raise ValueError(f"FIG {label} quit boundary differs")
 
     frames = load_indexed_frames(frame_path)
-    if len(frames) != 28:
+    if len(frames) != rewrite_frames:
         raise ValueError(f"FIG {label} frame count differs")
     pixels, palette = frames[int(expected["rewrite_frame"])]
     rgb = expand_rgb(pixels, palette)
