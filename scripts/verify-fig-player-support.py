@@ -52,6 +52,12 @@ EXPECTED_CASES = {
         "following_monster_action_card", "monster_action_first",
         "rising_damage_final", "next_command",
     ),
+    (103, 0x0B): (
+        "target_selector", "common_pose0", "common_pose4",
+        "support_result", "player_action_boundary",
+        "following_monster_action_card", "monster_action_first",
+        "rising_damage_final", "next_command",
+    ),
     (49, 0x0F): (
         "target_selector", "common_pose0", "common_pose4",
         "support_result", "player_action_boundary",
