@@ -174,13 +174,13 @@
     {
       "id": "long_run_platform_matrix",
       "title": "各平台长期运行稳定性矩阵",
-      "status": "pending",
+      "status": "in_progress",
       "acceptance": [
         "原生和主流浏览器长时间运行无崩溃、泄漏、漂移或存档损坏",
         "平台矩阵结果由自动脚本和日志存档"
       ],
-      "evidence": ["scripts/verify-long-run.sh", "scripts/verify-evidence-manifest.py"],
-      "remaining": ["完成桌面与浏览器平台矩阵", "生成通过哈希校验的 long_run manifest"]
+      "evidence": ["scripts/verify-long-run.sh", "scripts/verify-evidence-manifest.py", "scripts/run-long-run-checkpoint.py", "scripts/verify-long-run-checkpoint.py", "verification/long_run/checkpoint-2026-08-10-macos/native-log.json", "verification/long_run/checkpoint-2026-08-10-macos/edge-browser-log.json", "verification/long_run/checkpoint-2026-08-10-macos/webkit-browser-log.json", "verification/long_run/checkpoint-2026-08-10-macos/matrix-report.json"],
+      "remaining": ["已完成 250 次 macOS 原生确定性进程回放、100 次 Edge 和 1000 次 WebKit IDBFS 重启检查点；继续多小时活动游戏/音频长跑", "补齐 Windows/Linux、品牌浏览器、物理 iOS/Android 与手柄矩阵后生成 verified long_run manifest"]
     }
   ],
   "completion_commands": [

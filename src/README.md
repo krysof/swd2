@@ -391,6 +391,22 @@ WASM 构建可在本机已安装的 Chromium/Edge 中执行真实浏览器触摸
   --output build-wasm/wasm-webkit-idbfs-report.json
 ```
 
+长期矩阵的本机检查点可重复执行原生进程边界和两种浏览器存储重启。它生成的
+`matrix-report.json` 固定为 `status=in_progress`，不会因本机循环通过而伪造最终
+`verification/long_run/manifest.json`：
+
+```sh
+./scripts/run-long-run-checkpoint.py \
+  --playwright /path/to/node_modules/playwright \
+  --output verification/long_run/checkpoint-local
+./scripts/verify-long-run-checkpoint.py \
+  verification/long_run/checkpoint-local
+```
+
+2026-08-10 的登记检查点为 250 次原生 MEO→RPG 确定性重放、100 次 Edge IDBFS 重启、
+1000 次 WebKit IDBFS 重启；仍缺多小时活动游戏/音频、Windows/Linux、物理手机和手柄，
+所以长期门只是从 `pending` 进入 `in_progress`。
+
 该测试使用移动视口模拟，不能替代物理 iOS/Android 设备验收；报告会保留这个限制。
 
 模拟并验证启动器协议。列表中的每一项是相应子模块返回的共享标记：

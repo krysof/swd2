@@ -1239,4 +1239,10 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_summon_replace_validation PROPERTIES
         DEPENDS fig_summon_replace_prepare)
+    add_test(
+        NAME long_run_checkpoint_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-long-run-checkpoint.py"
+                "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-10-macos"
+    )
 endif()

@@ -46,6 +46,12 @@ comparison 报告完全一致。
 像素差分也不是只校验一份手写 JSON：现代回放可把每次提交的 320×200 索引页、VGA
 调色板和直接写页标志保存为带输入序列及完整结尾计数的 `SWD2FRM2` 流；门禁会现场严格解析原版/
 重写捕获，逐帧要求索引像素、调色板、页类型乃至容器字节完全相同，并重算 diff_report。
+
+长期测试允许先保存 `status=in_progress` 的检查点，例如
+`verification/long_run/checkpoint-2026-08-10-macos/`；这类目录可证明已有循环并把 gate 从
+`pending` 推进到 `in_progress`，但 `verify-long-run.sh` 仍只接受最终的
+`verification/long_run/manifest.json`、`status=verified` 和完整平台角色，不能拿检查点
+替代 Windows/Linux、品牌浏览器、物理手机/手柄及多小时活动游戏验收。
 `scripts/capture-original-dosbox.py` 可以在固定 DOS 日期/时间和隔离的 `C:\\SWD2` 下生成
 带哈希 manifest 的原版 RGB 录像/抽帧，用于定位场景和复核时序；但 DOSBox-X 录像已通过
 VGA DAC 转色，只是 `reference_only`，不能代替上述索引像素及逐帧调色板证据。

@@ -20,20 +20,28 @@ function fail(message) {
 function parseArguments(argv) {
   if (argv.length < 1) {
     fail('usage: verify-wasm-webkit-idbfs.mjs SITE ' +
-      '[--playwright PACKAGE_OR_INDEX] [--reference FILE] [--output FILE]');
+      '[--playwright PACKAGE_OR_INDEX] [--cycles N] ' +
+      '[--reference FILE] [--output FILE]');
   }
   const result = {
-    site: path.resolve(argv[0]), playwright: '', reference: '', output: '',
+    site: path.resolve(argv[0]), playwright: '', cycles: 1,
+    reference: '', output: '',
   };
   for (let index = 1; index < argv.length; ++index) {
     const option = argv[index];
-    if ((option === '--playwright' || option === '--reference' ||
+    if (option === '--cycles' && index + 1 < argv.length) {
+      result.cycles = Number(argv[++index]);
+    } else if ((option === '--playwright' || option === '--reference' ||
          option === '--output') &&
         index + 1 < argv.length) {
       result[option.slice(2)] = path.resolve(argv[++index]);
     } else {
       fail(`unknown or incomplete option: ${option}`);
     }
+  }
+  if (!Number.isInteger(result.cycles) || result.cycles < 1 ||
+      result.cycles > 10_000) {
+    fail('--cycles must be an integer from 1 through 10000');
   }
   return result;
 }
@@ -131,44 +139,58 @@ try {
     }
   });
 
-  const token = 'webkit-restart-roundtrip';
-  await page.goto(`http://127.0.0.1:${port}/?idbfs-self-test=${token}`, {
-    waitUntil: 'domcontentloaded', timeout: 30_000,
-  });
-  const deadline = Date.now() + 45_000;
-  let result = '';
-  while (Date.now() < deadline) {
-    try {
-      result = await page.evaluate(
-        `document.documentElement.dataset.idbfsSelfTest || ''`);
-      if (result === 'pass' || result === 'fail') break;
-    } catch (_) {
-      // The first document intentionally reloads while this loop is polling.
+  let state;
+  let reloadAbortErrorCount = 0;
+  for (let cycle = 0; cycle < options.cycles; ++cycle) {
+    const navigationStart = topLevelNavigations;
+    const errorStart = errors.length;
+    const token = `webkit-restart-roundtrip-${cycle}`;
+    await page.goto(`http://127.0.0.1:${port}/?idbfs-self-test=${token}`, {
+      waitUntil: 'domcontentloaded', timeout: 30_000,
+    });
+    const deadline = Date.now() + 45_000;
+    let result = '';
+    while (Date.now() < deadline) {
+      try {
+        result = await page.evaluate(
+          `document.documentElement.dataset.idbfsSelfTest || ''`);
+        if (result === 'pass' || result === 'fail') break;
+      } catch (_) {
+        // The first document intentionally reloads while this loop is polling.
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  if (result !== 'pass') fail(`two-load probe finished with ${result || 'timeout'}`);
-  const state = await page.evaluate(`({
-    result: document.documentElement.dataset.idbfsSelfTest,
-    status: document.getElementById('status').textContent,
-    error: document.getElementById('error').textContent,
-    gateHidden: document.getElementById('start-gate').hidden,
-    sessionToken: sessionStorage.getItem('swd2-idbfs-self-test-token'),
-    navigationType: performance.getEntriesByType('navigation')[0]?.type || '',
-    userAgent: navigator.userAgent
-  })`);
-  // WebKit reports one rejected loader promise when the first self-test
-  // document intentionally reloads while index.data/index.wasm requests are
-  // still in flight.  It is an observed navigation abort, not an IDBFS error;
-  // reject every other page error and more than one such abort.
-  const reloadAbortErrors = errors.filter(error => error === 'TypeError: Load failed');
-  const unexpectedErrors = errors.filter(error => error !== 'TypeError: Load failed');
-  if (state.error || !state.gateHidden || state.sessionToken !== null ||
-      topLevelNavigations !== 2 || reloadAbortErrors.length > 1 ||
-      unexpectedErrors.length !== 0) {
-    fail(`restart state differs: ${JSON.stringify({
-      state, topLevelNavigations, reloadAbortErrors, unexpectedErrors,
-    })}`);
+    if (result !== 'pass') {
+      fail(`two-load probe cycle ${cycle} finished with ${result || 'timeout'}`);
+    }
+    state = await page.evaluate(`({
+      result: document.documentElement.dataset.idbfsSelfTest,
+      status: document.getElementById('status').textContent,
+      error: document.getElementById('error').textContent,
+      gateHidden: document.getElementById('start-gate').hidden,
+      sessionToken: sessionStorage.getItem('swd2-idbfs-self-test-token'),
+      navigationType: performance.getEntriesByType('navigation')[0]?.type || '',
+      userAgent: navigator.userAgent
+    })`);
+    // WebKit reports one rejected loader promise when the first self-test
+    // document intentionally reloads while index.data/index.wasm requests are
+    // still in flight. It is an observed navigation abort, not an IDBFS error.
+    const cycleErrors = errors.slice(errorStart);
+    const reloadAbortErrors = cycleErrors.filter(
+      error => error === 'TypeError: Load failed');
+    const unexpectedErrors = cycleErrors.filter(
+      error => error !== 'TypeError: Load failed');
+    if (state.error || !state.gateHidden || state.sessionToken !== null ||
+        topLevelNavigations - navigationStart !== 2 ||
+        reloadAbortErrors.length > 1 || unexpectedErrors.length !== 0) {
+      fail(`restart cycle ${cycle} differs: ${JSON.stringify({
+        state,
+        topLevelNavigations: topLevelNavigations - navigationStart,
+        reloadAbortErrors,
+        unexpectedErrors,
+      })}`);
+    }
+    reloadAbortErrorCount += reloadAbortErrors.length;
   }
 
   const report = {
@@ -180,12 +202,13 @@ try {
     host: { platform: process.platform, architecture: process.arch },
     viewport: { width: 390, height: 844, device_scale_factor: 2 },
     idbfs: {
+      cycles: options.cycles,
       initial_sync: 'completed',
       exact_probe_write: 'completed',
       top_level_navigations: topLevelNavigations,
       restored_bytes: 'exact',
       cleanup_sync: 'completed',
-      intentional_reload_abort_errors: reloadAbortErrors.length,
+      intentional_reload_abort_errors: reloadAbortErrorCount,
       result: state.result,
     },
     user_agent: state.userAgent,
@@ -205,7 +228,8 @@ try {
     fs.writeFileSync(options.output, JSON.stringify(report, null, 2) + '\n');
   }
   console.log(
-    `WASM WebKit IDBFS: OK (${topLevelNavigations} documents, exact restore and cleanup)`);
+    `WASM WebKit IDBFS: OK (${options.cycles} cycles, ` +
+    `${topLevelNavigations} documents, exact restore and cleanup)`);
 } finally {
   if (browser) await browser.close();
   await new Promise(resolve => server.close(resolve));

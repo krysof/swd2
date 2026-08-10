@@ -1496,6 +1496,14 @@ ASYNCIFY 与 SDL 进入 28 个世界帧，松开后零追加输入。它证明�
 `pass`。WebKit 会在主动重载第一文档时报告一次预期的 `TypeError: Load failed`（被中止的
 WASM/data loader），runner 只允许这一条且拒绝额外页面错误。该证据独立于 Chromium，
 但仍明确不是品牌 Safari 或物理 iOS，不能据此关闭移动浏览器验收项。
+浏览器检查现支持一次进程内重复 IDBFS 周期，用于暴露只在多次 IndexedDB 重启后出现的
+清理/恢复错误。首次短跑还发现 CDP 的 `Input.dispatchTouchEvent(touchEnd)` promise 会在
+renderer 接受任务、但 DOM 回调尚未执行时返回；旧测试偶发把此时已经开始的一帧诊断算成
+“松手后仍移动”。runner 现在先等待 `swd2HeldDirection==0` 作为 DOM 释放栅栏，再要求
+随后 250ms 零追加，连续五次短跑和正式 100 周期 Edge 检查均通过。登记的长期检查点另
+执行 250 次独立原生 MEO→RPG 回放（每次 trace SHA-256 相同）以及 1000 次 WebKit 两文档
+恢复/删除周期；矩阵报告仍列出多小时活动音频、Windows/Linux、物理手机和手柄缺口，
+因此长期平台门只进入 `in_progress`，绝不生成最终 verified manifest。
 
 五个便携槽实际是 SAVE/MAPZ/NAME 三件套，而不是两件套：原版 `4ce6..4d29` 写
 `SAVE.DAn`、`MAPZ.DAn` 和 `NAME<n>.DSK`，`4c16..4c73` 读三者并把槽位 NAME

@@ -22,16 +22,26 @@ function fail(message) {
 
 function parseArguments(argv) {
   if (argv.length < 1) {
-    fail('usage: verify-wasm-browser-input.mjs SITE [--browser PATH] [--output FILE]');
+    fail('usage: verify-wasm-browser-input.mjs SITE [--browser PATH] ' +
+      '[--idbfs-cycles N] [--output FILE]');
   }
-  const result = { site: path.resolve(argv[0]), browser: '', output: '' };
+  const result = {
+    site: path.resolve(argv[0]), browser: '', idbfsCycles: 1, output: '',
+  };
   for (let index = 1; index < argv.length; ++index) {
     const option = argv[index];
-    if ((option === '--browser' || option === '--output') && index + 1 < argv.length) {
+    if (option === '--idbfs-cycles' && index + 1 < argv.length) {
+      result.idbfsCycles = Number(argv[++index]);
+    } else if ((option === '--browser' || option === '--output') &&
+               index + 1 < argv.length) {
       result[option.slice(2)] = path.resolve(argv[++index]);
     } else {
       fail(`unknown or incomplete option: ${option}`);
     }
+  }
+  if (!Number.isInteger(result.idbfsCycles) || result.idbfsCycles < 1 ||
+      result.idbfsCycles > 10_000) {
+    fail('--idbfs-cycles must be an integer from 1 through 10000');
   }
   return result;
 }
@@ -300,6 +310,19 @@ try {
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchEnd', touchPoints: [],
   });
+  // CDP resolves dispatchTouchEvent when the renderer has accepted the task,
+  // not necessarily after the DOM touchend callback has run. Fence on the
+  // shell's held level reaching zero before measuring post-release delivery;
+  // one world poll already executing before that fence is not a post-release
+  // action and may append its diagnostic while the event task is queued.
+  await waitUntil(
+    () => cdp.evaluate('Module.swd2HeldDirection === 0'),
+    'DOM touchend release fence', 2_000);
+  const releaseFence = await cdp.evaluate(`({
+    held: Module.swd2HeldDirection,
+    queue: Module.swd2DirectionQueue.slice(),
+    deliveries: Module.swd2InputDeliveries.slice()
+  })`);
   await sleep(250);
   const released = await cdp.evaluate(`({
     held: Module.swd2HeldDirection,
@@ -320,9 +343,11 @@ try {
   if (deliverySpan < 500) {
     fail(`direction deliveries did not span the hold (${deliverySpan} ms)`);
   }
-  if (released.held !== 0 || released.queue.length !== 0 ||
-      released.deliveries.length !== held.deliveries.length) {
-    fail('trusted touchEnd did not stop the world direction immediately');
+  if (releaseFence.held !== 0 || releaseFence.queue.length !== 0 ||
+      released.held !== 0 || released.queue.length !== 0 ||
+      released.deliveries.length !== releaseFence.deliveries.length) {
+    fail('trusted touchEnd did not stop the world direction immediately: ' +
+      JSON.stringify({ held, releaseFence, released }));
   }
   if (!released.rotated) fail('portrait mobile layout did not apply rotation');
 
@@ -330,24 +355,28 @@ try {
   // profile. The first document writes and syncs a token before reloading;
   // only the second document may expose data-idbfs-self-test=pass after it
   // reads the exact persisted bytes and removes the probe again.
-  const idbfsToken = 'edge-restart-roundtrip';
-  await cdp.send('Page.navigate', {
-    url: `http://127.0.0.1:${httpPort}/?idbfs-self-test=${idbfsToken}`,
-  });
-  await waitUntil(
-    () => cdp.evaluate(
-      `['pass', 'fail'].includes(document.documentElement.dataset.idbfsSelfTest)`),
-    'IDBFS write, page reload and byte restoration', 30_000);
-  const idbfs = await cdp.evaluate(`({
-    result: document.documentElement.dataset.idbfsSelfTest,
-    status: document.getElementById('status').textContent,
-    error: document.getElementById('error').textContent,
-    gateHidden: document.getElementById('start-gate').hidden,
-    sessionToken: sessionStorage.getItem('swd2-idbfs-self-test-token')
-  })`);
-  if (idbfs.result !== 'pass' || idbfs.error || !idbfs.gateHidden ||
-      idbfs.sessionToken !== null) {
-    fail(`IDBFS restart probe did not finish cleanly: ${JSON.stringify(idbfs)}`);
+  let idbfs;
+  for (let cycle = 0; cycle < options.idbfsCycles; ++cycle) {
+    const idbfsToken = `edge-restart-roundtrip-${cycle}`;
+    await cdp.send('Page.navigate', {
+      url: `http://127.0.0.1:${httpPort}/?idbfs-self-test=${idbfsToken}`,
+    });
+    await waitUntil(
+      () => cdp.evaluate(
+        `['pass', 'fail'].includes(document.documentElement.dataset.idbfsSelfTest)`),
+      `IDBFS cycle ${cycle} write, reload and byte restoration`, 30_000);
+    idbfs = await cdp.evaluate(`({
+      result: document.documentElement.dataset.idbfsSelfTest,
+      status: document.getElementById('status').textContent,
+      error: document.getElementById('error').textContent,
+      gateHidden: document.getElementById('start-gate').hidden,
+      sessionToken: sessionStorage.getItem('swd2-idbfs-self-test-token')
+    })`);
+    if (idbfs.result !== 'pass' || idbfs.error || !idbfs.gateHidden ||
+        idbfs.sessionToken !== null) {
+      fail(`IDBFS restart cycle ${cycle} did not finish cleanly: ` +
+        JSON.stringify(idbfs));
+    }
   }
 
   const version = await cdp.send('Browser.getVersion');
@@ -368,12 +397,15 @@ try {
       direction: 'right',
       wasm_world_deliveries: held.deliveries.length,
       first_to_last_delivery_milliseconds: deliverySpan,
-      deliveries_after_release: 0,
+      deliveries_before_release_fence:
+        releaseFence.deliveries.length - held.deliveries.length,
+      deliveries_after_release_fence: 0,
     },
     idbfs: {
+      cycles: options.idbfsCycles,
       initial_sync: 'completed',
       exact_probe_write: 'completed',
-      page_reloads: 1,
+      page_reloads: options.idbfsCycles,
       restored_bytes: 'exact',
       cleanup_sync: 'completed',
       result: idbfs.result,
@@ -389,7 +421,7 @@ try {
   console.log(
     `WASM browser input: OK (${held.deliveries.length} world-frame ` +
     `deliveries from one 1000ms trusted touch hold; release stopped at once; ` +
-    `IDBFS restart roundtrip passed)`);
+    `${options.idbfsCycles} IDBFS restart cycles passed)`);
 } catch (error) {
   if (browserOutput) console.error(browserOutput.slice(-4_000));
   throw error;

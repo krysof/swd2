@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "swd2_long_run_checkpoint",
+  "status": "in_progress",
+  "captured_at": "2026-08-10T07:14:34+00:00",
+  "host": {
+    "platform": "Darwin",
+    "release": "25.5.0",
+    "machine": "arm64"
+  },
+  "coverage": {
+    "native_process_replays": 250,
+    "edge_idbfs_restart_cycles": 100,
+    "webkit_idbfs_restart_cycles": 1000
+  },
+  "artifacts": {
+    "native_log_sha256": "e10ddc02523966a076005a0af5db674f01ef1b41e1e605d05eea2d4af69a9bba",
+    "edge_browser_log_sha256": "98fc5b3c4613e53f5e1f2714fa462f867900a4433e435f4bfddc44ea0d550493",
+    "webkit_browser_log_sha256": "5a4656b185e7b0797e7fa362ad06a2545fe9afba79a83fe9ee2bd0df8b67d46f"
+  },
+  "remaining": [
+    "multi-hour active gameplay/audio soak",
+    "Windows and Linux native backends",
+    "physical iOS/Android browser restart and touch",
+    "physical gamepad matrix"
+  ]
+}
