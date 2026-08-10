@@ -28,7 +28,7 @@
     "direct_updates": 36,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "1b302d72f713236c"
+    "fnv1a64": "655c3e7f0fa16afc"
   },
   "rewrite_audio": {
     "music_calls": 1,
@@ -194,6 +194,15 @@
   ],
   "capture_note": "The same deterministic capture gives exact RGB for ally installation and both complete enemy physical presentations (modern frames 42..83). The 70 Hz stream crosses captured-ally result page one before a stable extraction; every other registered ally page is exact. Two identical bare tail flips coalesce visually.",
   "summon_and_enemy_exact_frames": [
+    {
+      "rewrite_frame": 41,
+      "original_review_frame": 889,
+      "rewrite_indexed_sha256": "0d2d525262cb0995c9720e45e193e7ecc462bb2dab0560d97ab59a4a3f2fb6b8",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "64fe5b4f63ea303360bc50df98532c2ce3aae4da7c4d6d081ae5f7528c992464",
+      "original_png_sha256": "1fc9adae9df7d88955cbd6a1239310d01e2914a05c58f53b075779d27aee813c",
+      "original_rgb_sha256": "64fe5b4f63ea303360bc50df98532c2ce3aae4da7c4d6d081ae5f7528c992464"
+    },
     {
       "rewrite_frame": 42,
       "original_review_frame": 930,

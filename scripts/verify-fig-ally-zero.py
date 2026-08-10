@@ -99,7 +99,7 @@ def main() -> int:
         prefix = expected.get("summon_and_enemy_exact_frames")
         if not isinstance(prefix, list) or \
                 tuple(page.get("rewrite_frame") for page in prefix) != \
-                tuple(range(42, 84)):
+                tuple(range(41, 84)):
             raise ValueError("FIG captured-ally prefix page set differs")
         for page in prefix:
             pixels, palette = frames[page["rewrite_frame"]]
@@ -147,10 +147,10 @@ def main() -> int:
                      "capture_manifest_sha256"):
             digest(expected.get(name), name)
         print(
-            "FIG captured-ally checkpoint: paid summon install, both enemy "
-            "physical sequences, bare 2db8 preparation, card-free 10fc "
-            "action, retained zero timeline, and bare 1039 tail match the "
-            "original RGB sequence")
+            "FIG captured-ally checkpoint: pre-debit summon install, paid "
+            "follow-on pages, both enemy physical sequences, bare 2db8 "
+            "preparation, card-free 10fc action, retained zero timeline, and "
+            "bare 1039 tail match the original RGB sequence")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:

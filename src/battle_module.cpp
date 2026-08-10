@@ -2354,13 +2354,21 @@ bool present_round_events(
             // pose. The install uses SP061 and ten ticks; it does not decode an
             // ST### archive named after the captured-monster item id.
             apply_visual_event(visual, event, abilities);
+            present_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event, 0, {},
+                std::nullopt, encounter_directory_offset);
+            play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
+                                     FigVoiceTiming::before_action});
+            if (!delay(summon_install_delay)) return false;
             if (event.source < visual.party_count &&
                 static_cast<std::size_t>(event.ability_id) + 2U <
                     items.entry_count()) {
-                // 5de4 debits +35 before installing the slot and before 2f84
-                // redraws the summoner. The resolved session already owns the
-                // post-state; mirror that debit into the presentation snapshot
-                // so 2bd9's blue gauge loses its top row on this very page.
+                // The resolved session already owns the post-state, but the
+                // presentation snapshot is the pre-round state.  Original
+                // capture shows 2f84 holding the old +35 gauge for all ten
+                // ticks; the level*2 debit becomes visible only when the next
+                // action redraws the party card.
                 const auto summoned = MonsterDefinition::parse(
                     event.ability_id,
                     items.entry(static_cast<std::size_t>(event.ability_id) + 2U));
@@ -2372,13 +2380,6 @@ bool present_round_events(
                         ? 0U
                         : member.secondary_points - cost);
             }
-            present_event_frame(
-                context, base_surface, encounter, items, fighters,
-                menu_sprites, font, fallback, visual, event, 0, {},
-                std::nullopt, encounter_directory_offset);
-            play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
-                                     FigVoiceTiming::before_action});
-            if (!delay(summon_install_delay)) return false;
             continue;
         }
         if (event.kind == BattleEventKind::status_expired) {
