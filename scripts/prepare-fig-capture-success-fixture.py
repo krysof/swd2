@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 EXPECTED_SAVE = "7a6aa873909e024a30b704345213cccec2a28dce6c476c3c799ca8dfbc1342c3"
+EXPECTED_FAILURE_SAVE = "5b6a60430d2d9c12d4924f9cc9fc93598ee8e55447c7a68d6cdffaca3f6056e5"
 EXPECTED_ORC = "e9dd243bc22afcd93f5474de6f481651fc7e45ead2aaeba8e06f78e9b9befec5"
 
 
@@ -25,6 +26,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--failure", action="store_true",
+        help="stage level 1 so the same capture attempt reaches 0e42")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -40,7 +44,8 @@ def main() -> int:
         actor = 0x106
         for offset, value in (
                 (0x08, 0), (0x0C, 1000), (0x0E, 1000),
-                (0x2D, 1000), (0x2F, 1000), (0x31, 100), (0x33, 1),
+                (0x2D, 1000), (0x2F, 1000),
+                (0x31, 1 if args.failure else 100), (0x33, 1),
                 (0x41, 1000), (0x43, 1000),
                 (0x5D, 30000), (0x5F, 30000), (0x65, 0), (0x67, 0)):
             word(save, actor + offset, value)
@@ -74,14 +79,15 @@ def main() -> int:
 
         save_digest = sha256(save)
         orc_digest = sha256(orc)
-        if save_digest != EXPECTED_SAVE:
+        expected_save = EXPECTED_FAILURE_SAVE if args.failure else EXPECTED_SAVE
+        if save_digest != expected_save:
             raise ValueError(f"FIG capture-success SAVE differs: {save_digest}")
         if orc_digest != EXPECTED_ORC:
             raise ValueError(f"FIG capture-success ORC differs: {orc_digest}")
         (args.output / "SAVE.DA1").write_bytes(save)
         orc_path.write_bytes(orc)
         print(
-            "FIG capture-success fixture: "
+            f"FIG capture-{'failure' if args.failure else 'success'} fixture: "
             f"SAVE={save_digest} ORC={orc_digest}")
         return 0
     except (OSError, ValueError) as error:
