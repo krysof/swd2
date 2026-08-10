@@ -354,6 +354,8 @@ fig_page_wipe_scanline_ends() noexcept {
 // by 23b1/1048: the selector itself always runs the installation animation.
 [[nodiscard]] std::optional<std::size_t> fig_summoned_medium(
     std::uint16_t effect_code) noexcept;
+[[nodiscard]] std::optional<std::size_t> fig_player_dismissed_medium(
+    std::uint16_t effect_code) noexcept;
 [[nodiscard]] std::optional<std::size_t> fig_dismissed_medium(
     std::uint16_t ability_id) noexcept;
 [[nodiscard]] FigEffectPlacement fig_medium_placement(

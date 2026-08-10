@@ -3009,6 +3009,10 @@ void test_fig_effect_timeline(const std::filesystem::path& game_root) {
                 swd2::fig_summoned_medium(0x3b) == 1 &&
                 swd2::fig_summoned_medium(0x3c) == 2 &&
                 !swd2::fig_summoned_medium(0x3d) &&
+                swd2::fig_player_dismissed_medium(0x3d) == 0 &&
+                swd2::fig_player_dismissed_medium(0x3e) == 1 &&
+                swd2::fig_player_dismissed_medium(0x3f) == 2 &&
+                !swd2::fig_player_dismissed_medium(0x3c) &&
                 swd2::fig_dismissed_medium(0x35) == 0 &&
                 swd2::fig_dismissed_medium(0x43) == 1 &&
                 swd2::fig_dismissed_medium(0x53) == 2 &&
@@ -4617,6 +4621,57 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     std::vector<std::pair<std::uint16_t, std::size_t>>{
                         {0x31, 0}, {0x3c, 2}},
             "FIG item 195 did not install/pay its two persistent media");
+
+    // Standalone items 191/193 exercise the same AE slot across consecutive
+    // rounds. The first 31h call installs it, the consumed inventory compacts,
+    // and the following 3dh call removes it while paying its own cost.
+    auto medium_remove_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    medium_remove_state.set_u16(0x10, 1);
+    medium_remove_state.set_u16(0x382, 191);
+    medium_remove_state.set_u16(0x384, 193);
+    medium_remove_state.set_u16(actor_zero + 0x2d, 1000);
+    medium_remove_state.set_u16(actor_zero + 0x2f, 1000);
+    medium_remove_state.set_u16(actor_zero + 0x35, 1000);
+    medium_remove_state.set_u16(actor_zero + 0x37, 1000);
+    medium_remove_state.set_u16(actor_zero + 0x55, 1000);
+    medium_remove_state.set_u16(actor_zero + 0x57, 1000);
+    medium_remove_state.set_u16(actor_zero + 0x5d, 1000);
+    auto medium_remove_session = swd2::BattleSession::create(
+        medium_remove_state, selected->get(), items);
+    auto medium_remove_commands = escape_commands;
+    medium_remove_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto medium_install_round = medium_remove_session.play_round(
+        medium_remove_commands, abilities, zero_random);
+    require(medium_remove_session.battle_media() ==
+                    std::array<bool, 3>{true, false, false} &&
+                medium_remove_session.inventory()[0] == 193 &&
+                std::any_of(
+                    medium_install_round.events.begin(),
+                    medium_install_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_summoned &&
+                               event.ability_id == 191 && event.target == 0;
+                    }),
+            "FIG standalone 31h item did not install/compact medium AE");
+    const auto medium_remove_round = medium_remove_session.play_round(
+        medium_remove_commands, abilities, zero_random);
+    require(medium_remove_session.battle_media() ==
+                    std::array<bool, 3>{false, false, false} &&
+                medium_remove_session.inventory()[0] == 0 &&
+                medium_remove_session.party()[0].ability_points == 970 &&
+                std::any_of(
+                    medium_remove_round.events.begin(),
+                    medium_remove_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_dismissed &&
+                               event.ability_id == 193 &&
+                               event.effect_code == 0x3d && event.target == 0;
+                    }),
+            "FIG standalone 3dh item did not pay/remove medium AE");
 
     // Direct ITEM selectors enter the same tactical handlers as learned and
     // nested abilities. Cover the unflagged player/self side (62/69) and the

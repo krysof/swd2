@@ -515,6 +515,16 @@ std::optional<std::size_t> fig_summoned_medium(
     }
 }
 
+std::optional<std::size_t> fig_player_dismissed_medium(
+    std::uint16_t effect_code) noexcept {
+    switch (effect_code) {
+    case 0x3d: return 0;
+    case 0x3e: return 1;
+    case 0x3f: return 2;
+    default: return std::nullopt;
+    }
+}
+
 std::optional<std::size_t> fig_dismissed_medium(
     std::uint16_t ability_id) noexcept {
     switch (ability_id) {

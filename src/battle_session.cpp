@@ -399,16 +399,22 @@ BattleRoundResult BattleSession::play_round(
             };
             const auto apply_player_medium = [&](std::uint16_t effect_code,
                                                  std::uint16_t presentation_id) {
-                const auto medium = fig_summoned_medium(effect_code);
-                if (!medium) return false;
+                auto medium = fig_summoned_medium(effect_code);
+                const auto summoned = medium.has_value();
+                if (!medium) {
+                    medium = fig_player_dismissed_medium(effect_code);
+                    if (!medium || !battle_media_[*medium]) return false;
+                }
 
                 // 4792/47c6/47fa call 5b41 unconditionally and store the
                 // final AEh/AFh/B0h coordinates in the persistent slot.
                 // Recasting an installed medium therefore still flies it;
-                // this is not 58fa's target-flag prerequisite failure.
-                battle_media_[*medium] = true;
+                // 482e/4886/4894 clear the corresponding slot when present.
+                // Neither is 58fa's target-flag prerequisite failure.
+                battle_media_[*medium] = summoned;
                 BattleSessionEvent event;
-                event.kind = BattleEventKind::medium_summoned;
+                event.kind = summoned ? BattleEventKind::medium_summoned
+                                      : BattleEventKind::medium_dismissed;
                 event.source = actor;
                 event.target = *medium;
                 event.ability_id = presentation_id;

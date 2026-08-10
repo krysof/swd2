@@ -1146,6 +1146,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_item_composite_media_validation PROPERTIES
         DEPENDS fig_item_composite_media_prepare)
     add_test(
+        NAME fig_player_medium_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-medium-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-medium-save"
+    )
+    add_test(
+        NAME fig_player_medium_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-medium.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-medium-save"
+                "${CMAKE_BINARY_DIR}/fig-player-medium"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-medium-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_medium_validation PROPERTIES
+        DEPENDS fig_player_medium_prepare)
+    add_test(
         NAME fig_item_composite_support_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-item-composite-support-fixture.py"

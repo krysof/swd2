@@ -2556,6 +2556,62 @@ bool present_round_events(
             continue;
         }
         if (event.kind == BattleEventKind::medium_dismissed) {
+            if (!event.source_is_monster &&
+                !event.source_is_summoned_ally &&
+                event.source < visual.party_count) {
+                const auto direct_item =
+                    event.source < commands.size() &&
+                    commands[event.source].kind == PlayerCommandKind::item;
+                auto pose_event = event;
+                pose_event.kind = BattleEventKind::player_ability;
+                pose_event.target_is_monster = false;
+                pose_event.target = event.source;
+                pose_event.action_anchor_is_target = false;
+                const auto ability_poses = fig_player_ability_poses();
+                const auto pose_count = direct_item ? 1U : 2U;
+                BattleSurface retained;
+                for (std::size_t phase = 0; phase < pose_count; ++phase) {
+                    retained = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, pose_event,
+                        ability_poses[phase], {}, std::nullopt,
+                        encounter_directory_offset);
+                    present_battle_surface(context, retained);
+                    if (!delay(action_delay)) return false;
+                }
+                for (auto step = 0; step < 5; ++step) {
+                    darken_fig_dispatcher_palette(retained);
+                    present_battle_surface(context, retained);
+                    if (!delay(effect_delay)) return false;
+                }
+                play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
+                                         FigVoiceTiming::before_action});
+
+                // 482e/4886/4894 retain the old mediator on the page saved by
+                // 3c15, clear its persistent x coordinate, then flip that
+                // retained pair eight times.  Its disappearance is visible
+                // only on the ordinary 0d98 recomposition after 585e/4417.
+                apply_visual_event(visual, event, abilities);
+                for (std::size_t flip = 0; flip < 8U; ++flip) {
+                    present_battle_surface(context, retained);
+                    if (!delay(effect_delay)) return false;
+                }
+                present_player_resource_cost(event);
+                for (auto step = 0; step < 5; ++step) {
+                    brighten_fig_dispatcher_palette(
+                        retained, base_surface.palette);
+                    present_battle_surface(context, retained);
+                    if (!delay(effect_delay)) return false;
+                }
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                if (!delay(ward_card_delay)) return false;
+                continue;
+            }
             // 20e7 first exposes a bare 2db8 page. 2731 is reached before the
             // ordinary named-action dispatcher below, so this branch must
             // reproduce its own 262f setup rather than inheriting the party
