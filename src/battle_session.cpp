@@ -1515,6 +1515,18 @@ BattleRoundResult BattleSession::play_round(
                     player_states[index].special_status_turns;
                 player_buff_turns_[index] = player_states[index].buff_turns;
             }
+            if (special.resolution == MonsterSpecialResolution::silent_return) {
+                // Preserve the enemy-action boundary so the frontend can
+                // reproduce 20e7's bare preparation and 22e0's bare cleanup,
+                // but mark that the body jumps directly to 2938's RET.
+                BattleSessionEvent event{
+                    BattleEventKind::monster_ability, true, monster_index,
+                    false, target_index, decision.ability_id};
+                event.effect_code = selected_ability.effect_code;
+                event.monster_special_silent_return = true;
+                result.events.push_back(event);
+                continue;
+            }
             add_ability_events(result.events, BattleEventKind::monster_ability,
                                true, monster_index, false, decision.ability_id,
                                selected_ability.effect_code,

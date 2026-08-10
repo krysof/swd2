@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_monster_special_silent_return_sequence",
+  "status": "exact_rgb_checkpoint",
+  "formation_directory_offset": 962,
+  "monster_definition_id": 456,
+  "ability_id": 10,
+  "effect_code": 76,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "33464009581eef0e027b68d9157886e49fa93624509e6383fef35ff7328a3f44",
+  "capture_autotype": "original-fig-monster-special-silent-autotype.txt",
+  "capture_autotype_sha256": "7f36aa1d27d399fe237e6f99b1c012c0be40da931a5fb6bdcdd7235a1a3cf607",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 30,
+  "capture_video_sha256": "5cdcc29d61cf65a846fd75f842eba25535d0457153a545ada7ed484246e44501",
+  "capture_manifest_sha256": "ee575853e74026484dfa4e8475fe31b833316413a5c33e7f1563e92fdc6782af",
+  "rewrite_video": {
+    "frames": 116,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "8988d2b4407c74cc"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 9,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "fc77e6a8e75ca739"
+  },
+  "rewrite_delay_milliseconds": 2193,
+  "rewrite_state_fnv1a64": "b94ba51f041f08db",
+  "pages": [
+    {
+      "label": "target selection immediately before the silent action",
+      "rewrite_frame": 3,
+      "original_review_frame": 437,
+      "original_png_sha256": "28cd0e5b9a352569b490dd368b1950ed287ce2dc65dc4ef50c7995d8a32fa805",
+      "rewrite_indexed_sha256": "6d3e2e2d18f8195cd622341d19ae1e34793ed4c783e0e9fdc4913e743b0f8ea3",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "e213d2f66f273a86e16b8ef3c69e192f753c7f56e9f37de458b50c24c28ef6ae",
+      "original_rgb_sha256": "e213d2f66f273a86e16b8ef3c69e192f753c7f56e9f37de458b50c24c28ef6ae"
+    },
+    {
+      "label": "20e7 bare preparation with no ability-name card",
+      "rewrite_frame": 4,
+      "original_review_frame": 506,
+      "original_png_sha256": "9c2cf406d6f599d885309819214111043e611009f405facc793c8ecb084b1899",
+      "rewrite_indexed_sha256": "ed31a6ef96e4cacee43e28dabc9704e49725ff3d76af71e8f52bb5622fb0cef0",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002",
+      "original_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002"
+    },
+    {
+      "label": "22e0 bare cleanup with no ability-name card",
+      "rewrite_frame": 5,
+      "original_review_frame": 506,
+      "original_png_sha256": "9c2cf406d6f599d885309819214111043e611009f405facc793c8ecb084b1899",
+      "rewrite_indexed_sha256": "ed31a6ef96e4cacee43e28dabc9704e49725ff3d76af71e8f52bb5622fb0cef0",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002",
+      "original_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002"
+    },
+    {
+      "label": "following monster physical-attack card",
+      "rewrite_frame": 6,
+      "original_review_frame": 552,
+      "original_png_sha256": "16a65bf91f7a3a861f1bf5a1d6fbfd6e42beead4d8a452552fd36078e00aaf29",
+      "rewrite_indexed_sha256": "d73bb51ce309288339d732843d24901e06c3e15f4986654b97f378580ffc63b0",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "6d84f41b19e135e17655226cb196034e950a2b6ea6317879fecae6ddc8a1eff8",
+      "original_rgb_sha256": "6d84f41b19e135e17655226cb196034e950a2b6ea6317879fecae6ddc8a1eff8"
+    },
+    {
+      "label": "following monster attack first clean page",
+      "rewrite_frame": 7,
+      "original_review_frame": 568,
+      "original_png_sha256": "8873a53b7eb40472c65c9c08f65526d90a57584e27ae453a4be031c4dde6c32f",
+      "rewrite_indexed_sha256": "9f18a4c628041c7ff06e42176e840566ab24ca265068659d0435f49115758899",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "9d360658a885d182a437a8cc4c5db42ed7c54565aefd118fcafc0d6fa7ece592",
+      "original_rgb_sha256": "9d360658a885d182a437a8cc4c5db42ed7c54565aefd118fcafc0d6fa7ece592"
+    },
+    {
+      "label": "following player first pose",
+      "rewrite_frame": 26,
+      "original_review_frame": 609,
+      "original_png_sha256": "a49f52a9c023817be79c4c20fb5c99c47ad4b77046a8aecb6926a3ffe73164ca",
+      "rewrite_indexed_sha256": "4f38eec926c82ece658504df81e2c1a0c2f25a5447ccc231df593e299cea6c5c",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "8177f3762000dc87b2ef051e0efb63016624139ab658380f7edf8f1fdcadc369",
+      "original_rgb_sha256": "8177f3762000dc87b2ef051e0efb63016624139ab658380f7edf8f1fdcadc369"
+    }
+  ]
+}

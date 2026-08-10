@@ -117,6 +117,11 @@ struct BattleSessionEvent {
     // solid-colour 25ee flash. Special-A/B and self-heal actions enter 26af
     // instead; the event kind alone cannot distinguish those call sites.
     bool monster_generic_path{};
+    // The 26af selector was not one of its explicit branches and therefore
+    // jumped directly to 2938's RET. 20e7/22e0 still expose the normal bare
+    // enemy-turn preparation and cleanup pages, but there is no 262f card,
+    // voice or effect between them.
+    bool monster_special_silent_return{};
     std::size_t source{};
     bool target_is_monster{};
     std::size_t target{};

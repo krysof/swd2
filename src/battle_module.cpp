@@ -2166,6 +2166,30 @@ bool present_round_events(
                     encounter_directory_offset);
                 return delay(action_delay);
             };
+        if (event.monster_special_silent_return) {
+            // 20e7 exposes a bare 2db8 page before action selection. Effects
+            // without an explicit 26af branch jump directly to 2938, so no
+            // 262f name card, voice, selector visual or seven-tick name hold
+            // occurs. The outer 22e0 tail still waits five ticks, redraws the
+            // same bare page and waits three more ticks.
+            if (action_first) {
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+            }
+            if (finish_monster_action_here) {
+                if (!delay(ward_card_delay)) return false;
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                if (!delay(action_delay)) return false;
+            }
+            continue;
+        }
         // Captured allies return from physical resolution or the player-side
         // effect table to the same 0fb9/1039 epilogue: rebuild the clean
         // battlefield and hold it for five ticks.  A scope guard is used

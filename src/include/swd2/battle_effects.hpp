@@ -210,7 +210,15 @@ MonsterAbilityCastResult apply_prepaid_monster_ability(
     std::size_t selected_target, std::span<PlayerBattleState> players,
     const BattleAbilityDatabase& abilities);
 
-enum class MonsterSpecialResolution { unsupported, applied, fallback_basic_attack };
+enum class MonsterSpecialResolution {
+    unsupported,
+    applied,
+    // 26af's unhandled-selector tail is a literal jump to the RET at 2938.
+    // The already-paid action succeeds, but it has no name card, voice,
+    // visual effect, target result or page flip of its own.
+    silent_return,
+    fallback_basic_attack,
+};
 
 struct MonsterSpecialAbilityResult {
     MonsterSpecialResolution resolution{MonsterSpecialResolution::unsupported};

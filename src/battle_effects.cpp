@@ -541,13 +541,13 @@ MonsterSpecialAbilityResult apply_prepaid_monster_special(
     case 0x3f:
     case 0x49:
     case 0x4c:
-        // These entries only run presentation/reposition sequences. They are
-        // still successful enemy actions and retain their already-paid cost.
-        // In particular shipped monsters 343/456/501 use 獅子吼 (4ch), and
-        // monster 502 uses 炒飯十八手 (49h); 26af falls through to RET after
-        // their visual handlers rather than applying the player-side damage
-        // descriptor with the same selector.
-        result.resolution = MonsterSpecialResolution::applied;
+        // None of these selectors has a branch in 26af. The default at
+        // 283f..2844 compares only 61h and then jumps straight to 2938's RET.
+        // They therefore retain the already-paid cost and consume the turn,
+        // but do not call 262f or the similarly numbered player visual
+        // handler. Shipped monsters 343/456/501 exercise 4ch (獅子吼),
+        // while monster 502 exercises 49h (炒飯十八手).
+        result.resolution = MonsterSpecialResolution::silent_return;
         break;
     case 0x5e: status(0x0020, 0, true); break;
     case 0x64: status(0x0002, 1, true); break;

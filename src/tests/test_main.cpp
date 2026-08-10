@@ -3531,9 +3531,9 @@ void test_battle_effects(const std::filesystem::path& game_root) {
         53, 1, special_points, 0, special_player, special_monster,
         abilities, sequence({}));
     require(cinematic_only.resolution ==
-                swd2::MonsterSpecialResolution::applied &&
+                swd2::MonsterSpecialResolution::silent_return &&
                 cinematic_only.targets.empty(),
-            "FIG enemy presentation-only ability was treated as unsupported");
+            "FIG enemy silent-return ability was treated as presented/unsupported");
     const auto monster_effect_49 = swd2::apply_prepaid_monster_special(
         5, 55, special_points, 0, special_player, special_monster,
         abilities, sequence({}));
@@ -3541,12 +3541,12 @@ void test_battle_effects(const std::filesystem::path& game_root) {
         10, 101, special_points, 0, special_player, special_monster,
         abilities, sequence({}));
     require(monster_effect_49.resolution ==
-                swd2::MonsterSpecialResolution::applied &&
+                swd2::MonsterSpecialResolution::silent_return &&
                 monster_effect_49.targets.empty() &&
                 monster_effect_4c.resolution ==
-                swd2::MonsterSpecialResolution::applied &&
+                swd2::MonsterSpecialResolution::silent_return &&
                 monster_effect_4c.targets.empty(),
-            "FIG shipped enemy-only effects 49/4c remained unsupported");
+            "FIG shipped enemy-only effects 49/4c did not use 2938 silent RET");
     special_player[0].buff_turns = {1, 0, 2, 0, 3, 4};
     const auto cleanse = swd2::apply_prepaid_monster_special(
         71, 1, special_points, 0, special_player, special_monster,
