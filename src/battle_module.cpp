@@ -3075,14 +3075,19 @@ bool present_round_events(
             !event.target_is_monster && !status_text.empty() &&
             fig_effect_leaves_player_status_card(event.effect_code) &&
             effect_code && *effect_code > 0x30;
+        const auto retained_player_support_handler =
+            player_dispatcher_action && event.resulting_player_support_state &&
+            effect_code && *effect_code <= 0x30;
         const auto retained_fading_handler =
             retained_immunity_handler || retained_monster_status_handler ||
             retained_player_status_handler || retained_monster_damage_handler;
-        if (action_first && !retained_fading_handler) {
+        if (action_first && !retained_fading_handler &&
+            !retained_player_support_handler) {
             // Non-fading learned handlers expose the paid pool after the
             // common pose0/pose4 pages. The verified 43ce status/immunity
-            // handlers instead retain their pre-debit page through the SP
-            // sequence and are charged explicitly after the handler below.
+            // handlers and 447b..478f support selectors instead retain their
+            // pre-debit page through the handler and are charged explicitly
+            // after it below.
             present_player_resource_cost(event);
         }
         if (player_dispatcher_action) {
@@ -3354,24 +3359,70 @@ bool present_round_events(
         if (event.resulting_player_support_state && effect_code &&
             *effect_code <= 0x30) {
             const auto presentation = fig_support_presentation(*effect_code);
-            const auto support_pose =
-                event.kind == BattleEventKind::player_ability
-                    ? std::optional<std::size_t>{fig_player_ability_poses()[1]}
-                    : std::nullopt;
+            const auto source_ability_points =
+                event.source < visual.party_count
+                    ? visual.party[event.source].ability_points
+                    : 0;
+            const auto source_secondary_points =
+                event.source < visual.party_count
+                    ? visual.party[event.source].secondary_points
+                    : 0;
+            auto resource_class = std::uint8_t{};
+            if (event.source < commands.size()) {
+                const auto& command = commands[event.source];
+                if (command.kind == PlayerCommandKind::ability &&
+                    command.ability_id < abilities.abilities().size()) {
+                    resource_class = static_cast<std::uint8_t>(
+                        (abilities.ability(command.ability_id).target_flags >>
+                         8U) & 0x0fU);
+                }
+            }
+            const auto apply_support_visual = [&](const auto& shown) {
+                apply_visual_event(visual, shown, abilities);
+                if (event.source >= visual.party_count) return;
+                // The support result snapshot comes from the already-paid
+                // rules state, but 585e does not debit the visible gauge until
+                // after the handler's last 58a9 page. Keep only that charged
+                // resource at its pre-action value while preserving any other
+                // resource recovery performed by the support effect itself.
+                if (resource_class == 1U || resource_class == 4U) {
+                    visual.party[event.source].ability_points =
+                        source_ability_points;
+                } else if (resource_class == 2U || resource_class == 3U) {
+                    visual.party[event.source].secondary_points =
+                        source_secondary_points;
+                }
+            };
             const auto present_support_frame =
                 [&](const BattleSessionEvent& shown) {
                     present_event_frame(
                         context, base_surface, encounter, items, fighters,
                         menu_sprites, font, fallback, visual, shown,
-                        support_pose, {}, std::nullopt,
+                        std::nullopt, {}, std::nullopt,
                         encounter_directory_offset);
                 };
+            const auto present_player_action_tail = [&]() -> bool {
+                // Every 447b..478f support selector returns through the
+                // common 585e debit and then the ordinary player caller's
+                // 0c41. With no expiring status, 0d98 flips one bare 2db8
+                // battlefield and holds it for five ticks before the next
+                // initiative entry.
+                present_player_resource_cost(event);
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                return delay(ward_card_delay);
+            };
 
             if (presentation == FigSupportPresentation::none) {
                 // Entries 28/29 point to literal RET instructions. The
                 // snapshot is unchanged, but consume it without inventing a
                 // 5841 target preview or a result redraw.
-                apply_visual_event(visual, event, abilities);
+                apply_support_visual(event);
+                if (!present_player_action_tail()) return false;
                 continue;
             }
 
@@ -3398,24 +3449,27 @@ bool present_round_events(
                     ++group_end;
                 }
                 for (auto index = event_index; index <= group_end; ++index) {
-                    apply_visual_event(visual, result.events[index], abilities);
+                    apply_support_visual(result.events[index]);
                 }
                 present_support_frame(event);
                 if (!delay(summoned_action_card_delay)) return false;
                 event_index = group_end;
+                if (!present_player_action_tail()) return false;
                 continue;
             }
 
-            apply_visual_event(visual, event, abilities);
+            apply_support_visual(event);
             if (presentation ==
                 FigSupportPresentation::commit_without_redraw) {
                 // 4728..4765 return immediately after the permanent +3
                 // write. The next normal composition observes the new state;
                 // this handler itself does not call 58a9 or wait nine ticks.
+                if (!present_player_action_tail()) return false;
                 continue;
             }
             present_support_frame(event);
             if (!delay(summoned_action_card_delay)) return false;
+            if (!present_player_action_tail()) return false;
             continue;
         }
         if (effect_code && fig_effect_tail_hold_ticks(*effect_code) != 0 &&
