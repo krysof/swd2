@@ -11,8 +11,8 @@
       "ability_id": 35,
       "effect_code": 102,
       "fixture_save_sha256": "2d59f72ee7242ab46fe31056afd6ec27810ffb1c774ff9ad7cf0805489c95218",
-      "capture_video_sha256": "3dc6bf931980756d7bfe88496521ddd6e7579d5bd43c241a5d58f70ff73c6a3d",
-      "capture_manifest_sha256": "935aeddc554a43b6bae409d4d125a85972db7dc81655a176ca98dedd02c103d8",
+      "capture_video_sha256": "ee4f27c068065cb98d983f5667fafbe2a330b876b9dc5a06ceaecb6472b731ca",
+      "capture_manifest_sha256": "d60199ecf7fab3a1a78f43e0fecefd62b10f8d7e0e7e86f4eabd52145b1d32f2",
       "rewrite_input": {
         "total": 4,
         "consumed": 4,
@@ -23,14 +23,14 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 82
+        "frontend": 102
       },
       "rewrite_video": {
-        "frames": 30,
+        "frames": 41,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "6d98117f324d1e7a"
+        "fnv1a64": "294de0fb3a8d86b3"
       },
       "rewrite_state_fnv1a64": "b70c38ea21872739",
       "rewrite_final_fnv1a64": "739e22162d4bbbed",
@@ -38,7 +38,7 @@
         {
           "kind": "common_pose0",
           "rewrite_frame": 4,
-          "original_review_frame": 247,
+          "original_review_frame": 407,
           "original_png_sha256": "1151578a07a5fbcc867ffba3c3ca8885b38fb8cd8512de50740654d99c075f52",
           "rewrite_indexed_sha256": "0a0476dbddc3e624cec1321437bf06e48d864e605dc289287a9179f07b4cb82a",
           "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -48,7 +48,7 @@
         {
           "kind": "common_pose4",
           "rewrite_frame": 5,
-          "original_review_frame": 250,
+          "original_review_frame": 419,
           "original_png_sha256": "28312db4390940684181ef5a4bad932433253a5cfae6b4e4a5d4518215c6bd89",
           "rewrite_indexed_sha256": "f85c2e5c6513e74b7043c311dabcff01bfc1f73f8557b57d7dce2b132c386fe0",
           "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -56,9 +56,29 @@
           "rewrite_rgb_sha256": "9979359b5699aa51c0708f94d8b7b4eb00ed91369d7892c42cf8bdf7e7b61e6b"
         },
         {
+          "kind": "darkened_pose4",
+          "rewrite_frame": 10,
+          "original_review_frame": 440,
+          "original_png_sha256": "8bec140f81a95f5ad9cb26bb6d4d16a59ac47b6ee83d41c0e1ed3c56cff02f80",
+          "rewrite_indexed_sha256": "f85c2e5c6513e74b7043c311dabcff01bfc1f73f8557b57d7dce2b132c386fe0",
+          "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+          "original_rgb_sha256": "9b591e53967b74ad19991fdfd8270ad8e8e2c1b8cd11af29501639f48a2c821a",
+          "rewrite_rgb_sha256": "9b591e53967b74ad19991fdfd8270ad8e8e2c1b8cd11af29501639f48a2c821a"
+        },
+        {
+          "kind": "darkened_status_card",
+          "rewrite_frame": 11,
+          "original_review_frame": 469,
+          "original_png_sha256": "1064c375c25918e473c84c1189a661a0d4df369a9afce84805a68454781e9f11",
+          "rewrite_indexed_sha256": "803a4a5258b4c78c7a01b2be535dd299848b6a69ecdfd412805cb1be7def5474",
+          "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+          "original_rgb_sha256": "23379a9e8ef198e62542f27ad453c61a2e3d3b4ec25a05de5b453809a6a61079",
+          "rewrite_rgb_sha256": "23379a9e8ef198e62542f27ad453c61a2e3d3b4ec25a05de5b453809a6a61079"
+        },
+        {
           "kind": "status_card",
-          "rewrite_frame": 6,
-          "original_review_frame": 277,
+          "rewrite_frame": 17,
+          "original_review_frame": 512,
           "original_png_sha256": "832ca97093056673153b4552d6392ba1ea00c5a1ed9016ff0e1632c0575ef7ed",
           "rewrite_indexed_sha256": "de3a591c4ffe19960091fd600efc850b19f596eb67e964dadebcc496d847b108",
           "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -83,14 +103,14 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 82
+        "frontend": 102
       },
       "rewrite_video": {
-        "frames": 30,
+        "frames": 41,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "31c2069d1a7de3cb"
+        "fnv1a64": "70a030d075d4ab32"
       },
       "rewrite_state_fnv1a64": "9f3157f8feaafb05",
       "rewrite_final_fnv1a64": "dea110a93457767f",
@@ -117,7 +137,7 @@
         },
         {
           "kind": "status_card",
-          "rewrite_frame": 6,
+          "rewrite_frame": 17,
           "original_review_frame": 277,
           "original_png_sha256": "6cae2c8cf4a3cbe9867ef9c5704d1814d790f8aa2bc24c9a7e1b229be9f40b1c",
           "rewrite_indexed_sha256": "2deac13f21dddd292b0de6dad5032820c99232f75c670f861cd3b65a86fe8308",
@@ -143,14 +163,14 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 53
+        "frontend": 73
       },
       "rewrite_video": {
-        "frames": 12,
+        "frames": 23,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "27cf905aa1692450"
+        "fnv1a64": "7d85081282c277ad"
       },
       "rewrite_state_fnv1a64": "7fc882cac23118fd",
       "rewrite_final_fnv1a64": "684d924363157741",
@@ -177,7 +197,7 @@
         },
         {
           "kind": "status_card",
-          "rewrite_frame": 6,
+          "rewrite_frame": 17,
           "original_review_frame": 277,
           "original_png_sha256": "a6752cdae9570e0ee45e74f851b7b31444cf2117a6862e7d9fd2bcc6e9d2e22d",
           "rewrite_indexed_sha256": "6e7665d96aaee01329fcc7c7326fd0e2383efe03fad7ba142bda918526b2adf4",
@@ -203,14 +223,14 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 82
+        "frontend": 102
       },
       "rewrite_video": {
-        "frames": 30,
+        "frames": 41,
         "direct_updates": 0,
         "last_width": 320,
         "last_height": 200,
-        "fnv1a64": "3f21f147fb06ecf3"
+        "fnv1a64": "6cd483042fe1eaf2"
       },
       "rewrite_state_fnv1a64": "b488e81253be2445",
       "rewrite_final_fnv1a64": "b03589e09ca99a25",
@@ -237,7 +257,7 @@
         },
         {
           "kind": "status_card",
-          "rewrite_frame": 6,
+          "rewrite_frame": 17,
           "original_review_frame": 277,
           "original_png_sha256": "00aaef94ee4779e29027006f8239db4613d636ffe8178a2c975790b765a72a2b",
           "rewrite_indexed_sha256": "90d07fca04c6eaf0807cb83065701c4d292d011097462c838134a6918222ab45",

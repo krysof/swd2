@@ -51,7 +51,7 @@ def main() -> int:
             raise ValueError("original player-status capture input differs")
 
         replay = args.reference.with_name("replay-fig-player-status.txt")
-        for case in cases:
+        for case_index, case in enumerate(cases):
             ability_id = case["ability_id"]
             save_root = args.save_root / f"ability-{ability_id}"
             if sha256((save_root / "SAVE.DA1").read_bytes()) != \
@@ -96,7 +96,8 @@ def main() -> int:
                 raise ValueError(
                     f"FIG player-status ability {ability_id} frame count differs")
             matched = case.get("matched_frames")
-            if not isinstance(matched, list) or len(matched) != 3:
+            if not isinstance(matched, list) or \
+                    len(matched) != (5 if case_index == 0 else 3):
                 raise ValueError("FIG player-status reference page set differs")
             for page in matched:
                 pixels, palette = frames[page["rewrite_frame"]]
@@ -113,8 +114,8 @@ def main() -> int:
                 digest(case.get(name), f"{ability_id}/{name}")
         digest(expected.get("capture_harness_sha256"), "capture_harness_sha256")
         print(
-            "FIG player-status checkpoint: abilities 35/38/33/37, twelve full "
-            "pose0/pose4/status 320x200 RGB pages exactly match the original")
+            "FIG player-status checkpoint: abilities 35/38/33/37, plus the "
+            "five-step ability-35 dispatcher envelope, exactly match original RGB")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:

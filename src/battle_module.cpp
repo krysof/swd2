@@ -1603,7 +1603,9 @@ void present_player_status_card(
     std::uint16_t encounter_directory_offset, int columns = 4,
     std::uint8_t color = 0x6b, int panel_left_offset = 6,
     int text_left_offset = 8, const SpriteArchive* fighters = nullptr,
-    std::optional<std::size_t> fighter_pose = std::nullopt) {
+    std::optional<std::size_t> fighter_pose = std::nullopt,
+    const std::array<std::uint8_t, 768>* palette_override = nullptr,
+    BattleSurface* captured_surface = nullptr) {
     if (event.target_is_monster || event.target >= visual.party_count || text.empty()) {
         return;
     }
@@ -1639,6 +1641,12 @@ void present_player_status_card(
         draw_fig_party_card(frame, menu_sprites, visual.party[event.source], false);
         draw_fighter_pose(frame, *fighters, visual.party[event.source],
                           *fighter_pose);
+    }
+    if (palette_override != nullptr) {
+        frame.palette = *palette_override;
+    }
+    if (captured_surface != nullptr) {
+        *captured_surface = frame;
     }
     context.platform.present({
         320, 200, frame.pixels,
@@ -2644,8 +2652,16 @@ bool present_round_events(
             event.block_reason == AbilityBlockReason::none &&
             event.target_is_monster && event.status_duration != 0 &&
             effect_code && *effect_code > 0x30;
+        const auto status_text = abilities.player_status_text(event.effect_code);
+        const auto retained_player_status_handler =
+            player_dispatcher_action &&
+            event.block_reason == AbilityBlockReason::none &&
+            !event.target_is_monster && !status_text.empty() &&
+            fig_effect_leaves_player_status_card(event.effect_code) &&
+            effect_code && *effect_code > 0x30;
         const auto retained_fading_handler =
-            retained_immunity_handler || retained_monster_status_handler;
+            retained_immunity_handler || retained_monster_status_handler ||
+            retained_player_status_handler;
         if (action_first && !retained_fading_handler) {
             // Non-fading learned handlers expose the paid pool after the
             // common pose0/pose4 pages. The verified 43ce status/immunity
@@ -2775,6 +2791,39 @@ bool present_round_events(
             }
             present_battle_surface(context, *retained_effect_surface);
             if (!delay(effect_delay)) return false;
+        }
+        if (retained_player_status_handler) {
+            // 57d6 first draws 2338's compact card on the dark handler page
+            // with the ordinary party portrait and holds it for 18 ticks.
+            // Once it returns, 585e debits the pool; 4417 rebuilds the card
+            // with 137a's pose 4 and restores C0h..DFh in five steps.
+            present_player_status_card(
+                context, base_surface, encounter, items, menu_sprites,
+                font, fallback, visual, event, status_text,
+                encounter_directory_offset, 4, 0x6b, 6, 8, nullptr,
+                std::nullopt,
+                dispatcher_palette_override
+                    ? &*dispatcher_palette_override
+                    : nullptr);
+            if (!delay(status_card_delay)) return false;
+            apply_visual_event(visual, event, abilities);
+            present_player_resource_cost(event);
+            BattleSurface restored;
+            present_player_status_card(
+                context, base_surface, encounter, items, menu_sprites,
+                font, fallback, visual, event, status_text,
+                encounter_directory_offset, 4, 0x6b, 6, 8, &fighters, 4,
+                dispatcher_palette_override
+                    ? &*dispatcher_palette_override
+                    : nullptr,
+                &restored);
+            for (auto step = 0; step < 5; ++step) {
+                brighten_fig_dispatcher_palette(
+                    restored, base_surface.palette);
+                present_battle_surface(context, restored);
+                if (!delay(effect_delay)) return false;
+            }
+            continue;
         }
         if (retained_monster_status_handler) {
             // 5a91 commits the new monster timer before 5b06 rebuilds the
@@ -3024,7 +3073,6 @@ bool present_round_events(
                 }
             }
         }
-        const auto status_text = abilities.player_status_text(event.effect_code);
         if (!status_text.empty() &&
             fig_effect_leaves_player_status_card(event.effect_code) &&
             !event.source_is_monster &&

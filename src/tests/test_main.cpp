@@ -9881,10 +9881,10 @@ void test_battle_module(const std::filesystem::path& game_root) {
     // Effect 63/ability 86 instead requests an absent medium through its
     // target_flags and is locked separately as a 58fa failure below.
     static constexpr std::array<StatusCardCase, 4> status_card_cases = {{
-        {35, 6, 16231846622373325418ULL},   // effect 66, defence
-        {38, 6, 8595608823063091186ULL},    // effect 67, attack
-        {33, 6, 18118597621268180707ULL},   // effect 68, evasion
-        {37, 6, 3692402201310657212ULL},    // effect 69, ward
+        {35, 17, 16231846622373325418ULL},   // effect 66, defence
+        {38, 17, 8595608823063091186ULL},    // effect 67, attack
+        {33, 17, 18118597621268180707ULL},   // effect 68, evasion
+        {37, 17, 3692402201310657212ULL},    // effect 69, ward
     }};
     for (const auto& test : status_card_cases) {
         ScriptedPlatform status_card_platform;
@@ -9962,7 +9962,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
         swd2::InputAction::quit,
     };
     status_card_quit_platform.frontend_actions.assign(
-        9U, swd2::InputAction::none);
+        19U, swd2::InputAction::none);
     status_card_quit_platform.frontend_actions.push_back(
         swd2::InputAction::quit);
     auto status_card_quit_state =
@@ -9983,13 +9983,13 @@ void test_battle_module(const std::filesystem::path& game_root) {
         status_card_quit_context, swd2::Marker::open_figure);
     require(status_card_quit_result == swd2::Marker::none &&
                 status_card_quit_platform.cursor == 3U &&
-                status_card_quit_platform.frontend_cursor == 10U &&
-                status_card_quit_platform.frontend_quit_poll_calls == 10U &&
-                status_card_quit_platform.frame_hashes.size() == 7U &&
+                status_card_quit_platform.frontend_cursor == 20U &&
+                status_card_quit_platform.frontend_quit_poll_calls == 20U &&
+                status_card_quit_platform.frame_hashes.size() == 12U &&
                 status_card_quit_platform.frame_hashes.back() ==
-                    16231846622373325418ULL &&
-                status_card_quit_platform.delay_calls == 6U &&
-                status_card_quit_platform.delayed_milliseconds == 86U &&
+                    2224825471123321483ULL &&
+                status_card_quit_platform.delay_calls == 11U &&
+                status_card_quit_platform.delayed_milliseconds == 156U &&
                 status_card_quit_platform.stop_calls == 1U &&
                 status_card_quit_context.shared_state.u16(0x4a0) == 0U,
             "FIG 57d6 fixed status-card hold ignored frontend quit");
