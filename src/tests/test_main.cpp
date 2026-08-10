@@ -4205,6 +4205,64 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     [](std::uint16_t count) { return count == 0; }),
             "FIG item 242 did not charge AP while preserving elemental counters");
 
+    // Item 203 is a second independent ITEM/ability discriminator: its own
+    // unaligned selector is 01h, while embedded ability 63 stores selector
+    // 02h. 1138 obtains the price from the latter record but dispatches the
+    // former, so low HP/SP must receive 25%, not 45%.
+    constexpr auto direct_selector_item_id = std::uint16_t{203};
+    constexpr auto direct_selector_ability_id = std::size_t{63};
+    const auto direct_selector_item = swd2::BattleItemDefinition::parse(
+        direct_selector_item_id,
+        items.entry(static_cast<std::size_t>(direct_selector_item_id) + 2U));
+    const auto& direct_selector_ability =
+        abilities.ability(direct_selector_ability_id);
+    require(direct_selector_item.type == 0x10U &&
+                direct_selector_item.effect_code == 0x01U &&
+                direct_selector_ability.effect_code == 0x02U &&
+                direct_selector_ability.cost == 22U,
+            "ITEM 203 no longer discriminates item and embedded selectors");
+    auto direct_selector_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    direct_selector_state.set_u16(0x10, 1);
+    direct_selector_state.set_u16(0x382, direct_selector_item_id);
+    direct_selector_state.set_u16(0x106 + 0x08, 0);
+    direct_selector_state.set_u16(0x106 + 0x2d, 100);
+    direct_selector_state.set_u16(0x106 + 0x2f, 1000);
+    direct_selector_state.set_u16(0x106 + 0x35, 100);
+    direct_selector_state.set_u16(0x106 + 0x37, 1000);
+    direct_selector_state.set_u16(0x106 + 0x45, 0);
+    direct_selector_state.set_u16(0x106 + 0x55,
+                                  direct_selector_ability.cost);
+    direct_selector_state.set_u16(0x106 + 0x57, 1000);
+    direct_selector_state.set_u16(0x106 + 0x5d, 1000);
+    auto direct_selector_session = swd2::BattleSession::create(
+        direct_selector_state, selected->get(), items);
+    std::array<swd2::PlayerBattleCommand, 4> direct_selector_commands{};
+    for (auto& command : direct_selector_commands) {
+        command = {swd2::PlayerCommandKind::skip, 0, 0, 0};
+    }
+    direct_selector_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto direct_selector_round = direct_selector_session.play_round(
+        direct_selector_commands, abilities, zero_random);
+    const auto direct_selector_event = std::find_if(
+        direct_selector_round.events.begin(), direct_selector_round.events.end(),
+        [](const swd2::BattleSessionEvent& event) {
+            return event.kind == swd2::BattleEventKind::player_ability &&
+                   event.ability_id == direct_selector_item_id;
+        });
+    require(direct_selector_event != direct_selector_round.events.end() &&
+                direct_selector_event->effect_code == 0x01U &&
+                direct_selector_event->resulting_player_support_state &&
+                direct_selector_event->resulting_player_support_state->hit_points ==
+                    350U &&
+                direct_selector_event->resulting_player_support_state
+                        ->secondary_points == 350U &&
+                direct_selector_session.party()[0].ability_points == 0U &&
+                direct_selector_session.inventory()[0] == 0U,
+            "FIG item 203 used embedded selector 02h instead of item selector 01h");
+
     // FIG resource class five treats the ability "cost" as a mask over the
     // five shared counters at +3e6 rather than subtracting a numeric pool.
     auto class_five_state = swd2::SharedState::load(game_root / "SAVE.DA1");

@@ -2,12 +2,12 @@
   "schema_version": 1,
   "kind": "original_fig_direct_item_support",
   "formation_directory_offset": 392,
-  "item_id": 190,
-  "canonical_ability_id": 50,
+  "item_id": 203,
+  "canonical_ability_id": 63,
   "effect_code": 1,
-  "embedded_effect_code": 1,
+  "embedded_effect_code": 2,
   "resource_class": 4,
-  "resource_cost": 7,
+  "resource_cost": 22,
   "payment_pool": "ability_points",
   "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
   "item_archive_sha256": "050243ce3d8bb5e0665f5d4016d53e20803e98d1e22470639d3cb0914d2e8604",
@@ -19,9 +19,9 @@
   "capture_wait_seconds": 5,
   "capture_pace_seconds": 0.5,
   "capture_time_limit_seconds": 15,
-  "capture_video_sha256": "135cf24b8ac092482baf7eb1d28c28b779810f7f0bbc73725044dd4ac16da42e",
-  "capture_manifest_sha256": "9a09e1f6000fbf39a08b6447496125ecaec6c4f5bccdc4370f127551d0f4047f",
-  "fixture_save_sha256": "df90801bf76307381ceaf6db9616d7cbbf395aca1557c53c8ee9e8ae51be2149",
+  "capture_video_sha256": "ef2d49c619dbeb074f3765c24c5c55811ec0c5e93b6d6f43d4ec2fdec9ebfe76",
+  "capture_manifest_sha256": "c1e2dc5e7222e3bd02447dfef54a349a050be6a80d7ad403d69f6dcff65befb2",
+  "fixture_save_sha256": "3c19edf00fd8b86680d3bed80046647847cb6ceeeadeb50448f85912c22847bc",
   "rewrite_input": {
     "total": 5,
     "consumed": 5,
@@ -39,7 +39,7 @@
     "direct_updates": 0,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "ee265e9de5fcd6f2"
+    "fnv1a64": "350afe1a94238172"
   },
   "rewrite_delay_milliseconds": 789,
   "rewrite_audio": {
@@ -49,38 +49,38 @@
     "stop_audio_calls": 1,
     "fnv1a64": "801caeb78543ddf1"
   },
-  "rewrite_state_fnv1a64": "f89b10d41c28940c",
-  "rewrite_final_fnv1a64": "2e8e04a85ac385bb",
+  "rewrite_state_fnv1a64": "f1e173a18ff0fc48",
+  "rewrite_final_fnv1a64": "761ec6a3c95b3593",
   "matched_frames": [
     {
       "kind": "item_pose0",
       "rewrite_frame": 5,
       "original_review_frame": 481,
-      "original_png_sha256": "0c92790f81c69dfe008ecc0ca02d5c7da6b7c4b9e0a70b7fb1c31f922041083f",
-      "rewrite_indexed_sha256": "fc948c71c494cc7cfd949fd31f975cf3c8c00851f39d33e9890fd2662f8a4d17",
+      "original_png_sha256": "81997bb7d8bd51ecd598790977b3ac48b56df688d7dc8142044f0babbc76e4d4",
+      "rewrite_indexed_sha256": "eaae28680f50817281881ffce86f19ea52679505eb1be638d6b0012cd0151eea",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "original_rgb_sha256": "0658a8c860dbbbc3593755966d001ae8d7a27c39ea16b9a2ade7ff6ba6090fad",
-      "rewrite_rgb_sha256": "0658a8c860dbbbc3593755966d001ae8d7a27c39ea16b9a2ade7ff6ba6090fad"
+      "original_rgb_sha256": "5a7663bb402c6dcda9897ecaac2f97c49dc9b145baecf4aafdb33285acab5145",
+      "rewrite_rgb_sha256": "5a7663bb402c6dcda9897ecaac2f97c49dc9b145baecf4aafdb33285acab5145"
     },
     {
       "kind": "support_before",
       "rewrite_frame": 6,
       "original_review_frame": 495,
-      "original_png_sha256": "d6da5e5346fb4a82ba2772493ae41e294fcb23c492c06ec447142938c996256d",
-      "rewrite_indexed_sha256": "e17f3040f1032fa84862e8e39a955ab190b49353a5d2609dd1271a6b2acdb2b5",
+      "original_png_sha256": "1576340f5db1eb905d794fb517d185829cb75916ae12ec6a12d13b7f96c5c609",
+      "rewrite_indexed_sha256": "f7e9dc7901c770aba131734c4714654260b9973a48b7bc015eb11809369cd10f",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "original_rgb_sha256": "402a16d22444e42e981d7b6831f443b20fa529421d6da651d9c3521e19b93d4a",
-      "rewrite_rgb_sha256": "402a16d22444e42e981d7b6831f443b20fa529421d6da651d9c3521e19b93d4a"
+      "original_rgb_sha256": "2c264c62b95902ee59f50dcb43112cc2ade71c2b0b01ff7b684d1ce45143a55b",
+      "rewrite_rgb_sha256": "2c264c62b95902ee59f50dcb43112cc2ade71c2b0b01ff7b684d1ce45143a55b"
     },
     {
       "kind": "support_after",
       "rewrite_frame": 7,
       "original_review_frame": 500,
-      "original_png_sha256": "f4b02c8909fa1185d220ab94be252e3da6128c313cb2c559a103062852bcbc91",
-      "rewrite_indexed_sha256": "16abf5907606eed90c615cbf81c2b44d6c640922bb5e4b33be000d768c6969e3",
+      "original_png_sha256": "ed0d2f21d8f342739f93c7068dc26dbd281574874b598d282ab48a76f66e7d32",
+      "rewrite_indexed_sha256": "6ab082f8456682fa71e5be6fe41779970cfceaa4db1788167a0f15326c0ffe2a",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "original_rgb_sha256": "428a70b68ede3b917a2614eb19ff781670a53f84f66e68fd4892ca9a28f604a3",
-      "rewrite_rgb_sha256": "428a70b68ede3b917a2614eb19ff781670a53f84f66e68fd4892ca9a28f604a3"
+      "original_rgb_sha256": "51a0a5ec700e3da72da5504a97e4b76fec99b23660b9a07afd466576105c7791",
+      "rewrite_rgb_sha256": "51a0a5ec700e3da72da5504a97e4b76fec99b23660b9a07afd466576105c7791"
     },
     {
       "kind": "player_action_boundary",
@@ -96,21 +96,21 @@
       "kind": "post_debit_monster_action_card",
       "rewrite_frame": 9,
       "original_review_frame": 537,
-      "original_png_sha256": "5631d911f8dbcfbe11a11489017b3f9c2eb5ec5c1bcae9098166207937790bf4",
-      "rewrite_indexed_sha256": "6d269380f8eead79ac0efaa25192b9b44ac0e92bd9a83c0c4df9daf407cf5d61",
+      "original_png_sha256": "5ccd9f8a85a045d7e78b1466993eb23a9239d1611a4914b0bc9af516c5d809e8",
+      "rewrite_indexed_sha256": "d821e9cc9c6ca02f7e585dc6b0e6d4e8768a8f0c360f3971839d3795e745e9b5",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "original_rgb_sha256": "ec870a88aff76fa7dc63ace9ac96e630768ed0289162eef9fe3704bf7ace967e",
-      "rewrite_rgb_sha256": "ec870a88aff76fa7dc63ace9ac96e630768ed0289162eef9fe3704bf7ace967e"
+      "original_rgb_sha256": "bb7ce56145ba4275070e93a9d041b20d9615d0232ba177bb64769fb1b9f716fe",
+      "rewrite_rgb_sha256": "bb7ce56145ba4275070e93a9d041b20d9615d0232ba177bb64769fb1b9f716fe"
     },
     {
       "kind": "post_debit_monster_attack_pose",
       "rewrite_frame": 10,
       "original_review_frame": 547,
-      "original_png_sha256": "6b368d04f7c8bfaaf4b64ab9199df000968e8fd7b2b8f17c5ce0da54efc9f53c",
-      "rewrite_indexed_sha256": "f8a4d50f41dec2923c2377e1f5a3e423965e864c0f2264da1e8a39670aea7034",
+      "original_png_sha256": "ea9cbcc46455cd46390e6df78721f7b5d2bdf35a01822d774941fe2e6dbcae56",
+      "rewrite_indexed_sha256": "9ca806fdb1dd4e17878736881f72bd2b4c71e6cc006a2b5d37a1f95cd65955f0",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "original_rgb_sha256": "8b1eef155f91e2d43d4f193094cc58fff87cc58cdece39c4a046981b0be23cb2",
-      "rewrite_rgb_sha256": "8b1eef155f91e2d43d4f193094cc58fff87cc58cdece39c4a046981b0be23cb2"
+      "original_rgb_sha256": "f2f5877e1661ebce3d98166c3b4c2f8ab8a587c42e80559a0d0d4438ce0fbc86",
+      "rewrite_rgb_sha256": "f2f5877e1661ebce3d98166c3b4c2f8ab8a587c42e80559a0d0d4438ce0fbc86"
     }
   ]
 }

@@ -18,8 +18,9 @@ EXPECTED_PAGES = (
     "post_debit_monster_attack_pose",
 )
 EXPECTED_ITEMS = {
-    190: (50, 0x01, 4, 7),
-    242: (102, 0x0A, 5, 30),
+    190: (50, 0x01, 0x01, 4, 7),
+    203: (63, 0x01, 0x02, 4, 22),
+    242: (102, 0x0A, 0x10, 5, 30),
 }
 
 
@@ -50,7 +51,9 @@ def main() -> int:
                 expected.get("formation_directory_offset") != 392 or \
                 item_id not in EXPECTED_ITEMS or \
                 (expected.get("canonical_ability_id"),
-                 expected.get("effect_code"), expected.get("resource_class"),
+                 expected.get("effect_code"),
+                 expected.get("embedded_effect_code"),
+                 expected.get("resource_class"),
                  expected.get("resource_cost")) != EXPECTED_ITEMS[item_id] or \
                 expected.get("payment_pool") != "ability_points" or \
                 expected.get("capture_wait_seconds") != 5 or \

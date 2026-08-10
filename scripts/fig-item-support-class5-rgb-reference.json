@@ -5,6 +5,7 @@
   "item_id": 242,
   "canonical_ability_id": 102,
   "effect_code": 10,
+  "embedded_effect_code": 16,
   "resource_class": 5,
   "resource_cost": 30,
   "payment_pool": "ability_points",
