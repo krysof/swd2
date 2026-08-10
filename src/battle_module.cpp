@@ -3079,13 +3079,17 @@ bool present_round_events(
             player_dispatcher_action &&
             event.block_reason == AbilityBlockReason::none &&
             !event.target_is_monster && effect_code && *effect_code == 0x62;
+        const auto retained_player_dispel_handler =
+            player_dispatcher_action &&
+            event.block_reason == AbilityBlockReason::none &&
+            event.target_is_monster && effect_code && *effect_code == 0x61;
         const auto retained_player_support_handler =
             player_dispatcher_action && event.resulting_player_support_state &&
             effect_code && *effect_code <= 0x30;
         const auto retained_fading_handler =
             retained_immunity_handler || retained_monster_status_handler ||
             retained_player_status_handler || retained_player_barrier_handler ||
-            retained_monster_damage_handler;
+            retained_player_dispel_handler || retained_monster_damage_handler;
         if (action_first && !retained_fading_handler &&
             !retained_player_support_handler) {
             // Non-fading learned handlers expose the paid pool after the
@@ -3251,6 +3255,79 @@ bool present_round_events(
             }
             present_battle_surface(context, *retained_effect_surface);
             if (!delay(effect_delay)) return false;
+            if (retained_player_dispel_handler && effect_cursor == 5U) {
+                // 55ca runs the five SP336 pages first, restores 3c15's
+                // dark pose-4 scratch once, and only then loads SP337 for
+                // its final three pages.  The intervening page flip has no
+                // explicit delay but is visible in the 70 Hz original
+                // capture between SP336 frame 4 and SP337 frame 0.
+                auto between_archives = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::optional<std::size_t>{4}, {}, std::nullopt,
+                    encounter_directory_offset);
+                if (dispatcher_palette_override) {
+                    between_archives.palette = *dispatcher_palette_override;
+                }
+                present_battle_surface(context, between_archives);
+            }
+        }
+        if (retained_player_dispel_handler) {
+            // 55ca rebuilds one clean dark pose-4 page after SP336/SP337 and
+            // before examining +3461/+3475/+3489.  Each non-zero counter is
+            // then cleared and reported by 55e4 on a fresh copy of that page;
+            // with no counters set this clean page is the handler's last one.
+            auto dispel_surface = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event,
+                std::optional<std::size_t>{4}, {}, std::nullopt,
+                encounter_directory_offset);
+            if (dispatcher_palette_override) {
+                dispel_surface.palette = *dispatcher_palette_override;
+            }
+            if (event.removed_monster_buff_mask == 0) {
+                // With no reportable counter, 55ca flips the prepared clean
+                // page itself.  Otherwise 55e4 adds the first compact card
+                // before that page is exposed; presenting the clean scratch
+                // page here would invent an extra visible frame.
+                present_battle_surface(context, dispel_surface);
+            }
+
+            for (std::size_t slot = 0; slot < 3U; ++slot) {
+                if ((event.removed_monster_buff_mask & (1U << slot)) == 0) {
+                    continue;
+                }
+                present_monster_compact_card(
+                    context, base_surface, encounter, items, menu_sprites,
+                    font, fallback, visual, event,
+                    abilities.monster_removed_buff_text(slot),
+                    encounter_directory_offset, 4, 0x00, 10,
+                    &dispel_surface, true, &dispel_surface);
+                if (!delay(status_card_delay)) return false;
+            }
+
+            // The selected handler returns with either its final 55e4 card
+            // or the clean page still visible.  Only then does 585e debit the
+            // pool.  4417 draws pose 4 on the other VGA page, so the visible
+            // handler page survives all five C0h..DFh palette restoration
+            // steps.  The ordinary player caller finally exposes 0d98's bare
+            // battlefield for five ticks before initiative continues.
+            apply_visual_event(visual, event, abilities);
+            present_player_resource_cost(event);
+            for (auto step = 0; step < 5; ++step) {
+                brighten_fig_dispatcher_palette(
+                    dispel_surface, base_surface.palette);
+                present_battle_surface(context, dispel_surface);
+                if (!delay(effect_delay)) return false;
+            }
+            const auto clean = compose_event_frame(
+                context, base_surface, encounter, items, fighters,
+                menu_sprites, font, fallback, visual, event,
+                std::nullopt, {}, std::nullopt,
+                encounter_directory_offset, std::nullopt, false, false);
+            present_battle_surface(context, clean);
+            if (!delay(ward_card_delay)) return false;
+            continue;
         }
         if (retained_player_status_handler) {
             // 57d6 first draws 2338's compact card on the dark handler page
