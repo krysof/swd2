@@ -12,10 +12,17 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
-EXPECTED_KINDS = (
-    "common_pose0", "common_pose4", "support_before", "support_after",
-    "player_action_boundary", "following_monster_action_card",
-)
+EXPECTED_CASES = {
+    (50, 0x01): (
+        "common_pose0", "common_pose4", "support_before", "support_after",
+        "player_action_boundary", "following_monster_action_card",
+    ),
+    (104, 0x0C): (
+        "common_pose0", "common_pose4", "support_before_all",
+        "support_after_all", "player_action_boundary",
+        "following_monster_action_card",
+    ),
+}
 
 
 def sha256(data: bytes) -> str:
@@ -39,11 +46,11 @@ def main() -> int:
     args = parser.parse_args()
     try:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
+        case_key = (expected.get("ability_id"), expected.get("effect_code"))
         if expected.get("schema_version") != 1 or \
                 expected.get("kind") != "original_fig_player_support" or \
                 expected.get("formation_directory_offset") != 392 or \
-                expected.get("ability_id") != 50 or \
-                expected.get("effect_code") != 1:
+                case_key not in EXPECTED_CASES:
             raise ValueError("unsupported FIG player-support reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:
@@ -58,7 +65,7 @@ def main() -> int:
         args.output.mkdir(parents=True, exist_ok=True)
         trace_path = args.output / "trace.json"
         frame_path = args.output / "frames.bin"
-        replay = args.reference.with_name("replay-fig-player-support.txt")
+        replay = args.reference.with_name(expected["replay"])
         subprocess.run([
             str(args.executable), "--game", str(args.game),
             "--save-dir", str(args.save_dir), "--slot", "1", "--no-save",
@@ -92,7 +99,8 @@ def main() -> int:
         pages = expected.get("matched_frames")
         if len(frames) != expected["rewrite_video"]["frames"] or \
                 not isinstance(pages, list) or \
-                tuple(page.get("kind") for page in pages) != EXPECTED_KINDS:
+                tuple(page.get("kind") for page in pages) != \
+                    EXPECTED_CASES[case_key]:
             raise ValueError("FIG player-support reference page set differs")
         for page in pages:
             pixels, palette = frames[page["rewrite_frame"]]
@@ -111,7 +119,8 @@ def main() -> int:
                      "capture_manifest_sha256"):
             digest(expected.get(name), name)
         print(
-            "FIG player-support checkpoint: selector 01h before/after cards, "
+            "FIG player-support checkpoint: selector "
+            f"{expected['effect_code']:02x}h before/after cards, "
             "deferred gauge debit and 0d98 boundary exactly match original RGB")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
