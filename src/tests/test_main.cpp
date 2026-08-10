@@ -4157,6 +4157,11 @@ void test_battle_session(const std::filesystem::path& game_root) {
         swd2::SharedState::load(game_root / "SAVE.DA1");
     direct_class_five_state.set_u16(0x10, 1);
     direct_class_five_state.set_u16(0x382, direct_class_five_item_id);
+    direct_class_five_state.set_u16(0x106 + 0x2d, 100);
+    direct_class_five_state.set_u16(0x106 + 0x2f, 1000);
+    direct_class_five_state.set_u16(0x106 + 0x35, 100);
+    direct_class_five_state.set_u16(0x106 + 0x37, 1000);
+    direct_class_five_state.set_u16(0x106 + 0x45, 0);
     direct_class_five_state.set_u16(0x106 + 0x55,
                                     direct_class_five_ability.cost);
     direct_class_five_state.set_u16(0x106 + 0x57, 1000);
@@ -4196,14 +4201,28 @@ void test_battle_session(const std::filesystem::path& game_root) {
     direct_class_five_commands[0] = {
         swd2::PlayerCommandKind::item, 0, 0, 0,
     };
-    direct_class_five_session.play_round(
+    const auto direct_class_five_round = direct_class_five_session.play_round(
         direct_class_five_commands, abilities, zero_random);
-    require(direct_class_five_session.party()[0].ability_points == 0 &&
+    const auto direct_class_five_event = std::find_if(
+        direct_class_five_round.events.begin(),
+        direct_class_five_round.events.end(),
+        [](const swd2::BattleSessionEvent& event) {
+            return event.kind == swd2::BattleEventKind::player_ability &&
+                   event.ability_id == direct_class_five_item_id;
+        });
+    require(direct_class_five_event != direct_class_five_round.events.end() &&
+                direct_class_five_event->effect_code == 0x0aU &&
+                direct_class_five_event->resulting_player_support_state &&
+                direct_class_five_event->resulting_player_support_state->hit_points ==
+                    100U &&
+                direct_class_five_event->resulting_player_support_state
+                        ->secondary_points == 550U &&
+                direct_class_five_session.party()[0].ability_points == 0 &&
                 std::all_of(
                     direct_class_five_session.special_item_counts().begin(),
                     direct_class_five_session.special_item_counts().end(),
                     [](std::uint16_t count) { return count == 0; }),
-            "FIG item 242 did not charge AP while preserving elemental counters");
+            "FIG item 242 did not dispatch item selector 0ah and charge AP");
 
     // Item 203 is a second independent ITEM/ability discriminator: its own
     // unaligned selector is 01h, while embedded ability 63 stores selector

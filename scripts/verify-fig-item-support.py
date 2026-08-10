@@ -54,8 +54,9 @@ def main() -> int:
                  expected.get("effect_code"),
                  expected.get("embedded_effect_code"),
                  expected.get("resource_class"),
-                 expected.get("resource_cost")) != EXPECTED_ITEMS[item_id] or \
+                expected.get("resource_cost")) != EXPECTED_ITEMS[item_id] or \
                 expected.get("payment_pool") != "ability_points" or \
+                expected.get("selector_source") != "item_record" or \
                 expected.get("capture_wait_seconds") != 5 or \
                 expected.get("capture_pace_seconds") != 0.5 or \
                 expected.get("capture_time_limit_seconds") != 15:
