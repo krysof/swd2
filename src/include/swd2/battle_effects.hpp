@@ -94,6 +94,13 @@ struct PlayerAbilityResult {
     std::vector<AbilityTargetResult> targets;
 };
 
+// The >30h player dispatcher does not necessarily use the ability selected
+// in the command for damage/resistance.  Each visual selector hard-codes a
+// canonical FIG ability record (DS:31e5); presentation also needs that
+// record's low target-flag bits for the five-colour 144e reaction ramp.
+[[nodiscard]] std::optional<std::uint16_t>
+fig_player_effect_canonical_ability(std::uint16_t effect_code) noexcept;
+
 struct PlayerSupportResult {
     bool supported{};
     bool all_targets{};

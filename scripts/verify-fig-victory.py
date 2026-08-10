@@ -29,7 +29,9 @@ def main() -> int:
         if expected.get("schema_version") != 1 or \
                 expected.get("kind") != "original_fig_victory_summary" or \
                 expected.get("formation_directory_offset") != 392 or \
-                expected.get("rewrite_frame") != 26:
+                expected.get("rewrite_frame") != 26 or \
+                expected.get("clean_rewrite_frame") != 25 or \
+                expected.get("clean_original_review_frame") != 453:
             raise ValueError("unsupported FIG victory reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:
@@ -37,6 +39,11 @@ def main() -> int:
         autotype = args.reference.with_name(expected["capture_autotype"])
         if sha256(autotype.read_bytes()) != expected["capture_autotype_sha256"]:
             raise ValueError("original victory capture input differs")
+        clean_autotype = args.reference.with_name(
+            expected["clean_capture_autotype"])
+        if sha256(clean_autotype.read_bytes()) != \
+                expected["clean_capture_autotype_sha256"]:
+            raise ValueError("original clean-page capture input differs")
         if sha256((args.save_root / "SAVE.DA1").read_bytes()) != \
                 expected["fixture_save_sha256"]:
             raise ValueError("FIG victory staged save differs")
@@ -78,6 +85,14 @@ def main() -> int:
         frames = load_indexed_frames(frame_path)
         if len(frames) != 27:
             raise ValueError("FIG victory frame count differs")
+        clean_pixels, clean_palette = frames[expected["clean_rewrite_frame"]]
+        clean_rgb = expand_rgb(clean_pixels, clean_palette)
+        if sha256(clean_pixels) != expected["clean_rewrite_indexed_sha256"] or \
+                sha256(clean_palette) != expected["clean_rewrite_palette_sha256"] or \
+                sha256(clean_rgb) != expected["clean_rewrite_rgb_sha256"] or \
+                sha256(clean_rgb) != expected["clean_original_rgb_sha256"]:
+            raise ValueError(
+                "FIG post-round 2db8 clean page no longer matches original RGB")
         pixels, palette = frames[expected["rewrite_frame"]]
         rgb = expand_rgb(pixels, palette)
         if sha256(pixels) != expected["rewrite_indexed_sha256"] or \
@@ -87,13 +102,16 @@ def main() -> int:
             raise ValueError("FIG victory no longer exactly matches original RGB")
         for name in (
                 "capture_harness_sha256", "capture_video_sha256",
-                "capture_manifest_sha256", "original_png_sha256"):
+                "capture_manifest_sha256", "original_png_sha256",
+                "clean_capture_video_sha256", "clean_capture_manifest_sha256",
+                "clean_original_png_sha256"):
             value = expected.get(name, "")
             if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
                 raise ValueError(f"malformed victory evidence digest {name}")
         print(
-            "FIG victory checkpoint: defeated formation, reward panel, money, "
-            "experience share, indexed VGA, and complete original RGB match")
+            "FIG victory checkpoint: original card-free 2db8 clean page, "
+            "defeated formation, reward panel, money, experience share, "
+            "indexed VGA, and complete original RGB match")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:

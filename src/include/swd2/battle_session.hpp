@@ -151,6 +151,10 @@ struct BattleSessionEvent {
     // clear death/status bits or alter SP/AP/maxima without producing a
     // numeric HP result, so deltas alone cannot drive faithful card redraws.
     std::optional<PlayerSupportState> resulting_player_support_state;
+    // 4338 only replaces DS:31e3 with a selected monster/party target when a
+    // selector was actually entered. Zero target-mode >30h effects still
+    // resolve against monster zero, but keep the caster's own action anchor.
+    bool action_anchor_is_target{true};
 };
 
 struct BattleRoundResult {

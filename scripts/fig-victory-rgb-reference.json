@@ -13,10 +13,21 @@
   "original_png_sha256": "96818bd62b98c9c199c3339e6ea54218047ee9ce583ea079bea201ee6de58ce7",
   "original_rgb_sha256": "000e96f9bdd95b82426d9ed2398f94c26a9fb71447005d74445784fa8a92c725",
   "rewrite_frame": 26,
-  "rewrite_video_fnv1a64": "a1d4028d021c953b",
+  "rewrite_video_fnv1a64": "3854708e708639d8",
   "rewrite_state_fnv1a64": "e43bbbb5336a07d3",
   "rewrite_final_fnv1a64": "4992aa123da6790b",
   "rewrite_indexed_sha256": "517189eedb08764ba591122659827c76f01df504effc65fb9aa3a60c682cbc75",
   "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-  "rewrite_rgb_sha256": "000e96f9bdd95b82426d9ed2398f94c26a9fb71447005d74445784fa8a92c725"
+  "rewrite_rgb_sha256": "000e96f9bdd95b82426d9ed2398f94c26a9fb71447005d74445784fa8a92c725",
+  "clean_capture_autotype": "original-fig-victory-clean-autotype.txt",
+  "clean_capture_autotype_sha256": "7f36aa1d27d399fe237e6f99b1c012c0be40da931a5fb6bdcdd7235a1a3cf607",
+  "clean_capture_video_sha256": "6ef092859e4eb0e67a48c342e45572906f3454f5a06f6dbab8c86a6ce41ba95c",
+  "clean_capture_manifest_sha256": "51ef2f2ecb7c6ddfdc699cb002effe1232f2b09069d0fd396915e4f8f63dd337",
+  "clean_original_review_frame": 453,
+  "clean_original_png_sha256": "bffb7032a2fa1457c572fd98916507887f72f287d53148a8467e1fa07de75540",
+  "clean_original_rgb_sha256": "ace69b54a56e2fa1a8535adf0b8856a56dcc047cb58a28600bb24a6a161ccd52",
+  "clean_rewrite_frame": 25,
+  "clean_rewrite_indexed_sha256": "ca44f9f4437d14abcc85c33900749937364eb40a2e8c2dcfb9805c2fa0287e72",
+  "clean_rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+  "clean_rewrite_rgb_sha256": "ace69b54a56e2fa1a8535adf0b8856a56dcc047cb58a28600bb24a6a161ccd52"
 }

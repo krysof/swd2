@@ -16,7 +16,7 @@
   "original_png_sha256": "72e3f2c6a0b6f3507f4f895b5dd54ce70118092caba892bce434905d28634f52",
   "original_rgb_sha256": "46da3d6c7261d93274ee841095a6430e18ea65a662ad86f7d62360ef4f4d9956",
   "rewrite_frame": 93,
-  "rewrite_video_fnv1a64": "640bda628bf42898",
+  "rewrite_video_fnv1a64": "cf18b870c7f5e42a",
   "rewrite_final_fnv1a64": "a78cae640e2d1a55",
   "rewrite_victory_ack_state_fnv1a64": "ba19229b77ab53f7",
   "rewrite_reward_ack_state_fnv1a64": "7d0248d991da888e",

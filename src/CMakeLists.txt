@@ -1163,4 +1163,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_player_damage_validation PROPERTIES
         DEPENDS fig_player_damage_prepare)
+    add_test(
+        NAME fig_implicit_damage_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-implicit-damage-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-implicit-damage-save"
+    )
+    add_test(
+        NAME fig_implicit_damage_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-implicit-damage.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-implicit-damage-save"
+                "${CMAKE_BINARY_DIR}/fig-implicit-damage"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-implicit-damage-rgb-reference.json"
+    )
+    set_tests_properties(fig_implicit_damage_validation PROPERTIES
+        DEPENDS fig_implicit_damage_prepare)
 endif()

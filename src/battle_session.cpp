@@ -56,7 +56,8 @@ void add_ability_events(std::vector<BattleSessionEvent>& events,
                         std::span<const AbilityTargetResult> targets,
                         std::uint8_t removed_player_buff_mask = 0,
                         std::uint8_t removed_monster_buff_mask = 0,
-                        bool monster_generic_path = false) {
+                        bool monster_generic_path = false,
+                        bool action_anchor_is_target = true) {
     if (targets.empty()) {
         BattleSessionEvent event{
             kind, source_is_monster, source, target_is_monster, 0, ability_id};
@@ -64,6 +65,7 @@ void add_ability_events(std::vector<BattleSessionEvent>& events,
         event.monster_generic_path = monster_generic_path;
         event.removed_player_buff_mask = removed_player_buff_mask;
         event.removed_monster_buff_mask = removed_monster_buff_mask;
+        event.action_anchor_is_target = action_anchor_is_target;
         events.push_back(event);
         return;
     }
@@ -79,6 +81,7 @@ void add_ability_events(std::vector<BattleSessionEvent>& events,
         event.monster_generic_path = monster_generic_path;
         event.removed_player_buff_mask = removed_player_buff_mask;
         event.removed_monster_buff_mask = removed_monster_buff_mask;
+        event.action_anchor_is_target = action_anchor_is_target;
         event.damage = target.damage;
         event.healing = target.healing;
         event.resisted = target.resisted;
@@ -1046,9 +1049,9 @@ BattleRoundResult BattleSession::play_round(
                     }
                     add_ability_events(result.events,
                                        BattleEventKind::player_ability,
-                                       false, actor, false, command.ability_id,
+                                       false, actor, true, command.ability_id,
                                        ability.effect_code,
-                                       applied.targets);
+                                       applied.targets, 0, 0, false, false);
                 }
                 finish_successful_ability();
                 continue;

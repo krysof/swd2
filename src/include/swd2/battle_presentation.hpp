@@ -210,6 +210,14 @@ fig_monster_status_icon_placement(int monster_mode_x_left,
                                   std::size_t active_ordinal) noexcept;
 [[nodiscard]] FigMonsterReactionPhase fig_monster_reaction_phase(
     const BattleSessionEvent& event) noexcept;
+
+// 59a1 copies one of FIG DATA:2f5b/2f6a/2f79 into DAC entries E0h..E4h
+// immediately before 144e.  5ed8 then rotates those five RGB triplets every
+// second result page; page_index is zero-based within the ten-page rise.
+void apply_fig_monster_result_palette(
+    std::array<std::uint8_t, 768>& palette,
+    std::uint16_t canonical_target_flags,
+    std::size_t page_index) noexcept;
 [[nodiscard]] std::optional<std::uint16_t> fig_player_status_bit(
     std::uint16_t effect_code) noexcept;
 [[nodiscard]] constexpr std::array<std::size_t, 2>

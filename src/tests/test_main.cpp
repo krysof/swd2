@@ -3036,6 +3036,33 @@ void test_fig_effect_timeline(const std::filesystem::path& game_root) {
                 effect_33.back().layers[0].vertical == 9,
             "FIG effect 33 cumulative dual-archive flight path differs from 490c");
 
+    require(swd2::fig_player_effect_canonical_ability(0x33) == 52 &&
+                swd2::fig_player_effect_canonical_ability(0x54) == 22 &&
+                !swd2::fig_player_effect_canonical_ability(0x30),
+            "FIG learned-effect DS:31e5 canonical ability mapping differs");
+    std::array<std::uint8_t, 768> result_palette{};
+    swd2::apply_fig_monster_result_palette(result_palette, 0xa405, 0);
+    require(std::equal(result_palette.begin() + 0x2a0,
+                       result_palette.begin() + 0x2af,
+                       std::array<std::uint8_t, 15>{
+                           63, 63, 63, 33, 52, 59, 23, 39, 53,
+                           14, 25, 48, 7, 12, 43}.begin()),
+            "FIG 59a1 water-result palette ramp differs from DATA:2f6a");
+    swd2::apply_fig_monster_result_palette(result_palette, 0xa405, 1);
+    require(std::equal(result_palette.begin() + 0x2a0,
+                       result_palette.begin() + 0x2af,
+                       std::array<std::uint8_t, 15>{
+                           7, 12, 43, 63, 63, 63, 33, 52, 59,
+                           23, 39, 53, 14, 25, 48}.begin()),
+            "FIG 5ed8 first two-page water-ramp rotation differs");
+    swd2::apply_fig_monster_result_palette(result_palette, 0xa200, 0);
+    require(std::equal(result_palette.begin() + 0x2a0,
+                       result_palette.begin() + 0x2af,
+                       std::array<std::uint8_t, 15>{
+                           44, 44, 44, 51, 51, 51, 58, 58, 58,
+                           44, 44, 44, 35, 35, 35}.begin()),
+            "FIG 59a1 neutral-result palette ramp differs from DATA:2f79");
+
     const auto effect_35 = swd2::fig_effect_timeline(0x35);
     require(effect_35.size() == 24 && effect_35.front().layers.size() == 2 &&
                 effect_35.front().layers[0].resource == 0 &&
@@ -4646,6 +4673,42 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 shipped_player_ability_count == 71 &&
                 invalid_shipped_player_abilities.empty(),
             "FIG reachable shipped player-ability domain contains an invalid dispatch");
+
+    // A zero target-mode descriptor still enters the monster-side >30h
+    // effect table.  FIG ability 100/effect 54 therefore damages monster
+    // zero without opening a selector; it is not a party-target action merely
+    // because target_flags & 3000h is zero.
+    auto implicit_monster_state = swd2::SharedState::load(
+        game_root / "SAVE.DA1");
+    implicit_monster_state.set_u16(0x10, 1);
+    implicit_monster_state.set_u8(actor_zero + 0x6d, 100);
+    implicit_monster_state.set_u16(actor_zero + 0x35, 1000);
+    implicit_monster_state.set_u16(actor_zero + 0x37, 1000);
+    implicit_monster_state.set_u16(actor_zero + 0x2d, 5000);
+    implicit_monster_state.set_u16(actor_zero + 0x2f, 5000);
+    implicit_monster_state.set_u16(actor_zero + 0x5d, 1000);
+    auto implicit_monster_session = swd2::BattleSession::create(
+        implicit_monster_state, selected->get(), items);
+    auto implicit_monster_commands = skip_commands;
+    implicit_monster_commands[0] = {
+        swd2::PlayerCommandKind::ability, 100, 0, 0,
+    };
+    const auto implicit_monster_round = implicit_monster_session.play_round(
+        implicit_monster_commands, abilities, zero_random);
+    require(std::any_of(
+                implicit_monster_round.events.begin(),
+                implicit_monster_round.events.end(),
+                [](const swd2::BattleSessionEvent& event) {
+                    return event.kind ==
+                               swd2::BattleEventKind::player_ability &&
+                           event.ability_id == 100 &&
+                           event.effect_code == 0x54 &&
+                           event.target_is_monster && event.target == 0 &&
+                           event.damage == 340 && event.defeated &&
+                           !event.action_anchor_is_target;
+                }) &&
+                implicit_monster_session.monsters()[0].hit_points == 0,
+            "FIG zero target-mode damage was mislabeled as a party event");
 
     // 58fa skips a medium-dependent effect body but returns to the ordinary
     // payment/consumption path. The monster is untouched and the exact failed

@@ -97,6 +97,12 @@ std::uint16_t checked_draw(const BattleRandom& random, std::uint16_t modulus) {
 
 }  // namespace
 
+std::optional<std::uint16_t>
+fig_player_effect_canonical_ability(std::uint16_t effect_code) noexcept {
+    if (const auto effect = descriptor(effect_code)) return effect->ability;
+    return visual_only_ability(effect_code);
+}
+
 MonsterTurnStatusResult advance_monster_turn_status(
     MonsterBattleState& monster, std::uint16_t base_physical_attack,
     std::uint16_t base_evasion, std::uint16_t first_actor_level,

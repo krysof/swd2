@@ -13,7 +13,7 @@
   "original_png_sha256": "af50e9212e6bd18f37ff021ca6207a7648727e9425c8c4b690221e058204df39",
   "original_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3",
   "rewrite_frame": 25,
-  "rewrite_video_fnv1a64": "20f27bb013efd1d6",
+  "rewrite_video_fnv1a64": "d271a281a568c559",
   "rewrite_state_fnv1a64": "3beaf26fa6e11a7b",
   "rewrite_final_fnv1a64": "0b6ac5ce3c1b2d24",
   "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",

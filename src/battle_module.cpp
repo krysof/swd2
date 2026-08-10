@@ -1485,12 +1485,13 @@ BattleSurface compose_event_frame(
                                   ? std::optional<std::size_t>(event.source)
                                   : std::nullopt;
     const auto action_mode_x_anchor = action_actor
-                                          ? std::optional<int>{
-                                                event.target_is_monster
-                                                    ? target_x / 4 - 3
-                                                    : 12 + static_cast<int>(
-                                                               event.target) * 18}
-                                          : std::nullopt;
+        ? std::optional<int>{
+              event.action_anchor_is_target
+                  ? (event.target_is_monster
+                         ? target_x / 4 - 3
+                         : 12 + static_cast<int>(event.target) * 18)
+                  : 12 + static_cast<int>(event.source) * 18}
+        : std::nullopt;
     draw_fig_party_cards(
         frame, menu_sprites,
         std::span<const BattlePartyMember>(visual.party).first(
@@ -1505,9 +1506,12 @@ BattleSurface compose_event_frame(
         draw_weapon_overlay(frame, *weapon_animation, context.game_root,
                             target_x, target_y);
     }
-    const auto target_mode_x_anchor = event.target_is_monster
-                                          ? target_x / 4 - 3
-                                          : 12 + static_cast<int>(event.target) * 18;
+    const auto target_mode_x_anchor = !event.action_anchor_is_target
+                                          ? 12 + static_cast<int>(event.source) * 18
+                                          : event.target_is_monster
+                                                ? target_x / 4 - 3
+                                                : 12 + static_cast<int>(
+                                                           event.target) * 18;
     for (const auto& layer : effect_layers) {
         if (layer.archive == nullptr || layer.archive->sprites().empty()) continue;
         const auto effect_frame = std::min(
@@ -2658,6 +2662,15 @@ bool present_round_events(
             event.target_is_monster && event.status_duration == 0 &&
             (event.damage != 0 || event.healing != 0) &&
             effect_code && *effect_code > 0x30;
+        std::optional<std::uint16_t> retained_damage_target_flags;
+        if (retained_monster_damage_handler) {
+            if (const auto canonical =
+                    fig_player_effect_canonical_ability(event.effect_code);
+                canonical && *canonical < abilities.abilities().size()) {
+                retained_damage_target_flags =
+                    abilities.ability(*canonical).target_flags;
+            }
+        }
         const auto status_text = abilities.player_status_text(event.effect_code);
         const auto retained_player_status_handler =
             player_dispatcher_action &&
@@ -3175,19 +3188,47 @@ bool present_round_events(
             } else {
                 placements = fig_party_number_timeline(event.target);
             }
-            for (const auto& placement : placements) {
+            if (retained_monster_damage_handler) {
+                // 144e first performs one complete 2db8/137a/flip and saves
+                // that reaction page in A800h before drawing any digits.  It
+                // has no timer wait, but it is a real visible page and is the
+                // immutable indexed source copied for all ten number pages.
+                auto reaction_frame = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::optional<std::size_t>{4}, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, true);
+                if (dispatcher_palette_override) {
+                    reaction_frame.palette = *dispatcher_palette_override;
+                }
+                if (retained_damage_target_flags) {
+                    apply_fig_monster_result_palette(
+                        reaction_frame.palette,
+                        *retained_damage_target_flags, 0);
+                }
+                present_battle_surface(context, reaction_frame);
+            }
+            for (std::size_t page_index = 0;
+                 page_index < placements.size(); ++page_index) {
+                const auto& placement = placements[page_index];
                 if (retained_monster_damage_handler) {
                     // 144e runs inside the >30h dispatcher handler, before
-                    // 585e charges the selected resource.  Keep both 137a's
-                    // target-anchored pose 4 and 43ce's darkest palette on
-                    // every floating-number page.
+                    // 585e charges the selected resource.  A800h preserves
+                    // the one-shot reaction sprite on every number page;
+                    // 5ed8 rotates its E0h..E4h colour ramp every second
+                    // flip while pose 4 and 43ce's dark C0h..DFh survive.
                     auto number_frame = compose_event_frame(
                         context, base_surface, encounter, items, fighters,
                         menu_sprites, font, fallback, visual, event,
                         std::optional<std::size_t>{4}, {}, placement,
-                        encounter_directory_offset);
+                        encounter_directory_offset, std::nullopt, true);
                     if (dispatcher_palette_override) {
                         number_frame.palette = *dispatcher_palette_override;
+                    }
+                    if (retained_damage_target_flags) {
+                        apply_fig_monster_result_palette(
+                            number_frame.palette,
+                            *retained_damage_target_flags, page_index);
                     }
                     present_battle_surface(context, number_frame);
                 } else {
@@ -3198,6 +3239,15 @@ bool present_round_events(
                         encounter_directory_offset);
                 }
                 if (!delay(effect_delay)) return false;
+            }
+            if (retained_monster_damage_handler &&
+                dispatcher_palette_override && retained_damage_target_flags) {
+                // The fifth two-page rotation returns E0h..E4h to the table
+                // installed by 14a3, which remains active for the clean page
+                // and the subsequent C0h..DFh restoration.
+                apply_fig_monster_result_palette(
+                    *dispatcher_palette_override,
+                    *retained_damage_target_flags, placements.size() - 1U);
             }
         }
         if (retained_monster_damage_handler) {
@@ -3954,9 +4004,11 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 break;
             }
 
-            // Recompose from the decoded background after each resolved round
-            // so defeated monsters disappear and portable frontends receive a
-            // real state frame rather than a frozen pre-battle screenshot.
+            // The initiative loop rejoins through 2db8, not 137a.  This clean
+            // page contains the background, monsters and persistent media but
+            // deliberately no party cards; the next 2b64 command composition
+            // installs those cards together with the menu.  Drawing ordinary
+            // portraits here creates a page the original never displayed.
             surface = base_surface;
             draw_battle_media(surface, menu_sprites, session.battle_media());
             draw_summoned_ally_name_cards(
@@ -3965,10 +4017,6 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             draw_enemies(surface, encounter, items, context.game_root,
                          menu_sprites,
                          session.monsters());
-            draw_fig_party_cards(
-                surface, menu_sprites,
-                std::span<const BattlePartyMember>(session.party()).first(
-                    session.party_count()));
             context.platform.present({
                 320, 200, surface.pixels,
                 std::span<const std::uint8_t, 768>(surface.palette),

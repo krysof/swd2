@@ -425,6 +425,41 @@ FigMonsterReactionPhase fig_monster_reaction_phase(
                              : FigMonsterReactionPhase::none;
 }
 
+void apply_fig_monster_result_palette(
+    std::array<std::uint8_t, 768>& palette,
+    std::uint16_t canonical_target_flags,
+    std::size_t page_index) noexcept {
+    static constexpr std::array<std::uint8_t, 15> fire = {
+        63, 26, 1, 59, 28, 17, 63, 50, 35,
+        59, 35, 12, 60, 16, 7,
+    };
+    static constexpr std::array<std::uint8_t, 15> water = {
+        63, 63, 63, 33, 52, 59, 23, 39, 53,
+        14, 25, 48, 7, 12, 43,
+    };
+    static constexpr std::array<std::uint8_t, 15> neutral = {
+        44, 44, 44, 51, 51, 51, 58, 58, 58,
+        44, 44, 44, 35, 35, 35,
+    };
+    const auto selector = canonical_target_flags & 7U;
+    const auto& ramp = selector == 1U
+                           ? fire
+                           : (selector == 2U || selector == 5U ? water
+                                                               : neutral);
+    constexpr auto colors = std::size_t{5};
+    // Runtime word 42b2 starts at interval two.  144e calls 5ed8 after every
+    // flip, so the visible stable pages are baseline, shift 1 twice, shift 2
+    // twice, ... and finally baseline again on page ten.
+    const auto shift = ((page_index + 1U) / 2U) % colors;
+    constexpr auto first_color = std::size_t{0xe0};
+    for (std::size_t destination = 0; destination < colors; ++destination) {
+        const auto source = (destination + colors - shift) % colors;
+        std::copy_n(ramp.begin() + static_cast<std::ptrdiff_t>(source * 3U),
+                    3, palette.begin() + static_cast<std::ptrdiff_t>(
+                           (first_color + destination) * 3U));
+    }
+}
+
 std::optional<std::uint16_t> fig_player_status_bit(
     std::uint16_t effect_code) noexcept {
     switch (effect_code) {

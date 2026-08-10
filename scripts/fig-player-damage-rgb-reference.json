@@ -24,11 +24,11 @@
     "frontend": 134
   },
   "rewrite_video": {
-    "frames": 64,
+    "frames": 65,
     "direct_updates": 0,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "297810d2f0899569"
+    "fnv1a64": "4799a0cdff8c21d2"
   },
   "rewrite_state_fnv1a64": "3a697ec857a8be8f",
   "rewrite_final_fnv1a64": "30578ea283f892ae",
@@ -95,7 +95,7 @@
     },
     {
       "kind": "first_result_reaction",
-      "rewrite_frame": 45,
+      "rewrite_frame": 46,
       "original_review_frame": 646,
       "original_png_sha256": "e40705a975c14cfec7af6617cee136fb4acb7b4bd0bac3c1f74f16e495220208",
       "rewrite_indexed_sha256": "57bdbb8bda39ab078b8e1679baa57a493dc2023be8434780aa8c7483896cd945",
@@ -105,7 +105,7 @@
     },
     {
       "kind": "restore_middle",
-      "rewrite_frame": 59,
+      "rewrite_frame": 60,
       "original_review_frame": 669,
       "original_png_sha256": "0b10b77ec26117db0fd411bc72701e5069bcc33babbeb79bdf4982fbfd0d2f64",
       "rewrite_indexed_sha256": "e03eddcff75b8679a6127d45df78278609d784e0349cb5021ba1b900866077d7",
@@ -115,7 +115,7 @@
     },
     {
       "kind": "restore_late",
-      "rewrite_frame": 60,
+      "rewrite_frame": 61,
       "original_review_frame": 671,
       "original_png_sha256": "55d00d0e016e76da2798201de1bb8f9ea985cb480b2158305283a47899295e52",
       "rewrite_indexed_sha256": "e03eddcff75b8679a6127d45df78278609d784e0349cb5021ba1b900866077d7",
@@ -125,7 +125,7 @@
     },
     {
       "kind": "restored_pose4",
-      "rewrite_frame": 61,
+      "rewrite_frame": 62,
       "original_review_frame": 673,
       "original_png_sha256": "cb597237e66539ed939d572358568caa19eb7c7fec8a1596c6b5ae2094842a14",
       "rewrite_indexed_sha256": "e03eddcff75b8679a6127d45df78278609d784e0349cb5021ba1b900866077d7",
