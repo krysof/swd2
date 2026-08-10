@@ -4461,6 +4461,10 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 quit_battle = true;
                 break;
             }
+            // 09b8's successful random-encounter escape returns from FIG as
+            // soon as the second fighter pose and SV3 submission complete.
+            // It never rejoins the ordinary round-boundary 2db8/80ms page.
+            if (session.outcome() == BattleOutcome::escaped) break;
 
             // The initiative loop rejoins through 2db8, not 137a.  This clean
             // page contains the background, monsters and persistent media but
