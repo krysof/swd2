@@ -12,8 +12,15 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
-EXPECTED_PAGES = (
+ABILITY_PAGES = (
     "common_pose0", "common_pose4", "darkened_pose4",
+    "sp336_frame0", "sp336_frame1", "sp336_frame2", "sp336_frame3",
+    "sp336_frame4", "between_archives_clean", "sp337_frame0",
+    "sp337_frame1", "sp337_frame2", "removed_attack_buff_card",
+    "bare_player_tail",
+)
+ITEM_PAGES = (
+    "item_pose0", "darkened_item_pose0",
     "sp336_frame0", "sp336_frame1", "sp336_frame2", "sp336_frame3",
     "sp336_frame4", "between_archives_clean", "sp337_frame0",
     "sp337_frame1", "sp337_frame2", "removed_attack_buff_card",
@@ -42,14 +49,24 @@ def main() -> int:
     args = parser.parse_args()
     try:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
+        kind = expected.get("kind")
         if expected.get("schema_version") != 1 or \
-                expected.get("kind") != "original_fig_player_dispel" or \
+                kind not in ("original_fig_player_dispel",
+                             "original_fig_item_dispel") or \
                 expected.get("formation_directory_offset") != 1246 or \
-                expected.get("ability_id") != 71 or \
                 expected.get("effect_code") != 0x61 or \
                 expected.get("removed_monster_buff_mask") != 0x02 or \
                 expected.get("capture_time_limit_seconds") != 15:
             raise ValueError("unsupported FIG player-dispel reference")
+        if kind == "original_fig_player_dispel":
+            if expected.get("ability_id") != 71:
+                raise ValueError("unsupported FIG player-dispel ability")
+            expected_pages = ABILITY_PAGES
+        else:
+            if expected.get("item_id") != 211 or \
+                    expected.get("embedded_ability_id") != 71:
+                raise ValueError("unsupported FIG item-dispel record")
+            expected_pages = ITEM_PAGES
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:
             raise ValueError("FIG.EXE differs from the player-dispel reference")
@@ -100,7 +117,7 @@ def main() -> int:
         pages = expected.get("matched_frames")
         if len(frames) != expected["rewrite_video"]["frames"] or \
                 not isinstance(pages, list) or \
-                tuple(page.get("kind") for page in pages) != EXPECTED_PAGES:
+                tuple(page.get("kind") for page in pages) != expected_pages:
             raise ValueError("FIG player-dispel reference page set differs")
         for page in pages:
             pixels, palette = frames[page["rewrite_frame"]]

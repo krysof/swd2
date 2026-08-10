@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 EXPECTED = "536f23db3cf3c6faccf9e5d02ee4dddcda14878041a5ee5fcf1852793e9f0f04"
+EXPECTED_ITEM = "ed93002747f17c7ba9dabffdd46fa11ade08aa57ec2885c1bc0544ebfa33853a"
 
 
 def word(data: bytearray, offset: int, value: int) -> None:
@@ -20,6 +21,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--item", action="store_true",
+                        help="stage consumable item 211 instead of the learned ability")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -47,9 +50,14 @@ def main() -> int:
             for offset in (0x27, 0x28, 0x2A, 0x2B):
                 data[actor + offset] = 0
         word(data, 0x106 + 0x6D, 71)  # player effect 61h
+        if args.item:
+            for offset in range(0x382, 0x3E6, 2):
+                word(data, offset, 0)
+            word(data, 0x382, 211)     # type-10 direct selector 61h
 
         actual = hashlib.sha256(data).hexdigest()
-        if actual != EXPECTED:
+        expected = EXPECTED_ITEM if args.item else EXPECTED
+        if actual != expected:
             raise ValueError(f"FIG player-dispel save differs: {actual}")
         (args.output / "SAVE.DA1").write_bytes(data)
         print(f"FIG player-dispel fixture: {actual}")

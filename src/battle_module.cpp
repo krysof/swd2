@@ -2812,6 +2812,11 @@ bool present_round_events(
             effect_first && effect_code.has_value() &&
             (event.kind == BattleEventKind::player_ability ||
              dispatcher_escape_action);
+        const auto item_dispatcher_action =
+            player_dispatcher_action && event.source < commands.size() &&
+            commands[event.source].kind == PlayerCommandKind::item;
+        const auto dispatcher_effect_pose =
+            item_dispatcher_action ? std::size_t{0} : std::size_t{4};
         if (effect_code && effect_first &&
             !monster_special_player_resistance) {
             const auto voice = monster_named_action
@@ -2975,7 +2980,11 @@ bool present_round_events(
         } else if (action_first && player_actor_event(event.kind)) {
             const auto ability_poses = fig_player_ability_poses();
             poses = {ability_poses[0], ability_poses[1], ability_poses[1]};
-            pose_count = 2;
+            // 1138's direct-item path calls 2db8/137a exactly once, saves
+            // that pose-0 page with 3c15 and waits three ticks before the
+            // selector. Learned abilities instead enter 4338 and expose the
+            // separate pose0(3) -> pose4(3) pair.
+            pose_count = item_dispatcher_action ? 1U : 2U;
         }
         std::size_t effect_cursor = 0;
         if (pose_count == 0 && effect_frames.empty() && !dispatcher_event) {
@@ -3243,7 +3252,8 @@ bool present_round_events(
             // backing and FMAN, and also gives 59a1 the wrong page to retain.
             const auto retained_pose = player_dispatcher_action &&
                                                !retained_player_barrier_handler
-                                           ? std::optional<std::size_t>{4}
+                                           ? std::optional<std::size_t>{
+                                                 dispatcher_effect_pose}
                                            : std::nullopt;
             retained_effect_surface = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
@@ -3264,7 +3274,8 @@ bool present_round_events(
                 auto between_archives = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
-                    std::optional<std::size_t>{4}, {}, std::nullopt,
+                    std::optional<std::size_t>{dispatcher_effect_pose}, {},
+                    std::nullopt,
                     encounter_directory_offset);
                 if (dispatcher_palette_override) {
                     between_archives.palette = *dispatcher_palette_override;
@@ -3280,7 +3291,8 @@ bool present_round_events(
             auto dispel_surface = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event,
-                std::optional<std::size_t>{4}, {}, std::nullopt,
+                std::optional<std::size_t>{dispatcher_effect_pose}, {},
+                std::nullopt,
                 encounter_directory_offset);
             if (dispatcher_palette_override) {
                 dispel_surface.palette = *dispatcher_palette_override;
