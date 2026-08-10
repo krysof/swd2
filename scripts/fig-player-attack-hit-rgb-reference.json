@@ -21,9 +21,9 @@
   "capture_time_limit_seconds": 12,
   "capture_review_fps": 70,
   "capture_review_frames": 839,
-  "capture_video_sha256": "6fd27ec75d38c886a25eff56797d1f4fd3c5064e1ba2f6c64bd93603877f5d30",
-  "capture_manifest_sha256": "623e8409e1e627e354703500c2774a5ba97ee7fb4d3bd57c6e5e7697eb4c272c",
-  "capture_limitation": "The three live monster-reaction wipe pages (modern frames 11..13), generic pre-effect page 27, fourth solid flash page 35, and post-damage commit page 47 were not sampled as stable DOS review frames; entry frame 0 is outside this action checkpoint.",
+  "capture_video_sha256": "686e5979fdeca23e73a17182e4abedc92777df7f1ab03384d52c9010bc8a2bfb",
+  "capture_manifest_sha256": "2cedc6fa459128cdabc79bdb3d51faab418f3809a584eda744ca88e53ea3e744",
+  "capture_limitation": "The three live monster-reaction wipe pages (modern frames 11..13), generic pre-effect page 28, fourth solid flash page 36, and post-damage commit page 48 were not sampled as stable DOS review frames; entry frame 0 is outside this action checkpoint.",
   "rewrite_input": {
     "total": 3,
     "consumed": 3,
@@ -37,11 +37,11 @@
     "frontend": 111
   },
   "rewrite_video": {
-    "frames": 50,
+    "frames": 51,
     "direct_updates": 0,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "ad73ea076ebfa1a4"
+    "fnv1a64": "b4d91c6413f6d0eb"
   },
   "rewrite_audio": {
     "music_calls": 1,
@@ -76,6 +76,7 @@
     281,
     295,
     309,
+    394,
     394,
     394,
     394,
@@ -311,8 +312,18 @@
       "original_rgb_sha256": "17f7ff7bd7075b031c0ec311f97438ae7492745c99ec6afd02ab18d15999d0b8"
     },
     {
-      "kind": "player_result_commit_retains_pose2",
+      "kind": "player_result_background_clear",
       "rewrite_frame": 24,
+      "original_review_frame": 529,
+      "original_png_sha256": "bffb7032a2fa1457c572fd98916507887f72f287d53148a8467e1fa07de75540",
+      "rewrite_indexed_sha256": "ca44f9f4437d14abcc85c33900749937364eb40a2e8c2dcfb9805c2fa0287e72",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "ace69b54a56e2fa1a8535adf0b8856a56dcc047cb58a28600bb24a6a161ccd52",
+      "rewrite_rgb_sha256": "ace69b54a56e2fa1a8535adf0b8856a56dcc047cb58a28600bb24a6a161ccd52"
+    },
+    {
+      "kind": "player_result_commit_retains_pose2",
+      "rewrite_frame": 25,
       "original_review_frame": 530,
       "rewrite_indexed_sha256": "4048be8e444a9e081a1bb3155dc5d30a45809cdf78cbe938fed1e17cbda71b2b",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -322,7 +333,7 @@
     },
     {
       "kind": "player_round_bare_boundary",
-      "rewrite_frame": 25,
+      "rewrite_frame": 26,
       "original_review_frame": 531,
       "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -332,7 +343,7 @@
     },
     {
       "kind": "monster_ability_name",
-      "rewrite_frame": 26,
+      "rewrite_frame": 27,
       "original_review_frame": 550,
       "rewrite_indexed_sha256": "4b4592ffafcf6596420ee12e1269f89b85bf17f918a3324dfadd7ff0d71bbb41",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -342,7 +353,7 @@
     },
     {
       "kind": "generic_clean1",
-      "rewrite_frame": 28,
+      "rewrite_frame": 29,
       "original_review_frame": 565,
       "rewrite_indexed_sha256": "327b96abc15a63fe7b542be062ff2715e46c237bbc17e6522812e58b6b800a66",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -352,7 +363,7 @@
     },
     {
       "kind": "generic_solid1",
-      "rewrite_frame": 29,
+      "rewrite_frame": 30,
       "original_review_frame": 567,
       "rewrite_indexed_sha256": "778441adea6aecfdc8408a6832e2b7454f35074d993f3228ad8ce5f8bf745125",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -362,7 +373,7 @@
     },
     {
       "kind": "generic_clean2",
-      "rewrite_frame": 30,
+      "rewrite_frame": 31,
       "original_review_frame": 569,
       "rewrite_indexed_sha256": "327b96abc15a63fe7b542be062ff2715e46c237bbc17e6522812e58b6b800a66",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -372,7 +383,7 @@
     },
     {
       "kind": "generic_solid2",
-      "rewrite_frame": 31,
+      "rewrite_frame": 32,
       "original_review_frame": 571,
       "rewrite_indexed_sha256": "778441adea6aecfdc8408a6832e2b7454f35074d993f3228ad8ce5f8bf745125",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -382,7 +393,7 @@
     },
     {
       "kind": "generic_clean3",
-      "rewrite_frame": 32,
+      "rewrite_frame": 33,
       "original_review_frame": 573,
       "rewrite_indexed_sha256": "327b96abc15a63fe7b542be062ff2715e46c237bbc17e6522812e58b6b800a66",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -392,7 +403,7 @@
     },
     {
       "kind": "generic_solid3",
-      "rewrite_frame": 33,
+      "rewrite_frame": 34,
       "original_review_frame": 575,
       "rewrite_indexed_sha256": "778441adea6aecfdc8408a6832e2b7454f35074d993f3228ad8ce5f8bf745125",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -402,7 +413,7 @@
     },
     {
       "kind": "generic_clean4",
-      "rewrite_frame": 34,
+      "rewrite_frame": 35,
       "original_review_frame": 577,
       "rewrite_indexed_sha256": "327b96abc15a63fe7b542be062ff2715e46c237bbc17e6522812e58b6b800a66",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -412,7 +423,7 @@
     },
     {
       "kind": "generic_final_clean",
-      "rewrite_frame": 36,
+      "rewrite_frame": 37,
       "original_review_frame": 579,
       "rewrite_indexed_sha256": "327b96abc15a63fe7b542be062ff2715e46c237bbc17e6522812e58b6b800a66",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -422,7 +433,7 @@
     },
     {
       "kind": "monster_damage_rise1",
-      "rewrite_frame": 37,
+      "rewrite_frame": 38,
       "original_review_frame": 582,
       "rewrite_indexed_sha256": "aa1bc50b5fbc2831ffb70cc803d0915714bdbddaf930ba021a60381653dfc463",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -432,7 +443,7 @@
     },
     {
       "kind": "monster_damage_rise2",
-      "rewrite_frame": 38,
+      "rewrite_frame": 39,
       "original_review_frame": 584,
       "rewrite_indexed_sha256": "88d129303e8eae36a6f82bac6a3f9fef7c961ae9a166bfa8df456803a2046f98",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -442,7 +453,7 @@
     },
     {
       "kind": "monster_damage_rise3",
-      "rewrite_frame": 39,
+      "rewrite_frame": 40,
       "original_review_frame": 586,
       "rewrite_indexed_sha256": "061a92d93eafac9f51a80f632967849bd6da2d097297fc5bc1f2b18d4643b178",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -452,7 +463,7 @@
     },
     {
       "kind": "monster_damage_rise4",
-      "rewrite_frame": 40,
+      "rewrite_frame": 41,
       "original_review_frame": 588,
       "rewrite_indexed_sha256": "40adcf0eecc087245fa3ca86419995bf72b97f069d3843f84e4aab6a02c16a53",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -462,7 +473,7 @@
     },
     {
       "kind": "monster_damage_rise5",
-      "rewrite_frame": 41,
+      "rewrite_frame": 42,
       "original_review_frame": 590,
       "rewrite_indexed_sha256": "be88ef78a9eda3669fce39ed828338ad7c3aa89cbc75afe54f332956f4f4a5ca",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -472,7 +483,7 @@
     },
     {
       "kind": "monster_damage_rise6",
-      "rewrite_frame": 42,
+      "rewrite_frame": 43,
       "original_review_frame": 592,
       "rewrite_indexed_sha256": "ee35eb66f568a28d9fd89512e4f964228655ac3dba0c8b16400fa96a3aa8eac0",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -482,7 +493,7 @@
     },
     {
       "kind": "monster_damage_rise7",
-      "rewrite_frame": 43,
+      "rewrite_frame": 44,
       "original_review_frame": 594,
       "rewrite_indexed_sha256": "6584214aa6d9348492230fd89d25674d50d0d908afa6f4ce8d987c26ef01edb9",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -492,7 +503,7 @@
     },
     {
       "kind": "monster_damage_rise8",
-      "rewrite_frame": 44,
+      "rewrite_frame": 45,
       "original_review_frame": 596,
       "rewrite_indexed_sha256": "d930e62ba2b6624a75b56c6fa74c9d7a928b22a9eab8cdebb1da28364e782e62",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -502,7 +513,7 @@
     },
     {
       "kind": "monster_damage_rise9",
-      "rewrite_frame": 45,
+      "rewrite_frame": 46,
       "original_review_frame": 598,
       "rewrite_indexed_sha256": "89f3d3b7dfab1a567120d33138d05ac2514b48cba08a7275c323126c830ded40",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -512,7 +523,7 @@
     },
     {
       "kind": "monster_damage_rise10",
-      "rewrite_frame": 46,
+      "rewrite_frame": 47,
       "original_review_frame": 600,
       "rewrite_indexed_sha256": "7f7c1defe067931b8c65a0e47e6e8cc5dfbc67b3acaf169a04ef100b77c68aa5",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -522,7 +533,7 @@
     },
     {
       "kind": "monster_round_bare_boundary",
-      "rewrite_frame": 48,
+      "rewrite_frame": 49,
       "original_review_frame": 611,
       "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
@@ -532,7 +543,7 @@
     },
     {
       "kind": "next_command_page",
-      "rewrite_frame": 49,
+      "rewrite_frame": 50,
       "original_review_frame": 628,
       "rewrite_indexed_sha256": "df9449b290f3a2352bef99367270c527327590e4cc2b8ba5f02bd0bb0981f297",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",

@@ -17,11 +17,11 @@
   "capture_video_sha256": "61c12356f7524d3daa1a55804734177a624e205440434e1d5f0612ef8dd50b47",
   "capture_manifest_sha256": "edc8f7fce3bc6d8b0bbe0eb7d067c790814ec413752e04b6132d1acf332c0808",
   "rewrite_video": {
-    "frames": 115,
+    "frames": 116,
     "direct_updates": 36,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "a4d2f7b3956c7420"
+    "fnv1a64": "f2559b2e9f8a7009"
   },
   "rewrite_audio": {
     "music_calls": 1,

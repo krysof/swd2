@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay and lock FIG's nonfatal player-physical-attack presentation."""
+"""Replay and lock FIG's nonfatal critical player-physical-attack presentation."""
 
 from __future__ import annotations
 
@@ -14,12 +14,12 @@ from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 EXPECTED_KINDS = (
     "initial_command_page", "attack_command_selected",
-    "pose0", "pose1", "pose2",
-    *(f"weapon_wipe{index}" for index in range(1, 5)),
+    "pose0", "pose1", "critical_pose3",
+    "weapon_wipe1", "weapon_wipe3", "weapon_wipe4",
     "reaction_wipe1",
-    *(f"player_damage_rise{index}" for index in range(1, 11)),
+    *(f"critical_damage_rise{index}" for index in range(1, 11)),
     "player_result_background_clear",
-    "player_result_commit_retains_pose2", "player_round_bare_boundary",
+    "player_result_commit_retains_pose3", "player_round_bare_boundary",
     "monster_ability_name",
     "generic_clean1", "generic_solid1", "generic_clean2",
     "generic_solid2", "generic_clean3", "generic_solid3",
@@ -28,8 +28,8 @@ EXPECTED_KINDS = (
     "monster_round_bare_boundary", "next_command_page",
 )
 EXPECTED_REWRITE_FRAMES = (
-    *range(1, 11), *range(14, 28), *range(29, 36), 37,
-    *range(38, 48), 49, 50,
+    *range(1, 7), *range(8, 11), *range(14, 28),
+    *range(29, 36), 37, *range(38, 48), 49, 50,
 )
 
 
@@ -40,7 +40,7 @@ def sha256(data: bytes) -> str:
 def digest(value: object, label: str) -> str:
     if not isinstance(value, str) or len(value) != 64 or any(
             character not in "0123456789abcdef" for character in value):
-        raise ValueError(f"malformed FIG player-hit digest {label}")
+        raise ValueError(f"malformed FIG player-critical-hit digest {label}")
     return value
 
 
@@ -55,33 +55,33 @@ def main() -> int:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
         pages = expected.get("matched_frames")
         if expected.get("schema_version") != 1 or \
-                expected.get("kind") != "original_fig_player_attack_hit" or \
+                expected.get("kind") != "original_fig_player_critical_hit" or \
                 expected.get("status") != "exact_rgb_checkpoint" or \
                 expected.get("formation_directory_offset") != 392 or \
                 expected.get("monster_definition_id") != 500 or \
                 expected.get("monster_hit_points") != 60000 or \
                 expected.get("monster_physical_immunity") != 0 or \
                 expected.get("monster_evasion") != 0 or \
-                expected.get("critical_countdown") != 0xFFFF or \
+                expected.get("critical_countdown") != 1 or \
                 not isinstance(pages, list) or \
                 tuple(page.get("kind") for page in pages) != EXPECTED_KINDS or \
                 tuple(page.get("rewrite_frame") for page in pages) != \
                     EXPECTED_REWRITE_FRAMES:
-            raise ValueError("unsupported FIG player-hit reference")
+            raise ValueError("unsupported FIG player-critical-hit reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:
-            raise ValueError("FIG.EXE differs from player-hit reference")
+            raise ValueError("FIG.EXE differs from player-critical-hit reference")
         if sha256((args.game / "SAVE.DA1").read_bytes()) != \
                 expected["fixture_save_sha256"] or \
                 sha256((args.game / "ITEM.EXE").read_bytes()) != \
                 expected["fixture_item_sha256"]:
-            raise ValueError("FIG player-hit staged game differs")
+            raise ValueError("FIG player-critical-hit staged game differs")
         autotype = args.reference.with_name(expected["capture_autotype"])
         replay = args.reference.with_name(expected["replay_input"])
         if sha256(autotype.read_bytes()) != \
                 expected["capture_autotype_sha256"] or \
                 sha256(replay.read_bytes()) != expected["replay_input_sha256"]:
-            raise ValueError("FIG player-hit input evidence differs")
+            raise ValueError("FIG player-critical-hit input evidence differs")
         if expected.get("capture_wait_seconds") != 5 or \
                 expected.get("capture_pace_seconds") != 1 or \
                 expected.get("capture_time_limit_seconds") != 12 or \
@@ -89,14 +89,14 @@ def main() -> int:
                 expected.get("capture_review_frames") != 839 or \
                 expected.get("capture_harness_sha256") != \
                     "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba":
-            raise ValueError("FIG player-hit capture boundary differs")
+            raise ValueError("FIG player-critical-hit capture boundary differs")
         for name in ("capture_video_sha256", "capture_manifest_sha256"):
             digest(expected.get(name), name)
         limitation = expected.get("capture_limitation")
         if not isinstance(limitation, str) or \
-                "modern frames 11..13" not in limitation or \
+                "modern frames 7 and 11..13" not in limitation or \
                 "page 28" not in limitation:
-            raise ValueError("FIG player-hit capture limitation missing")
+            raise ValueError("FIG player-critical-hit capture limitation missing")
 
         args.output.mkdir(parents=True, exist_ok=True)
         trace_path = args.output / "trace.json"
@@ -111,30 +111,30 @@ def main() -> int:
         trace = json.loads(trace_path.read_text(encoding="utf-8"))
         if trace.get("input") != expected["rewrite_input"] or \
                 trace.get("boundaries") != expected["rewrite_boundaries"]:
-            raise ValueError("FIG player-hit replay boundaries differ")
+            raise ValueError("FIG player-critical-hit replay boundaries differ")
         if trace.get("video") != expected["rewrite_video"] or \
                 trace.get("audio") != expected["rewrite_audio"] or \
                 trace.get("delay_milliseconds") != \
                     expected["rewrite_delay_milliseconds"] or \
                 trace.get("frame_fnv1a64", [])[-1:] != [
                     expected["rewrite_final_fnv1a64"]]:
-            raise ValueError("FIG player-hit audio/video timeline differs")
+            raise ValueError("FIG player-critical-hit audio/video timeline differs")
         if (trace.get("state_fnv1a64"), trace.get("mapz_fnv1a64"),
                 trace.get("name_fnv1a64")) != (
                     expected["rewrite_state_fnv1a64"],
                     "827f0f1b725a0958", "e3d2853e2676513b"):
-            raise ValueError("FIG player-hit final save triple differs")
+            raise ValueError("FIG player-critical-hit final save triple differs")
         if trace.get("transitions") != [{
                 "module": "FIG.EXE", "input": "IF", "output": "--",
                 "launched": True}]:
-            raise ValueError("FIG player-hit replay did not use IF entry")
+            raise ValueError("FIG player-critical-hit replay did not use IF entry")
 
         timeline = trace.get("timeline", [])
         frame_times = tuple(
             item["at_milliseconds"] for item in timeline
             if item.get("kind") == "frame")
         if frame_times != tuple(expected["rewrite_frame_times_milliseconds"]):
-            raise ValueError("FIG player-hit frame timing differs")
+            raise ValueError("FIG player-critical-hit frame timing differs")
         voices = tuple((
             item.get("call"), item.get("at_milliseconds"),
             item.get("payload_fnv1a64")) for item in timeline
@@ -142,17 +142,20 @@ def main() -> int:
         if voices != (
                 (0, expected["identity_voice_at_milliseconds"],
                  expected["identity_voice_payload_fnv1a64"]),
-                (1, expected["monster_voice_at_milliseconds"],
+                (1, expected["critical_voice_at_milliseconds"],
+                 expected["critical_voice_payload_fnv1a64"]),
+                (2, expected["monster_voice_at_milliseconds"],
                  expected["monster_voice_payload_fnv1a64"])):
-            raise ValueError("FIG player-hit SP003/SP106 timeline differs")
+            raise ValueError(
+                "FIG player-critical-hit SP003/SV7/SP106 timeline differs")
 
         frames = load_indexed_frames(frame_path)
         if len(frames) != expected["rewrite_video"]["frames"]:
-            raise ValueError("FIG player-hit frame count differs")
+            raise ValueError("FIG player-critical-hit frame count differs")
         previous_original = -1
         for page in pages:
             if page["original_review_frame"] <= previous_original:
-                raise ValueError("FIG player-hit original page order differs")
+                raise ValueError("FIG player-critical-hit original page order differs")
             previous_original = page["original_review_frame"]
             pixels, palette = frames[page["rewrite_frame"]]
             rgb = expand_rgb(pixels, palette)
@@ -161,20 +164,20 @@ def main() -> int:
                     sha256(rgb) != page["rewrite_rgb_sha256"] or \
                     sha256(rgb) != page["original_rgb_sha256"]:
                 raise ValueError(
-                    "FIG player-hit page differs from original: " +
+                    "FIG player-critical-hit page differs from original: " +
                     page["kind"])
             digest(page.get("original_png_sha256"),
                    page["kind"] + "/original_png_sha256")
 
         print(
-            "FIG player-hit checkpoint: physical poses/wipes, ten damage "
-            "pages, bare-background/pose-2 commit, round boundary, generic "
-            "monster effect, complete result and next command match 44 "
-            "original RGB pages")
+            "FIG player-critical-hit checkpoint: critical poses/wipes, ten "
+            "damage pages, bare-background/pose-3 commit, round boundary, "
+            "generic monster effect, complete result and next command match "
+            "43 original RGB pages")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:
-        parser.exit(1, f"FIG player-hit checkpoint: FAIL: {error}\n")
+        parser.exit(1, f"FIG player-critical-hit checkpoint: FAIL: {error}\n")
 
 
 if __name__ == "__main__":

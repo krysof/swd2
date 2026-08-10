@@ -35,8 +35,8 @@ def main() -> int:
                 expected.get("kind") != "original_fig_encounter_capture_reward" or \
                 expected.get("formation_directory_offset") != 100 or \
                 expected.get("encounter_capture_item") != 83 or \
-                expected.get("rewrite_frames") != 93 or \
-                expected.get("rewrite_frame") != 92:
+                expected.get("rewrite_frames") != 94 or \
+                expected.get("rewrite_frame") != 93:
             raise ValueError("unsupported FIG capture-reward reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:

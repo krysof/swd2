@@ -4277,13 +4277,13 @@ bool present_round_events(
             apply_visual_event(visual, event, abilities);
         }
         if (event.kind == BattleEventKind::player_attack) {
-            // 1358 uses 2db8/137a for the no-number commit page before the
-            // next action. The physical-action flag remains live for that
-            // flip, so 137a retains the final fighter pose instead of
-            // restoring the ordinary portrait. If this is the round's last
-            // event, the caller's initiative-loop rejoin immediately owns
-            // the bare 2db8 page; the separate fatal-tail capture covers that
-            // boundary.
+            // 1358 uses 2db8/137a for the no-number commit before the next
+            // action. A successful nonzero hit first exposes 2db8's completely
+            // bare background page; 137a then redraws the surviving monster
+            // and party while the physical-action flag still retains the
+            // final fighter pose. The following initiative-loop rejoin owns
+            // the monster-only page. The zero path below enters 1358 through
+            // 12d5 and does not expose that first background flip.
             if (show_physical_zero) {
                 // 12d5's immunity/insufficient-attack branch still rejoins
                 // 1358 after the ten red zero pages. 137a consumes the
@@ -4308,6 +4308,14 @@ bool present_round_events(
                 continue;
             }
             if (event_index + 1U < result.events.size()) {
+                // 20e7's low-HP self-heal decision is entered before the
+                // ordinary initiative rejoin, so that successor consumes the
+                // retained pose directly. Other surviving-monster actions
+                // expose 2db8's empty page first.
+                if (result.events[event_index + 1U].kind !=
+                    BattleEventKind::monster_heal) {
+                    present_battle_surface(context, base_surface);
+                }
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
