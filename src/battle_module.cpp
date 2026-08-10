@@ -2610,10 +2610,17 @@ bool present_round_events(
             event.kind == BattleEventKind::monster_ability &&
             !event.monster_generic_path && !event.target_is_monster &&
             event.status_duration != 0;
+        const auto monster_special_player_resistance =
+            monster_named_action &&
+            event.kind == BattleEventKind::monster_ability &&
+            !event.monster_generic_path && !event.target_is_monster &&
+            event.resisted &&
+            (event.effect_code == 0x5e || event.effect_code == 0x64);
         if (monster_named_action) {
             if (event.kind == BattleEventKind::monster_heal ||
                 monster_generic_single_target ||
-                monster_special_player_status) {
+                monster_special_player_status ||
+                monster_special_player_resistance) {
                 // 20e7 begins every enemy turn by flipping a bare 2db8 page
                 // and copying it to scratch before either the low-HP decision
                 // or either single-target dispatcher. 2485's all-party path
@@ -2624,23 +2631,26 @@ bool present_round_events(
                     std::nullopt, {}, std::nullopt,
                     encounter_directory_offset, std::nullopt, false, false);
             }
-            if (monster_special_player_status) {
-                // 26f3 switches to the other page, runs 2bb5 for the selected
-                // party card, and switches back before 262f overlays the
-                // ability name. The card-only page is observable even though
-                // no timer wait separates these two flips.
+            if (monster_special_player_status ||
+                monster_special_player_resistance) {
+                // 26f3 (successful status) or 2721 (resisted status) switches
+                // to the other page, runs 2bb5 for the selected party card,
+                // and switches back. On success 262f immediately overlays the
+                // ability name; on resistance the card remains by itself.
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
                     std::nullopt, {}, std::nullopt,
                     encounter_directory_offset);
             }
-            present_monster_ability_name_card(
-                context, base_surface, encounter, items, menu_sprites,
-                font, fallback, visual, event, abilities,
-                encounter_directory_offset,
-                event.kind != BattleEventKind::monster_heal &&
-                    !monster_generic_single_target);
+            if (!monster_special_player_resistance) {
+                present_monster_ability_name_card(
+                    context, base_surface, encounter, items, menu_sprites,
+                    font, fallback, visual, event, abilities,
+                    encounter_directory_offset,
+                    event.kind != BattleEventKind::monster_heal &&
+                        !monster_generic_single_target);
+            }
         }
         const auto player_identity =
             event.kind == BattleEventKind::player_attack &&
@@ -2663,7 +2673,8 @@ bool present_round_events(
             effect_first && effect_code.has_value() &&
             (event.kind == BattleEventKind::player_ability ||
              dispatcher_escape_action);
-        if (effect_code && effect_first) {
+        if (effect_code && effect_first &&
+            !monster_special_player_resistance) {
             const auto voice = monster_named_action
                                    ? fig_monster_ability_voice_resource(
                                          event.ability_id, *effect_code)
@@ -2678,7 +2689,7 @@ bool present_round_events(
                 }
             }
         }
-        if (monster_named_action) {
+        if (monster_named_action && !monster_special_player_resistance) {
             if (!delay(std::chrono::milliseconds(100))) return false; // 7/70 s
             if (event.monster_generic_path) {
                 // 2464 first flips the bare scratch page that 262f restored;
@@ -2706,6 +2717,24 @@ bool present_round_events(
             // inherit the bare 2db8 battlefield; party cards reappear only
             // when the next player action composes 137a.
             apply_visual_event(visual, event, abilities);
+            if (finish_monster_action_here) {
+                if (!delay(ward_card_delay)) return false;
+                present_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                if (!delay(action_delay)) return false;
+            }
+            continue;
+        }
+        if (monster_special_player_resistance) {
+            // Effects 5eh/64h compare the selected actor's third resistance
+            // before entering 26f3. On immunity they jump directly to 2721,
+            // which exposes only the selected-party card prepared by 2bb5;
+            // 262f's name card, voice, status write and seven-tick hold are all
+            // skipped. The common 22e0 tail retains that card for five ticks,
+            // then replaces it with a bare battlefield for three ticks.
             if (finish_monster_action_here) {
                 if (!delay(ward_card_delay)) return false;
                 present_event_frame(
