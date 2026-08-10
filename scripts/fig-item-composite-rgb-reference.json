@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_type10_composite_item",
+  "formation_directory_offset": 1236,
+  "item_id": 230,
+  "canonical_ability_id": 90,
+  "effect_code": 107,
+  "nested_effects": [
+    56,
+    58
+  ],
+  "resource_cost": 40,
+  "payment_pool": "ability_points",
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "item_archive_sha256": "050243ce3d8bb5e0665f5d4016d53e20803e98d1e22470639d3cb0914d2e8604",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-item-damage-autotype.txt",
+  "capture_autotype_sha256": "52c61ea8063ce0e9d60e826ff4e5dd543a68bf4993c2c7c3c944619ca94148db",
+  "replay": "replay-fig-item-damage.txt",
+  "replay_sha256": "66d0a5b256a4a59c553bdf0131a6ec630d81542672351d873f46ef36d16da741",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 15,
+  "capture_video_sha256": "f8f185b53b86930bfd6d6463c5ffbeebbffb0bbbefe3eb2e69f9cf3a7bfd1ba5",
+  "capture_manifest_sha256": "bf32fe2eb2d6c6bbe50f39d90447445edbe21b79f061596946a3e18a4fa6e20f",
+  "fixture_save_sha256": "9dc0d5c2e959f0a4535508bd24594a942e6d593c674cc8fd93fd0f9de316e1e8",
+  "capture_limitation": "The second composite restoration straddles live VGA DAC writes; the top 197 scanlines match exactly while eight bottom-two-scanline pixels retain the established DOSBox-X ZMBV observation artifact.",
+  "rewrite_input": {
+    "total": 4,
+    "consumed": 4,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 4,
+    "poll": 0,
+    "text": 0,
+    "frontend": 167
+  },
+  "rewrite_video": {
+    "frames": 85,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "79fe7871d716ed1c"
+  },
+  "rewrite_delay_milliseconds": 1260,
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 3,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "02364a93ec5c4715"
+  },
+  "rewrite_state_fnv1a64": "505e53011eb7bd7f",
+  "rewrite_final_fnv1a64": "30578ea283f892ae",
+  "matched_frames": [
+    {
+      "kind": "item_pose0",
+      "rewrite_frame": 25,
+      "original_review_frame": 622,
+      "original_png_sha256": "7027cce853b0391581d94459ff3204bf44d9a37cc577722dd545176712349712",
+      "rewrite_indexed_sha256": "b78df3f0ac971f28d746665821ee3f26bd2479fb56879da3e3d1800945825368",
+      "rewrite_palette_sha256": "b194f186f2d1a147e3a8d6228b9b73e5368e4bc9226b3bff0e4da53065ca4877",
+      "original_rgb_sha256": "1a17358a39e7266e4b14d959d80ae76f15ab90cdc995c77e76b86bbe105cd060",
+      "rewrite_rgb_sha256": "1a17358a39e7266e4b14d959d80ae76f15ab90cdc995c77e76b86bbe105cd060"
+    },
+    {
+      "kind": "first_nested_effect",
+      "rewrite_frame": 31,
+      "original_review_frame": 690,
+      "original_png_sha256": "89021928cbe472a989d95ef039101ccc05098a245473c4baa06b2a474da62d24",
+      "rewrite_indexed_sha256": "f6345ae0bc9a18cbdaa033b355df4f5159391a5e97a0b9e320b026ee7427545c",
+      "rewrite_palette_sha256": "f97431b675076cc249b4eb3b030734fd50a4a906bd572626988e0513ed5ea2f1",
+      "original_rgb_sha256": "024e9c508632d61e1e95c778bc012ed5341408ac0271941cc3be368b84be3e1f",
+      "rewrite_rgb_sha256": "024e9c508632d61e1e95c778bc012ed5341408ac0271941cc3be368b84be3e1f"
+    },
+    {
+      "kind": "first_nested_result",
+      "rewrite_frame": 50,
+      "original_review_frame": 763,
+      "original_png_sha256": "408795a5136c28153f32cc9bc03406924e1124f569d1090a45a9393b2a3edf22",
+      "rewrite_indexed_sha256": "c25f5032e960827e1117d289900d46822f95520ed1aaccec279a7de53c9a5caf",
+      "rewrite_palette_sha256": "07b361003cfffc40aeaccea8b84bbc7c99b05558424e53c7db02202ca3445969",
+      "original_rgb_sha256": "3c0ef0132bd8a86acd2ce8b6088e93620122cc7aac159f6b429f37afe7a0f510",
+      "rewrite_rgb_sha256": "3c0ef0132bd8a86acd2ce8b6088e93620122cc7aac159f6b429f37afe7a0f510"
+    },
+    {
+      "kind": "player_action_boundary",
+      "rewrite_frame": 83,
+      "original_review_frame": 883,
+      "original_png_sha256": "bab70e61e2640c1a0b3637556879cfd1bec2c1c5d64d7ee3178907a75db1428b",
+      "rewrite_indexed_sha256": "17a514037c5934fb31bfa48b5b9c552a162511472f75699133393a8c162606f6",
+      "rewrite_palette_sha256": "b194f186f2d1a147e3a8d6228b9b73e5368e4bc9226b3bff0e4da53065ca4877",
+      "original_rgb_sha256": "4eaf65e7aa52bcf2ef2c49d448d76c82be40dc2ee69a8b2fc02da1a77d28c7e2",
+      "rewrite_rgb_sha256": "4eaf65e7aa52bcf2ef2c49d448d76c82be40dc2ee69a8b2fc02da1a77d28c7e2"
+    },
+    {
+      "kind": "post_debit_next_command",
+      "rewrite_frame": 84,
+      "original_review_frame": 907,
+      "original_png_sha256": "6513077568c9a6447be180c9b8fd90b8ef5eb10e08ab02a0155dd1783d154161",
+      "rewrite_indexed_sha256": "33dfbbb9f5e4fa0531581f7e98b74a1167ca3337ee0003064a280399c8e813b8",
+      "rewrite_palette_sha256": "b194f186f2d1a147e3a8d6228b9b73e5368e4bc9226b3bff0e4da53065ca4877",
+      "original_rgb_sha256": "0cba26c1a60dc085ee6e4d7192c66e03f30bbbe886b82c295a0a9708da06f26c",
+      "rewrite_rgb_sha256": "0cba26c1a60dc085ee6e4d7192c66e03f30bbbe886b82c295a0a9708da06f26c"
+    }
+  ],
+  "second_nested_anchor": {
+    "rewrite_frame": 55,
+    "original_review_frame": 845,
+    "crop": [
+      0,
+      0,
+      320,
+      197
+    ],
+    "mismatched_full_rgb_pixels": 8,
+    "original_png_sha256": "0fca80fdbeeb837a030c4c21f7362aba55374eceb02c22d3385e3e0ba26bedec",
+    "rewrite_indexed_sha256": "b78df3f0ac971f28d746665821ee3f26bd2479fb56879da3e3d1800945825368",
+    "rewrite_palette_sha256": "bcb2f0e74391610daab4e399445ad38c83f421540460172013ec2cf6e27f8caf",
+    "original_rgb_sha256": "65e2720281418844ef4764ea7d1c2729956c802de761b0e0c862bf7bd95ad392",
+    "rewrite_rgb_sha256": "559484ac2bf326210429407f295ed59152486cbfb859544f4bb3c5064a264a86",
+    "original_crop_rgb_sha256": "2c33fd9758a89fa83b6e13f50843ace06557d6d17147e39f1aaa33fb67a1f9c7",
+    "rewrite_crop_rgb_sha256": "2c33fd9758a89fa83b6e13f50843ace06557d6d17147e39f1aaa33fb67a1f9c7"
+  }
+}
