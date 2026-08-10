@@ -1201,4 +1201,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_periodic_zero_validation PROPERTIES
         DEPENDS fig_periodic_zero_prepare)
+    add_test(
+        NAME fig_ally_zero_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-zero-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-zero-save"
+    )
+    add_test(
+        NAME fig_ally_zero_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ally-zero.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-zero-save"
+                "${CMAKE_BINARY_DIR}/fig-ally-zero"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ally-zero-rgb-reference.json"
+    )
+    set_tests_properties(fig_ally_zero_validation PROPERTIES
+        DEPENDS fig_ally_zero_prepare)
 endif()

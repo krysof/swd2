@@ -1817,10 +1817,6 @@ void present_summoned_ally_action_card(
     draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
                  visual.monsters,
                  std::nullopt, encounter_directory_offset);
-    draw_fig_party_cards(
-        frame, menu_sprites,
-        std::span<const BattlePartyMember>(visual.party).first(
-            visual.party_count));
 
     const auto placement = fig_summoned_action_card_placement(event.source);
     // FIG 10fc calls 65fc with MENU index zero and its opaque copy mode.
@@ -2165,10 +2161,15 @@ bool present_round_events(
                     event, result.events[event_index + 1U])) {
                 return;
             }
-            present_event_frame(
+            // 1039/0fb9 call bare 2db8.  That compositor redraws the media,
+            // captured-ally name cards and monsters, but never 2bb5's bottom
+            // party cards.
+            const auto clean = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt,
-                {}, std::nullopt, encounter_directory_offset);
+                {}, std::nullopt, encounter_directory_offset, std::nullopt,
+                false, false);
+            present_battle_surface(context, clean);
             static_cast<void>(delay(ward_card_delay));
         });
         if (event.kind == BattleEventKind::skipped) {
@@ -2470,6 +2471,18 @@ bool present_round_events(
             (event.kind == BattleEventKind::ally_attack ||
              event.kind == BattleEventKind::ally_ability ||
              event.kind == BattleEventKind::ally_fled)) {
+            if (event.kind == BattleEventKind::ally_attack) {
+                // The physical path enters through the initiative loop's
+                // bare 2db8 page before 10fc installs the fixed ally action
+                // card.  Keeping this page after the card reverses two
+                // observable flips in the original zero-damage sequence.
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+            }
             auto text = abilities.monster_attack_text();
             auto color = std::uint8_t{0x00};
             if (event.kind == BattleEventKind::ally_ability) {
@@ -2643,6 +2656,9 @@ bool present_round_events(
                     std::nullopt, {}, std::nullopt,
                     encounter_directory_offset, std::nullopt, false, false);
                 present_battle_surface(context, clean);
+            } else if (event.kind == BattleEventKind::ally_attack) {
+                // The captured-ally physical path already exposed its bare
+                // 2db8 preparation immediately before the 10fc action card.
             } else {
                 present_event_frame(context, base_surface, encounter, items,
                                     fighters, menu_sprites, font, fallback,
@@ -3228,6 +3244,10 @@ bool present_round_events(
         const auto retained_status_damage_handler =
             event.kind == BattleEventKind::status_damage &&
             event.target_is_monster && presented_result_number;
+        const auto retained_ally_physical_handler =
+            event.kind == BattleEventKind::ally_attack &&
+            event.target_is_monster && !event.evaded &&
+            presented_result_number;
         if (presented_result_number) {
             std::array<FigNumberPlacement, 10> placements{};
             if (event.target_is_monster) {
@@ -3239,11 +3259,14 @@ bool present_round_events(
                 placements = fig_party_number_timeline(event.target);
             }
             if (retained_monster_damage_handler ||
-                retained_status_damage_handler) {
+                retained_status_damage_handler ||
+                retained_ally_physical_handler) {
                 // 144e first performs one complete 2db8/137a/flip and saves
-                // that reaction page in A800h before drawing any digits.  It
-                // has no timer wait, but it is a real visible page and is the
-                // immutable indexed source copied for all ten number pages.
+                // that page in A800h before drawing any digits. It has no
+                // timer wait, but is a real visible page and the immutable
+                // indexed source copied for all ten number pages. Player
+                // effects and periodic damage set +3114 for a reaction sprite;
+                // captured-ally 1020 deliberately retains the normal monster.
                 auto reaction_frame = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
@@ -3251,8 +3274,10 @@ bool present_round_events(
                         ? std::optional<std::size_t>{4}
                         : std::nullopt,
                     {}, std::nullopt,
-                    encounter_directory_offset, std::nullopt, true,
-                    !retained_status_damage_handler);
+                    encounter_directory_offset, std::nullopt,
+                    !retained_ally_physical_handler,
+                    !retained_status_damage_handler &&
+                        !retained_ally_physical_handler);
                 if (dispatcher_palette_override) {
                     reaction_frame.palette = *dispatcher_palette_override;
                 }
@@ -3260,7 +3285,8 @@ bool present_round_events(
                     apply_fig_monster_result_palette(
                         reaction_frame.palette,
                         *retained_damage_target_flags, 0);
-                } else if (retained_status_damage_handler) {
+                } else if (retained_status_damage_handler ||
+                           retained_ally_physical_handler) {
                     rotate_fig_existing_result_palette(
                         reaction_frame.palette, 0);
                 }
@@ -3270,7 +3296,8 @@ bool present_round_events(
                  page_index < placements.size(); ++page_index) {
                 const auto& placement = placements[page_index];
                 if (retained_monster_damage_handler ||
-                    retained_status_damage_handler) {
+                    retained_status_damage_handler ||
+                    retained_ally_physical_handler) {
                     // 144e runs inside the >30h dispatcher handler, before
                     // 585e charges the selected resource.  A800h preserves
                     // the one-shot reaction sprite on every number page;
@@ -3283,8 +3310,10 @@ bool present_round_events(
                             ? std::optional<std::size_t>{4}
                             : std::nullopt,
                         {}, placement,
-                        encounter_directory_offset, std::nullopt, true,
-                        !retained_status_damage_handler);
+                        encounter_directory_offset, std::nullopt,
+                        !retained_ally_physical_handler,
+                        !retained_status_damage_handler &&
+                            !retained_ally_physical_handler);
                     if (dispatcher_palette_override) {
                         number_frame.palette = *dispatcher_palette_override;
                     }
@@ -3292,7 +3321,8 @@ bool present_round_events(
                         apply_fig_monster_result_palette(
                             number_frame.palette,
                             *retained_damage_target_flags, page_index);
-                    } else if (retained_status_damage_handler) {
+                    } else if (retained_status_damage_handler ||
+                               retained_ally_physical_handler) {
                         rotate_fig_existing_result_palette(
                             number_frame.palette, page_index);
                     }
@@ -3352,6 +3382,13 @@ bool present_round_events(
                 present_battle_surface(context, restored);
                 if (!delay(effect_delay)) return false;
             }
+            continue;
+        }
+        if (retained_ally_physical_handler) {
+            // 1020 reuses 144e's retained normal-monster page and ten floating
+            // number pages, then returns to 1039. The scope tail owns the
+            // single bare clean page and its five-tick hold.
+            apply_visual_event(visual, event, abilities);
             continue;
         }
         if (!event.target_is_monster && presented_result_number &&
