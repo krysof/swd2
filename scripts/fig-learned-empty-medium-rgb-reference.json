@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_learned_empty_medium_dismissal",
+  "formation_directory_offset": 392,
+  "ability_id": 53,
+  "effect_code": 61,
+  "resource_cost": 20,
+  "resource_class": 4,
+  "medium_slot": 0,
+  "empty_x_sentinel": 80,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-player-status-autotype.txt",
+  "capture_autotype_sha256": "990a3264d14184e457614216edd458621d978a61bf94c45cf4a5ea7d0cb23b61",
+  "replay": "replay-fig-player-status.txt",
+  "replay_sha256": "28ad52c198488dde04b9580e94a5e63bf1e131026ded45467e224b8814da2e84",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 15,
+  "capture_review_fps": 70,
+  "capture_review_frames": 1051,
+  "capture_video_sha256": "7b3146bdc8f2e2e5aa7ec03774378ae0a2ff3256b030fd230db4a73f8272ec52",
+  "capture_manifest_sha256": "d59fa4d3128ed0f19080ec953aff49931ac774ded4f2ad93092ff958efcb751f",
+  "fixture_save_sha256": "7923c0e685ef281e6996c76bf8337fcf8430df5df44ffdc530f0df29ed73f766",
+  "capture_limitation": "The live first darkening and four restoration DAC observations have the established DOSBox-X bottom-two-scanline artifact; registered stable steps and all surrounding pages match exactly.",
+  "rewrite_input": {
+    "total": 4,
+    "consumed": 4,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 4,
+    "poll": 0,
+    "text": 0,
+    "frontend": 98
+  },
+  "rewrite_video": {
+    "frames": 40,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "548774d4c881424a"
+  },
+  "rewrite_delay_milliseconds": 871,
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 2,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "d3fd90ceee569760"
+  },
+  "rewrite_state_fnv1a64": "9bfb9803aed3783f",
+  "rewrite_final_fnv1a64": "d28edb25f665f757",
+  "voice_checkpoints": [
+    {
+      "call": 0,
+      "at_milliseconds": 156,
+      "payload_fnv1a64": "309e81a048cdcef2",
+      "resource": "SP061.VOC"
+    },
+    {
+      "call": 1,
+      "at_milliseconds": 425,
+      "payload_fnv1a64": "ce3659387971554b",
+      "resource": "SP106.VOC"
+    }
+  ],
+  "matched_frames": [
+    {
+      "kind": "common_pose0",
+      "rewrite_frame": 4,
+      "original_review_frame": 511,
+      "original_png_sha256": "1151578a07a5fbcc867ffba3c3ca8885b38fb8cd8512de50740654d99c075f52",
+      "rewrite_indexed_sha256": "0a0476dbddc3e624cec1321437bf06e48d864e605dc289287a9179f07b4cb82a",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "a40240a4defc4cad9fd84e28fa7741d8debeeaf2cb33ade038dfb035214b2adb",
+      "rewrite_rgb_sha256": "a40240a4defc4cad9fd84e28fa7741d8debeeaf2cb33ade038dfb035214b2adb"
+    },
+    {
+      "kind": "common_pose4",
+      "rewrite_frame": 5,
+      "original_review_frame": 523,
+      "original_png_sha256": "28312db4390940684181ef5a4bad932433253a5cfae6b4e4a5d4518215c6bd89",
+      "rewrite_indexed_sha256": "f85c2e5c6513e74b7043c311dabcff01bfc1f73f8557b57d7dce2b132c386fe0",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "9979359b5699aa51c0708f94d8b7b4eb00ed91369d7892c42cf8bdf7e7b61e6b",
+      "rewrite_rgb_sha256": "9979359b5699aa51c0708f94d8b7b4eb00ed91369d7892c42cf8bdf7e7b61e6b"
+    },
+    {
+      "kind": "first_observed_dark_step",
+      "rewrite_frame": 7,
+      "original_review_frame": 532,
+      "original_png_sha256": "02a8a4285d135fd5d4a2bbf16b934cedd6868b061212fe240afcf93e6b1913d1",
+      "rewrite_indexed_sha256": "f85c2e5c6513e74b7043c311dabcff01bfc1f73f8557b57d7dce2b132c386fe0",
+      "rewrite_palette_sha256": "2628cfb7b4e81e66b6b4b53ad09a3bc9d700c9cc65b88fc704ec319f00b0be2a",
+      "original_rgb_sha256": "83950652b404677c3322af302c7257f2f806eeb1880b311ad49defce95a50700",
+      "rewrite_rgb_sha256": "83950652b404677c3322af302c7257f2f806eeb1880b311ad49defce95a50700"
+    },
+    {
+      "kind": "darkest_page",
+      "rewrite_frame": 10,
+      "original_review_frame": 544,
+      "original_png_sha256": "8bec140f81a95f5ad9cb26bb6d4d16a59ac47b6ee83d41c0e1ed3c56cff02f80",
+      "rewrite_indexed_sha256": "f85c2e5c6513e74b7043c311dabcff01bfc1f73f8557b57d7dce2b132c386fe0",
+      "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
+      "original_rgb_sha256": "9b591e53967b74ad19991fdfd8270ad8e8e2c1b8cd11af29501639f48a2c821a",
+      "rewrite_rgb_sha256": "9b591e53967b74ad19991fdfd8270ad8e8e2c1b8cd11af29501639f48a2c821a"
+    },
+    {
+      "kind": "restored_pose4",
+      "rewrite_frame": 15,
+      "original_review_frame": 523,
+      "original_png_sha256": "28312db4390940684181ef5a4bad932433253a5cfae6b4e4a5d4518215c6bd89",
+      "rewrite_indexed_sha256": "f85c2e5c6513e74b7043c311dabcff01bfc1f73f8557b57d7dce2b132c386fe0",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "9979359b5699aa51c0708f94d8b7b4eb00ed91369d7892c42cf8bdf7e7b61e6b",
+      "rewrite_rgb_sha256": "9979359b5699aa51c0708f94d8b7b4eb00ed91369d7892c42cf8bdf7e7b61e6b"
+    },
+    {
+      "kind": "player_action_boundary",
+      "rewrite_frame": 16,
+      "original_review_frame": 620,
+      "original_png_sha256": "af50e9212e6bd18f37ff021ca6207a7648727e9425c8c4b690221e058204df39",
+      "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3",
+      "rewrite_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3"
+    },
+    {
+      "kind": "monster_action_card",
+      "rewrite_frame": 17,
+      "original_review_frame": 643,
+      "original_png_sha256": "51a10840fca2c94f78429eafa08dadbf08d552ed38e659ad09bb585e4df05066",
+      "rewrite_indexed_sha256": "8e27a8f5d534bbf9dea20c0f00a7f306675760f34b55673b0e661cab3d7ebbe5",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "48f908e194d41ed39195b98d6ff1a9e9140e78f69a3f2e381864f6c75f01d889",
+      "rewrite_rgb_sha256": "48f908e194d41ed39195b98d6ff1a9e9140e78f69a3f2e381864f6c75f01d889"
+    },
+    {
+      "kind": "attack_shock_page",
+      "rewrite_frame": 26,
+      "original_review_frame": 657,
+      "original_png_sha256": "8ab7adefab14bacbde89223a56a3ef1c501909ec39e52c7a1b472779612863b8",
+      "rewrite_indexed_sha256": "217449f8e54271df4c82007f75c61d7a620b81bb110acc8270b3fcf45357bd3f",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "c8a484a2e5d2a41c1e3b062d06fbefd7e0474ea9feeb62db8333b3e1a9e1df47",
+      "rewrite_rgb_sha256": "c8a484a2e5d2a41c1e3b062d06fbefd7e0474ea9feeb62db8333b3e1a9e1df47"
+    },
+    {
+      "kind": "rising_damage_final",
+      "rewrite_frame": 36,
+      "original_review_frame": 693,
+      "original_png_sha256": "124dfb10284161f6b16f98aa133dade92b3234e293cd16db632ecad2cbf5a198",
+      "rewrite_indexed_sha256": "f30400fa825cf0e41cc8cacc109cc7db5860660365d9318f26e9cc0ddde27ef4",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "bc88d63f992927faf1dd0447a2cbd4c8e137d45fb7cb7457d2a3157820a54cd2",
+      "rewrite_rgb_sha256": "bc88d63f992927faf1dd0447a2cbd4c8e137d45fb7cb7457d2a3157820a54cd2"
+    },
+    {
+      "kind": "next_command_paid",
+      "rewrite_frame": 39,
+      "original_review_frame": 807,
+      "original_png_sha256": "cadf96703ff8e1f948c3968ac4fff2723a381b9332cd6869439b6f957b0f0128",
+      "rewrite_indexed_sha256": "39051f34e2345143a7ebcd5d3810b458c5868b3fb1397de0a08916aa6d7a6302",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "original_rgb_sha256": "572aa1cf6099849922a2346d1c72c3606391c58337fa0207120ea868cf2ecd26",
+      "rewrite_rgb_sha256": "572aa1cf6099849922a2346d1c72c3606391c58337fa0207120ea868cf2ecd26"
+    }
+  ]
+}

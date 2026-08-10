@@ -12,12 +12,20 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
-EXPECTED_PAGES = (
-    "item_pose0", "first_observed_dark_step", "darkest_page",
-    "restored_pose0", "player_action_boundary", "monster_action_card",
-    "attack_shock_page", "rising_damage_midpoint", "rising_damage_final",
-    "next_command_paid",
-)
+EXPECTED_PAGES = {
+    "original_fig_player_empty_medium_dismissal": (
+        "item_pose0", "first_observed_dark_step", "darkest_page",
+        "restored_pose0", "player_action_boundary", "monster_action_card",
+        "attack_shock_page", "rising_damage_midpoint",
+        "rising_damage_final", "next_command_paid",
+    ),
+    "original_fig_learned_empty_medium_dismissal": (
+        "common_pose0", "common_pose4", "first_observed_dark_step",
+        "darkest_page", "restored_pose4", "player_action_boundary",
+        "monster_action_card", "attack_shock_page", "rising_damage_final",
+        "next_command_paid",
+    ),
+}
 
 
 def sha256(data: bytes) -> str:
@@ -41,18 +49,26 @@ def main() -> int:
     args = parser.parse_args()
     try:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
-        identity = (
-            expected.get("item_id"), expected.get("canonical_ability_id"),
-            expected.get("effect_code"), expected.get("resource_cost"),
-            expected.get("medium_slot"), expected.get("empty_x_sentinel"),
-            expected.get("payment_pool"),
+        kind = expected.get("kind")
+        direct_item = kind == "original_fig_player_empty_medium_dismissal"
+        learned = kind == "original_fig_learned_empty_medium_dismissal"
+        identity_ok = (
+            direct_item and (
+                expected.get("item_id"),
+                expected.get("canonical_ability_id"),
+                expected.get("effect_code"), expected.get("resource_cost"),
+                expected.get("medium_slot"), expected.get("empty_x_sentinel"),
+                expected.get("payment_pool"),
+            ) == (193, 53, 0x3D, 20, 0, 0x50, "ability_points")
+        ) or (
+            learned and (
+                expected.get("ability_id"), expected.get("effect_code"),
+                expected.get("resource_cost"), expected.get("resource_class"),
+                expected.get("medium_slot"), expected.get("empty_x_sentinel"),
+            ) == (53, 0x3D, 20, 4, 0, 0x50)
         )
-        if expected.get("schema_version") != 1 or \
-                expected.get("kind") != \
-                "original_fig_player_empty_medium_dismissal" or \
+        if expected.get("schema_version") != 1 or not identity_ok or \
                 expected.get("formation_directory_offset") != 392 or \
-                identity != (193, 53, 0x3D, 20, 0, 0x50,
-                             "ability_points") or \
                 (expected.get("capture_wait_seconds"),
                  expected.get("capture_pace_seconds"),
                  expected.get("capture_time_limit_seconds"),
@@ -62,8 +78,9 @@ def main() -> int:
             raise ValueError("unsupported FIG empty-medium reference")
         if sha256((args.game / "FIG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"] or \
-                sha256((args.game / "ITEM.EXE").read_bytes()) != \
-                expected["item_archive_sha256"]:
+                (direct_item and
+                 sha256((args.game / "ITEM.EXE").read_bytes()) !=
+                 expected["item_archive_sha256"]):
             raise ValueError("FIG/ITEM data differs from empty-medium reference")
         autotype = args.reference.with_name(expected["capture_autotype"])
         replay = args.reference.with_name(expected["replay"])
@@ -121,7 +138,7 @@ def main() -> int:
         pages = expected.get("matched_frames")
         if len(frames) != expected["rewrite_video"]["frames"] or \
                 not isinstance(pages, list) or tuple(
-                    page.get("kind") for page in pages) != EXPECTED_PAGES:
+                    page.get("kind") for page in pages) != EXPECTED_PAGES[kind]:
             raise ValueError("FIG empty-medium page set differs")
         for page in pages:
             pixels, palette = frames[page["rewrite_frame"]]
@@ -136,8 +153,9 @@ def main() -> int:
         for name in ("capture_harness_sha256", "capture_video_sha256",
                      "capture_manifest_sha256"):
             digest(expected.get(name), name)
+        source = "item 193" if direct_item else "learned ability 53"
         print(
-            "FIG empty-medium checkpoint: item 193 pays 20 AP, skips the "
+            f"FIG empty-medium checkpoint: {source} pays 20 AP, skips the "
             "eight flips at x=50h, and matches ten original RGB pages")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
