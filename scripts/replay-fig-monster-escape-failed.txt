@@ -1,0 +1,5 @@
+# Skip the opening text, choose the default attack and its first target.
+POLL:CONFIRM
+WAIT:CONFIRM*3
+# Stop after the complete round, when command collection begins again.
+WAIT:QUIT

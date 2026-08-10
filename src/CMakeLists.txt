@@ -1259,6 +1259,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_flee_validation PROPERTIES
         DEPENDS fig_monster_flee_prepare)
     add_test(
+        NAME fig_monster_escape_failed_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-escape-failed-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-escape-failed-save"
+    )
+    add_test(
+        NAME fig_monster_escape_failed_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-escape-failed.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-escape-failed-save"
+                "${CMAKE_BINARY_DIR}/fig-monster-escape-failed"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-escape-failed-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_escape_failed_validation PROPERTIES
+        DEPENDS fig_monster_escape_failed_prepare)
+    add_test(
         NAME long_run_checkpoint_validation
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-long-run-checkpoint.py"
