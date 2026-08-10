@@ -96,6 +96,25 @@ def main() -> int:
         frames = load_indexed_frames(frame_path)
         if len(frames) != expected["rewrite_video"]["frames"]:
             raise ValueError("FIG captured-ally frame count differs")
+        prefix = expected.get("summon_and_enemy_exact_frames")
+        if not isinstance(prefix, list) or \
+                tuple(page.get("rewrite_frame") for page in prefix) != \
+                tuple(range(42, 84)):
+            raise ValueError("FIG captured-ally prefix page set differs")
+        for page in prefix:
+            pixels, palette = frames[page["rewrite_frame"]]
+            rgb = expand_rgb(pixels, palette)
+            if sha256(pixels) != page["rewrite_indexed_sha256"] or \
+                    sha256(palette) != page["rewrite_palette_sha256"] or \
+                    sha256(rgb) != page["rewrite_rgb_sha256"] or \
+                    sha256(rgb) != page["original_rgb_sha256"]:
+                raise ValueError(
+                    "FIG captured-ally summon/enemy page differs: "
+                    f"{page['rewrite_frame']}")
+            digest(page.get("original_png_sha256"),
+                   f"prefix-{page['rewrite_frame']}/original_png_sha256")
+            if not isinstance(page.get("original_review_frame"), int):
+                raise ValueError("captured-ally prefix review frame differs")
         pages = expected.get("full_modern_frames")
         if not isinstance(pages, list) or \
                 tuple(page.get("kind") for page in pages) != PAGE_KINDS or \
@@ -128,9 +147,10 @@ def main() -> int:
                      "capture_manifest_sha256"):
             digest(expected.get(name), name)
         print(
-            "FIG captured-ally checkpoint: bare 2db8 preparation, card-free "
-            "10fc action, retained zero timeline, and bare 1039 tail match "
-            "the original RGB sequence")
+            "FIG captured-ally checkpoint: paid summon install, both enemy "
+            "physical sequences, bare 2db8 preparation, card-free 10fc "
+            "action, retained zero timeline, and bare 1039 tail match the "
+            "original RGB sequence")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:

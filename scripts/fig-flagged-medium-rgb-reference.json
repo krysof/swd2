@@ -11,7 +11,7 @@
   "fixture_save_sha256": "364ecc89b3ff4bc4414b188d226f02e9774bbc66f667ca5ceb33ec91d2ad0c62",
   "capture_video_sha256": "db48524dbc16ebbbd592ab19020f0a3a905c942b78a0be1d12aea3195da059de",
   "capture_manifest_sha256": "84fcb3bb68186701ce7a9d6f368d2930c6881a3a5d9f8d3d3c90cb0b988cea5d",
-  "rewrite_video_fnv1a64": "1dab91b6b9750cec",
+  "rewrite_video_fnv1a64": "770a33caa003e2ac",
   "rewrite_state_fnv1a64": "054b5b8fd6c084dc",
   "rewrite_final_fnv1a64": "bf5e97d678add92f",
   "matched_frames": [

@@ -2354,6 +2354,24 @@ bool present_round_events(
             // pose. The install uses SP061 and ten ticks; it does not decode an
             // ST### archive named after the captured-monster item id.
             apply_visual_event(visual, event, abilities);
+            if (event.source < visual.party_count &&
+                static_cast<std::size_t>(event.ability_id) + 2U <
+                    items.entry_count()) {
+                // 5de4 debits +35 before installing the slot and before 2f84
+                // redraws the summoner. The resolved session already owns the
+                // post-state; mirror that debit into the presentation snapshot
+                // so 2bd9's blue gauge loses its top row on this very page.
+                const auto summoned = MonsterDefinition::parse(
+                    event.ability_id,
+                    items.entry(static_cast<std::size_t>(event.ability_id) + 2U));
+                const auto cost = static_cast<std::uint16_t>(
+                    static_cast<unsigned>(summoned.level) * 2U);
+                auto& member = visual.party[event.source];
+                member.secondary_points = static_cast<std::uint16_t>(
+                    cost >= member.secondary_points
+                        ? 0U
+                        : member.secondary_points - cost);
+            }
             present_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, 0, {},
@@ -2945,8 +2963,9 @@ bool present_round_events(
             event.damage != 0 && !event.evaded) {
             // 2939 copies 197 scanlines from the displayed clean page at
             // source +0xf0 (three Mode-X rows) into the other page, then flips
-            // shifted/clean eight times. Preserve the untouched bottom three
-            // rows from the clean page; the attack card never covers them.
+            // shifted/clean eight times. The destination page's untouched
+            // bottom three rows are the zeroed off-screen tail, not pixels
+            // copied from the clean page.
             const auto clean_frame = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt,
@@ -2961,6 +2980,10 @@ bool present_round_events(
                     shifted_frame.pixels.begin() +
                         static_cast<std::ptrdiff_t>(y * 320));
             }
+            std::fill(
+                shifted_frame.pixels.begin() +
+                    static_cast<std::ptrdiff_t>((200 - shift) * 320),
+                shifted_frame.pixels.end(), 0);
             for (std::uint16_t step = 0;
                  step < fig_monster_attack_shake_steps(); ++step) {
                 present_battle_surface(

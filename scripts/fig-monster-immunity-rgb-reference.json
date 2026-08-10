@@ -13,7 +13,7 @@
   "capture_manifest_sha256": "2e135e407c7f93959fe4b253dc719c82438fc49fbc91fc9a14f592fefd155633",
   "rewrite_input": {"total": 4, "consumed": 4, "remaining": 0, "implicit_quit_calls": 0},
   "rewrite_boundaries": {"wait": 4, "poll": 0, "text": 0, "frontend": 111},
-  "rewrite_video": {"frames": 50, "direct_updates": 0, "last_width": 320, "last_height": 200, "fnv1a64": "dd30978a0cab0249"},
+  "rewrite_video": {"frames": 50, "direct_updates": 0, "last_width": 320, "last_height": 200, "fnv1a64": "ea5ef519e9287f39"},
   "rewrite_state_fnv1a64": "07fea39dd8e8bda1",
   "rewrite_final_fnv1a64": "66c2ac096b2d0187",
   "matched_frames": [
