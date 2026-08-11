@@ -2971,7 +2971,9 @@ bool present_round_events(
             // After 0fce's unconditional SP106, the successful evasion roll
             // tail-jumps to 2a28. That routine leaves the two-column colour-6b
             // “閃躲” card visible for eight ticks and RETs from the entire
-            // ally action, bypassing 1039's clean/five-tick epilogue.
+            // ally action, bypassing 1039's clean/five-tick epilogue. 2a28
+            // recomposes from bare 2db8 and never calls 2bb5, so this page also
+            // omits the bottom commandable-party cards.
             for (const auto& cue : fig_non_effect_voice_cues(event)) {
                 if (cue.timing == FigVoiceTiming::before_action) {
                     play_voice_cue(context, cue);
@@ -2980,7 +2982,7 @@ bool present_round_events(
             present_monster_compact_card(
                 context, base_surface, encounter, items, menu_sprites,
                 font, fallback, visual, event, abilities.evasion_text(),
-                encounter_directory_offset, 2, 0x6b, 8);
+                encounter_directory_offset, 2, 0x6b, 8, nullptr, false);
             if (!delay(immunity_card_delay)) return false;
             continue;
         }

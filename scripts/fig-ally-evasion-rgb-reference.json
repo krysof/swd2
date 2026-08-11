@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_captured_ally_physical_evasion",
+  "status": "exact_rgb_checkpoint",
+  "formation_directory_offset": 392,
+  "captured_item_id": 417,
+  "random_cursor": 4098,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "e10e7d675dd772a098e34067b13c6842638bf1f685d73eed557fca378edd731a",
+  "capture_autotype": "original-fig-ally-evasion-autotype.txt",
+  "capture_autotype_sha256": "664ee04b99e23e74508abd927f038d9e25b2715329f40887a705553f20470e7d",
+  "replay_input": "replay-fig-ally-evasion.txt",
+  "replay_input_sha256": "0a5f92d6c898bef4d96545fdd9c6709541b49fa505ba14b4102738408b07b572",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 0.25,
+  "capture_time_limit_seconds": 25,
+  "capture_review_fps": 70,
+  "capture_review_frames": 1749,
+  "capture_video_sha256": "fbc20a5deb58010338ae5aa9b364cc7ab9173d03237790719c24ab8da34eef5b",
+  "capture_manifest_sha256": "0066de4a3800b20af64c7070a5cfc2dd9d4f933d3937c0bd867b8913b1a469e9",
+  "capture_dosbox_exit_code": 0,
+  "rewrite_input": {
+    "total": 8,
+    "consumed": 8,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 8,
+    "poll": 0,
+    "text": 0,
+    "frontend": 284
+  },
+  "rewrite_video": {
+    "frames": 118,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "6a8411ea3db419fa"
+  },
+  "rewrite_audio": {
+    "music_calls": 2,
+    "voice_calls": 9,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "3adafffd65071f0e"
+  },
+  "rewrite_delay_milliseconds": 2600,
+  "rewrite_state_fnv1a64": "2f17af458afb8646",
+  "rewrite_mapz_fnv1a64": "827f0f1b725a0958",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "rewrite_final_fnv1a64": "22a1572ec33b6e51",
+  "rewrite_checkpoint_frame_times_milliseconds": [
+    1040,
+    1040,
+    1169
+  ],
+  "matched_frames": [
+    {
+      "kind": "bare_prepare",
+      "rewrite_frame": 52,
+      "rewrite_indexed_sha256": "59cbee6feb5771fd16c55e491e6d1c41a5a1f24850a0603a6e7b103f23781f39",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "2865cebf829e2486b5db3354bfbe96b610e7d31bf85da7820ee58016049204e9",
+      "original_review_frame": 939,
+      "original_png_sha256": "b927b6d50a2031f3fa36ff96bb15e3f96c191bb476838b0f3fa321a591aa0c5c",
+      "original_rgb_sha256": "2865cebf829e2486b5db3354bfbe96b610e7d31bf85da7820ee58016049204e9"
+    },
+    {
+      "kind": "ally_action_card",
+      "rewrite_frame": 53,
+      "rewrite_indexed_sha256": "8ab7d9a16c08fc152dae53f8ca5ab2877208fd4be03475518a73813e2fe90744",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "f153037f6d48af72c609c5feb672b16559cb3b1fd5ebaec550543f699ef7b94f",
+      "original_review_frame": 958,
+      "original_png_sha256": "0923a9373b4645fda5f669f5479d9c996a4c32b9acf720aad4001f9eef6871cf",
+      "original_rgb_sha256": "f153037f6d48af72c609c5feb672b16559cb3b1fd5ebaec550543f699ef7b94f"
+    },
+    {
+      "kind": "ally_evasion_card_without_party_card",
+      "rewrite_frame": 54,
+      "rewrite_indexed_sha256": "0dc15e8c72374af82ac7742c3bafd4155bfafd7dec464874d6a95f7c3a268e6c",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "e697c936672e5d23c7373085637b8534bee067da084de7d6342712e7a17df346",
+      "original_review_frame": 998,
+      "original_png_sha256": "c1ec186c04946535a1e83dcf3b0e5bed607995e386166078840fc0a0da2e74c1",
+      "original_rgb_sha256": "e697c936672e5d23c7373085637b8534bee067da084de7d6342712e7a17df346"
+    }
+  ],
+  "capture_note": "The original stable 70 Hz pages show 2a28 rebuilding the captured-ally evasion card without 2bb5 party cards; the former rewrite retained the bottom actor card over y=150..199."
+}
