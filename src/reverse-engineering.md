@@ -2245,10 +2245,11 @@ trace 的独立验证器会拒绝剩余动作、隐式退出、无帧/非 320×2
 重写输出和报告四种角色，并现场重算逐帧及整文件零容差比较，截断捕获或手改报告会失败。
 
 FIG 的专用原版捕获现另有一个非最终聚合检查点，避免手工累加证据数量掩盖漏登记或哈希
-漂移。`build-fig-rgb-checkpoint.py` 扫描所有含 `matched_frames` 的 FIG RGB reference，记录
-每个源文件 SHA-256、原版/现代整页摘要和页数；`verify-fig-rgb-checkpoint.py` 重新发现源集、
-核对 102 个 reference 的哈希，并逐项拒绝 RGB 不等值页。当前聚合为 2,721 张零差异页，
-其中 1,468 个不同 RGB 画面。它的状态明确是 `checkpoint_not_complete`，不代替最终必须覆盖
+漂移。`build-fig-rgb-checkpoint.py` 递归扫描所有 FIG RGB reference 的原版/现代摘要对，记录
+每个源文件 SHA-256、摘要对和页数；`verify-fig-rgb-checkpoint.py` 重新发现源集并核对 132 个
+reference 的哈希。当前聚合明确认领 2,987 张零差异页，其中 1,618 个不同 RGB 画面；另
+有 11 对用于裁剪或差异说明的非等值摘要只计数、不冒充等值页。它的状态明确是
+`checkpoint_not_complete`，不代替最终必须覆盖
 全部 RPG/FIG 场景的四角色 `verification/pixel_diffs/manifest.json`，因此不会抬高完成门。
 
 怪物低血量自疗路径也不能复用玩家治疗演出。`21a9..21ca` 先由 `22f3` 扣除 AP 并计算

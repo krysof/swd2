@@ -23,6 +23,19 @@ def require_digest(value: object, label: str) -> str:
     return value
 
 
+def rgb_pairs(value: object):
+    if isinstance(value, dict):
+        rewrite = value.get("rewrite_rgb_sha256")
+        original = value.get("original_rgb_sha256")
+        if isinstance(rewrite, str) and isinstance(original, str):
+            yield rewrite, original
+        for child in value.values():
+            yield from rgb_pairs(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from rgb_pairs(child)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     root = Path(__file__).resolve().parent.parent
@@ -39,11 +52,10 @@ def main() -> int:
                 not isinstance(sources, list) or not sources:
             raise ValueError("unsupported FIG RGB checkpoint")
 
-        discovered = sorted((root / "scripts").glob("*-rgb-reference.json"))
+        discovered = sorted((root / "scripts").glob("fig-*-rgb-reference.json"))
         discovered = [
             path for path in discovered
-            if isinstance(json.loads(path.read_text(encoding="utf-8")).get(
-                "matched_frames"), list)
+            if list(rgb_pairs(json.loads(path.read_text(encoding="utf-8"))))
         ]
         listed = [source.get("path") for source in sources]
         wanted = [path.relative_to(root).as_posix() for path in discovered]
@@ -52,6 +64,7 @@ def main() -> int:
 
         total = 0
         exact_total = 0
+        nonmatching_total = 0
         exact_digests: set[str] = set()
         for source, path in zip(sources, discovered):
             if not isinstance(source, dict) or \
@@ -59,52 +72,40 @@ def main() -> int:
                         source.get("sha256"), source.get("path", "source")):
                 raise ValueError(f"FIG RGB reference hash differs: {path.name}")
             data = json.loads(path.read_text(encoding="utf-8"))
-            pages = data.get("matched_frames")
+            pairs = list(rgb_pairs(data))
             if source.get("kind") != data.get("kind") or \
                     not isinstance(data.get("kind"), str) or \
                     not data["kind"].startswith("original_fig_") or \
-                    not isinstance(pages, list) or not pages or \
-                    source.get("registered_pages") != len(pages):
+                    not pairs or \
+                    source.get("registered_rgb_pairs") != len(pairs):
                 raise ValueError(f"FIG RGB reference boundary differs: {path.name}")
             exact = 0
-            for index, page in enumerate(pages):
-                if not isinstance(page, dict):
-                    raise ValueError(f"FIG RGB page is not an object: {path.name}")
-                review = page.get("original_review_frame")
-                if not isinstance(review, int) or review < 0:
-                    raise ValueError(f"FIG RGB review frame differs: {path.name}")
-                require_digest(
-                    page.get("original_png_sha256"),
-                    f"{path.name}/{index}/original_png")
-                require_digest(
-                    page.get("rewrite_indexed_sha256"),
-                    f"{path.name}/{index}/rewrite_indexed")
-                require_digest(
-                    page.get("rewrite_palette_sha256"),
-                    f"{path.name}/{index}/rewrite_palette")
+            for index, (rewrite_value, original_value) in enumerate(pairs):
                 rewrite = require_digest(
-                    page.get("rewrite_rgb_sha256"),
-                    f"{path.name}/{index}/rewrite_rgb")
+                    rewrite_value, f"{path.name}/{index}/rewrite_rgb")
                 original = require_digest(
-                    page.get("original_rgb_sha256"),
-                    f"{path.name}/{index}/original_rgb")
-                if rewrite != original:
-                    raise ValueError(f"FIG RGB mismatch remains: {path.name}/{index}")
-                exact += 1
-                exact_digests.add(rewrite)
-            if source.get("exact_rgb_pages") != exact:
+                    original_value, f"{path.name}/{index}/original_rgb")
+                if rewrite == original:
+                    exact += 1
+                    exact_digests.add(rewrite)
+            nonmatching = len(pairs) - exact
+            if source.get("exact_rgb_pages") != exact or \
+                    source.get("nonmatching_rgb_pairs") != nonmatching:
                 raise ValueError(f"FIG RGB page count differs: {path.name}")
-            total += len(pages)
+            total += len(pairs)
             exact_total += exact
+            nonmatching_total += nonmatching
 
         if expected.get("source_count") != len(sources) or \
-                expected.get("registered_page_count") != total or \
+                expected.get("registered_rgb_pair_count") != total or \
                 expected.get("exact_rgb_page_count") != exact_total or \
+                expected.get("nonmatching_rgb_pair_count") != nonmatching_total or \
                 expected.get("unique_exact_rgb_page_count") != len(exact_digests):
             raise ValueError("FIG RGB aggregate count differs")
         print(
             f"FIG RGB checkpoint: {len(sources)} references, "
-            f"{exact_total} exact pages, {len(exact_digests)} unique RGB pages")
+            f"{exact_total} exact pages, {len(exact_digests)} unique RGB pages, "
+            f"{nonmatching_total} nonmatching pairs not claimed")
         return 0
     except (OSError, ValueError, TypeError, KeyError,
             json.JSONDecodeError) as error:

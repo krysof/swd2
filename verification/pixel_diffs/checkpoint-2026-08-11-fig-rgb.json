@@ -3,724 +3,1067 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG reference containing matched_frames; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 102,
-  "registered_page_count": 2721,
-  "exact_rgb_page_count": 2721,
-  "unique_exact_rgb_page_count": 1468,
+  "source_count": 132,
+  "registered_rgb_pair_count": 2998,
+  "exact_rgb_page_count": 2987,
+  "nonmatching_rgb_pair_count": 11,
+  "unique_exact_rgb_page_count": 1618,
   "sources": [
+    {
+      "path": "scripts/fig-ability-pages-rgb-reference.json",
+      "sha256": "62dc0a175b7470ee4106e61dce1b5720b6a8ebdf92fa0265e37b7bcf5da752ec",
+      "kind": "original_fig_ability_resource_pages",
+      "registered_rgb_pairs": 5,
+      "exact_rgb_pages": 0,
+      "nonmatching_rgb_pairs": 5
+    },
     {
       "path": "scripts/fig-ally-medium-rgb-reference.json",
       "sha256": "ee2b9f2f8797447c10fc58f3026a1b9cf7c8c817bb92e90c9612727115265c00",
       "kind": "original_fig_captured_ally_medium_install",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-ally-zero-rgb-reference.json",
+      "sha256": "e0ce80e21325ccac0e8691d8188d67d1ee0bba75d70689ae67e19c9f40d1b71e",
+      "kind": "original_fig_captured_ally_zero_physical",
+      "registered_rgb_pairs": 57,
+      "exact_rgb_pages": 57,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-capture-reward-rgb-reference.json",
+      "sha256": "09e044bd27d3d9dff784f96c79d2c86bd08b368140495194c0bb39497977c67b",
+      "kind": "original_fig_encounter_capture_reward",
+      "registered_rgb_pairs": 1,
+      "exact_rgb_pages": 1,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-capture-success-rgb-reference.json",
+      "sha256": "000cf43d8c3ad18836814126a3b82f40a2e7ac8cc8f45e9306822ea4f002d64c",
+      "kind": "original_fig_random_capture_success_sequence",
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-defeat-rgb-reference.json",
+      "sha256": "e7b153c93a2d99808f841fd3d2ae104a9c9a64044420e4d5d6e767d02548eb61",
+      "kind": "original_fig_defeat_epilogue",
+      "registered_rgb_pairs": 1,
+      "exact_rgb_pages": 1,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-flagged-medium-rgb-reference.json",
       "sha256": "6b4be582693432d480cc4a3754c9c828c0579d792856edd535019f95b0c69c1c",
       "kind": "original_fig_flagged_medium",
-      "registered_pages": 4,
-      "exact_rgb_pages": 4
+      "registered_rgb_pairs": 4,
+      "exact_rgb_pages": 4,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-implicit-damage-rgb-reference.json",
       "sha256": "129c18dc5b1c3aa31c2afbc5e6141b9d3bfc4b7a38dbee674e4b03615b084162",
       "kind": "original_fig_implicit_monster_damage_dispatcher",
-      "registered_pages": 22,
-      "exact_rgb_pages": 22
+      "registered_rgb_pairs": 22,
+      "exact_rgb_pages": 22,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-barrier-rgb-reference.json",
       "sha256": "6b14541d5bf8de705c9e65ca63c16d15a35d6abffcf1551773ee14a663ea1313",
       "kind": "original_fig_direct_item_barrier",
-      "registered_pages": 7,
-      "exact_rgb_pages": 7
+      "registered_rgb_pairs": 7,
+      "exact_rgb_pages": 7,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-composite-media-rgb-reference.json",
       "sha256": "c98331ba06135a73dd2bdc7918e5c49d8fc41282c9ff2d53a500ce4c5ae76662",
       "kind": "original_fig_type10_composite_media_item",
-      "registered_pages": 7,
-      "exact_rgb_pages": 7
+      "registered_rgb_pairs": 7,
+      "exact_rgb_pages": 7,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-composite-rgb-reference.json",
       "sha256": "b7ede79356b5463781ad73aab451432ae580a26f22ab325893e13444879865d2",
       "kind": "original_fig_type10_composite_item",
-      "registered_pages": 5,
-      "exact_rgb_pages": 5
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 5,
+      "nonmatching_rgb_pairs": 1
     },
     {
       "path": "scripts/fig-item-composite-support-rgb-reference.json",
       "sha256": "3d865216c9f2a568616bccd43845015449483579f48a522de95ec3fde8136f58",
       "kind": "original_fig_type10_composite_support_item",
-      "registered_pages": 7,
-      "exact_rgb_pages": 7
+      "registered_rgb_pairs": 7,
+      "exact_rgb_pages": 7,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-damage-rgb-reference.json",
       "sha256": "fe19623437feef20c2aa63c9fbf03bc1f43566135fa40f0beb9bf61c03e7b355",
       "kind": "original_fig_direct_item_damage_dispatcher",
-      "registered_pages": 10,
-      "exact_rgb_pages": 10
+      "registered_rgb_pairs": 13,
+      "exact_rgb_pages": 10,
+      "nonmatching_rgb_pairs": 3
     },
     {
       "path": "scripts/fig-item-dispel-rgb-reference.json",
       "sha256": "8d494d393ce396a72f83483b6f000091d5d698fef00196842b7790ae3139e3c5",
       "kind": "original_fig_item_dispel",
-      "registered_pages": 13,
-      "exact_rgb_pages": 13
+      "registered_rgb_pairs": 13,
+      "exact_rgb_pages": 13,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-item-effect47-escape-rgb-reference.json",
+      "sha256": "80d86a8876bde8660ebf1cca7be3395c07a0dd26e5354bd1ce74b585059defbf",
+      "kind": "original_fig_item_effect47_escape",
+      "registered_rgb_pairs": 5,
+      "exact_rgb_pages": 5,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-effect47-fixed-rgb-reference.json",
       "sha256": "17b310738d4cdb38a9193cda163ce3df67baf8aa0f12358ecc353b6bde1973ed",
       "kind": "original_fig_item_effect47_fixed",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-item-monster-status-rgb-reference.json",
+      "sha256": "5d887ef174b0489b91fb9a971b149e1a207fac29e342412a5879f24ec3938f7b",
+      "kind": "original_fig_direct_item_monster_status",
+      "registered_rgb_pairs": 13,
+      "exact_rgb_pages": 11,
+      "nonmatching_rgb_pairs": 2
+    },
+    {
+      "path": "scripts/fig-item-page-rgb-reference.json",
+      "sha256": "acf89da77a423c12b9be4fb118cceb0fcb55dea5680ab11583263f8fd2f082c1",
+      "kind": "original_fig_item_page",
+      "registered_rgb_pairs": 1,
+      "exact_rgb_pages": 1,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-item-status-rgb-reference.json",
+      "sha256": "a6a63c03c38a7c6176bf7dc1827ebac437489afdc1c20cacafefee4e43529545",
+      "kind": "original_fig_direct_item_status_paths",
+      "registered_rgb_pairs": 12,
+      "exact_rgb_pages": 12,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-support-class5-rgb-reference.json",
       "sha256": "1b43bb0bbc2c6845479f202b8c77904d63f9d46dc45990f288a0def66788ff85",
       "kind": "original_fig_direct_item_support",
-      "registered_pages": 6,
-      "exact_rgb_pages": 6
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-support-class5-selector-rgb-reference.json",
       "sha256": "4a581cb493bb180a19b5679bc30f1161d2ac822d9724a722cbd6cb39b152f068",
       "kind": "original_fig_direct_item_support",
-      "registered_pages": 6,
-      "exact_rgb_pages": 6
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-support-dispatch-rgb-reference.json",
       "sha256": "568d50ff5dff801dce0e26166fbbcb1cf88ad8ee0ef6013e6d72dfe0b9c7cde6",
       "kind": "original_fig_direct_item_support",
-      "registered_pages": 6,
-      "exact_rgb_pages": 6
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-support-rgb-reference.json",
       "sha256": "53372c281a4c1857bc663f85a2fb87c3045e16c030eacada98309d8288ee2961",
       "kind": "original_fig_direct_item_support",
-      "registered_pages": 6,
-      "exact_rgb_pages": 6
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-learned-empty-medium-rgb-reference.json",
       "sha256": "39d1c66b34305ef581df7bcb3294b8f661c8b4a4a0efa9332eb4170f71636205",
       "kind": "original_fig_learned_empty_medium_dismissal",
-      "registered_pages": 10,
-      "exact_rgb_pages": 10
+      "registered_rgb_pairs": 10,
+      "exact_rgb_pages": 10,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-learned-medium-rgb-reference.json",
       "sha256": "07e0d2a963a62ad88a6bd1d6849742b72c62beb927665013d775bff16552610b",
       "kind": "original_fig_learned_medium_install_dismiss",
-      "registered_pages": 12,
-      "exact_rgb_pages": 12
+      "registered_rgb_pairs": 12,
+      "exact_rgb_pages": 12,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-level-up-rgb-reference.json",
+      "sha256": "835d8ef34a0bfe1f98f549eba79f1d1b36118737c6a23dc2ba3ae6afd6793aae",
+      "kind": "original_fig_level_up_pages",
+      "registered_rgb_pairs": 2,
+      "exact_rgb_pages": 2,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-medium-dismiss-rgb-reference.json",
+      "sha256": "d2f7dd80d25b0cac5a817bbc94f7585bcc4ccda93ddc93a2b63dcb1587df77c8",
+      "kind": "original_fig_medium_summon_dismiss_sequence",
+      "registered_rgb_pairs": 5,
+      "exact_rgb_pages": 5,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-escape-failed-rgb-reference.json",
+      "sha256": "9f2305c312bdbac78a6909c237c802a3b60770676f397cecf54f4cfd408dd704",
+      "kind": "original_fig_monster_escape_failed_sequence",
+      "registered_rgb_pairs": 5,
+      "exact_rgb_pages": 5,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-monster-first-slot-medium-rgb-reference.json",
       "sha256": "939b7a25c9afda79145dfed1c1333dd17afe00af490fe4b17b6203ffa7e7b067",
       "kind": "original_fig_first_monster_ae_medium_install",
-      "registered_pages": 36,
-      "exact_rgb_pages": 36
+      "registered_rgb_pairs": 36,
+      "exact_rgb_pages": 36,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-flee-rgb-reference.json",
+      "sha256": "c2273b08da22e6b2f6c9d27a10e0b374ab23640a1a79696be5df30f0e3f2abe7",
+      "kind": "original_fig_monster_flee_sequence",
+      "registered_rgb_pairs": 7,
+      "exact_rgb_pages": 7,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-generic-rgb-reference.json",
+      "sha256": "6b1d837dc9a7183002a18b4ee0e1d9b3c6f3d311b010cebdc00071737ce340e4",
+      "kind": "original_fig_monster_generic_ability_sequence",
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-heal-rgb-reference.json",
+      "sha256": "8c7686f19d31a9589f89c340a6caccb8237cb104dbeb34f8aea72b0ee6b0fbcc",
+      "kind": "original_fig_monster_self_heal_sequence",
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-monster-immunity-rgb-reference.json",
       "sha256": "cf3977d065294fed0e74a3e1d24325bb3560e4713e4b6fdd7af51c71d13d490e",
       "kind": "original_fig_monster_immunity",
-      "registered_pages": 13,
-      "exact_rgb_pages": 13
+      "registered_rgb_pairs": 13,
+      "exact_rgb_pages": 13,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-monster-slot-medium-rgb-reference.json",
       "sha256": "d63312e37fb7364307d79cf9098b18c96a3ad2ee71834a362e5299fb9284c8b4",
       "kind": "original_fig_second_monster_af_medium_install",
-      "registered_pages": 35,
-      "exact_rgb_pages": 35
+      "registered_rgb_pairs": 35,
+      "exact_rgb_pages": 35,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-special-buff-rgb-reference.json",
+      "sha256": "a53abc7767c649a394a9235c38264e452b5031f32b80214dbdf1c2b598e3db45",
+      "kind": "original_fig_monster_special_buff_sequence",
+      "registered_rgb_pairs": 5,
+      "exact_rgb_pages": 5,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-special-resistance-rgb-reference.json",
+      "sha256": "5c8885e65c60126f426ceec0156caf1fdf2307f2a2b98911a98fc64c6c2ecd63",
+      "kind": "original_fig_monster_special_resistance_sequence",
+      "registered_rgb_pairs": 5,
+      "exact_rgb_pages": 5,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-special-silent-rgb-reference.json",
+      "sha256": "0a78c5dbd2b1f548278b233c46b1e7afd0a6264d8980802e87801b0962ca1fb3",
+      "kind": "original_fig_monster_special_silent_return_sequence",
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-special-status-rgb-reference.json",
+      "sha256": "28e7bc73d6d96583d59a5de2961c2579d06e02b735f22441909ebf5bb667e9c0",
+      "kind": "original_fig_monster_special_status_sequence",
+      "registered_rgb_pairs": 7,
+      "exact_rgb_pages": 7,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-status-rgb-reference.json",
+      "sha256": "e4860fc0a080c07a78c2d68d5933ef40712547d85d1ad65cfb2340ef30ce115c",
+      "kind": "original_fig_monster_status_variants",
+      "registered_rgb_pairs": 11,
+      "exact_rgb_pages": 11,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-target-rgb-reference.json",
+      "sha256": "b57231691051e3311dd0dac2d7eea3434a144983087bf689980abac583a24e53",
+      "kind": "original_fig_monster_target",
+      "registered_rgb_pairs": 1,
+      "exact_rgb_pages": 1,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-monster-third-slot-medium-rgb-reference.json",
       "sha256": "f95935015a7347b8a3fa9699a747259d685eee3224f4421ef07cbfe853d576c5",
       "kind": "original_fig_third_monster_b0_medium_install",
-      "registered_pages": 20,
-      "exact_rgb_pages": 20
+      "registered_rgb_pairs": 20,
+      "exact_rgb_pages": 20,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-ordinary-attack-rgb-reference.json",
+      "sha256": "ed9f86edec01d5ee82d3015d09993511c29af8315bd6500651fc9b7256470204",
+      "kind": "original_fig_ordinary_attack_actor_advance",
+      "registered_rgb_pairs": 1,
+      "exact_rgb_pages": 1,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-periodic-zero-rgb-reference.json",
+      "sha256": "95873a664ecb63791083e1907e30270aca52365dae554a32ca3cc2366ad4beb8",
+      "kind": "original_fig_periodic_zero_damage",
+      "registered_rgb_pairs": 11,
+      "exact_rgb_pages": 11,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-af-medium-rgb-reference.json",
       "sha256": "64f4370238c043b1ba73139d715e65da9d11092172bc22602b637755e8ff4c9a",
       "kind": "original_fig_player_attack_af_medium_install",
-      "registered_pages": 53,
-      "exact_rgb_pages": 53
+      "registered_rgb_pairs": 53,
+      "exact_rgb_pages": 53,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-b0-medium-rgb-reference.json",
       "sha256": "34d2573f6c0261e93ccd9eb26e9888b8c4c6127f454af8c6889897e08079cb93",
       "kind": "original_fig_player_attack_b0_medium_install",
-      "registered_pages": 47,
-      "exact_rgb_pages": 47
+      "registered_rgb_pairs": 47,
+      "exact_rgb_pages": 47,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-basic-rgb-reference.json",
       "sha256": "f154f609d0c7db017c696a9cbbe9b5febb2b0e7d580e07d8b3ca322e712e32fb",
       "kind": "original_fig_player_attack_basic",
-      "registered_pages": 45,
-      "exact_rgb_pages": 45
+      "registered_rgb_pairs": 45,
+      "exact_rgb_pages": 45,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-evaded-rgb-reference.json",
       "sha256": "6afb51276d61c3252ac3ed5008027446e303c89b144d2f3363a2c933029ddd6e",
       "kind": "original_fig_player_attack_evaded",
-      "registered_pages": 34,
-      "exact_rgb_pages": 34
+      "registered_rgb_pairs": 34,
+      "exact_rgb_pages": 34,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-flee-failed-rgb-reference.json",
       "sha256": "8c462c5a9cd3b002cce7277cd3969f423171af6161308d94005f9d7651fab462",
       "kind": "original_fig_player_attack_flee_failed",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-flee-rgb-reference.json",
       "sha256": "c9999f233e78f1017f978fd89c3972a94a3aba65f69ec875ad177899daffc6dc",
       "kind": "original_fig_player_attack_flee",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-hit-rgb-reference.json",
       "sha256": "07c33629b3976bc511d5a0f456dda1c62464bfd0ee77839fc673a89fecccdb15",
       "kind": "original_fig_player_attack_hit",
-      "registered_pages": 44,
-      "exact_rgb_pages": 44
+      "registered_rgb_pairs": 44,
+      "exact_rgb_pages": 44,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-medium-rgb-reference.json",
       "sha256": "0c1b9a39ae643a9e82187cad5f7e20ff547c8d00f2e6a4fb346f438675f3aa34",
       "kind": "original_fig_player_attack_medium_install",
-      "registered_pages": 59,
-      "exact_rgb_pages": 59
+      "registered_rgb_pairs": 59,
+      "exact_rgb_pages": 59,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-special-buff-rgb-reference.json",
       "sha256": "3bdaa420cf988a88447dec4593bc65c5bf37e695ae5729ac5d968c4951ee6161",
       "kind": "original_fig_player_attack_special_buff",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-special-resisted-rgb-reference.json",
       "sha256": "1a91f76ce45876421cd194949959ed53d6a4652a401c89b416f05da06822609f",
       "kind": "original_fig_player_attack_special_resisted",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-special-silent-rgb-reference.json",
       "sha256": "707d92f87287294319b8a40ebdc24f851d98548fd33377388e6717c15d088be0",
       "kind": "original_fig_player_attack_special_silent",
-      "registered_pages": 26,
-      "exact_rgb_pages": 26
+      "registered_rgb_pairs": 26,
+      "exact_rgb_pages": 26,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-special-status-rgb-reference.json",
       "sha256": "b99448b96e7c2602acfd791c2420092a8ea060d97ab16ed74660a9908c2f32cf",
       "kind": "original_fig_player_attack_special_status",
-      "registered_pages": 30,
-      "exact_rgb_pages": 30
+      "registered_rgb_pairs": 30,
+      "exact_rgb_pages": 30,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-attack-zero-rgb-reference.json",
       "sha256": "3629fd7c8ed3ded926ff87bc5fd5fd56bbb8c25a796b40468a6c638e78dbeb43",
       "kind": "original_fig_player_attack_zero",
-      "registered_pages": 46,
-      "exact_rgb_pages": 46
+      "registered_rgb_pairs": 46,
+      "exact_rgb_pages": 46,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-barrier-rgb-reference.json",
       "sha256": "866f0e5d43f91bb49e5778ffbcd106a592389836ec656415d8b357fe9ec9982d",
       "kind": "original_fig_player_barrier",
-      "registered_pages": 8,
-      "exact_rgb_pages": 8
+      "registered_rgb_pairs": 8,
+      "exact_rgb_pages": 8,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-critical-hit-rgb-reference.json",
       "sha256": "11d867a3f4606ec15649d6a8a20e72b394ee340b3f860c4abbded13b92d81e4f",
       "kind": "original_fig_player_critical_hit",
-      "registered_pages": 43,
-      "exact_rgb_pages": 43
+      "registered_rgb_pairs": 43,
+      "exact_rgb_pages": 43,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-critical-rgb-reference.json",
       "sha256": "74c21adbab5eba60c7c0f12ef357fb364cea58d5d8348858592d90005de8e6eb",
       "kind": "original_fig_player_critical_attack",
-      "registered_pages": 17,
-      "exact_rgb_pages": 17
+      "registered_rgb_pairs": 17,
+      "exact_rgb_pages": 17,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-damage-rgb-reference.json",
       "sha256": "6f54c4284e57105d1303fa700d6e35e687641f40749494aa069a54244d7a715c",
       "kind": "original_fig_player_damage_dispatcher",
-      "registered_pages": 10,
-      "exact_rgb_pages": 10
+      "registered_rgb_pairs": 10,
+      "exact_rgb_pages": 10,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-dispel-rgb-reference.json",
       "sha256": "0d60d98483ed6dc900a91581b83ea99435c2b24748efb49366dcf510a84b7cfe",
       "kind": "original_fig_player_dispel",
-      "registered_pages": 14,
-      "exact_rgb_pages": 14
+      "registered_rgb_pairs": 14,
+      "exact_rgb_pages": 14,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect32-rgb-reference.json",
       "sha256": "c0c9a2797053be7b772bde33a35f4187503d8d7692be567c09d09d8aefddeb12",
       "kind": "original_fig_player_effect",
-      "registered_pages": 62,
-      "exact_rgb_pages": 62
+      "registered_rgb_pairs": 62,
+      "exact_rgb_pages": 62,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect34-rgb-reference.json",
       "sha256": "45a1a31e2523271d8d3875ef98212e73d082268bf4bfc33ca4e7c15858a74362",
       "kind": "original_fig_player_effect",
-      "registered_pages": 43,
-      "exact_rgb_pages": 43
+      "registered_rgb_pairs": 43,
+      "exact_rgb_pages": 43,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect35-rgb-reference.json",
       "sha256": "63f7399fec05298268aa01447b6221c748b6ac4bff039bc4413a9c8b4f0d6d4a",
       "kind": "original_fig_player_effect",
-      "registered_pages": 48,
-      "exact_rgb_pages": 48
+      "registered_rgb_pairs": 48,
+      "exact_rgb_pages": 48,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect36-rgb-reference.json",
       "sha256": "403f78baf04d3d5e62701b97d938cf0197ef6526b1d0b777fc3df4e30e2233cf",
       "kind": "original_fig_player_effect",
-      "registered_pages": 25,
-      "exact_rgb_pages": 25
+      "registered_rgb_pairs": 25,
+      "exact_rgb_pages": 25,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect37-rgb-reference.json",
       "sha256": "66064c80da2c31ecd72ff9f257faf818267272f6b5ad9bae98b288d172e48ce4",
       "kind": "original_fig_player_effect",
-      "registered_pages": 34,
-      "exact_rgb_pages": 34
+      "registered_rgb_pairs": 34,
+      "exact_rgb_pages": 34,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect38-rgb-reference.json",
       "sha256": "bf5705d15c1e1bd57bdfda0e8426829950055c34bdc1f8fa988ccb2da028677f",
       "kind": "original_fig_player_effect",
-      "registered_pages": 51,
-      "exact_rgb_pages": 51
+      "registered_rgb_pairs": 51,
+      "exact_rgb_pages": 51,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect39-rgb-reference.json",
       "sha256": "87fd19181e2350b492c785779135826fa00a9e291bd429b4f85cb1135731632f",
       "kind": "original_fig_player_effect",
-      "registered_pages": 34,
-      "exact_rgb_pages": 34
+      "registered_rgb_pairs": 34,
+      "exact_rgb_pages": 34,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect3a-rgb-reference.json",
       "sha256": "38af6057ab1f845e223df5e3311b916e28e7b9bb5689fad44688c0c1ddae7424",
       "kind": "original_fig_player_effect",
-      "registered_pages": 49,
-      "exact_rgb_pages": 49
+      "registered_rgb_pairs": 49,
+      "exact_rgb_pages": 49,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect40-rgb-reference.json",
       "sha256": "f5d4ce98632f1da24fe693912b4befe077a4ae78aa5e771b3a0c2596072f10f0",
       "kind": "original_fig_player_effect",
-      "registered_pages": 44,
-      "exact_rgb_pages": 44
+      "registered_rgb_pairs": 44,
+      "exact_rgb_pages": 44,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect41-rgb-reference.json",
       "sha256": "ce4e9a06121a4d2f0459f3b5e91de701f9e6816e0d3a52ac00df7b535de9c155",
       "kind": "original_fig_player_effect",
-      "registered_pages": 55,
-      "exact_rgb_pages": 55
+      "registered_rgb_pairs": 55,
+      "exact_rgb_pages": 55,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect42-rgb-reference.json",
       "sha256": "1996110d9d3344bd23f7a1110a2dd471b53add23fd3790bc44521894f918ab28",
       "kind": "original_fig_player_effect",
-      "registered_pages": 58,
-      "exact_rgb_pages": 58
+      "registered_rgb_pairs": 58,
+      "exact_rgb_pages": 58,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect43-rgb-reference.json",
       "sha256": "d8c389971e56087d714099a4ad429cd5146543aa9775f01e44e37cb58a24aac2",
       "kind": "original_fig_player_effect",
-      "registered_pages": 37,
-      "exact_rgb_pages": 37
+      "registered_rgb_pairs": 37,
+      "exact_rgb_pages": 37,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect44-rgb-reference.json",
       "sha256": "722f99dab088c370369bfbf2252df5ebde89b45cbbca724d6f8eabbc15facae1",
       "kind": "original_fig_player_effect",
-      "registered_pages": 31,
-      "exact_rgb_pages": 31
+      "registered_rgb_pairs": 31,
+      "exact_rgb_pages": 31,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect45-rgb-reference.json",
       "sha256": "ac5e7acc795decaf2b8fcfd7856693ead30572d7358eef2089610509985769ad",
       "kind": "original_fig_player_effect",
-      "registered_pages": 31,
-      "exact_rgb_pages": 31
+      "registered_rgb_pairs": 31,
+      "exact_rgb_pages": 31,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect46-rgb-reference.json",
       "sha256": "2643982f0987b1c722da9a0743e4e1186b05b54c696967c91153ac1db8e5da2f",
       "kind": "original_fig_player_effect",
-      "registered_pages": 42,
-      "exact_rgb_pages": 42
+      "registered_rgb_pairs": 42,
+      "exact_rgb_pages": 42,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-player-effect47-escape-rgb-reference.json",
+      "sha256": "c51cc13e9fe3b2d7cb39f219168bbf11953791aab239228f82c485ec2a68c9df",
+      "kind": "original_fig_player_effect47_escape",
+      "registered_rgb_pairs": 5,
+      "exact_rgb_pages": 5,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect47-fixed-rgb-reference.json",
       "sha256": "eebbe28bd44510e95da9b2817b4dd04ff910cb6db6165058d7eb0fb8c82c3c54",
       "kind": "original_fig_player_effect47_fixed",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect48-rgb-reference.json",
       "sha256": "ecf3a70589b2d730a917223a5a42f226446e674210c32759b2d205d2cd6a44ac",
       "kind": "original_fig_player_effect",
-      "registered_pages": 50,
-      "exact_rgb_pages": 50
+      "registered_rgb_pairs": 50,
+      "exact_rgb_pages": 50,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect49-rgb-reference.json",
       "sha256": "d01a14d407749b952f097e2992e16dd395296d1f5864ea302c75ef2eb5320104",
       "kind": "original_fig_player_effect",
-      "registered_pages": 52,
-      "exact_rgb_pages": 52
+      "registered_rgb_pairs": 52,
+      "exact_rgb_pages": 52,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect4a-rgb-reference.json",
       "sha256": "e7cfc5f5dc529f93d92680468047b4ae026ebb963bc8450344bbbe7237625d42",
       "kind": "original_fig_player_effect",
-      "registered_pages": 38,
-      "exact_rgb_pages": 38
+      "registered_rgb_pairs": 38,
+      "exact_rgb_pages": 38,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect4b-kill-rgb-reference.json",
       "sha256": "1e2e1a9cf231169383fef55444c08cfc701c370f98111f1cc0be643c06119414",
       "kind": "original_fig_player_effect",
-      "registered_pages": 28,
-      "exact_rgb_pages": 28
+      "registered_rgb_pairs": 28,
+      "exact_rgb_pages": 28,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect4c-rgb-reference.json",
       "sha256": "f8f8eb592e4ce39818808ead64ad6801e3ff2ac6e72786d2cb9fb4921b048fea",
       "kind": "original_fig_player_effect",
-      "registered_pages": 51,
-      "exact_rgb_pages": 51
+      "registered_rgb_pairs": 51,
+      "exact_rgb_pages": 51,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect4d-rgb-reference.json",
       "sha256": "729216376c420bdf0f1cd68fd6c74d7373f8ed4a655def8fc8066480906ed804",
       "kind": "original_fig_player_effect",
-      "registered_pages": 48,
-      "exact_rgb_pages": 48
+      "registered_rgb_pairs": 48,
+      "exact_rgb_pages": 48,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect4e-rgb-reference.json",
       "sha256": "292ea34aa5c40094239c7e3fd062376c5a20e7bb78e6ba5b2017a72e71b69084",
       "kind": "original_fig_player_effect",
-      "registered_pages": 32,
-      "exact_rgb_pages": 32
+      "registered_rgb_pairs": 32,
+      "exact_rgb_pages": 32,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect4f-rgb-reference.json",
       "sha256": "93628e78dfce18306c3ae560bddd5ce445b9eaf688d5a92f8001ecfe167fa65a",
       "kind": "original_fig_player_effect",
-      "registered_pages": 49,
-      "exact_rgb_pages": 49
+      "registered_rgb_pairs": 49,
+      "exact_rgb_pages": 49,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect50-rgb-reference.json",
       "sha256": "93c3fa946e42c48bfd7e3caaf063a272c2e254ffae3e3671a0512c67402ede2b",
       "kind": "original_fig_player_effect",
-      "registered_pages": 50,
-      "exact_rgb_pages": 50
+      "registered_rgb_pairs": 50,
+      "exact_rgb_pages": 50,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect51-rgb-reference.json",
       "sha256": "1919941da2a0b45900cc315a594d36ad1d363d930efc4f4f0e3af4bb398432d2",
       "kind": "original_fig_player_effect",
-      "registered_pages": 52,
-      "exact_rgb_pages": 52
+      "registered_rgb_pairs": 52,
+      "exact_rgb_pages": 52,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect52-kill-rgb-reference.json",
       "sha256": "59396858b40ae4ad189c5707c9b576f453700db5f6a8cecaac9f77dde7936dbc",
       "kind": "original_fig_player_effect",
-      "registered_pages": 33,
-      "exact_rgb_pages": 33
+      "registered_rgb_pairs": 33,
+      "exact_rgb_pages": 33,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect53-rgb-reference.json",
       "sha256": "dd41a204112a4586e321ada0428a254f706f7316e3e9ec92c1dab121467399f3",
       "kind": "original_fig_player_effect",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect54-kill-rgb-reference.json",
       "sha256": "d1f4b5015b51ce7191647cf6682a1d8fb73f3a05f003a6e34f1c817e87466041",
       "kind": "original_fig_player_effect",
-      "registered_pages": 31,
-      "exact_rgb_pages": 31
+      "registered_rgb_pairs": 31,
+      "exact_rgb_pages": 31,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect55-rgb-reference.json",
       "sha256": "039e90aa48c63b217d1bde387660dd792dcf5baf7afab563c9d1c1d312e9d2c8",
       "kind": "original_fig_player_effect",
-      "registered_pages": 27,
-      "exact_rgb_pages": 27
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect56-kill-rgb-reference.json",
       "sha256": "bfbde3caf4db42ff2a4da6b4868dacf796c50d8e07a0ca1115245956b029c298",
       "kind": "original_fig_player_effect",
-      "registered_pages": 32,
-      "exact_rgb_pages": 32
+      "registered_rgb_pairs": 32,
+      "exact_rgb_pages": 32,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect57-kill-rgb-reference.json",
       "sha256": "e22ead6cdda9b1da76ef918f3071df08e9108d1ec8b9699ef9a408db4fb59cf2",
       "kind": "original_fig_player_effect",
-      "registered_pages": 32,
-      "exact_rgb_pages": 32
+      "registered_rgb_pairs": 32,
+      "exact_rgb_pages": 32,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect58-kill-rgb-reference.json",
       "sha256": "a1a39d061c960ca36c28c5784658dc9f87995ed62be5249be2d873f7b0d5ab12",
       "kind": "original_fig_player_effect",
-      "registered_pages": 30,
-      "exact_rgb_pages": 30
+      "registered_rgb_pairs": 30,
+      "exact_rgb_pages": 30,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect59-kill-rgb-reference.json",
       "sha256": "7dd26838e4d95c7ac9bddf50eba93c85c0bde0cc2936ebd39b59b709e2ff86db",
       "kind": "original_fig_player_effect",
-      "registered_pages": 35,
-      "exact_rgb_pages": 35
+      "registered_rgb_pairs": 35,
+      "exact_rgb_pages": 35,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect5a-rgb-reference.json",
       "sha256": "ae2a6cb9d728357dc523d39398836d5670d19807a542c0a84a36f0e1dd4c8757",
       "kind": "original_fig_player_effect",
-      "registered_pages": 50,
-      "exact_rgb_pages": 50
+      "registered_rgb_pairs": 50,
+      "exact_rgb_pages": 50,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect5b-kill-rgb-reference.json",
       "sha256": "4c3b2eab4c2381297e446483e5ebddda2b78c0f24c185ebea6e6f2f8928beb50",
       "kind": "original_fig_player_effect",
-      "registered_pages": 28,
-      "exact_rgb_pages": 28
+      "registered_rgb_pairs": 28,
+      "exact_rgb_pages": 28,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect5c-kill-rgb-reference.json",
       "sha256": "faea161d7848b46c67042ca07eb1ded828f1dddee60b19ec4762d4d22d41c819",
       "kind": "original_fig_player_effect",
-      "registered_pages": 32,
-      "exact_rgb_pages": 32
+      "registered_rgb_pairs": 32,
+      "exact_rgb_pages": 32,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect5d-kill-rgb-reference.json",
       "sha256": "40d64fc2eb731b47381634b8b616ea67477abdfa1358675224d4d9caa5d8a908",
       "kind": "original_fig_player_effect",
-      "registered_pages": 38,
-      "exact_rgb_pages": 38
+      "registered_rgb_pairs": 38,
+      "exact_rgb_pages": 38,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect5e-resistance-rgb-reference.json",
       "sha256": "8e80354e0e8b99c5efaa0ffd5895a159cb796407cd06a7ab108dd8b4a98c0346",
       "kind": "original_fig_player_effect",
-      "registered_pages": 42,
-      "exact_rgb_pages": 42
+      "registered_rgb_pairs": 42,
+      "exact_rgb_pages": 42,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect5f-status-rgb-reference.json",
       "sha256": "a5df5b0cef5eb629c5cd3c88ccf571a78e7a810d5c39856f54344ed8b454399d",
       "kind": "original_fig_player_effect",
-      "registered_pages": 21,
-      "exact_rgb_pages": 21
+      "registered_rgb_pairs": 21,
+      "exact_rgb_pages": 21,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect60-status-rgb-reference.json",
       "sha256": "db8dd35dcbb597992f9e2d5de13d7e46f534ed91e71b9b32d7540ed06aa42251",
       "kind": "original_fig_player_effect",
-      "registered_pages": 25,
-      "exact_rgb_pages": 25
+      "registered_rgb_pairs": 25,
+      "exact_rgb_pages": 25,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect64-status-rgb-reference.json",
       "sha256": "5657ed7d9230702c01747c449ef85999e73b2e7fc2b530fd135d371bc70389eb",
       "kind": "original_fig_player_effect",
-      "registered_pages": 32,
-      "exact_rgb_pages": 32
+      "registered_rgb_pairs": 32,
+      "exact_rgb_pages": 32,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-effect65-status-rgb-reference.json",
       "sha256": "b9f9c9e847bdc369906fe6a22b38da8c1a15248e5b4cd63ffab030e74e8ce214",
       "kind": "original_fig_player_effect",
-      "registered_pages": 43,
-      "exact_rgb_pages": 43
+      "registered_rgb_pairs": 43,
+      "exact_rgb_pages": 43,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-empty-medium-rgb-reference.json",
       "sha256": "a8396c79a25e0cc776c6e8bf5c06e736b8c8fce80ab860d3ba4bea870b14b7b2",
       "kind": "original_fig_player_empty_medium_dismissal",
-      "registered_pages": 10,
-      "exact_rgb_pages": 10
+      "registered_rgb_pairs": 10,
+      "exact_rgb_pages": 10,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-player-escape-failure-rgb-reference.json",
+      "sha256": "9cca5cb693c3be03446007a8c20966649fb6c6075801fc81a1d2c540313f09f0",
+      "kind": "original_fig_player_escape_failure_checkpoint",
+      "registered_rgb_pairs": 31,
+      "exact_rgb_pages": 31,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-player-escape-success-rgb-reference.json",
+      "sha256": "c3c36ffbc4bb11cc0e94e3fa42462bd419938919700fa687e3063445586d04ac",
+      "kind": "original_fig_player_escape_success_sequence",
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-medium-rgb-reference.json",
       "sha256": "8d999aab9dbd203be6131e64dee5c6aa837365fbc88409bf39667d23f42e63fc",
       "kind": "original_fig_player_medium_install_dismiss",
-      "registered_pages": 10,
-      "exact_rgb_pages": 10
+      "registered_rgb_pairs": 10,
+      "exact_rgb_pages": 10,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-player-status-rgb-reference.json",
+      "sha256": "e31011f06eee61db0ebfdc339c75924faee3060746eb8a49a3876b4fa4b499a1",
+      "kind": "original_fig_player_status_variants",
+      "registered_rgb_pairs": 15,
+      "exact_rgb_pages": 15,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-all-rgb-reference.json",
       "sha256": "9a6dbdf0c0cdd03b552ae376c308a0f3880908bb0e706cd41d77342ef56d017f",
       "kind": "original_fig_player_support",
-      "registered_pages": 6,
-      "exact_rgb_pages": 6
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect01-class5-rgb-reference.json",
       "sha256": "b76f5187bfd5de0c0b9c9351be8f97e7ac905031574a361996c271c3d0d3119e",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect02-class1-rgb-reference.json",
       "sha256": "a3cfe55663a8402c46679544aaf92e186ce5c0b8477f415b8297e157a345c850",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect03-reachable-rgb-reference.json",
       "sha256": "a8a7d7ae831647c9f4c2478db4d8b8a50c78b39ffded86e933628412a7fb35f7",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect07-rgb-reference.json",
       "sha256": "f89a02761534f24837e6365722bd3f161459f3cee0fd491b0619956c30ad12c6",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect0a-rgb-reference.json",
       "sha256": "9101aab807f39aafdaec48882e9a735739353db188c0f202bf56705a4629e765",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect0b-rgb-reference.json",
       "sha256": "412c02ac17ed4ca79d51dd483cdc2d2c9ae017c4dc05b24da6b8d4cbf85bf50f",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect0d-rgb-reference.json",
       "sha256": "da40a6a8166431fc0240734e59f28b3ecbccf68dfec923ed1ca5bfb2222d7c57",
       "kind": "original_fig_player_support",
-      "registered_pages": 6,
-      "exact_rgb_pages": 6
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect0e-rgb-reference.json",
       "sha256": "de012825e979efcd18c2c2e457fe3e7550929dcbfccb618ea2361ae8f30adc00",
       "kind": "original_fig_player_support",
-      "registered_pages": 6,
-      "exact_rgb_pages": 6
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect0f-rgb-reference.json",
       "sha256": "5b35a237818886d21fa6cddb1a9d5152c65abe4b9bd70d4e424ae557bf92e352",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect19-class2-rgb-reference.json",
       "sha256": "5c7fb50f41dae98ea6dc18116c2978060dd539c78b4847f5c4347da4e0830d4c",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect19-rgb-reference.json",
       "sha256": "9289134404aa239de40b77488949e1d2d7824319589cff06ef46f962409958f0",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect1a-rgb-reference.json",
       "sha256": "bf6ac4b4e129d5c3a157f3509c1d1529a5c1dec3033a7ec07be77708d734775d",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect1e-rgb-reference.json",
       "sha256": "b679af116b590c1d862be77d24d1871263c77eee8726edd95ab2a978fa03ae34",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect2-rgb-reference.json",
       "sha256": "984dd9e6fa4e0815f7ebbd2b63780e2776b43ec1c03f822bb5125dcfcce2cdf6",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect3-rgb-reference.json",
       "sha256": "de3f8bc477472829b523b9b0644679c25fe57815fce85cb5e027fac4af08edf6",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect4-rgb-reference.json",
       "sha256": "527c8a7d2287f5c796cc9bac757a981935da3431b029c4fda7bbac3af444c6ab",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-effect9-rgb-reference.json",
       "sha256": "dcc79494039f5ec2db0f2b9f931e63749d927a56ebfebedc50e6f62ae655b777",
       "kind": "original_fig_player_support",
-      "registered_pages": 9,
-      "exact_rgb_pages": 9
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-support-rgb-reference.json",
       "sha256": "d772118cda02016f3e5d857eb6a6c42e30e51f136b9c83e00ab15bcc5a06ba5c",
       "kind": "original_fig_player_support",
-      "registered_pages": 6,
-      "exact_rgb_pages": 6
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-story-30-rgb-reference.json",
+      "sha256": "49ed716e836adf5602e6ff39d04c792f2391be747a49d8f1610a7f4ddf5b9780",
+      "kind": "original_fig_story_30_opening",
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-story-42-rgb-reference.json",
+      "sha256": "84bf77124832f4ffac8d9326ae45b3afe74b85822ae9f538821ea8d0306bf7d1",
+      "kind": "original_fig_story_42_hit_reaction",
+      "registered_rgb_pairs": 9,
+      "exact_rgb_pages": 9,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-victory-rgb-reference.json",
+      "sha256": "ff3783c64aabd17e65efd0d7348cb2aa5b826f9fda80ba7af55208dc52cbad41",
+      "kind": "original_fig_victory_summary",
+      "registered_rgb_pairs": 19,
+      "exact_rgb_pages": 19,
+      "nonmatching_rgb_pairs": 0
     }
   ]
 }

@@ -13,6 +13,19 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def rgb_pairs(value: object):
+    if isinstance(value, dict):
+        rewrite = value.get("rewrite_rgb_sha256")
+        original = value.get("original_rgb_sha256")
+        if isinstance(rewrite, str) and isinstance(original, str):
+            yield rewrite, original
+        for child in value.values():
+            yield from rgb_pairs(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from rgb_pairs(child)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     root = Path(__file__).resolve().parent.parent
@@ -26,31 +39,29 @@ def main() -> int:
     try:
         sources: list[dict[str, object]] = []
         exact_digests: set[str] = set()
-        registered_pages = 0
-        for path in sorted((root / "scripts").glob("*-rgb-reference.json")):
+        registered_pairs = 0
+        nonmatching_pairs = 0
+        for path in sorted((root / "scripts").glob("fig-*-rgb-reference.json")):
             raw = path.read_bytes()
             data = json.loads(raw)
-            pages = data.get("matched_frames")
-            if not isinstance(pages, list):
+            pairs = list(rgb_pairs(data))
+            if not pairs:
                 continue
             exact = 0
-            for page in pages:
-                if not isinstance(page, dict):
-                    raise ValueError(f"matched frame is not an object: {path.name}")
-                rewrite = page.get("rewrite_rgb_sha256")
-                original = page.get("original_rgb_sha256")
+            for rewrite, original in pairs:
                 if rewrite == original:
                     exact += 1
-                    if isinstance(rewrite, str):
-                        exact_digests.add(rewrite)
+                    exact_digests.add(rewrite)
             sources.append({
                 "path": path.relative_to(root).as_posix(),
                 "sha256": sha256(raw),
                 "kind": data.get("kind"),
-                "registered_pages": len(pages),
+                "registered_rgb_pairs": len(pairs),
                 "exact_rgb_pages": exact,
+                "nonmatching_rgb_pairs": len(pairs) - exact,
             })
-            registered_pages += len(pages)
+            registered_pairs += len(pairs)
+            nonmatching_pairs += len(pairs) - exact
 
         output = {
             "schema_version": 1,
@@ -62,9 +73,10 @@ def main() -> int:
                 "completion manifest."
             ),
             "source_count": len(sources),
-            "registered_page_count": registered_pages,
+            "registered_rgb_pair_count": registered_pairs,
             "exact_rgb_page_count": sum(
                 int(source["exact_rgb_pages"]) for source in sources),
+            "nonmatching_rgb_pair_count": nonmatching_pairs,
             "unique_exact_rgb_page_count": len(exact_digests),
             "sources": sources,
         }
@@ -77,7 +89,8 @@ def main() -> int:
             "FIG RGB checkpoint: "
             f"{output['source_count']} references, "
             f"{output['exact_rgb_page_count']} exact pages, "
-            f"{output['unique_exact_rgb_page_count']} unique RGB pages")
+            f"{output['unique_exact_rgb_page_count']} unique RGB pages, "
+            f"{output['nonmatching_rgb_pair_count']} nonmatching pairs not claimed")
         return 0
     except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
         parser.exit(1, f"FIG RGB checkpoint: FAIL: {error}\n")
