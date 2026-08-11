@@ -2994,3 +2994,25 @@ pose is 12,923 ms, and expiry follows at 12,978 ms.  The B0-to-expiry change is
 3,484 indexed pixels in `[12,1,269,151]`; expiry-to-clean remains 3,704 pixels
 in `[12,120,91,199]` after the exact 989 ms hold, and the clean page again
 equals the round boundary.
+
+### FIG direct-item AF/B0 dismissal followed by same-turn expiry
+
+The type-10 item dispatcher now has independent populated-slot expiry
+checkpoints for the remaining two medium pairs.  Items 206/207 route through
+embedded abilities 66/67 and selectors `3bh/3eh`; items 222/223 do the same
+through 82/83 and `3ch/3fh`.  The original `47c6/4886` and `47fa/4894`
+slot-specific stubs converge on common installer/remover code, while
+`11fc/1235` preserves direct-item pose zero into `0c41`.  In both fixtures the
+removal completes on the fifth player turn exactly as ability 38's minimum
+attack-buff duration reaches zero, and `0da7` precedes the sole cleanup.
+
+Each DOSBox-X observation supplies thirty-five stable exact 320x200 RGB pages:
+pose zero, stable fade steps, three sampled dismissal stencil pages, restored
+pose, expiry/cleanup, full enemy physical response, ten damage rises, and the
+next command.  Eight live-DAC or mid-page pages per path remain explicitly
+unpaired.  AF dismissal starts at 14,683 ms, restores at 15,343 ms, and expires
+at 15,398 ms; B0 starts at 14,518 ms, restores at 15,178 ms, and expires at
+15,233 ms.  Both retain the exact 989 ms expiry hold.  AF removal changes
+3,484 indexed pixels in `[16,1,293,151]`, while B0 changes the same count in
+`[16,1,269,151]`; both then change 3,677 pixels in `[16,120,95,199]` at
+cleanup, whose full page equals the later round boundary.
