@@ -3120,3 +3120,22 @@ unpaired.  The nested voices begin at 10,118 ms and 11,438 ms, the final
 restored pose appears at 12,593 ms, expiry follows at 12,648 ms and holds 989
 ms before the sole cleanup.  The deterministic rewrite now contains 198
 submitted pages and ends at 15,836 ms.
+
+### FIG learned composite damage followed by same-turn expiry
+
+The same `38h/3ah` pair is reachable as learned ability 90 rather than only
+through item 230.  This route retains `4338`'s pose-zero then pose-four setup,
+but `57f2` still shares the first handler's dark DAC state with the second and
+reaches `585e/4417` only once.  Consequently the common 40 AP payment and
+restoration occur after both nested phases, and `0c41` overlays the expiring
+attack buff on restored pose four one tick later.
+
+A separate 75-second original capture contributes sixty-nine exact full-page
+RGB matches: both learned poses, four stable darkening pages, all registered
+pages of both nested phases, the final three restoration checkpoints, expiry,
+cleanup, monster attack, seven stable shake pages, ten damage rises, round
+boundary, and next command.  Fourteen selector, live-DAC, reaction, alternate,
+or quit-boundary observations remain explicitly unpaired.  The two nested
+voices begin at 10,283 ms and 11,603 ms; restored pose four appears at 12,758
+ms, expiry at 12,813 ms, cleanup 989 ms later, and the deterministic 201-page
+replay reaches the next command at 16,001 ms.
