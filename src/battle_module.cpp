@@ -2909,45 +2909,61 @@ bool present_round_events(
                 // party-slot status helper instead moves the panel to x=0,
                 // replaces the fighter with a portrait and cannot match the
                 // original 0c41 path.
-                const BattleSessionEvent* physical_backing = nullptr;
-                std::optional<std::size_t> physical_pose;
+                std::optional<BattleSessionEvent> retained_action;
+                std::optional<std::size_t> retained_pose;
                 if (event_index != 0) {
                     const auto& previous = result.events[event_index - 1U];
                     if (previous.kind == BattleEventKind::player_attack &&
                         !previous.source_is_monster &&
                         previous.source == event.source &&
                         previous.source < visual.party_count) {
-                        physical_backing = &previous;
-                        physical_pose = previous.critical ? 3U : 2U;
+                        retained_action = previous;
+                        retained_pose = previous.critical ? 3U : 2U;
+                    } else if (previous.kind == BattleEventKind::skipped &&
+                               !previous.source_is_monster &&
+                               previous.source == event.source &&
+                               previous.source < visual.party_count) {
+                        // 0694 sets 31e1 to the incapacitated actor before it
+                        // skips command dispatch.  31e3 remains that actor's
+                        // own 137a anchor and 31dd is pose zero, so 0da7 still
+                        // draws a full fighter action card rather than the
+                        // ordinary portrait used by 2bb5.
+                        retained_action = previous;
+                        retained_action->kind =
+                            BattleEventKind::player_attack;
+                        retained_action->target_is_monster = false;
+                        retained_action->target = event.source;
+                        retained_action->action_anchor_is_target = false;
+                        retained_pose = 0U;
                     }
                 }
                 const auto present_player_expiry_card = [&](std::span<const std::uint8_t> text) {
-                    if (physical_backing != nullptr && physical_pose) {
+                    if (retained_action && retained_pose) {
                         auto frame = compose_event_frame(
                             context, base_surface, encounter, items, fighters,
                             menu_sprites, font, fallback, visual,
-                            *physical_backing, *physical_pose, {}, std::nullopt,
+                            *retained_action, *retained_pose, {}, std::nullopt,
                             encounter_directory_offset);
                         const auto [target_x, target_y] = event_target_center(
                             encounter, items, context.game_root, visual,
-                            *physical_backing, fighters);
+                            *retained_action, fighters);
                         static_cast<void>(target_y);
                         const auto action_anchor =
-                            physical_backing->action_anchor_is_target
-                                ? (physical_backing->target_is_monster
+                            retained_action->action_anchor_is_target
+                                ? (retained_action->target_is_monster
                                        ? target_x / 4 - 3
                                        : 12 + static_cast<int>(
-                                                  physical_backing->target) *
+                                                  retained_action->target) *
                                                   18)
                                 : 12 + static_cast<int>(
-                                           physical_backing->source) * 18;
+                                           retained_action->source) * 18;
                         auto placement = fig_fighter_placement(
-                            visual.party[physical_backing->source].identity,
-                            visual.party[physical_backing->source].party_index,
-                            *physical_pose, fighters.sprites().size());
+                            visual.party[retained_action->source].identity,
+                            visual.party[retained_action->source].party_index,
+                            *retained_pose, fighters.sprites().size());
                         const auto normal_anchor =
                             12 + static_cast<int>(
-                                     visual.party[physical_backing->source]
+                                     visual.party[retained_action->source]
                                          .party_index) *
                                      18;
                         placement.left +=

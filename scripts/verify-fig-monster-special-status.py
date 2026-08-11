@@ -12,7 +12,7 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
-PAGE_FRAMES = (3, 4, 5, 6, 7, 8, 9)
+PAGE_FRAMES = (3, 4, 5, 6, 7, 8, 9, 30, 31, 33)
 PAGE_LABELS = (
     "target selection immediately before the status action",
     "20e7 bare preparation page",
@@ -21,6 +21,9 @@ PAGE_LABELS = (
     "status icon committed while retaining the name card",
     "22e0 bare cleanup page",
     "following monster physical-attack card",
+    "0694 skipped-player recovery card retains own-slot pose zero",
+    "0d98 bare cleanup after skipped-player recovery",
+    "post-recovery replay exit page",
 )
 
 
@@ -54,8 +57,7 @@ def main() -> int:
                 (reference.get("ability_id"), reference.get("effect_code")) != \
                     (117, 0x64) or \
                 "0da7" not in reference.get("rewrite_timeline_note", "") or \
-                "fig-player-buff-expiry" not in \
-                    reference.get("rewrite_timeline_note", "") or \
+                "pose zero" not in reference.get("rewrite_timeline_note", "") or \
                 not isinstance(pages, list) or \
                 tuple(page.get("rewrite_frame") for page in pages) != \
                     PAGE_FRAMES or \
@@ -79,6 +81,16 @@ def main() -> int:
             raise ValueError("monster-special-status capture boundary differs")
         for name in ("capture_video_sha256", "capture_manifest_sha256"):
             digest(reference.get(name), name)
+        for name in ("tail_capture_video_sha256",
+                     "tail_capture_manifest_sha256"):
+            digest(reference.get(name), name)
+        if reference.get("tail_capture_review_fps") != 70 or \
+                reference.get("tail_capture_review_frames") != 2099 or \
+                reference.get("tail_capture_video_frames") != 2102 or \
+                reference.get("tail_capture_dosbox_exit_code") != 0 or \
+                "stable tail pages" not in \
+                    reference.get("tail_capture_limitation", ""):
+            raise ValueError("monster-special-status tail capture differs")
 
         args.output.mkdir(parents=True, exist_ok=True)
         trace_path = args.output / "trace.json"
@@ -120,6 +132,11 @@ def main() -> int:
         if tuple(frame_times.get(index) for index in range(4, 10)) != \
                 (0, 0, 0, 384, 659, 824):
             raise ValueError("26af selected-player status flip timing differs")
+        if tuple(frame_times.get(index) for index in (29, 30, 31, 32, 33)) != \
+                (2309, 2474, 3463, 3738, 3848) or \
+                frame_times[31] - frame_times[30] != 989 or \
+                frame_times[32] - frame_times[31] != 275:
+            raise ValueError("0694/0da7/0d98 recovery timing differs")
 
         frames = load_indexed_frames(frame_path)
         if len(frames) != reference["rewrite_video"]["frames"]:
@@ -141,9 +158,28 @@ def main() -> int:
                 raise ValueError(
                     "invalid original review frame: " + page["label"])
 
+        # With one actor, 137a places pose zero at its own x=48 action anchor;
+        # 0db5 subtracts eight Mode-X columns and produces the x=16 four-column
+        # panel.  The exact original page above additionally includes the
+        # fighter down to y=199, so compare its whole changed footprint with
+        # 0d98's following bare page rather than merely checking the text.
+        recovery_pixels = frames[30][0]
+        clean_pixels = frames[31][0]
+        changed = [
+            (index % 320, index // 320)
+            for index, (left, right) in enumerate(
+                zip(recovery_pixels, clean_pixels)) if left != right
+        ]
+        if len(changed) != 3677 or (
+                min(x for x, _ in changed), min(y for _, y in changed),
+                max(x for x, _ in changed), max(y for _, y in changed)) != \
+                (16, 120, 95, 199):
+            raise ValueError("skipped-player recovery lost pose-zero anchor")
+
         print(
             "FIG monster-special-status checkpoint: 20e7/26f3/262f/status/"
-            "22e0 pages and timing exactly match original RGB")
+            "22e0 plus skipped-player 0da7/0d98 pages and timing exactly "
+            "match original RGB")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:

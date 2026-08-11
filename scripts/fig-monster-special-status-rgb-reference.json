@@ -21,7 +21,7 @@
     "direct_updates": 0,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "77a1fbfa878880d6"
+    "fnv1a64": "88d3e4ee9405393c"
   },
   "rewrite_audio": {
     "music_calls": 1,
@@ -102,7 +102,44 @@
       "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
       "rewrite_rgb_sha256": "82e4890bf4d9b5e8a039882981749e21b9a82b8f862c3985039816ef60db7dde",
       "original_rgb_sha256": "82e4890bf4d9b5e8a039882981749e21b9a82b8f862c3985039816ef60db7dde"
+    },
+    {
+      "label": "0694 skipped-player recovery card retains own-slot pose zero",
+      "rewrite_frame": 30,
+      "original_review_frame": 716,
+      "original_png_sha256": "7c3c7e323fd30227830b6e5213c78a15de38c71b9342d1df63d9c7c7745c45f8",
+      "rewrite_indexed_sha256": "67604c65932a4531ac572f1aba28d96bd22878e6af527cdc4c36fd797d52352d",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "c217e0d176ce38e1af6974c70c3d7d979268063c1a7fd61e4e4b110bd2f9df67",
+      "original_rgb_sha256": "c217e0d176ce38e1af6974c70c3d7d979268063c1a7fd61e4e4b110bd2f9df67"
+    },
+    {
+      "label": "0d98 bare cleanup after skipped-player recovery",
+      "rewrite_frame": 31,
+      "original_review_frame": 791,
+      "original_png_sha256": "9c2cf406d6f599d885309819214111043e611009f405facc793c8ecb084b1899",
+      "rewrite_indexed_sha256": "ed31a6ef96e4cacee43e28dabc9704e49725ff3d76af71e8f52bb5622fb0cef0",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002",
+      "original_rgb_sha256": "524cf5a2100146e0242c805d99db5c2b041930cd8e44cdba123a58dbdf332002"
+    },
+    {
+      "label": "post-recovery replay exit page",
+      "rewrite_frame": 33,
+      "original_review_frame": 820,
+      "original_png_sha256": "ff8c7aaf1d9f91ce184d5e640ece7cd80ddfc2fe10e64654496f62e89bb0fff3",
+      "rewrite_indexed_sha256": "9c34b73ddf77be269cb3502c5a394a95bbbbf676c5f79f85b9ebbc53eaeb00f3",
+      "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
+      "rewrite_rgb_sha256": "c8e6c5df862ac5682db339506b9ae8509cea2b25b5f7d100190e4d332abf9a6e",
+      "original_rgb_sha256": "c8e6c5df862ac5682db339506b9ae8509cea2b25b5f7d100190e4d332abf9a6e"
     }
   ],
-  "rewrite_timeline_note": "The deterministic tail includes the selected player status naturally expiring after a physical attack; its 0da7 card now retains the final action anchor and its 0d98 cleanup is bare, as proved independently by fig-player-buff-expiry-rgb-reference.json."
+  "rewrite_timeline_note": "The deterministic tail includes the selected player status naturally expiring after 0694 skips that incapacitated actor. FIG 0da7 retains the actor own-slot pose zero and anchors the card at x=16; 0d98 then submits a bare cleanup page.",
+  "tail_capture_video_sha256": "fd15ae309687c2655777610f6bc42234474c887e3ff5a3024e2eaa82618f61f9",
+  "tail_capture_manifest_sha256": "fb9b8051f3be230316c765a8d3228f019858444af378d776d6064db43d4764bd",
+  "tail_capture_review_fps": 70,
+  "tail_capture_review_frames": 2099,
+  "tail_capture_video_frames": 2102,
+  "tail_capture_dosbox_exit_code": 0,
+  "tail_capture_limitation": "A fresh capture of the same released FIG.EXE, fixture and AUTOTYPE did not sample the un-delayed 26f3 preparation page, so the earlier capture remains its evidence. The fresh capture registers only stable tail pages: the skipped actor pose-zero recovery card, bare 0d98 cleanup and replay-exit page."
 }
