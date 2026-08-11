@@ -3160,3 +3160,27 @@ selector, DAC, result or quit observations remain explicitly unpaired.  The
 nested voices begin at 10,283 ms and 11,657 ms; the restored page appears at
 13,527 ms, expiry at 13,582 ms, and the deterministic 185-page replay reaches
 the next command at 14,956 ms.
+
+### FIG targetless learned double-missing-medium composite and expiry
+
+Learned ability 85 closes a different `6bh` envelope boundary.  Its target
+flags are `84c0h`, so target mode is zero: the common `4338` learned-action
+pose must remain anchored on the source player instead of borrowing the
+selected monster's center.  `57f2` then dispatches nested effects `43h` and
+`36h`; because the fixture has neither required medium, both enter `58fa`.
+The original does not restart pose zero/four, pay, restore, or clean between
+these two failures.  It darkens once, displays both missing-medium cards on
+the same pose-four page, then reaches the sole `585e` debit and five-step
+`4417` restoration before `0c41/0da7` expires the attack buff in that same
+player turn.
+
+The successful 75-second original observation contributes thirty-two exact
+full 320x200 RGB pages: both learned poses, four stable darkening checkpoints,
+both `58fa` cards, expiry/cleanup, the stable enemy physical response, all ten
+damage rises, action tail, round boundary, and next command.  Eleven selector,
+live-DAC restoration, mid-shake, or quit observations remain explicitly
+unpaired.  The two `SP002.VOC` calls and cards begin at 10,558 ms and
+11,052 ms, restoration starts at 11,546 ms, expiry follows its final step at
+11,821 ms, and the card holds 989 ms before cleanup.  The deterministic
+rewrite now contains 161 submitted pages and reaches the next command at
+14,845 ms.

@@ -3678,6 +3678,27 @@ if(BUILD_TESTING)
         PROPERTIES DEPENDS
         fig_player_buff_expiry_ability_composite_status_damage_prepare)
     add_test(
+        NAME fig_player_buff_expiry_ability_composite_missing_media_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-ability-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-composite-missing-media-game"
+                --composite-missing-media
+    )
+    add_test(
+        NAME fig_player_buff_expiry_ability_composite_missing_media_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry-ability-composite-missing-media.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-composite-missing-media-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-composite-missing-media"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-ability-composite-missing-media-rgb-reference.json"
+    )
+    set_tests_properties(
+        fig_player_buff_expiry_ability_composite_missing_media_validation
+        PROPERTIES DEPENDS
+        fig_player_buff_expiry_ability_composite_missing_media_prepare)
+    add_test(
         NAME fig_player_buff_expiry_ability_medium_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-ability-fixture.py"

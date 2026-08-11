@@ -2360,10 +2360,86 @@ bool present_round_events(
                 const auto direct_item =
                     event.source < commands.size() &&
                     commands[event.source].kind == PlayerCommandKind::item;
+                auto composite_group_end = event_index;
+                if (!direct_item) {
+                    while (composite_group_end + 1U < result.events.size()) {
+                        const auto& next =
+                            result.events[composite_group_end + 1U];
+                        if (next.kind != BattleEventKind::missing_medium ||
+                            next.source_is_monster ||
+                            next.source_is_summoned_ally ||
+                            !fig_same_presented_action(event, next)) {
+                            break;
+                        }
+                        ++composite_group_end;
+                    }
+                }
                 auto pose_event = event;
                 pose_event.kind = BattleEventKind::player_ability;
                 const auto pose_count = direct_item ? 1U : 2U;
                 const auto poses = fig_player_ability_poses();
+                if (composite_group_end != event_index) {
+                    // 57f2 wraps both failed nested selectors in one learned
+                    // 4338 action.  The actor poses and 43ce darkening occur
+                    // once, both 58fa cards share the dark pose-four page, and
+                    // only the final return reaches 585e/4417.
+                    BattleSurface retained;
+                    for (std::size_t phase = 0; phase < 2U; ++phase) {
+                        retained = compose_event_frame(
+                            context, base_surface, encounter, items, fighters,
+                            menu_sprites, font, fallback, visual, pose_event,
+                            poses[phase], {}, std::nullopt,
+                            encounter_directory_offset);
+                        present_battle_surface(context, retained);
+                        if (!delay(action_delay)) return false;
+                    }
+                    for (auto step = 0; step < 5; ++step) {
+                        darken_fig_dispatcher_palette(retained);
+                        present_battle_surface(context, retained);
+                        if (!delay(effect_delay)) return false;
+                    }
+                    BattleSurface missing;
+                    for (auto index = event_index;
+                         index <= composite_group_end; ++index) {
+                        present_missing_medium_card(
+                            context, base_surface, encounter, items, fighters,
+                            menu_sprites, font, fallback, visual,
+                            result.events[index], abilities,
+                            encounter_directory_offset, poses[1],
+                            &retained.palette, &missing);
+                        play_voice_cue(
+                            context, {FigVoiceFile::sp, 2,
+                                      FigVoiceTiming::before_action});
+                        if (!delay(summoned_action_card_delay)) return false;
+                    }
+                    present_player_resource_cost(event);
+                    for (auto step = 0; step < 5; ++step) {
+                        brighten_fig_dispatcher_palette(
+                            missing, base_surface.palette);
+                        present_battle_surface(context, missing);
+                        if (!delay(effect_delay)) return false;
+                    }
+                    const auto expiry_after_group =
+                        composite_group_end + 1U < result.events.size() &&
+                        result.events[composite_group_end + 1U].kind ==
+                            BattleEventKind::status_expired &&
+                        !result.events[composite_group_end + 1U]
+                             .target_is_monster &&
+                        result.events[composite_group_end + 1U].source ==
+                            event.source;
+                    if (!expiry_after_group) {
+                        const auto clean = compose_event_frame(
+                            context, base_surface, encounter, items, fighters,
+                            menu_sprites, font, fallback, visual, event,
+                            std::nullopt, {}, std::nullopt,
+                            encounter_directory_offset, std::nullopt, false,
+                            false);
+                        present_battle_surface(context, clean);
+                        if (!delay(ward_card_delay)) return false;
+                    }
+                    event_index = composite_group_end;
+                    continue;
+                }
                 for (std::size_t phase = 0; phase < pose_count; ++phase) {
                     present_event_frame(
                         context, base_surface, encounter, items, fighters,

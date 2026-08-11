@@ -390,7 +390,9 @@ BattleRoundResult BattleSession::play_round(
             const auto add_missing_medium = [&](std::uint16_t presentation_id,
                                                 std::uint16_t effect_code,
                                                 bool target_is_monster,
-                                                std::size_t target) {
+                                                std::size_t target,
+                                                bool action_anchor_is_target =
+                                                    true) {
                 BattleSessionEvent event;
                 event.kind = BattleEventKind::missing_medium;
                 event.source = actor;
@@ -398,6 +400,7 @@ BattleRoundResult BattleSession::play_round(
                 event.target = target;
                 event.ability_id = presentation_id;
                 event.effect_code = effect_code;
+                event.action_anchor_is_target = action_anchor_is_target;
                 result.events.push_back(event);
             };
             const auto apply_player_medium = [&](std::uint16_t effect_code,
@@ -483,7 +486,8 @@ BattleRoundResult BattleSession::play_round(
             const auto apply_composite = [&](
                 std::array<std::uint8_t, 2> nested,
                 std::uint16_t presentation_id,
-                std::size_t preferred_target) {
+                std::size_t preferred_target,
+                bool command_targets_monster) {
                 const auto target_index = first_living_monster(preferred_target);
                 if (target_index == no_target) return false;
                 const auto party_target = preferred_target < party_count_
@@ -500,8 +504,11 @@ BattleRoundResult BattleSession::play_round(
                         // return address. A 6b wrapper therefore continues to
                         // its second nested selector and remains a successful,
                         // paid command even when one or both handlers fail.
-                        add_missing_medium(presentation_id, effect_code, true,
-                                           target_index);
+                        add_missing_medium(
+                            presentation_id, effect_code,
+                            command_targets_monster,
+                            command_targets_monster ? target_index : actor,
+                            command_targets_monster);
                         continue;
                     }
                     if (apply_tactical(
@@ -834,7 +841,7 @@ BattleRoundResult BattleSession::play_round(
                     applied = apply_composite(
                         {item.first_composite_effect,
                          item.second_composite_effect},
-                        item.id, command.target);
+                        item.id, command.target, item.targets_monster());
                 } else if (item.effect_code == 0) {
                     applied = true;  // dispatch entry zero is a literal RET
                     result.events.push_back({
@@ -1035,7 +1042,8 @@ BattleRoundResult BattleSession::play_round(
                     !apply_composite(
                         {composite_effects_[command.ability_id]->first_effect,
                          composite_effects_[command.ability_id]->second_effect},
-                        command.ability_id, command.target)) {
+                        command.ability_id, command.target,
+                        (target_mode & 0x2000U) != 0)) {
                     if (!class_five) {
                         *resource = static_cast<std::uint16_t>(
                             *resource + ability.cost);

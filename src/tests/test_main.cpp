@@ -5234,6 +5234,10 @@ void test_battle_session(const std::filesystem::path& game_root) {
     for (const auto& event : missing_composite_round.events) {
         if (event.kind == swd2::BattleEventKind::missing_medium &&
             event.source == 0 && event.ability_id == 85) {
+            require(!event.target_is_monster && event.target == 0 &&
+                        !event.action_anchor_is_target,
+                    "FIG targetless 57f2/58fa failure did not retain the "
+                    "source actor anchor");
             missing_nested_effects.push_back(event.effect_code);
         }
     }
