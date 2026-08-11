@@ -3184,3 +3184,28 @@ unpaired.  The two `SP002.VOC` calls and cards begin at 10,558 ms and
 11,821 ms, and the card holds 989 ms before cleanup.  The deterministic
 rewrite now contains 161 submitted pages and reaches the next command at
 14,845 ms.
+
+### FIG target-flagged item double-missing-medium composite and expiry
+
+Item 225 is the direct-item counterpart of ability 85, but its own target byte
+is `20h`.  `1138` therefore keeps one pose-zero page under the selected
+monster while deriving embedded ability 85 and entering `57f2`.  Both nested
+effects (`43h/36h`) fail through `58fa` in the empty-medium fixture, yet they
+remain one item action: the pose and `43ce` fade occur once, both failure cards
+share the same dark target anchor, and only the outer return performs the sole
+`585e/4417` payment/restoration and consumes the inventory slot.  The former
+rewrite incorrectly repeated the entire item envelope for the second failure;
+its shared `58fa` card helper also ignored the target anchor and redrew the
+actor at the source-party column.
+
+The 75-second original observation provides ten exact full 320x200 RGB pages
+and twenty-two exact top-197 crops.  Together they cover pose zero, stable
+darkening, both failure cards, restoration, same-turn expiry, cleanup, the
+complete stable enemy physical response, ten damage rises, action tail, round
+boundary, and next command.  Each crop excludes only the established
+eight-pixel ZMBV artifact on the selected party-card edge; eight live selector,
+DAC, alternating-shake, or transition observations remain explicitly
+unpaired.  The two `SP002.VOC` calls begin at 10,393 ms and 10,887 ms,
+restoration begins at 11,381 ms, expiry follows at 11,656 ms, and the 989 ms
+expiry hold ends at 12,645 ms.  The corrected deterministic replay contains
+158 submitted pages and reaches the next command at 14,680 ms.

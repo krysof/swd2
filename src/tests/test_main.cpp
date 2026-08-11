@@ -5247,6 +5247,37 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     std::vector<std::uint16_t>{0x43, 0x36},
             "FIG 57f2 did not continue/pay two failed nested medium effects");
 
+    auto missing_composite_item_state = missing_medium_state;
+    missing_composite_item_state.set_u16(0x382, 225);
+    missing_composite_item_state.set_u16(actor_zero + 0x55, 200);
+    auto missing_composite_item_session = swd2::BattleSession::create(
+        missing_composite_item_state, selected->get(), items);
+    auto missing_composite_item_commands = escape_commands;
+    missing_composite_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto missing_composite_item_round =
+        missing_composite_item_session.play_round(
+            missing_composite_item_commands, abilities, zero_random);
+    std::vector<std::uint16_t> missing_item_nested_effects;
+    for (const auto& event : missing_composite_item_round.events) {
+        if (event.kind == swd2::BattleEventKind::missing_medium &&
+            event.source == 0 && event.ability_id == 225) {
+            require(event.target_is_monster && event.target == 0 &&
+                        event.action_anchor_is_target,
+                    "FIG target-flagged item 57f2/58fa failure lost its "
+                    "selected-monster action anchor");
+            missing_item_nested_effects.push_back(event.effect_code);
+        }
+    }
+    require(missing_composite_item_session.monsters()[0].hit_points == 120 &&
+                missing_composite_item_session.party()[0].ability_points ==
+                    100 &&
+                missing_composite_item_session.inventory()[0] == 0 &&
+                missing_item_nested_effects ==
+                    std::vector<std::uint16_t>{0x43, 0x36},
+            "FIG item 225 did not dispatch/pay/consume two missing media");
+
     // Encounter data offset 1252 contains monster 338, whose generic ability
     // 127 requests medium AE and has exactly three 50-AP casts in its 150 pool.
     // 23b1 refunds the first prepaid cast when it summons the missing medium.

@@ -28,6 +28,8 @@ EXPECTED_COMPOSITE_MEDIA_SAVE = \
     "dca08598ba229a53c57866eec93676f2628a5f69c030c65bc96e6f966919bbd0"
 EXPECTED_COMPOSITE_DAMAGE_SAVE = \
     "5830d3dd67c76b9dd7f7d0f508e48d400b0ec1f552975c9fe25e6a9b6e5ec339"
+EXPECTED_COMPOSITE_MISSING_MEDIA_SAVE = \
+    "71918bc80a20815ec32427579f4755e15c9987a62760d1936102881a93bbbc61"
 EXPECTED_AF_MEDIUM_SAVE = \
     "8d0feca88f2056ae83aa3c3ab266fed141e3efbedd870cab64a0225432736f60"
 EXPECTED_B0_MEDIUM_SAVE = \
@@ -88,6 +90,9 @@ def main() -> int:
     finish.add_argument(
         "--composite-damage-item", action="store_true",
         help="replace direct damage item 192 with item 230/effect 6bh")
+    finish.add_argument(
+        "--composite-missing-media-item", action="store_true",
+        help="replace direct damage item 192 with item 225/effect 6bh")
     finish.add_argument(
         "--medium-item-af", action="store_true",
         help="replace direct damage item 192 with item 206/effect 3bh")
@@ -172,6 +177,7 @@ def main() -> int:
             193 if args.empty_medium_item else
             222 if args.medium_item_b0 else
             206 if args.medium_item_af else
+            225 if args.composite_missing_media_item else
             230 if args.composite_damage_item else
             195 if args.composite_media_item else
             191 if args.medium_item else
@@ -202,6 +208,8 @@ def main() -> int:
             EXPECTED_AF_MEDIUM_SAVE if args.medium_item_af else
             EXPECTED_COMPOSITE_DAMAGE_SAVE
             if args.composite_damage_item else
+            EXPECTED_COMPOSITE_MISSING_MEDIA_SAVE
+            if args.composite_missing_media_item else
             EXPECTED_COMPOSITE_MEDIA_SAVE if args.composite_media_item else
             EXPECTED_MEDIUM_SAVE if args.medium_item else
             EXPECTED_BARRIER_SAVE if args.barrier_item else

@@ -3,11 +3,11 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG reference containing registered rewrite/original RGB digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 183,
-  "registered_rgb_pair_count": 4319,
-  "exact_rgb_page_count": 4308,
+  "source_count": 184,
+  "registered_rgb_pair_count": 4329,
+  "exact_rgb_page_count": 4318,
   "nonmatching_rgb_pair_count": 11,
-  "unique_exact_rgb_page_count": 2289,
+  "unique_exact_rgb_page_count": 2290,
   "sources": [
     {
       "path": "scripts/fig-ability-pages-rgb-reference.json",
@@ -751,6 +751,14 @@
       "kind": "original_fig_player_buff_expiry_after_item_composite_media",
       "registered_rgb_pairs": 71,
       "exact_rgb_pages": 71,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-player-buff-expiry-item-composite-missing-media-rgb-reference.json",
+      "sha256": "f65515a3bca7c366d943ad794789e9afcbcef653e501f9ff89c89cc02bb52a62",
+      "kind": "original_fig_player_buff_expiry_after_item_composite_missing_media",
+      "registered_rgb_pairs": 10,
+      "exact_rgb_pages": 10,
       "nonmatching_rgb_pairs": 0
     },
     {

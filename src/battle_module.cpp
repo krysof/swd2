@@ -1994,17 +1994,29 @@ void present_missing_medium_card(
                                       event.source < visual.party_count
                                   ? std::optional<std::size_t>(event.source)
                                   : std::nullopt;
+    std::optional<int> action_mode_x_anchor;
+    if (action_actor) {
+        const auto [target_x, target_y] = event_target_center(
+            encounter, items, context.game_root, visual, event, fighters);
+        static_cast<void>(target_y);
+        action_mode_x_anchor = event.action_anchor_is_target
+            ? (event.target_is_monster
+                   ? target_x / 4 - 3
+                   : 12 + static_cast<int>(event.target) * 18)
+            : 12 + static_cast<int>(event.source) * 18;
+    }
     draw_fig_party_cards(
         frame, menu_sprites,
         std::span<const BattlePartyMember>(visual.party).first(
             visual.party_count),
-        action_actor);
+        action_actor, action_mode_x_anchor);
     if (action_actor) {
         // Learned abilities reach 58fa after 4338 has left pose4 visible.
         // Direct items can instead enter it from 1138 with pose0 retained.
         draw_fighter_pose(
             frame, fighters, visual.party[*action_actor],
-            player_pose.value_or(fig_player_ability_poses()[1]));
+            player_pose.value_or(fig_player_ability_poses()[1]),
+            action_mode_x_anchor);
     }
 
     // 58fa programs 384a with x=10h/y=4bh/18 columns, then 7284 writes
@@ -2361,30 +2373,28 @@ bool present_round_events(
                     event.source < commands.size() &&
                     commands[event.source].kind == PlayerCommandKind::item;
                 auto composite_group_end = event_index;
-                if (!direct_item) {
-                    while (composite_group_end + 1U < result.events.size()) {
-                        const auto& next =
-                            result.events[composite_group_end + 1U];
-                        if (next.kind != BattleEventKind::missing_medium ||
-                            next.source_is_monster ||
-                            next.source_is_summoned_ally ||
-                            !fig_same_presented_action(event, next)) {
-                            break;
-                        }
-                        ++composite_group_end;
+                while (composite_group_end + 1U < result.events.size()) {
+                    const auto& next =
+                        result.events[composite_group_end + 1U];
+                    if (next.kind != BattleEventKind::missing_medium ||
+                        next.source_is_monster ||
+                        next.source_is_summoned_ally ||
+                        !fig_same_presented_action(event, next)) {
+                        break;
                     }
+                    ++composite_group_end;
                 }
                 auto pose_event = event;
                 pose_event.kind = BattleEventKind::player_ability;
                 const auto pose_count = direct_item ? 1U : 2U;
                 const auto poses = fig_player_ability_poses();
                 if (composite_group_end != event_index) {
-                    // 57f2 wraps both failed nested selectors in one learned
-                    // 4338 action.  The actor poses and 43ce darkening occur
-                    // once, both 58fa cards share the dark pose-four page, and
-                    // only the final return reaches 585e/4417.
+                    // 57f2 wraps both failed nested selectors in one 4338 or
+                    // 1138 action. The actor pose(s) and 43ce darkening occur
+                    // once, both 58fa cards share the final retained page, and
+                    // only the outer return reaches 585e/4417.
                     BattleSurface retained;
-                    for (std::size_t phase = 0; phase < 2U; ++phase) {
+                    for (std::size_t phase = 0; phase < pose_count; ++phase) {
                         retained = compose_event_frame(
                             context, base_surface, encounter, items, fighters,
                             menu_sprites, font, fallback, visual, pose_event,
@@ -2405,7 +2415,8 @@ bool present_round_events(
                             context, base_surface, encounter, items, fighters,
                             menu_sprites, font, fallback, visual,
                             result.events[index], abilities,
-                            encounter_directory_offset, poses[1],
+                            encounter_directory_offset,
+                            poses[pose_count - 1U],
                             &retained.palette, &missing);
                         play_voice_cue(
                             context, {FigVoiceFile::sp, 2,
