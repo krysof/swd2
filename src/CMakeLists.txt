@@ -3637,6 +3637,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_buff_expiry_ability_validation PROPERTIES
         DEPENDS fig_player_buff_expiry_ability_prepare)
     add_test(
+        NAME fig_player_buff_expiry_missing_medium_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-ability-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-missing-medium-game"
+                --missing-medium
+    )
+    add_test(
+        NAME fig_player_buff_expiry_missing_medium_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry-missing-medium.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-missing-medium-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-missing-medium"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-missing-medium-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_buff_expiry_missing_medium_validation
+        PROPERTIES DEPENDS fig_player_buff_expiry_missing_medium_prepare)
+    add_test(
         NAME fig_player_buff_expiry_item_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-item-fixture.py"

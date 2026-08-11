@@ -2393,14 +2393,22 @@ bool present_round_events(
                         present_battle_surface(context, missing);
                         if (!delay(effect_delay)) return false;
                     }
-                    const auto clean = compose_event_frame(
-                        context, base_surface, encounter, items, fighters,
-                        menu_sprites, font, fallback, visual, event,
-                        std::nullopt, {}, std::nullopt,
-                        encounter_directory_offset, std::nullopt, false,
-                        false);
-                    present_battle_surface(context, clean);
-                    if (!delay(ward_card_delay)) return false;
+                    const auto expires_here =
+                        event_index + 1U < result.events.size() &&
+                        result.events[event_index + 1U].kind ==
+                            BattleEventKind::status_expired &&
+                        !result.events[event_index + 1U].target_is_monster &&
+                        result.events[event_index + 1U].source == event.source;
+                    if (!expires_here) {
+                        const auto clean = compose_event_frame(
+                            context, base_surface, encounter, items, fighters,
+                            menu_sprites, font, fallback, visual, event,
+                            std::nullopt, {}, std::nullopt,
+                            encounter_directory_offset, std::nullopt, false,
+                            false);
+                        present_battle_surface(context, clean);
+                        if (!delay(ward_card_delay)) return false;
+                    }
                     continue;
                 }
                 // 58fa is entered after the ordinary learned-ability debit;
@@ -2423,13 +2431,22 @@ bool present_round_events(
                 // 58fa returns through the ordinary player-action caller and
                 // then 0c41. Even without an expiring status, 0d98 exposes a
                 // bare 2db8 page for five ticks before initiative advances.
-                const auto clean = compose_event_frame(
-                    context, base_surface, encounter, items, fighters,
-                    menu_sprites, font, fallback, visual, event,
-                    std::nullopt, {}, std::nullopt,
-                    encounter_directory_offset, std::nullopt, false, false);
-                present_battle_surface(context, clean);
-                if (!delay(ward_card_delay)) return false;
+                const auto expires_here =
+                    event_index + 1U < result.events.size() &&
+                    result.events[event_index + 1U].kind ==
+                        BattleEventKind::status_expired &&
+                    !result.events[event_index + 1U].target_is_monster &&
+                    result.events[event_index + 1U].source == event.source;
+                if (!expires_here) {
+                    const auto clean = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                    present_battle_surface(context, clean);
+                    if (!delay(ward_card_delay)) return false;
+                }
             }
             continue;
         }
@@ -2999,6 +3016,25 @@ bool present_round_events(
                         // ticks. 0c41/0da7 retains it for a same-turn expiry.
                         retained_action = previous;
                         retained_pose = 0U;
+                    } else if (previous.kind ==
+                                   BattleEventKind::missing_medium &&
+                               !previous.source_is_monster &&
+                               !previous.source_is_summoned_ally &&
+                               previous.source == event.source &&
+                               previous.source < visual.party_count) {
+                        // 58fa returns without changing the common player
+                        // action globals. Learned callers therefore retain
+                        // pose four, while 1138's direct-item caller retains
+                        // pose zero, at the same selected action anchor.
+                        retained_action = previous;
+                        retained_action->kind =
+                            BattleEventKind::player_ability;
+                        retained_pose =
+                            previous.source < commands.size() &&
+                                    commands[previous.source].kind ==
+                                        PlayerCommandKind::item
+                                ? 0U
+                                : 4U;
                     }
                 }
                 const auto present_player_expiry_card = [&](std::span<const std::uint8_t> text) {
