@@ -3146,6 +3146,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_ally_zero_validation PROPERTIES
         DEPENDS fig_ally_zero_prepare)
     add_test(
+        NAME fig_ally_flee_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-flee-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-flee-save"
+    )
+    add_test(
+        NAME fig_ally_flee_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ally-flee.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-flee-save"
+                "${CMAKE_BINARY_DIR}/fig-ally-flee"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ally-flee-rgb-reference.json"
+    )
+    set_tests_properties(fig_ally_flee_validation PROPERTIES
+        DEPENDS fig_ally_flee_prepare)
+    add_test(
         NAME fig_ally_medium_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-medium-fixture.py"

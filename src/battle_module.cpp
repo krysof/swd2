@@ -2949,9 +2949,10 @@ bool present_round_events(
         }
         if (event.kind == BattleEventKind::ally_fled) {
             // 0eef..0f18 starts SV3 immediately after the nine-tick colour-6b
-            // card, removes/packs the ally, redraws once, then waits four
-            // ticks.  It does not insert the generic three-tick pre-removal
-            // page or use the attack/ability five-tick epilogue.
+            // card, removes/packs the ally, then enters 2db8's bare battlefield
+            // redraw before waiting four ticks.  It neither leaves the player
+            // cards on that page nor inserts the generic three-tick pre-removal
+            // page or attack/ability five-tick epilogue.
             for (const auto& cue : fig_non_effect_voice_cues(event)) {
                 if (cue.timing == FigVoiceTiming::before_action) {
                     play_voice_cue(context, cue);
@@ -2961,7 +2962,8 @@ bool present_round_events(
             present_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, std::nullopt,
-                {}, std::nullopt, encounter_directory_offset);
+                {}, std::nullopt, encounter_directory_offset,
+                std::nullopt, false, false);
             if (!delay(monster_action_card_delay)) return false;
             continue;
         }

@@ -3,11 +3,11 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG reference containing matched_frames; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 132,
-  "registered_rgb_pair_count": 2998,
-  "exact_rgb_page_count": 2987,
+  "source_count": 133,
+  "registered_rgb_pair_count": 3003,
+  "exact_rgb_page_count": 2992,
   "nonmatching_rgb_pair_count": 11,
-  "unique_exact_rgb_page_count": 1618,
+  "unique_exact_rgb_page_count": 1621,
   "sources": [
     {
       "path": "scripts/fig-ability-pages-rgb-reference.json",
@@ -16,6 +16,14 @@
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 0,
       "nonmatching_rgb_pairs": 5
+    },
+    {
+      "path": "scripts/fig-ally-flee-rgb-reference.json",
+      "sha256": "751ae9bbc460700ea9409df5f4e2fd1549027169c2b775fea83e5ae31d1dfb6e",
+      "kind": "original_fig_captured_ally_departure",
+      "registered_rgb_pairs": 5,
+      "exact_rgb_pages": 5,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-ally-medium-rgb-reference.json",
