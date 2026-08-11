@@ -3797,6 +3797,46 @@ if(BUILD_TESTING)
         fig_player_buff_expiry_ability_empty_medium_validation PROPERTIES
         DEPENDS fig_player_buff_expiry_ability_empty_medium_prepare)
     add_test(
+        NAME fig_player_buff_expiry_ability_empty_af_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-ability-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-empty-af-game"
+                --empty-medium-af
+    )
+    add_test(
+        NAME fig_player_buff_expiry_ability_empty_af_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry-ability-empty-af.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-empty-af-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-empty-af"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-ability-empty-af-rgb-reference.json"
+    )
+    set_tests_properties(
+        fig_player_buff_expiry_ability_empty_af_validation PROPERTIES
+        DEPENDS fig_player_buff_expiry_ability_empty_af_prepare)
+    add_test(
+        NAME fig_player_buff_expiry_ability_empty_b0_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-ability-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-empty-b0-game"
+                --empty-medium-b0
+    )
+    add_test(
+        NAME fig_player_buff_expiry_ability_empty_b0_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry-ability-empty-b0.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-empty-b0-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-ability-empty-b0"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-ability-empty-b0-rgb-reference.json"
+    )
+    set_tests_properties(
+        fig_player_buff_expiry_ability_empty_b0_validation PROPERTIES
+        DEPENDS fig_player_buff_expiry_ability_empty_b0_prepare)
+    add_test(
         NAME fig_player_buff_expiry_missing_medium_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-ability-fixture.py"

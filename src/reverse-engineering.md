@@ -3016,3 +3016,22 @@ at 15,398 ms; B0 starts at 14,518 ms, restores at 15,178 ms, and expires at
 3,484 indexed pixels in `[16,1,293,151]`, while B0 changes the same count in
 `[16,1,269,151]`; both then change 3,677 pixels in `[16,120,95,199]` at
 cleanup, whose full page equals the later round boundary.
+
+### FIG learned empty AF/B0 dismissal followed by same-turn expiry
+
+The player empty-slot matrix now covers abilities 67 (`3eh`) and 83 (`3fh`)
+in addition to AE's ability 53.  Their unchanged `4886` and `4894` entries
+select AF slot one or B0 slot two, then common `482e` observes the `50h`
+sentinel, waits five ticks, and returns without backup, `65f1` stencil, or
+eight-flip loop.  Learned `4338/4377` nevertheless retains pose four, and the
+same player turn reaches `0c41/0da7` before ordinary cleanup.
+
+Separate 80-second original captures each provide twenty-nine exact full-page
+RGB matches covering both poses, stable darkening, expiry/cleanup, the complete
+enemy physical response, ten damage rises, tail, boundary, and next command.
+The six live palette/restoration pages and two mid-transition physical pages
+remain explicitly unpaired.  Both selectors submit SP061 at 10,558 ms, retain
+the five-tick empty-slot hold, restore pose four at 11,053 ms, enter expiry at
+11,108 ms, and keep its card for 989 ms.  The restored-to-expiry and
+expiry-to-clean change boxes remain `[12,120,91,198]` and `[12,120,91,199]`,
+and the clean page equals the later round boundary in both paths.

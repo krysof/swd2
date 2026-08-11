@@ -22,6 +22,10 @@ EXPECTED_DISMISS_B0_MEDIUM_SAVE = \
     "960c0a3fd50bc43efb7a31982406d1b9f755b723f1a630451f0ba6680eb8784f"
 EXPECTED_EMPTY_MEDIUM_SAVE = \
     "be254bfb138affa44a1df431c1d5c1ecf0c8005fed6b51290ce2cc19f95858c8"
+EXPECTED_EMPTY_AF_MEDIUM_SAVE = \
+    "0fd37f3269b2ace38a5db275b1ccdbc163622d241683a1033e602c250996092e"
+EXPECTED_EMPTY_B0_MEDIUM_SAVE = \
+    "e922c7778ae0240e2b04b065c9bf2e9d01d2b34eb32b0fb1bf5f3eaae8ef3d2f"
 EXPECTED_MEDIUM_SAVE = \
     "64dcf92c38b163351584ba80bf3849568025f080bfa6c1d1005f2b0a3f75d5d1"
 EXPECTED_AF_MEDIUM_SAVE = \
@@ -63,6 +67,12 @@ def main() -> int:
     finish.add_argument(
         "--empty-medium", action="store_true",
         help="expire on ability 53 while medium AE is absent")
+    finish.add_argument(
+        "--empty-medium-af", action="store_true",
+        help="expire on ability 67 while medium AF is absent")
+    finish.add_argument(
+        "--empty-medium-b0", action="store_true",
+        help="expire on ability 83 while medium B0 is absent")
     finish.add_argument(
         "--medium", action="store_true",
         help="expire on ability 51 while installing medium AE")
@@ -116,6 +126,8 @@ def main() -> int:
                  82 if args.medium_b0 else
                  66 if args.medium_af else
                  51 if args.medium else
+                 83 if args.empty_medium_b0 else
+                 67 if args.empty_medium_af else
                  53 if args.empty_medium else
                  6 if args.resisted else 86 if args.missing_medium else 1)
 
@@ -129,6 +141,8 @@ def main() -> int:
             EXPECTED_DISMISS_B0_MEDIUM_SAVE if args.dismiss_medium_b0 else
             EXPECTED_DISMISS_AF_MEDIUM_SAVE if args.dismiss_medium_af else
             EXPECTED_DISMISS_MEDIUM_SAVE if args.dismiss_medium else
+            EXPECTED_EMPTY_B0_MEDIUM_SAVE if args.empty_medium_b0 else
+            EXPECTED_EMPTY_AF_MEDIUM_SAVE if args.empty_medium_af else
             EXPECTED_EMPTY_MEDIUM_SAVE if args.empty_medium else
             EXPECTED_RESISTED_SAVE if args.resisted else
             EXPECTED_MISSING_MEDIUM_SAVE if args.missing_medium else
