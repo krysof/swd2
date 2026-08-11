@@ -2017,13 +2017,13 @@ bool present_medium_summon_animation(
     const LegacyFont& fallback, const BattleVisualState& visual,
     const BattleSessionEvent& event,
     std::uint16_t encounter_directory_offset,
-    BattleSurface* retained_player_surface = nullptr) {
+    BattleSurface* retained_action_surface = nullptr) {
     const auto summoned_source = event.source_is_summoned_ally;
     const auto player_source = !event.source_is_monster && !summoned_source;
     if ((event.source_is_monster && event.source >= visual.monsters.size()) ||
         (summoned_source && event.source >= visual.summoned_ally_present.size()) ||
         (player_source && (event.source >= visual.party_count ||
-                           retained_player_surface == nullptr)) ||
+                           retained_action_surface == nullptr)) ||
         event.target >= visual.media.size()) {
         return true;
     }
@@ -2058,14 +2058,19 @@ bool present_medium_summon_animation(
     if (horizontal_step > 0x50U) horizontal_step = 0x14U;
     horizontal_step = static_cast<std::uint16_t>(horizontal_step / 0x14U);
     if (horizontal_step == 0) horizontal_step = 1;
-    const auto player_background = player_source
+    // 5b41 copies the already visible action page to its scratch background
+    // before moving the mediator.  For a player this is the dark pose page;
+    // for a monster it is 262f's fixed mediator-name card.  Rebuilding from
+    // base_surface here both discarded the monster card and selected the
+    // summoner's blue reaction frame for the whole flight.
+    const auto action_background = retained_action_surface != nullptr
                                        ? std::optional<BattleSurface>{
-                                             *retained_player_surface}
+                                             *retained_action_surface}
                                        : std::nullopt;
 
     for (std::size_t guard = 0; guard < 512U; ++guard) {
-        auto frame = player_source ? *player_background : base_surface;
-        if (!player_source) {
+        auto frame = action_background ? *action_background : base_surface;
+        if (!action_background) {
             draw_battle_media(frame, menu_sprites, visual.media);
             draw_summoned_ally_name_cards(
                 frame, menu_sprites, font, fallback, visual);
@@ -2088,7 +2093,12 @@ bool present_medium_summon_animation(
             320, 200, frame.pixels,
             std::span<const std::uint8_t, 768>(frame.palette),
         });
-        if (player_source) *retained_player_surface = frame;
+        // Player callers restore from the final 5b41 page.  The monster
+        // caller instead keeps 262f's other Mode-X page untouched for a
+        // possible following 2731 dismissal in the same round.
+        if (player_source && retained_action_surface != nullptr) {
+            *retained_action_surface = frame;
+        }
         if (!delay_for_or_frontend_quit(
                 context.platform, std::chrono::milliseconds(14))) {
             return false;
@@ -2530,7 +2540,8 @@ bool present_round_events(
             if (!present_medium_summon_animation(
                     context, base_surface, encounter, items, menu_sprites,
                     font, fallback, visual, event,
-                    encounter_directory_offset)) {
+                    encounter_directory_offset,
+                    event.source_is_monster ? &alternate_page : nullptr)) {
                 frontend_abort = true;
                 return false;
             }
