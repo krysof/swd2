@@ -2843,3 +2843,28 @@ composited, so restored-pose to expiry changes 3,484 indexed pixels in
 `[16,1,317,151]`; expiry to cleanup remains 3,677 pixels in
 `[16,120,95,199]`.  Cleanup is held until 16,002 ms, exactly 989 ms after the
 expiry card.
+
+### FIG learned medium installation followed by same-turn expiry
+
+The learned selector now has an independent checkpoint for the populated
+return path that direct item 191 previously covered.  A fourth-turn fixture
+uses ability 51 (`effect 31h`) as the final action after ability 38's minimum
+attack-buff duration.  The unchanged command path at `0a97` first preserves
+the learned pose-zero/pose-four sequence in `4338`, dispatches through `4377`
+to the `4792` medium installer, writes sprite `AEh` into slot zero, and runs
+the complete `5b41` twenty-step flight.  On return, command type four enters
+`0c41` immediately; `0da7` must therefore composite the expiring buff over
+the retained learned pose four before the sole `0d98` cleanup.
+
+The 75-second, 70 fps DOSBox-X observation supplies forty-eight stable full
+320x200 RGB pages that match the deterministic rewrite byte for byte: both
+learned poses, four stable darkening pages, flight frames 1--19, expiry and
+cleanup, monster action plus seven shake pages, ten rising-damage pages, the
+action tail, round boundary, and next command.  Live DAC writes leave rewrite
+frames 123, 128, 148--153, 164, and 165 deliberately unpaired.  `SP049.VOC`
+and flight frame zero commit at 10,558 ms; the last flight frame appears at
+11,603 ms, the restored medium pose at 11,933 ms, and expiry follows one tick
+later.  The transition removes the newly installed icon while retaining pose
+four, changing 3,795 indexed pixels in `[12,1,317,198]`; the expiry card then
+holds for 989 ms before cleanup changes 3,704 pixels in `[12,120,91,199]`.
+That cleanup page is exactly the later round-boundary page.
