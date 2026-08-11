@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 EXPECTED_SAVE = "b19b4542bbf287c4d4556845b46c76c452c7eb66384e7386f614ef9878998658"
+EXPECTED_SUCCESS_SAVE = "5146ae0564d03e3755a9a462edb14acac6852b45aa2d51b9316eeb839e07a843"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 EXPECTED_ORC = "e9dd243bc22afcd93f5474de6f481651fc7e45ead2aaeba8e06f78e9b9befec5"
@@ -27,6 +28,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--success", action="store_true",
+        help="stage level 100 so the expiry-turn capture succeeds")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -50,7 +54,8 @@ def main() -> int:
         for offset, value in (
                 (0x0C, 1), (0x0E, 60000),
                 (0x2D, 60000), (0x2F, 60000),
-                (0x31, 1), (0x33, 60000), (0x35, 60000), (0x37, 60000),
+                (0x31, 100 if args.success else 1),
+                (0x33, 60000), (0x35, 60000), (0x37, 60000),
                 (0x41, 1), (0x43, 60000),
                 (0x55, 60000), (0x57, 60000),
                 (0x5D, 60000), (0x5F, 60000),
@@ -85,7 +90,8 @@ def main() -> int:
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
         orc_digest = sha256(orc)
-        if save_digest != EXPECTED_SAVE:
+        expected_save = EXPECTED_SUCCESS_SAVE if args.success else EXPECTED_SAVE
+        if save_digest != expected_save:
             raise ValueError(
                 f"FIG player-buff-expiry-capture SAVE differs: {save_digest}")
         if mapz_digest != EXPECTED_MAPZ or name_digest != EXPECTED_NAME:

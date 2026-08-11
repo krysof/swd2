@@ -2988,6 +2988,17 @@ bool present_round_events(
                         // exact capture page until 0d98 runs.
                         retained_action = previous;
                         retained_pose = 0U;
+                    } else if (previous.kind ==
+                                   BattleEventKind::monster_captured &&
+                               !previous.source_is_monster &&
+                               previous.source == event.source &&
+                               previous.source < visual.party_count) {
+                        // Successful 0ded returns through 0e84 with the same
+                        // target-anchored pose zero, after removing the
+                        // monster and holding that clean action page for nine
+                        // ticks. 0c41/0da7 retains it for a same-turn expiry.
+                        retained_action = previous;
+                        retained_pose = 0U;
                     }
                 }
                 const auto present_player_expiry_card = [&](std::span<const std::uint8_t> text) {
