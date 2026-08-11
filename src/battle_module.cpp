@@ -2525,13 +2525,23 @@ bool present_round_events(
                     present_battle_surface(context, retained);
                     if (!delay(effect_delay)) return false;
                 }
-                const auto clean = compose_event_frame(
-                    context, base_surface, encounter, items, fighters,
-                    menu_sprites, font, fallback, visual, event,
-                    std::nullopt, {}, std::nullopt,
-                    encounter_directory_offset, std::nullopt, false, false);
-                present_battle_surface(context, clean);
-                if (!delay(ward_card_delay)) return false;
+                const auto expiry_after_group = [&] {
+                    return group_end + 1U < result.events.size() &&
+                        result.events[group_end + 1U].kind ==
+                            BattleEventKind::status_expired &&
+                        !result.events[group_end + 1U].target_is_monster &&
+                        result.events[group_end + 1U].source == event.source;
+                }();
+                if (!expiry_after_group) {
+                    const auto clean = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                    present_battle_surface(context, clean);
+                    if (!delay(ward_card_delay)) return false;
+                }
                 event_index = group_end;
                 continue;
             }
