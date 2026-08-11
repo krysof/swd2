@@ -3438,4 +3438,10 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/scripts/verify-long-run-checkpoint.py"
                 "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-10-macos"
     )
+    add_test(
+        NAME linux_arm64_checkpoint_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-linux-arm64-checkpoint.py"
+                "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-11-linux-arm64"
+    )
 endif()

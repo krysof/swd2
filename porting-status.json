@@ -179,8 +179,8 @@
         "原生和主流浏览器长时间运行无崩溃、泄漏、漂移或存档损坏",
         "平台矩阵结果由自动脚本和日志存档"
       ],
-      "evidence": ["scripts/verify-long-run.sh", "scripts/verify-evidence-manifest.py", "scripts/run-long-run-checkpoint.py", "scripts/verify-long-run-checkpoint.py", "verification/long_run/checkpoint-2026-08-10-macos/native-log.json", "verification/long_run/checkpoint-2026-08-10-macos/edge-browser-log.json", "verification/long_run/checkpoint-2026-08-10-macos/webkit-browser-log.json", "verification/long_run/checkpoint-2026-08-10-macos/matrix-report.json"],
-      "remaining": ["已完成 250 次 macOS 原生确定性进程回放、100 次 Edge 和 1000 次 WebKit IDBFS 重启检查点；继续多小时活动游戏/音频长跑", "补齐 Windows/Linux、品牌浏览器、物理 iOS/Android 与手柄矩阵后生成 verified long_run manifest"]
+      "evidence": ["scripts/verify-long-run.sh", "scripts/verify-evidence-manifest.py", "scripts/run-long-run-checkpoint.py", "scripts/verify-long-run-checkpoint.py", "verification/long_run/checkpoint-2026-08-10-macos/native-log.json", "verification/long_run/checkpoint-2026-08-10-macos/edge-browser-log.json", "verification/long_run/checkpoint-2026-08-10-macos/webkit-browser-log.json", "verification/long_run/checkpoint-2026-08-10-macos/matrix-report.json", "scripts/run-linux-arm64-checkpoint.py", "scripts/verify-linux-arm64-checkpoint.py", "verification/platform/linux-arm64/Dockerfile", "verification/long_run/checkpoint-2026-08-11-linux-arm64/native-log.json", "verification/long_run/checkpoint-2026-08-11-linux-arm64/ctest.log", "verification/long_run/checkpoint-2026-08-11-linux-arm64/matrix-report.json"],
+      "remaining": ["已完成 250 次 macOS 原生确定性进程回放、100 次 Edge、1000 次 WebKit IDBFS 重启检查点，以及固定 Debian 13 Linux/aarch64 Release 从零构建的 348/348 CTest 零警告检查点；继续多小时活动游戏/音频长跑", "补齐 Windows、物理 Linux、品牌浏览器、物理 iOS/Android 与手柄矩阵后生成 verified long_run manifest"]
     }
   ],
   "completion_commands": [

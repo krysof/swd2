@@ -2096,6 +2096,15 @@ renderer 接受任务、但 DOM 回调尚未执行时返回；旧测试偶发把
 恢复/删除周期；矩阵报告仍列出多小时活动音频、Windows/Linux、物理手机和手柄缺口，
 因此长期平台门只进入 `in_progress`，绝不生成最终 verified manifest。
 
+Linux 交叉平台现不再只靠“应当能编译”的推断。固定到 Debian 13 ARM64 镜像摘要的容器
+用 GCC 14.2、Release 和实际 SDL2 头/库从空 build 目录构建统一程序，再以 dummy SDL
+视频/音频后端运行全部 348 项 CTest；首轮 GCC 还暴露 `optional` 三元表达式的三条
+`-Wmaybe-uninitialized` 诊断，改为显式分支后重新从零构建，最终 348/348 且编译警告为零。
+runner 锁定源提交、容器镜像 ID、ELF 摘要和完整 CTest 日志 SHA-256；独立 verifier 会
+拒绝测试数下降、日志警告、哈希漂移或把检查点误标为最终完成。它证明 Linux/aarch64
+容器后端，不冒充物理 Linux 桌面的图形/声音/手柄长跑；Windows、物理设备与多小时活动
+音频仍列在 matrix 的 remaining 中，所以长期平台门继续保持 `in_progress`。
+
 五个便携槽实际是 SAVE/MAPZ/NAME 三件套，而不是两件套：原版 `4ce6..4d29` 写
 `SAVE.DAn`、`MAPZ.DAn` 和 `NAME<n>.DSK`，`4c16..4c73` 读三者并把槽位 NAME
 复制为活动 `NAMEQ.DSK`。`SaveSlot` 现在先完成三份临时文件，再安装 `SWD2SLOT2`

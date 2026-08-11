@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "swd2_linux_platform_checkpoint",
+  "status": "in_progress",
+  "coverage": {
+    "platform": "linux",
+    "architecture": "aarch64",
+    "native_release_builds": 1,
+    "native_ctest_passes": 348
+  },
+  "artifacts": {
+    "native_log_sha256": "586849bff7edbddf0817bf258cb22389540fb1b3b0955175adc0bc08d68c9974",
+    "ctest_log_sha256": "9fa2e4606d93334419548515c4e571a02c2fc5f64545b6df7df0929559aa7f09"
+  },
+  "remaining": [
+    "multi-hour active Linux gameplay/audio soak",
+    "physical Linux desktop SDL/input/audio run",
+    "Windows native backend",
+    "physical iOS/Android browser and gamepad matrix"
+  ]
+}
