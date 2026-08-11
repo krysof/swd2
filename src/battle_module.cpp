@@ -99,28 +99,22 @@ void blit_mode0_stencil(BattleSurface& surface,
                         const SpriteArchive& archive, std::size_t index,
                         int left, int top) {
     const auto& sprite = archive.sprites().at(index);
-    if ((sprite.width & 3U) != 0) {
-        throw std::runtime_error("FIG mode-0 sprite width is not planar");
-    }
     const auto source = archive.pixels(index);
-    const auto plane_width = static_cast<std::size_t>(sprite.width) / 4U;
-    const auto plane_size = plane_width * sprite.height;
-    // 65f1 -> 684f visits the four Mode-X planes separately. Source bytes are
-    // used only as FEh transparency masks; every covered plane byte is filled
-    // with 0fh. Re-interleave those plane-major masks onto the linear surface.
-    for (std::size_t plane = 0; plane < 4U; ++plane) {
-        for (std::size_t y = 0; y < sprite.height; ++y) {
-            for (std::size_t column = 0; column < plane_width; ++column) {
-                if (source[plane * plane_size + y * plane_width + column] ==
-                    0xfeU) {
-                    continue;
-                }
-                const auto x = left + static_cast<int>(column * 4U + plane);
-                const auto row = top + static_cast<int>(y);
-                if (x >= 0 && x < 320 && row >= 0 && row < 200) {
-                    surface.pixels[static_cast<std::size_t>(row) * 320U +
-                                   static_cast<std::size_t>(x)] = 0x0f;
-                }
+    // SpriteArchive::pixels has already de-interleaved the four Mode-X planes
+    // into display order.  65f1 -> 684f uses each resulting source byte only
+    // as an FEh transparency mask and writes colour 0fh for every covered
+    // pixel.  Treating this span as plane-major a second time creates striped
+    // columns; the captured-ally 3eh dismissal proves the released renderer
+    // instead produces one solid 21x48 AF silhouette at x=273..293.
+    for (std::size_t y = 0; y < sprite.height; ++y) {
+        for (std::size_t x = 0; x < sprite.width; ++x) {
+            if (source[y * sprite.width + x] == 0xfeU) continue;
+            const auto destination_x = left + static_cast<int>(x);
+            const auto destination_y = top + static_cast<int>(y);
+            if (destination_x >= 0 && destination_x < 320 &&
+                destination_y >= 0 && destination_y < 200) {
+                surface.pixels[static_cast<std::size_t>(destination_y) * 320U +
+                               static_cast<std::size_t>(destination_x)] = 0x0f;
             }
         }
     }
@@ -1878,7 +1872,8 @@ void present_summoned_ally_action_card(
     const SpriteArchive& menu_sprites, const LegacyFont& font,
     const LegacyFont& fallback, const BattleVisualState& visual,
     const BattleSessionEvent& event, std::span<const std::uint8_t> text,
-    std::uint16_t encounter_directory_offset, std::uint8_t color = 0x00) {
+    std::uint16_t encounter_directory_offset, std::uint8_t color = 0x00,
+    BattleSurface* captured_surface = nullptr) {
     if (event.source > 1U || text.empty() || menu_sprites.sprites().empty()) return;
     auto frame = base_surface;
     draw_battle_media(frame, menu_sprites, visual.media);
@@ -1893,6 +1888,7 @@ void present_summoned_ally_action_card(
     blit(frame, menu_sprites, 0, placement.left, placement.top, false);
     draw_big5(frame, font, fallback, text,
               placement.text_left, placement.text_top, color);
+    if (captured_surface != nullptr) *captured_surface = frame;
     context.platform.present({
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
@@ -2588,6 +2584,59 @@ bool present_round_events(
         }
         if (event.kind == BattleEventKind::medium_dismissed ||
             event.kind == BattleEventKind::medium_dismissal_empty) {
+            if (event.source_is_summoned_ally) {
+                // 1048 has already entered the captured-ally action envelope,
+                // so 3dh/3eh/3fh retain the fixed “奇術” card instead of
+                // calling the monster-only 262f name panel.  3c15 backs up
+                // the preceding bare 2db8 page; the selector then removes the
+                // persistent medium and alternates that page with the action
+                // page after 65f1 has stencilled the old sprite over it.
+                auto bare_medium = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                BattleSurface action_page;
+                present_summoned_ally_action_card(
+                    context, base_surface, encounter, items, menu_sprites,
+                    font, fallback, visual, event,
+                    abilities.summoned_ally_ability_text(),
+                    encounter_directory_offset, 0x00, &action_page);
+                if (!delay(summoned_action_card_delay)) return false;
+                play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
+                                         FigVoiceTiming::before_action});
+
+                if (event.kind == BattleEventKind::medium_dismissed) {
+                    apply_visual_event(visual, event, abilities);
+                    const auto medium_frame = 174U + event.target;
+                    if (medium_frame < menu_sprites.sprites().size()) {
+                        const auto placement = fig_medium_placement(event.target);
+                        blit_mode0_stencil(
+                            action_page, menu_sprites, medium_frame,
+                            placement.left, placement.top);
+                    }
+                    present_battle_surface(context, bare_medium);
+                    for (std::size_t flip = 0; flip < 8U; ++flip) {
+                        present_battle_surface(
+                            context, (flip & 1U) == 0U
+                                         ? action_page
+                                         : bare_medium);
+                        if (!delay(effect_delay)) return false;
+                    }
+                } else {
+                    // 4844 sees the empty 50h x sentinel and waits five ticks
+                    // without creating a backup/flip pair.
+                    if (!delay(ward_card_delay)) return false;
+                }
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                if (!delay(ward_card_delay)) return false;
+                continue;
+            }
             if (!event.source_is_monster &&
                 !event.source_is_summoned_ally &&
                 event.source < visual.party_count) {

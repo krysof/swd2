@@ -3241,6 +3241,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_ally_special_ability_validation PROPERTIES
         DEPENDS fig_ally_special_ability_prepare)
     add_test(
+        NAME fig_ally_medium_dismiss_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-medium-dismiss-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-medium-dismiss-save"
+    )
+    add_test(
+        NAME fig_ally_medium_dismiss_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ally-medium-dismiss.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-medium-dismiss-save"
+                "${CMAKE_BINARY_DIR}/fig-ally-medium-dismiss"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ally-medium-dismiss-rgb-reference.json"
+    )
+    set_tests_properties(fig_ally_medium_dismiss_validation PROPERTIES
+        DEPENDS fig_ally_medium_dismiss_prepare)
+    add_test(
         NAME fig_ally_flee_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-flee-fixture.py"

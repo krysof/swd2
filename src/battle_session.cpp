@@ -1320,6 +1320,41 @@ BattleRoundResult BattleSession::play_round(
                 result.events.push_back(event);
                 continue;
             }
+            // 1048 jumps through the same player-side mediator selectors as
+            // a learned ability after the captured ally has paid its AP.
+            // The target-flag prerequisite above owns only missing-media
+            // installation; selectors 31h/3bh/3ch still fly an already
+            // installed medium, while 3dh/3eh/3fh remove the corresponding
+            // persistent slot (or take the five-tick empty sentinel return).
+            if (const auto medium = fig_summoned_medium(effect_code)) {
+                battle_media_[*medium] = true;
+                BattleSessionEvent event;
+                event.kind = BattleEventKind::medium_summoned;
+                event.source = ally_index;
+                event.target = *medium;
+                event.ability_id = decision.ability_id;
+                event.effect_code = effect_code;
+                event.action_anchor_is_target = false;
+                event.source_is_summoned_ally = true;
+                result.events.push_back(event);
+                continue;
+            }
+            if (const auto medium = fig_player_dismissed_medium(effect_code)) {
+                const auto present = battle_media_[*medium];
+                battle_media_[*medium] = false;
+                BattleSessionEvent event;
+                event.kind = present
+                                 ? BattleEventKind::medium_dismissed
+                                 : BattleEventKind::medium_dismissal_empty;
+                event.source = ally_index;
+                event.target = *medium;
+                event.ability_id = decision.ability_id;
+                event.effect_code = effect_code;
+                event.action_anchor_is_target = false;
+                event.source_is_summoned_ally = true;
+                result.events.push_back(event);
+                continue;
+            }
             bool applied = false;
             if (effect_code <= 0x30) {
                 std::array<PlayerSupportState, 4> support_states{};

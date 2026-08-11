@@ -27,7 +27,7 @@
     "direct_updates": 0,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "7e7f6ba86f7b34dd"
+    "fnv1a64": "191b751a0509c53d"
   },
   "rewrite_audio": {
     "music_calls": 1,
@@ -44,9 +44,9 @@
   "stencil_checkpoint": {
     "status": "original_instruction_checkpoint",
     "rewrite_frame": 39,
-    "rewrite_indexed_sha256": "f25fb468d20f07b8572ba38ce56d4d960da150f94cab2e0310a0c26860eb6a62",
+    "rewrite_indexed_sha256": "83e6d844cd6cb1ca517556a89c17c6be58d8860b6a6d7982528fb0595192ce38",
     "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
-    "rewrite_rgb_sha256": "afbbbcf41675cf65dbac48e1af36d53d1a520ce96e598c05ca1864faf1517dbc",
+    "rewrite_rgb_sha256": "2f210ac290efd1dd076e8d13d97c920fbd046e3bbd7c84c2d6e1f460370e23b1",
     "disassembly_entry": "2731",
     "sprite_dispatch": "65f1",
     "mode0_renderer": "684f"

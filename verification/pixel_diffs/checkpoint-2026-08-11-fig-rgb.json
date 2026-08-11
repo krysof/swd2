@@ -3,11 +3,11 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG reference containing matched_frames; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 138,
-  "registered_rgb_pair_count": 3119,
-  "exact_rgb_page_count": 3108,
+  "source_count": 139,
+  "registered_rgb_pair_count": 3130,
+  "exact_rgb_page_count": 3119,
   "nonmatching_rgb_pair_count": 11,
-  "unique_exact_rgb_page_count": 1713,
+  "unique_exact_rgb_page_count": 1717,
   "sources": [
     {
       "path": "scripts/fig-ability-pages-rgb-reference.json",
@@ -55,6 +55,14 @@
       "kind": "original_fig_captured_ally_nonlethal_physical_hit",
       "registered_rgb_pairs": 17,
       "exact_rgb_pages": 17,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-ally-medium-dismiss-rgb-reference.json",
+      "sha256": "e3b3a4edc09187140f12defe4646c1f274a1f36498ffd92c0a02619945284f93",
+      "kind": "original_fig_captured_ally_medium_dismissal",
+      "registered_rgb_pairs": 11,
+      "exact_rgb_pages": 11,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -267,7 +275,7 @@
     },
     {
       "path": "scripts/fig-medium-dismiss-rgb-reference.json",
-      "sha256": "d2f7dd80d25b0cac5a817bbc94f7585bcc4ccda93ddc93a2b63dcb1587df77c8",
+      "sha256": "30d516ba811c19b99addd3b1d1e70a36122f348adc49f81d173a35f121d1bc46",
       "kind": "original_fig_medium_summon_dismiss_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,

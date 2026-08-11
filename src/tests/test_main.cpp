@@ -5331,6 +5331,70 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 }),
             "FIG 1048 did not dispatch the captured-ally effect after mediator install");
 
+    // Captured item 394 can choose special-B ability 67/effect 3e.  1048
+    // must enter the player-side AF dismissal selector after actor zero has
+    // installed AF earlier in the same initiative pass; treating 3e as a
+    // generic visual-only ally_ability leaves the persistent medium behind.
+    auto ally_dismiss_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    ally_dismiss_state.set_u16(0x10, 1);
+    ally_dismiss_state.set_u16(0x49c, 0x1004);
+    for (std::size_t slot = 0; slot < 50; ++slot) {
+        ally_dismiss_state.set_u16(0x382 + slot * 2U, 0);
+    }
+    ally_dismiss_state.set_u16(0x382, 394);
+    for (const auto [offset, value] :
+         std::array<std::pair<std::size_t, std::uint16_t>, 16>{
+             std::pair{std::size_t{0x0c}, std::uint16_t{1}},
+             {0x0e, 60000}, {0x2d, 60000}, {0x2f, 60000},
+             {0x31, 1}, {0x33, 60000}, {0x35, 1000}, {0x37, 1000},
+             {0x41, 1}, {0x43, 60000}, {0x55, 1000}, {0x57, 1000},
+             {0x5d, 60000}, {0x5f, 60000}, {0x65, 0}, {0x67, 0},
+         }) {
+        ally_dismiss_state.set_u16(actor_zero + offset, value);
+    }
+    for (std::size_t slot = 0; slot < 50; ++slot) {
+        ally_dismiss_state.set_u8(actor_zero + 0x6d + slot, 0);
+    }
+    ally_dismiss_state.set_u8(actor_zero + 0x6d, 66);
+    auto ally_dismiss_session = swd2::BattleSession::create(
+        ally_dismiss_state, selected->get(), items);
+    auto ally_dismiss_random = swd2::FigBattleRandom::load(
+        game_root / "FIG.EXE", ally_dismiss_state);
+    auto ally_dismiss_draw = ally_dismiss_random.function();
+    static_cast<void>(ally_dismiss_session.play_round(
+        ally_summon_commands, abilities, ally_dismiss_draw));
+    auto install_af_commands = skip_commands;
+    install_af_commands[0] = {
+        swd2::PlayerCommandKind::ability, 66, 0, 0,
+    };
+    const auto ally_dismiss_round = ally_dismiss_session.play_round(
+        install_af_commands, abilities, ally_dismiss_draw);
+    require(!ally_dismiss_session.battle_media()[1] &&
+                std::any_of(
+                    ally_dismiss_round.events.begin(),
+                    ally_dismiss_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_summoned &&
+                               !event.source_is_summoned_ally &&
+                               event.source == 0 && event.target == 1 &&
+                               event.ability_id == 66 &&
+                               event.effect_code == 0x3b;
+                    }) &&
+                std::any_of(
+                    ally_dismiss_round.events.begin(),
+                    ally_dismiss_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_dismissed &&
+                               event.source_is_summoned_ally &&
+                               event.source == 0 && event.target == 1 &&
+                               event.ability_id == 67 &&
+                               event.effect_code == 0x3e;
+                    }),
+            "FIG 1048 captured-ally special B did not remove installed AF");
+
     auto medium_success_state = medium_monster_state;
     medium_success_state.set_u8(actor_zero + 0x6d, 54);
     medium_success_state.set_u16(actor_zero + 0x55, 100);
