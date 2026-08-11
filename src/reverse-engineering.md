@@ -3077,3 +3077,23 @@ ends at 11,932 ms, and the second card returns at 12,921 ms.  The final
 restoration reaches expiry at 13,196 ms, which retains the same 989 ms hold
 before the sole delayed cleanup.  That cleanup is byte-identical to both the
 un-delayed inter-selector bare flip and the later round boundary.
+
+### FIG composite media item followed by same-turn expiry
+
+Item 195 covers the complementary `6bh` composition boundary.  Its embedded
+ability 55 dispatches `31h` and `3ch` through `57f2`, so the unchanged
+`4792/5b41` path first installs AE and then B0.  The enclosing item command
+still owns only one `11fc` pose-zero page and one outer darkening sequence;
+the two nested effects each fly their medium but share the final payment and
+five-step palette restoration.  The restored page therefore contains both
+media before the same player turn reaches `0c41/0da7` one tick later.
+
+The 75-second original capture supplies seventy-one exact full-page RGB
+matches: direct-item pose zero, four stable darkening pages, all nineteen AE
+flight pages, all twenty-four B0 flight pages, expiry and cleanup, seven stable
+monster-shake pages, ten damage rises, action tail, round boundary, and next
+command.  Eleven live DAC, flight-zero, restoration, or transition pages stay
+explicitly unpaired.  SP049 is submitted at 10,393 ms and 11,548 ms; the last
+B0 flight page appears at 12,813 ms, both media are visible after restoration
+at 13,143 ms, expiry begins one 55 ms tick later, and the card holds 989 ms
+before the sole delayed cleanup at 14,187 ms.
