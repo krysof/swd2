@@ -24,6 +24,8 @@ EXPECTED_MEDIUM_SAVE = \
     "92853a673585baa5245fcfd5dab055a5e6d680fe5ee3de80126ab36ab16031cf"
 EXPECTED_EMPTY_MEDIUM_SAVE = \
     "5c9f3697a84462c87cd85bf027ccec8ce5730b14f2e9b3d3038d0188ffd54f7a"
+EXPECTED_DISMISS_MEDIUM_SAVE = \
+    "e781ae6198d4fb02fe87f1132e5f229ce89877f38a937745b1e9d268f6a09a9f"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 
@@ -62,6 +64,9 @@ def main() -> int:
     finish.add_argument(
         "--empty-medium-item", action="store_true",
         help="replace direct damage item 192 with item 193/effect 3dh")
+    finish.add_argument(
+        "--dismiss-medium-item", action="store_true",
+        help="install AE with item 191 before item 193 and buff expiry")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -72,7 +77,8 @@ def main() -> int:
         save = bytearray(save_path.read_bytes())
         actor = 0x106
         word(save, 0x10, 1)             # one active party member
-        word(save, 0x49C, 0x1020)       # minimum attack-buff duration draw
+        word(save, 0x49C,
+             0x100C if args.dismiss_medium_item else 0x1020)
         word(save, 0x49E, 20)           # stable physical/damage draws
         word(save, 0x4A0, 392)          # one-monster test formation
 
@@ -97,6 +103,9 @@ def main() -> int:
         word(save, actor + 0x5F, 60000)
         word(save, actor + 0x6D, 38)
         word(save, actor + 0x6E, 1)
+        if args.dismiss_medium_item:
+            save[actor + 0x6D:actor + 0x6D + 50] = bytes(50)
+            save[actor + 0x6D] = 38
         if args.support_item:
             word(save, actor + 0x2D, 100)
             word(save, actor + 0x2F, 1000)
@@ -107,6 +116,7 @@ def main() -> int:
         for offset in range(0x382, 0x3E6, 2):
             word(save, offset, 0)
         final_item = (
+            191 if args.dismiss_medium_item else
             193 if args.empty_medium_item else
             191 if args.medium_item else
             204 if args.barrier_item else
@@ -115,11 +125,14 @@ def main() -> int:
             186 if args.status_item else
             226 if args.missing_medium else 192)
         word(save, 0x382, final_item)
+        if args.dismiss_medium_item:
+            word(save, 0x384, 193)
 
         save_digest = sha256(save)
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
         expected_save = (
+            EXPECTED_DISMISS_MEDIUM_SAVE if args.dismiss_medium_item else
             EXPECTED_EMPTY_MEDIUM_SAVE if args.empty_medium_item else
             EXPECTED_MEDIUM_SAVE if args.medium_item else
             EXPECTED_BARRIER_SAVE if args.barrier_item else

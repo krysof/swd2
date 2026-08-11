@@ -2817,3 +2817,29 @@ pose-to-expiry change is 2,568 indexed pixels in `[16,120,95,198]`; expiry to
 cleanup is 3,677 pixels in `[16,120,95,199]`.  `SP061.VOC` commits at 10,393
 ms, restoration starts exactly 275 ms later, expiry appears at 10,943 ms, and
 the ordinary cleanup follows after 989 ms.
+
+### FIG direct item medium dismissal followed by same-turn expiry
+
+A separate five-turn fixture now locks the populated branch of direct item
+193.  Item 191 first installs medium `AE`, ability 38 then receives its
+minimum four-action duration from original random cursor `100ch`, and item 193
+dismisses `AE` on the exact player turn that the attack buff reaches zero.
+The unchanged item command/pose/dispatch sites `0a84`, `11fc`, and `1235`
+enter `482e`; the populated branch performs all eight 55 ms dismissal flips,
+restores direct-item pose zero, and returns directly to `0c41`.  The expiry
+card at `0da7` therefore appears before the only `0d98` cleanup.
+
+The successful DOSBox-X observation uses a 110-second, 70 fps review capture
+with seven-second AUTOTYPE pacing.  Thirty-two stable full 320x200 RGB pages
+match exactly: item pose and darkening, three stable restoration steps plus
+the restored pose, attack-buff expiry and cleanup, monster attack and seven
+shake pages, ten rising-damage pages, action tail, round boundary, and next
+command.  Live DAC writes and mid-page samples leave rewrite frames 180,
+185--193, 208, and 209 deliberately unpaired.  `SP061.VOC` and the first
+dismissal flip commit together at 14,298 ms; the last flip is at 14,683 ms,
+restoration begins at 14,738 ms, the restored page is at 14,958 ms, and expiry
+follows one tick later.  The installed medium icon disappears as expiry is
+composited, so restored-pose to expiry changes 3,484 indexed pixels in
+`[16,1,317,151]`; expiry to cleanup remains 3,677 pixels in
+`[16,120,95,199]`.  Cleanup is held until 16,002 ms, exactly 989 ms after the
+expiry card.
