@@ -12,6 +12,8 @@ from pathlib import Path
 EXPECTED_SAVE = "32c63d8fee0304b1f81899a0c402d7d693d69a7a44f0d73c80433d457f36755c"
 EXPECTED_MISSING_MEDIUM_SAVE = \
     "967403714f7d445c8f067fe09a8920163a9c39b2f3b2263b45e80180646d4e85"
+EXPECTED_STATUS_SAVE = \
+    "e09999f59339bd32ec0272c768599ea3bd67ec4ea1853489731d3c4b231255e3"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 
@@ -28,9 +30,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game", type=Path)
     parser.add_argument("output", type=Path)
-    parser.add_argument(
+    finish = parser.add_mutually_exclusive_group()
+    finish.add_argument(
         "--missing-medium", action="store_true",
         help="replace direct damage item 192 with item 226/effect 63h")
+    finish.add_argument(
+        "--status-item", action="store_true",
+        help="replace direct damage item 192 with item 186/effect 69h")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -68,13 +74,17 @@ def main() -> int:
         word(save, actor + 0x6E, 1)
         for offset in range(0x382, 0x3E6, 2):
             word(save, offset, 0)
-        word(save, 0x382, 226 if args.missing_medium else 192)
+        final_item = 186 if args.status_item else (
+            226 if args.missing_medium else 192)
+        word(save, 0x382, final_item)
 
         save_digest = sha256(save)
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
-        expected_save = (EXPECTED_MISSING_MEDIUM_SAVE
-                         if args.missing_medium else EXPECTED_SAVE)
+        expected_save = (
+            EXPECTED_STATUS_SAVE if args.status_item else
+            EXPECTED_MISSING_MEDIUM_SAVE if args.missing_medium else
+            EXPECTED_SAVE)
         if save_digest != expected_save:
             raise ValueError(
                 f"FIG player-buff-expiry-item SAVE differs: {save_digest}")
