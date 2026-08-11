@@ -3336,8 +3336,15 @@ bool present_round_events(
             event.target_is_monster && event.status_duration == 0 &&
             (event.damage != 0 || event.healing != 0) &&
             effect_code && *effect_code > 0x30;
+        const auto retained_ally_ability_damage_handler =
+            event.kind == BattleEventKind::ally_ability &&
+            event.block_reason == AbilityBlockReason::none &&
+            event.target_is_monster && event.status_duration == 0 &&
+            (event.damage != 0 || event.healing != 0) &&
+            effect_code && *effect_code > 0x30;
         std::optional<std::uint16_t> retained_damage_target_flags;
-        if (retained_monster_damage_handler) {
+        if (retained_monster_damage_handler ||
+            retained_ally_ability_damage_handler) {
             if (const auto canonical =
                     fig_player_effect_canonical_ability(event.effect_code);
                 canonical && *canonical < abilities.abilities().size()) {
@@ -3539,7 +3546,9 @@ bool present_round_events(
             retained_effect_surface = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, retained_pose,
-                effect.layers, std::nullopt, encounter_directory_offset);
+                effect.layers, std::nullopt, encounter_directory_offset,
+                std::nullopt, false,
+                event.kind != BattleEventKind::ally_ability);
             if (dispatcher_palette_override) {
                 retained_effect_surface->palette =
                     *dispatcher_palette_override;
@@ -4153,6 +4162,7 @@ bool present_round_events(
                 placements = fig_party_number_timeline(event.target);
             }
             if (retained_monster_damage_handler ||
+                retained_ally_ability_damage_handler ||
                 retained_status_damage_handler ||
                 retained_ally_physical_handler) {
                 // 144e first performs one complete 2db8/137a/flip and saves
@@ -4173,7 +4183,8 @@ bool present_round_events(
                     encounter_directory_offset, std::nullopt,
                     !retained_ally_physical_handler || event.damage != 0,
                     !retained_status_damage_handler &&
-                        !retained_ally_physical_handler);
+                        !retained_ally_physical_handler &&
+                        !retained_ally_ability_damage_handler);
                 if (dispatcher_palette_override) {
                     reaction_frame.palette = *dispatcher_palette_override;
                 }
@@ -4193,6 +4204,7 @@ bool present_round_events(
                  page_index < placements.size(); ++page_index) {
                 const auto& placement = placements[page_index];
                 if (retained_monster_damage_handler ||
+                    retained_ally_ability_damage_handler ||
                     retained_status_damage_handler ||
                     retained_ally_physical_handler) {
                     // 144e runs inside the >30h dispatcher handler, before
@@ -4212,7 +4224,8 @@ bool present_round_events(
                         encounter_directory_offset, std::nullopt,
                         !retained_ally_physical_handler || event.damage != 0,
                         !retained_status_damage_handler &&
-                            !retained_ally_physical_handler);
+                            !retained_ally_physical_handler &&
+                            !retained_ally_ability_damage_handler);
                     if (dispatcher_palette_override) {
                         number_frame.palette = *dispatcher_palette_override;
                     }
@@ -4290,6 +4303,15 @@ bool present_round_events(
             // 1020 reuses 144e's retained normal-monster page and ten floating
             // number pages, then returns to 1039. The scope tail owns the
             // single bare clean page and its five-tick hold.
+            apply_visual_event(visual, event, abilities);
+            continue;
+        }
+        if (retained_ally_ability_damage_handler) {
+            // Captured allies enter the same player-side effect selector but
+            // return through 0fb9/1039 rather than the learned-action 585e
+            // payment/restoration envelope. 144e still keeps its one-shot
+            // reaction scratch and mapped E0h..E4h result palette for every
+            // rising number; the scope tail owns the subsequent bare page.
             apply_visual_event(visual, event, abilities);
             continue;
         }

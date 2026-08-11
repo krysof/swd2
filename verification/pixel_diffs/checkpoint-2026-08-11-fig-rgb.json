@@ -3,11 +3,11 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG reference containing matched_frames; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 135,
-  "registered_rgb_pair_count": 3020,
-  "exact_rgb_page_count": 3009,
+  "source_count": 137,
+  "registered_rgb_pair_count": 3069,
+  "exact_rgb_page_count": 3058,
   "nonmatching_rgb_pair_count": 11,
-  "unique_exact_rgb_page_count": 1635,
+  "unique_exact_rgb_page_count": 1666,
   "sources": [
     {
       "path": "scripts/fig-ability-pages-rgb-reference.json",
@@ -16,6 +16,14 @@
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 0,
       "nonmatching_rgb_pairs": 5
+    },
+    {
+      "path": "scripts/fig-ally-ability-rgb-reference.json",
+      "sha256": "df38c48adb4cd48d9aa51ac1996671127a8f09b097b1ce43242d3510d55b56ff",
+      "kind": "original_fig_captured_ally_offensive_ability",
+      "registered_rgb_pairs": 32,
+      "exact_rgb_pages": 32,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-ally-evasion-rgb-reference.json",
@@ -39,6 +47,14 @@
       "kind": "original_fig_captured_ally_lethal_physical_hit",
       "registered_rgb_pairs": 14,
       "exact_rgb_pages": 14,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-ally-hit-survives-rgb-reference.json",
+      "sha256": "d17042e60ab08ac84bf512e05a5e784f35f6922b957d9893e54ed1bebafb5691",
+      "kind": "original_fig_captured_ally_nonlethal_physical_hit",
+      "registered_rgb_pairs": 17,
+      "exact_rgb_pages": 17,
       "nonmatching_rgb_pairs": 0
     },
     {
