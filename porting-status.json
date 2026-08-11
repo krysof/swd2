@@ -800,7 +800,12 @@
         "scripts/prepare-fig-ally-multitarget-fixture.py",
         "scripts/replay-fig-ally-multitarget.txt",
         "scripts/fig-ally-multitarget-rgb-reference.json",
-        "scripts/verify-fig-ally-multitarget.py"
+        "scripts/verify-fig-ally-multitarget.py",
+        "scripts/original-fig-monster-buff-expiry-autotype.txt",
+        "scripts/prepare-fig-monster-buff-expiry-fixture.py",
+        "scripts/replay-fig-monster-buff-expiry.txt",
+        "scripts/fig-monster-buff-expiry-rgb-reference.json",
+        "scripts/verify-fig-monster-buff-expiry.py"
       ],
       "remaining": [
         "完成剩余信息卡和特殊状态画面差分；捕获物品 376 的 special B 能力 83/effect 3fh 现另以 11 张稳定原版 RGB 页和 84 页/213 次 frontend/1970ms 时间线锁定同一回合内人物安装 B0、捕获兽奇术卡、1422ms SP061、x=249..269 的 65f1 白色剪影八次翻页及最终移除 B0；同一能力在 B0 空槽时另以 4 张稳定原版 RGB 页和 37 页/119 次 frontend/1282ms 时间线锁定九 tick 奇术卡、775ms SP061、50h sentinel 五 tick 早退及后继怪物动作；双怪目录 0ch 的捕获物品 334/能力 74/effect 42h 另以 37 张稳定原版 RGB 页和 124 页/306 次 frontend/2803ms 完整时间线锁定一次十六页特效、两个目标独立 144e scratch、两组各十张数字及仅一次 0fb9 尾部",
@@ -839,9 +844,12 @@
         "src/main.cpp",
         "scripts/verify-replay-trace.py",
         "scripts/compare-replay-traces.py",
-        "src/tests/test_main.cpp"
+        "src/tests/test_main.cpp",
+        "scripts/fig-monster-buff-expiry-rgb-reference.json",
+        "scripts/verify-fig-monster-buff-expiry.py"
       ],
       "remaining": [
+        "FIG 的界面停留计时已确认来自 BIOS INT 08h（约 18.2Hz）而非 70Hz；统一迁移并重录现代时间线证据",
         "用统一音画/输入时间线完成完整流程同步差分",
         "在真实平台长期验证循环、语音叠加和切换无漂移"
       ]
@@ -1297,10 +1305,15 @@
         "scripts/prepare-fig-ally-multitarget-fixture.py",
         "scripts/replay-fig-ally-multitarget.txt",
         "scripts/fig-ally-multitarget-rgb-reference.json",
-        "scripts/verify-fig-ally-multitarget.py"
+        "scripts/verify-fig-ally-multitarget.py",
+        "scripts/original-fig-monster-buff-expiry-autotype.txt",
+        "scripts/prepare-fig-monster-buff-expiry-fixture.py",
+        "scripts/replay-fig-monster-buff-expiry.txt",
+        "scripts/fig-monster-buff-expiry-rgb-reference.json",
+        "scripts/verify-fig-monster-buff-expiry.py"
       ],
       "remaining": [
-        "FIG 非最终聚合检查点已哈希锁定 145 个 reference、3,190 张零差异页（另有 11 对非等值裁剪/说明摘要明确不计入）；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
+        "FIG 非最终聚合检查点已哈希锁定 146 个 reference、3,195 张零差异页（另有 11 对非等值裁剪/说明摘要明确不计入）；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
         "生成通过实时精确比较及哈希校验的最终 pixel_diffs manifest"
       ]
     },

@@ -2893,7 +2893,8 @@ bool present_round_events(
                         context, base_surface, encounter, items, menu_sprites,
                         font, fallback, visual, event,
                         abilities.monster_removed_buff_text(slot),
-                        encounter_directory_offset);
+                        encounter_directory_offset, 4, 0x00, 10, nullptr,
+                        false);
                     if (!delay(status_card_delay)) return false;
                 }
             } else {

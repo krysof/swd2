@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_monster_buff_expiry",
+  "status": "exact_rgb_checkpoint",
+  "formation_directory_offset": 392,
+  "monster_definition_id": 500,
+  "random_cursor": 4100,
+  "initial_buff_turns": 4,
+  "ability_id": 38,
+  "effect_code": 103,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "361abb3e88934f31dba270362d60bcea3f608246c84a0bc004fca0df26c6e692",
+  "fixture_item_sha256": "ef92e8055c9e1f3e09df856955640127aca2ba7ae97743f5443eed9ad94b7ab8",
+  "capture_autotype": "original-fig-monster-buff-expiry-autotype.txt",
+  "capture_autotype_sha256": "d0be90accaef94efc00310ec5b1a9d4191e7f282b6ee5b9cd65e65a10aded27c",
+  "replay_input": "replay-fig-monster-buff-expiry.txt",
+  "replay_input_sha256": "0590afbd6bb22544fd15dfb69c9a8f8ea29ed76dc5eec832ef8da2389fbc272c",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 2,
+  "capture_time_limit_seconds": 45,
+  "capture_review_fps": 70,
+  "capture_review_frames": 3149,
+  "capture_video_frames": 3153,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "1abcf2d42be6efca7274ca15827c3d8d09e85f8f25494a33471733d0f5e9ba77",
+  "capture_manifest_sha256": "680c4fec85d1ca5d638517e3ba1032c01cd82e647905bb8936edac374a24975c",
+  "capture_limitation": "The two live VGA redraw observations between the expiry card and the recast card are not registered. This checkpoint proves stable RGB composition and order; the original INT 08h wall-time residence remains part of the separate audio/timing gate.",
+  "rewrite_input": {
+    "total": 16,
+    "consumed": 16,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 16,
+    "poll": 0,
+    "text": 0,
+    "frontend": 434
+  },
+  "rewrite_video": {
+    "frames": 166,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "68e7f4f4b7f4db1a"
+  },
+  "rewrite_delay_milliseconds": 4116,
+  "rewrite_audio": {
+    "music_calls": 5,
+    "voice_calls": 10,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "aeaf5c8eb4d250ae"
+  },
+  "rewrite_state_fnv1a64": "c0a8c8a7c9086ce7",
+  "rewrite_final_fnv1a64": "f57fcfa3da6c0796",
+  "expiry_rewrite_frame": 133,
+  "expiry_at_milliseconds": 3091,
+  "matched_frames": [
+    {
+      "kind": "pre_expiry_commit",
+      "rewrite_frame": 132,
+      "original_review_frame": 2333,
+      "original_png_sha256": "fb47ec17667dc347b6d0c72f2f2abaa9862e588b853358ea51f26af97278b696",
+      "rewrite_indexed_sha256": "5438a35e4eb7b3629206e97ec70ca5eee56b09fdebb6b28da6fb66fdf2ddc2fa",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "1c22d979c8c2ea6f6b963c78ae0777f95bdd9f4c14b7227f905fa18f864361f6",
+      "original_rgb_sha256": "1c22d979c8c2ea6f6b963c78ae0777f95bdd9f4c14b7227f905fa18f864361f6"
+    },
+    {
+      "kind": "attack_buff_expired",
+      "rewrite_frame": 133,
+      "original_review_frame": 2360,
+      "original_png_sha256": "a0e533101f40fdb56653f0cc708b0fe5d25227c7596be6db3d778891adddb4fc",
+      "rewrite_indexed_sha256": "86f763047009767f46d11cc50a4347c9a8d44071c1b1c71e04a848c70ac7d861",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "a85ae58ca10580e2206899110fa5753639113a011be828b5cd20ff6e533aa6a8",
+      "original_rgb_sha256": "a85ae58ca10580e2206899110fa5753639113a011be828b5cd20ff6e533aa6a8"
+    },
+    {
+      "kind": "attack_buff_recast",
+      "rewrite_frame": 135,
+      "original_review_frame": 2425,
+      "original_png_sha256": "915ee4b3b34efccf396a2970d306a94db25cedbe7e7bcf2da6304baff360f66c",
+      "rewrite_indexed_sha256": "450d15640c8fc618bbc6c95a8c5cef2c41242e4cb6ceced8eb99e9894f13d5b5",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "9f2671f33a3caef5752c9064973d0565202df48a36e230497a84192bdf6fc24c",
+      "original_rgb_sha256": "9f2671f33a3caef5752c9064973d0565202df48a36e230497a84192bdf6fc24c"
+    },
+    {
+      "kind": "recast_cleanup",
+      "rewrite_frame": 136,
+      "original_review_frame": 2450,
+      "original_png_sha256": "af50e9212e6bd18f37ff021ca6207a7648727e9425c8c4b690221e058204df39",
+      "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3",
+      "original_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3"
+    },
+    {
+      "kind": "next_command",
+      "rewrite_frame": 138,
+      "original_review_frame": 2466,
+      "original_png_sha256": "b7b452665d6d31a6dcac924a44429cacf2b4946553bfe1b4d4f06b66a8a3dbef",
+      "rewrite_indexed_sha256": "7005f7099bc644e3585e1373dde04462a854cf4152eec3fa02fa1aa83a9f25af",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "4b47dece7af18b679b3e5b99dbec74ca99f19eb5eefed1f6217e8b1e53e8fa20",
+      "original_rgb_sha256": "4b47dece7af18b679b3e5b99dbec74ca99f19eb5eefed1f6217e8b1e53e8fa20"
+    }
+  ]
+}
