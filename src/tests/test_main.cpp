@@ -5395,6 +5395,29 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     }),
             "FIG 1048 captured-ally special B did not remove installed AF");
 
+    auto ally_empty_dismiss_session = swd2::BattleSession::create(
+        ally_dismiss_state, selected->get(), items);
+    auto ally_empty_dismiss_random = swd2::FigBattleRandom::load(
+        game_root / "FIG.EXE", ally_dismiss_state);
+    auto ally_empty_dismiss_draw = ally_empty_dismiss_random.function();
+    static_cast<void>(ally_empty_dismiss_session.play_round(
+        ally_summon_commands, abilities, ally_empty_dismiss_draw));
+    const auto ally_empty_dismiss_round = ally_empty_dismiss_session.play_round(
+        skip_commands, abilities, ally_empty_dismiss_draw);
+    require(!ally_empty_dismiss_session.battle_media()[1] &&
+                std::any_of(
+                    ally_empty_dismiss_round.events.begin(),
+                    ally_empty_dismiss_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_dismissal_empty &&
+                               event.source_is_summoned_ally &&
+                               event.source == 0 && event.target == 1 &&
+                               event.ability_id == 67 &&
+                               event.effect_code == 0x3e;
+                    }),
+            "FIG 1048 captured-ally empty AF dismissal missed its sentinel return");
+
     auto medium_success_state = medium_monster_state;
     medium_success_state.set_u8(actor_zero + 0x6d, 54);
     medium_success_state.set_u16(actor_zero + 0x55, 100);
