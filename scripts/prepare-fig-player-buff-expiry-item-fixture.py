@@ -34,6 +34,8 @@ EXPECTED_COMPOSITE_STATUS_DAMAGE_SAVE = \
     "88e7f6ef3394b5496bff83573cecc25e17e6ae52bf3ea09bbf667d9a2d9ae00f"
 EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_SAVE = \
     "0dc9306fa4a63d86970860f27508af622ee0b0e8e9a441cafb32a1786edac539"
+EXPECTED_COMPOSITE_TARGETLESS_STATUS_SAVE = \
+    "c5b017adfc48ff74b6cf0ccd579367eacc28e75f3892063b08831708d3617a72"
 EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_ITEM = \
     "a6b20ac28d560c23f1a00c24b1bb1319381b2218ce5b4433b308a9a1c5954003"
 EXPECTED_AF_MEDIUM_SAVE = \
@@ -106,6 +108,9 @@ def main() -> int:
         "--composite-targetless-damage-item", action="store_true",
         help="replace direct damage item 192 with item 202/effect 6bh")
     finish.add_argument(
+        "--composite-targetless-status-item", action="store_true",
+        help="replace direct damage item 192 with item 232/effect 6bh")
+    finish.add_argument(
         "--medium-item-af", action="store_true",
         help="replace direct damage item 192 with item 206/effect 3bh")
     finish.add_argument(
@@ -151,7 +156,10 @@ def main() -> int:
         # random consumption, turn order and same-turn expiry, but raise only
         # that fixture monster's HP from 120 to 1200 so both selectors run.
         # ITEM.EXE directory entry 500+2 points at the original record.
-        if args.composite_targetless_damage_item:
+        patch_targetless_monster = (
+            args.composite_targetless_damage_item or
+            args.composite_targetless_status_item)
+        if patch_targetless_monster:
             item_path = args.output / "ITEM.EXE"
             item = bytearray(item_path.read_bytes())
             if item[:2] != b"MZ" or len(item) < 0x1c:
@@ -212,6 +220,7 @@ def main() -> int:
             193 if args.empty_medium_item else
             222 if args.medium_item_b0 else
             206 if args.medium_item_af else
+            232 if args.composite_targetless_status_item else
             202 if args.composite_targetless_damage_item else
             220 if args.composite_status_damage_item else
             225 if args.composite_missing_media_item else
@@ -251,6 +260,8 @@ def main() -> int:
             if args.composite_status_damage_item else
             EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_SAVE
             if args.composite_targetless_damage_item else
+            EXPECTED_COMPOSITE_TARGETLESS_STATUS_SAVE
+            if args.composite_targetless_status_item else
             EXPECTED_COMPOSITE_MEDIA_SAVE if args.composite_media_item else
             EXPECTED_MEDIUM_SAVE if args.medium_item else
             EXPECTED_BARRIER_SAVE if args.barrier_item else
@@ -272,7 +283,7 @@ def main() -> int:
             "FIG player-buff-expiry-item fixture: "
             f"SAVE={save_digest} MAPZ={mapz_digest} NAME={name_digest}" +
             (f" ITEM={EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_ITEM}"
-             if args.composite_targetless_damage_item else ""))
+             if patch_targetless_monster else ""))
         return 0
     except (OSError, ValueError) as error:
         parser.exit(

@@ -3748,27 +3748,17 @@ bool present_round_events(
             retained_immunity_handler || retained_monster_status_handler ||
             retained_player_status_handler || retained_player_barrier_handler ||
             retained_player_dispel_handler || retained_monster_damage_handler;
-        const auto is_player_dispatcher_damage = [](const auto& candidate) {
+        const auto is_player_dispatcher_handler = [](const auto& candidate) {
             return candidate.kind == BattleEventKind::player_ability &&
-                candidate.block_reason == AbilityBlockReason::none &&
-                candidate.target_is_monster && candidate.status_duration == 0 &&
-                (candidate.damage != 0 || candidate.healing != 0) &&
                 candidate.effect_code > 0x30;
         };
-        const auto composite_damage_continues =
-            retained_monster_damage_handler &&
+        const auto composite_dispatcher_continues =
+            retained_fading_handler &&
             event_index + 1U < result.events.size() &&
             fig_same_presented_action(
                 event, result.events[event_index + 1U]) &&
             event.effect_code != result.events[event_index + 1U].effect_code &&
-            is_player_dispatcher_damage(result.events[event_index + 1U]);
-        const auto composite_retained_handler_damage_continues =
-            (retained_immunity_handler || retained_monster_status_handler) &&
-            event_index + 1U < result.events.size() &&
-            fig_same_presented_action(
-                event, result.events[event_index + 1U]) &&
-            event.effect_code != result.events[event_index + 1U].effect_code &&
-            is_player_dispatcher_damage(result.events[event_index + 1U]);
+            is_player_dispatcher_handler(result.events[event_index + 1U]);
         if (action_first && !retained_fading_handler &&
             !retained_player_support_handler) {
             // Non-fading learned handlers expose the paid pool after the
@@ -3791,14 +3781,12 @@ bool present_round_events(
         }
         std::optional<std::array<std::uint8_t, 768>>
             dispatcher_palette_override;
-        if (retained_monster_damage_handler &&
+        if (player_dispatcher_action &&
             retained_composite_dispatcher_palette) {
-            // 57f2 keeps the first nested handler's dark DAC table live while
-            // it dispatches the second selector.  This applies both to the
-            // 38h+3ah damage pair and to ability 80's 60h status followed by
-            // 46h damage.  The intermediate handler neither pays/restores nor
-            // repeats 43ce; only the final nested handler reaches the shared
-            // 585e/4417 epilogue.
+            // 57f2 keeps the first nested handler's dark DAC table live for
+            // every second selector, not only damage->damage/status->damage
+            // pairs.  The intermediate handler neither pays/restores nor
+            // repeats 43ce; only the final nested handler reaches 585e/4417.
             dispatcher_palette_override =
                 *retained_composite_dispatcher_palette;
         } else if (retained_fading_handler &&
@@ -4126,7 +4114,7 @@ bool present_round_events(
                 restored.palette = *dispatcher_palette_override;
             }
             present_battle_surface(context, restored);
-            if (composite_retained_handler_damage_continues) {
+            if (composite_dispatcher_continues) {
                 // 5a91 has committed the first nested status and exposed its
                 // clean dark page, but 57f2 immediately invokes the second
                 // nested selector.  Do not execute 585e/4417 between them.
@@ -4469,7 +4457,7 @@ bool present_round_events(
                     restored.palette = *dispatcher_palette_override;
                 }
                 present_battle_surface(context, restored);
-                if (composite_retained_handler_damage_continues) {
+                if (composite_dispatcher_continues) {
                     // 57f2 immediately invokes the second nested selector.
                     // Preserve 5a0c's clean dark immunity page and bypass the
                     // intermediate 585e/4417 payment/restoration; the final
@@ -4722,7 +4710,7 @@ bool present_round_events(
             // epilogue then debits the pool and restores C0h..DFh in five
             // steps without dropping the action anchor between those pages.
             apply_visual_event(visual, event, abilities);
-            if (composite_damage_continues) {
+            if (composite_dispatcher_continues) {
                 retained_composite_dispatcher_palette =
                     *dispatcher_palette_override;
                 continue;

@@ -3256,3 +3256,33 @@ live menu, duplicate-clean, restoration or shake-transition observations are
 explicitly unpaired.  The two nested voices begin at 10,118 ms and 11,548 ms;
 the restored actor page appears at 12,868 ms, expiry at 12,923 ms, cleanup at
 13,912 ms, and the 203-page replay reaches the next command at 16,111 ms.
+
+### FIG targetless item damage/status composite and expiry
+
+Item 232 supplies the opposite mixed-order case.  It is the targetless
+direct-item wrapper for ability 92, with
+`type=10h/use=6eh/target=00h/effect=6bh` and nested selectors `4ch/5fh`.
+The first body deals 101 points to the first living monster and the second
+installs the original monster status.  As with item 202, target resolution
+does not move the presentation anchor: pose zero remains on the source actor
+for the entire outer action.
+
+This capture exposed a second `57f2` rule.  The dark DAC table and deferred
+`585e/4417` tail belong to the composite dispatcher, not specifically to a
+damage-to-damage pair.  Every following nested player dispatcher selector
+continues inside that same envelope.  The rewrite had restored the palette
+after `4ch`, then darkened it again before `5fh`; it now retains the first
+handler's DAC state through the status body and performs one zero-cost
+payment/restoration after both selectors return.
+
+The fixture again raises only monster 500's HP word from 120 to 1200, keeping
+directory 392, random cursor and turn order unchanged.  The 50-second original
+capture supplies sixty-five exact full 320x200 RGB pages covering the actor
+pose, stable darkening, all ten `4ch` effect pages, damage flash and rises, all
+ten `5fh` effect pages, the status result, restoration, same-turn attack-buff
+expiry, the following monster action, round boundary and next command.  Six
+live menu, first-DAC, handler-clean, first-restoration or final-shake
+observations remain explicitly unpaired.  Nested voices start at 10,118 ms
+and 11,493 ms; the restored actor page appears at 12,702 ms, expiry at
+12,757 ms, cleanup at 13,746 ms, and the 189-page replay reaches the next
+command at 15,781 ms.
