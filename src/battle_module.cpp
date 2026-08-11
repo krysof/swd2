@@ -380,10 +380,13 @@ void draw_fig_party_cards(BattleSurface& surface,
     for (const auto& member : party) {
         const auto is_action_actor = action_actor.has_value() &&
                                      *action_actor == member.party_index;
-        auto member_action_anchor = std::optional<int>{};
-        if (is_action_actor) member_action_anchor = action_mode_x_anchor;
-        draw_fig_party_card(surface, menu_sprites, member,
-                            is_action_actor, member_action_anchor);
+        if (is_action_actor) {
+            draw_fig_party_card(surface, menu_sprites, member, true,
+                                action_mode_x_anchor);
+        } else {
+            draw_fig_party_card(surface, menu_sprites, member, false,
+                                std::nullopt);
+        }
     }
 }
 
