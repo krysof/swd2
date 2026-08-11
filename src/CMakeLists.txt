@@ -3222,6 +3222,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_ally_ability_validation PROPERTIES
         DEPENDS fig_ally_ability_prepare)
     add_test(
+        NAME fig_ally_multitarget_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-multitarget-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-multitarget-save"
+    )
+    add_test(
+        NAME fig_ally_multitarget_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ally-multitarget.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-multitarget-save"
+                "${CMAKE_BINARY_DIR}/fig-ally-multitarget"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ally-multitarget-rgb-reference.json"
+    )
+    set_tests_properties(fig_ally_multitarget_validation PROPERTIES
+        DEPENDS fig_ally_multitarget_prepare)
+    add_test(
         NAME fig_ally_special_ability_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-special-ability-fixture.py"

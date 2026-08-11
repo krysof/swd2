@@ -2,12 +2,12 @@
   "schema_version": 1,
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
-  "scope": "Aggregate index of every committed FIG reference containing matched_frames; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 144,
-  "registered_rgb_pair_count": 3164,
-  "exact_rgb_page_count": 3153,
+  "scope": "Aggregate index of every committed FIG reference containing registered rewrite/original RGB digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
+  "source_count": 145,
+  "registered_rgb_pair_count": 3201,
+  "exact_rgb_page_count": 3190,
   "nonmatching_rgb_pair_count": 11,
-  "unique_exact_rgb_page_count": 1728,
+  "unique_exact_rgb_page_count": 1765,
   "sources": [
     {
       "path": "scripts/fig-ability-pages-rgb-reference.json",
@@ -111,6 +111,14 @@
       "kind": "original_fig_captured_ally_medium_install",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-ally-multitarget-rgb-reference.json",
+      "sha256": "5daec994eba5df044cc782b6c81cc8f9adc8489a50b7390735187086671cc20c",
+      "kind": "original_fig_captured_ally_multitarget_ability",
+      "registered_rgb_pairs": 37,
+      "exact_rgb_pages": 37,
       "nonmatching_rgb_pairs": 0
     },
     {

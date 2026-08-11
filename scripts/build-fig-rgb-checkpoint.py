@@ -69,7 +69,8 @@ def main() -> int:
             "status": "checkpoint_not_complete",
             "scope": (
                 "Aggregate index of every committed FIG reference containing "
-                "matched_frames; this is not the final all-scene pixel_diffs "
+                "registered rewrite/original RGB digest pairs; this is not "
+                "the final all-scene pixel_diffs "
                 "completion manifest."
             ),
             "source_count": len(sources),
