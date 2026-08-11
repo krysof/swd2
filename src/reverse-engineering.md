@@ -3209,3 +3209,26 @@ unpaired.  The two `SP002.VOC` calls begin at 10,393 ms and 10,887 ms,
 restoration begins at 11,381 ms, expiry follows at 11,656 ms, and the 989 ms
 expiry hold ends at 12,645 ms.  The corrected deterministic replay contains
 158 submitted pages and reaches the next command at 14,680 ms.
+
+### FIG target-flagged item resisted-status/damage composite and expiry
+
+Item 220 is the direct-item wrapper for ability 80.  Its record is
+`type=10h/target=20h/effect=6bh`, with nested selectors `60h/46h`; `1138`
+therefore keeps pose zero at the selected monster and derives embedded
+ability 80 only for the 60-point resource debit.  The first selector reaches
+`59a1`'s resistance card and returns a clean dark pose-zero page.  `57f2`
+immediately dispatches `46h` on that retained DAC table: it must not repeat
+the actor pose or `43ce`, nor perform an intermediate `585e/4417`.  Only after
+the damage handler completes does the outer item action debit once, restore
+the palette once, consume item 220, and enter same-turn `0c41/0da7` expiry.
+
+The isolated 60-second original capture supplies fifty-two exact full
+320x200 RGB pages and five exact top-197 crops.  They cover the item pose,
+four stable darkening pages, all stable resistance/effect/damage pages,
+restoration, expiry, cleanup, round boundary, and the next command; every crop
+differs only at the established eight ZMBV party-card pixels.  Seven live
+menu, DAC, result, or transition observations remain explicitly unpaired.
+The nested voices start at 10,118 ms and 11,492 ms, the restored pose appears
+at 13,362 ms, expiry follows at 13,417 ms, and cleanup occurs after its 989 ms
+hold at 14,406 ms.  The deterministic replay contains 182 submitted pages and
+reaches the next command at 14,791 ms.

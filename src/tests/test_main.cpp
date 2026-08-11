@@ -4673,6 +4673,46 @@ void test_battle_session(const std::filesystem::path& game_root) {
                         {0x38, 40}, {0x3a, 60}},
             "FIG type-10 composite item did not derive/dispatch/pay/consume exactly");
 
+    // Item 220 wraps ability 80's resisted-status then damage pair.  Its own
+    // target byte keeps both nested events anchored on the selected monster,
+    // while 1138 consumes one item and debits the embedded ability only once.
+    auto status_damage_item_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    status_damage_item_state.set_u16(0x382, 220);
+    status_damage_item_state.set_u16(actor_zero + 0x55, 200);
+    status_damage_item_state.set_u16(actor_zero + 0x57, 200);
+    status_damage_item_state.set_u16(actor_zero + 0x5d, 1000);
+    auto status_damage_item_session = swd2::BattleSession::create(
+        status_damage_item_state, selected->get(), items);
+    auto status_damage_item_commands = escape_commands;
+    status_damage_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto status_damage_item_round =
+        status_damage_item_session.play_round(
+            status_damage_item_commands, abilities, zero_random);
+    std::vector<std::pair<std::uint16_t, swd2::AbilityBlockReason>>
+        status_damage_nested;
+    for (const auto& event : status_damage_item_round.events) {
+        if (event.kind == swd2::BattleEventKind::player_ability &&
+            event.source == 0 && event.ability_id == 220) {
+            require(event.target_is_monster && event.target == 0 &&
+                        event.action_anchor_is_target,
+                    "FIG target-flagged item 220 lost its monster anchor");
+            status_damage_nested.emplace_back(
+                event.effect_code, event.block_reason);
+        }
+    }
+    require(status_damage_item_session.monsters()[0].hit_points == 0 &&
+                status_damage_item_session.party()[0].ability_points == 140 &&
+                status_damage_item_session.inventory()[0] == 0 &&
+                status_damage_nested ==
+                    std::vector<std::pair<
+                        std::uint16_t, swd2::AbilityBlockReason>>{
+                        {0x60, swd2::AbilityBlockReason::resistance},
+                        {0x46, swd2::AbilityBlockReason::none}},
+            "FIG item 220 did not retain/dispatch/pay its composite action");
+
     // The item target bits, not the derived ability's flags, suppress target
     // selection for item 219.  Its nested 66/69 handlers still apply both
     // tactical self buffs and must retain item id 219 in presentation events.
