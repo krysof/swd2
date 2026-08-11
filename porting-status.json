@@ -811,10 +811,15 @@
         "scripts/prepare-fig-player-buff-expiry-fixture.py",
         "scripts/replay-fig-player-buff-expiry.txt",
         "scripts/fig-player-buff-expiry-rgb-reference.json",
-        "scripts/verify-fig-player-buff-expiry.py"
+        "scripts/verify-fig-player-buff-expiry.py",
+        "scripts/original-fig-player-buff-expiry-ability-autotype.txt",
+        "scripts/prepare-fig-player-buff-expiry-ability-fixture.py",
+        "scripts/replay-fig-player-buff-expiry-ability.txt",
+        "scripts/fig-player-buff-expiry-ability-rgb-reference.json",
+        "scripts/verify-fig-player-buff-expiry-ability.py"
       ],
       "remaining": [
-        "继续对尚未登记的剧情专用战斗组合、信息卡和特殊状态路径做原版逐页差分；当前聚合检查点覆盖 147 份 reference、3,205 张精确 RGB 页面和 1,773 张唯一页面，11 对未匹配观察明确未声称等值",
+        "继续对尚未登记的剧情专用战斗组合、信息卡和特殊状态路径做原版逐页差分；当前聚合检查点覆盖 148 份 reference、3,209 张精确 RGB 页面和 1,776 张唯一页面，11 对未匹配观察明确未声称等值",
         "把现有单场景确定性回放扩展到全部可达战斗组合及完整剧情战串联，消除仍可能存在的未观察分支",
         "以完整通关战斗轨迹验证帧顺序、PIT timer 停留、调色板、语音提交点和最终状态均无分歧"
       ]
@@ -859,7 +864,12 @@
         "scripts/verify-fig-rgb-checkpoint.py",
         "verification/pixel_diffs/checkpoint-2026-08-11-fig-rgb.json",
         "scripts/fig-player-buff-expiry-rgb-reference.json",
-        "scripts/verify-fig-player-buff-expiry.py"
+        "scripts/verify-fig-player-buff-expiry.py",
+        "scripts/original-fig-player-buff-expiry-ability-autotype.txt",
+        "scripts/prepare-fig-player-buff-expiry-ability-fixture.py",
+        "scripts/replay-fig-player-buff-expiry-ability.txt",
+        "scripts/fig-player-buff-expiry-ability-rgb-reference.json",
+        "scripts/verify-fig-player-buff-expiry-ability.py"
       ],
       "remaining": [
         "用原版墙钟捕获独立核对 FIG 的 65,536 PIT-clock 周期及完整场景累计时长，而不只依赖机器码和现代确定性时间线",
@@ -1328,10 +1338,15 @@
         "scripts/prepare-fig-player-buff-expiry-fixture.py",
         "scripts/replay-fig-player-buff-expiry.txt",
         "scripts/fig-player-buff-expiry-rgb-reference.json",
-        "scripts/verify-fig-player-buff-expiry.py"
+        "scripts/verify-fig-player-buff-expiry.py",
+        "scripts/original-fig-player-buff-expiry-ability-autotype.txt",
+        "scripts/prepare-fig-player-buff-expiry-ability-fixture.py",
+        "scripts/replay-fig-player-buff-expiry-ability.txt",
+        "scripts/fig-player-buff-expiry-ability-rgb-reference.json",
+        "scripts/verify-fig-player-buff-expiry-ability.py"
       ],
       "remaining": [
-        "FIG 非最终聚合检查点已哈希锁定 147 个 reference、3,205 张零差异页（另有 11 对非等值裁剪/说明摘要明确不计入）；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
+        "FIG 非最终聚合检查点已哈希锁定 148 个 reference、3,209 张零差异页（另有 11 对非等值裁剪/说明摘要明确不计入）；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
         "生成通过实时精确比较及哈希校验的最终 pixel_diffs manifest"
       ]
     },
