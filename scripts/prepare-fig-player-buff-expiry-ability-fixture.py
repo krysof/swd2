@@ -20,6 +20,8 @@ EXPECTED_EMPTY_MEDIUM_SAVE = \
     "be254bfb138affa44a1df431c1d5c1ecf0c8005fed6b51290ce2cc19f95858c8"
 EXPECTED_MEDIUM_SAVE = \
     "64dcf92c38b163351584ba80bf3849568025f080bfa6c1d1005f2b0a3f75d5d1"
+EXPECTED_AF_MEDIUM_SAVE = \
+    "2ee0c9bb775ce93d9e40dd1d1b237fbdd6bc0da51074fd56ff814faeda27c764"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 
@@ -52,6 +54,9 @@ def main() -> int:
     finish.add_argument(
         "--medium", action="store_true",
         help="expire on ability 51 while installing medium AE")
+    finish.add_argument(
+        "--medium-af", action="store_true",
+        help="expire on ability 66 while installing medium AF")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -90,6 +95,7 @@ def main() -> int:
         else:
             word(save, actor + 0x6D, 38)
             word(save, actor + 0x6E,
+                 66 if args.medium_af else
                  51 if args.medium else
                  53 if args.empty_medium else
                  6 if args.resisted else 86 if args.missing_medium else 1)
@@ -98,6 +104,7 @@ def main() -> int:
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
         expected_save = (
+            EXPECTED_AF_MEDIUM_SAVE if args.medium_af else
             EXPECTED_MEDIUM_SAVE if args.medium else
             EXPECTED_DISMISS_MEDIUM_SAVE if args.dismiss_medium else
             EXPECTED_EMPTY_MEDIUM_SAVE if args.empty_medium else

@@ -2868,3 +2868,24 @@ later.  The transition removes the newly installed icon while retaining pose
 four, changing 3,795 indexed pixels in `[12,1,317,198]`; the expiry card then
 holds for 989 ms before cleanup changes 3,704 pixels in `[12,120,91,199]`.
 That cleanup page is exactly the later round-boundary page.
+
+### FIG learned AF installation followed by same-turn expiry
+
+Ability 66 (`effect 3bh`) now repeats the same expiry boundary with medium AF
+in slot one.  The original `47c6` handler writes sprite `AFh`, its distinct
+right-edge destination and slot coordinate, then enters the common `5b41`
+flight; `4338/4377` still retain learned pose four and return directly to
+`0c41`.  A duplicated final left-direction AUTOTYPE token makes the original
+command transition deterministic without changing the selected command, and
+the modern replay records the same extra boundary explicitly.
+
+The 85-second, 70 fps capture yields fifty-six exact full-page RGB matches:
+both poses, four stable darkening pages, AF flight frames 0--26, expiry and
+cleanup, the complete monster action, ten damage-number pages, tail, boundary,
+and next command.  First-level DAC darkening, five restoration writes, the
+restored AF observation, final shake cleanup, and pre-damage reaction remain
+explicitly unpaired.  AF starts flying at 10,558 ms, reaches its last point at
+11,988 ms, restores at 12,318 ms, and enters expiry exactly 55 ms later.  The
+AF-to-expiry transition changes 3,798 indexed pixels in `[12,1,293,198]`;
+expiry-to-clean changes 3,704 in `[12,120,91,199]`, after the unchanged 989 ms
+card hold.  The resulting clean page again equals the round boundary exactly.
