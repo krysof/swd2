@@ -3613,10 +3613,14 @@ void test_battle_effects(const std::filesystem::path& game_root) {
 
     // Captured monsters deliberately do not enter the enemy-only 26af
     // dispatcher.  FIG 10fa7 calls 1048, which uses the ordinary player
-    // DS:2bbd table after the ally AI has already paid/rolled in 22f3.  Audit
-    // every generic/A/B ability referenced by a shipped monster definition so
-    // the portable ally adapter cannot silently omit a player-side selector.
+    // DS:2bbd table after the ally AI has already paid/rolled in 22f3.  Keep
+    // the broad definition audit, but distinguish it from the actually
+    // summonable domain: 184f rejects records whose ITEM +5 bit 1 is clear.
+    // Several post-game definition records contain otherwise valid ability
+    // fields but can never be selected from the captured-item menu.
+    std::set<std::uint16_t> all_shipped_ally_abilities;
     std::set<std::uint16_t> shipped_ally_abilities;
+    std::size_t shipped_summonable_definition_count = 0;
     for (std::uint16_t item_id = 0x13aU;
          static_cast<std::size_t>(item_id) + 2U < item_records.entry_count();
          ++item_id) {
@@ -3624,16 +3628,23 @@ void test_battle_effects(const std::filesystem::path& game_root) {
             static_cast<std::size_t>(item_id) + 2U);
         if (record.size() < 0x50U) continue;
         const auto monster = swd2::MonsterDefinition::parse(item_id, record);
+        if ((record[5] & 2U) != 0) {
+            ++shipped_summonable_definition_count;
+        }
         for (const auto ability_id : {
                  monster.generic_ability,
                  monster.special_ability_a,
                  monster.special_ability_b,
              }) {
-            if (ability_id != 0) shipped_ally_abilities.insert(ability_id);
+            if (ability_id == 0) continue;
+            all_shipped_ally_abilities.insert(ability_id);
+            if ((record[5] & 2U) != 0) {
+                shipped_ally_abilities.insert(ability_id);
+            }
         }
     }
     std::vector<std::uint16_t> unsupported_shipped_ally_abilities;
-    for (const auto ability_id : shipped_ally_abilities) {
+    for (const auto ability_id : all_shipped_ally_abilities) {
         const auto effect_code = abilities.ability(ability_id).effect_code;
         const auto zero_random = [](std::uint16_t modulus) {
             if (modulus == 0) {
@@ -3676,9 +3687,21 @@ void test_battle_effects(const std::filesystem::path& game_root) {
             unsupported_shipped_ally_abilities.push_back(ability_id);
         }
     }
-    require(shipped_ally_abilities.size() == 68 &&
+    std::vector<std::uint16_t> unusable_record_only_abilities;
+    std::set_difference(
+        all_shipped_ally_abilities.begin(), all_shipped_ally_abilities.end(),
+        shipped_ally_abilities.begin(), shipped_ally_abilities.end(),
+        std::back_inserter(unusable_record_only_abilities));
+    const std::vector<std::uint16_t> expected_unusable_record_only{
+        36, 100, 105, 136, 138, 139, 140, 142, 144, 145, 149,
+    };
+    require(all_shipped_ally_abilities.size() == 68 &&
+                shipped_summonable_definition_count == 190 &&
+                shipped_ally_abilities.size() == 57 &&
+                unusable_record_only_abilities ==
+                    expected_unusable_record_only &&
                 unsupported_shipped_ally_abilities.empty(),
-            "FIG shipped captured-ally ability domain has an unsupported player dispatch");
+            "FIG shipped captured-ally ability/reachability domain differs");
 }
 
 void test_battle_session(const std::filesystem::path& game_root) {
