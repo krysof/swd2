@@ -3035,3 +3035,23 @@ the five-tick empty-slot hold, restore pose four at 11,053 ms, enter expiry at
 11,108 ms, and keep its card for 989 ms.  The restored-to-expiry and
 expiry-to-clean change boxes remain `[12,120,91,198]` and `[12,120,91,199]`,
 and the clean page equals the later round boundary in both paths.
+
+### FIG direct-item empty AF/B0 dismissal followed by same-turn expiry
+
+Items 207 and 223 complete the empty-slot player matrix through the type-10
+item path.  Their embedded abilities 67/83 select `3eh/3fh`; the unchanged
+`4886/4894` stubs point at AF/B0, common `482e` sees the `50h` sentinel and
+returns after five ticks without a medium stencil.  Unlike the learned pair,
+`11fc/1235` retains direct-item pose zero into the same `0c41/0da7` expiry
+boundary.
+
+Each original observation contributes twenty-eight exact full 320x200 RGB
+pages: pose zero, stable fade, expiry/cleanup, all stable enemy physical and
+damage pages, tail, boundary, and next command.  Eight restoration or
+mid-transition observations per route remain deliberately unpaired.  Both
+items submit SP061 at 10,393 ms, restore pose zero at 10,888 ms, expire one
+tick later, and preserve the exact 989 ms expiry hold.  B0's asynchronous DOS
+selection uses repeated final right/confirm groups; only the first completed
+dismissal is registered.  Both transitions change 2,568 indexed pixels in
+`[16,120,95,198]`, then cleanup changes 3,677 in `[16,120,95,199]` and equals
+the later round boundary.

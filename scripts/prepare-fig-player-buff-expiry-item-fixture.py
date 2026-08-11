@@ -28,6 +28,10 @@ EXPECTED_B0_MEDIUM_SAVE = \
     "ebdbb4a94f345f23d17760d74b10fb731ee03d2d7b17054e85bb18484083e09f"
 EXPECTED_EMPTY_MEDIUM_SAVE = \
     "5c9f3697a84462c87cd85bf027ccec8ce5730b14f2e9b3d3038d0188ffd54f7a"
+EXPECTED_EMPTY_AF_MEDIUM_SAVE = \
+    "c05b9f1c76e11327f59346edeb036b01fe6678ce2240053d1b44d05fdd2315d5"
+EXPECTED_EMPTY_B0_MEDIUM_SAVE = \
+    "e82af38e4d3f5559856ffd83fc03f40e66383ebdd61e27ea991388d109fb770b"
 EXPECTED_DISMISS_MEDIUM_SAVE = \
     "e781ae6198d4fb02fe87f1132e5f229ce89877f38a937745b1e9d268f6a09a9f"
 EXPECTED_DISMISS_AF_MEDIUM_SAVE = \
@@ -78,6 +82,12 @@ def main() -> int:
     finish.add_argument(
         "--empty-medium-item", action="store_true",
         help="replace direct damage item 192 with item 193/effect 3dh")
+    finish.add_argument(
+        "--empty-medium-item-af", action="store_true",
+        help="replace direct damage item 192 with item 207/effect 3eh")
+    finish.add_argument(
+        "--empty-medium-item-b0", action="store_true",
+        help="replace direct damage item 192 with item 223/effect 3fh")
     finish.add_argument(
         "--dismiss-medium-item", action="store_true",
         help="install AE with item 191 before item 193 and buff expiry")
@@ -142,6 +152,8 @@ def main() -> int:
             222 if args.dismiss_medium_item_b0 else
             206 if args.dismiss_medium_item_af else
             191 if args.dismiss_medium_item else
+            223 if args.empty_medium_item_b0 else
+            207 if args.empty_medium_item_af else
             193 if args.empty_medium_item else
             222 if args.medium_item_b0 else
             206 if args.medium_item_af else
@@ -165,6 +177,8 @@ def main() -> int:
             EXPECTED_DISMISS_B0_MEDIUM_SAVE if args.dismiss_medium_item_b0 else
             EXPECTED_DISMISS_AF_MEDIUM_SAVE if args.dismiss_medium_item_af else
             EXPECTED_DISMISS_MEDIUM_SAVE if args.dismiss_medium_item else
+            EXPECTED_EMPTY_B0_MEDIUM_SAVE if args.empty_medium_item_b0 else
+            EXPECTED_EMPTY_AF_MEDIUM_SAVE if args.empty_medium_item_af else
             EXPECTED_EMPTY_MEDIUM_SAVE if args.empty_medium_item else
             EXPECTED_B0_MEDIUM_SAVE if args.medium_item_b0 else
             EXPECTED_AF_MEDIUM_SAVE if args.medium_item_af else
