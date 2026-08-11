@@ -4137,6 +4137,27 @@ if(BUILD_TESTING)
         PROPERTIES DEPENDS
         fig_player_buff_expiry_item_composite_status_damage_prepare)
     add_test(
+        NAME fig_player_buff_expiry_item_composite_targetless_damage_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-item-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-composite-targetless-damage-game"
+                --composite-targetless-damage-item
+    )
+    add_test(
+        NAME fig_player_buff_expiry_item_composite_targetless_damage_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry-item-composite-targetless-damage.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-composite-targetless-damage-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-composite-targetless-damage"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-item-composite-targetless-damage-rgb-reference.json"
+    )
+    set_tests_properties(
+        fig_player_buff_expiry_item_composite_targetless_damage_validation
+        PROPERTIES DEPENDS
+        fig_player_buff_expiry_item_composite_targetless_damage_prepare)
+    add_test(
         NAME fig_player_buff_expiry_item_composite_missing_media_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-item-fixture.py"

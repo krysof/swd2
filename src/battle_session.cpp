@@ -443,7 +443,8 @@ BattleRoundResult BattleSession::play_round(
                                             MonsterBattleState* monster,
                                             std::uint16_t base_attack,
                                             std::uint16_t base_evasion,
-                                            std::uint16_t presentation_id) {
+                                            std::uint16_t presentation_id,
+                                            bool action_anchor_is_target = true) {
                 std::array<PlayerBattleState, 4> player_states{};
                 for (std::size_t index = 0; index < party_count_; ++index) {
                     player_states[index] = party_[index].ability_target();
@@ -474,7 +475,8 @@ BattleRoundResult BattleSession::play_round(
                                    false, actor, applied.target_is_monster,
                                    presentation_id, effect_code,
                                    applied.targets, 0,
-                                   applied.removed_monster_buff_mask);
+                                   applied.removed_monster_buff_mask, false,
+                                   action_anchor_is_target);
                 return true;
             };
             // FIG 57f2 dispatches ITEM[0x8c + ability_id] bytes +9/+0a and
@@ -517,7 +519,7 @@ BattleRoundResult BattleSession::play_round(
                             &monsters_[target_index],
                             monster_definitions_[target_index].physical_attack,
                             monster_definitions_[target_index].evasion,
-                            presentation_id)) {
+                            presentation_id, command_targets_monster)) {
                         continue;
                     }
                     if (effect_code <= 0x30U) {
@@ -537,7 +539,9 @@ BattleRoundResult BattleSession::play_round(
                         add_ability_events(result.events,
                                            BattleEventKind::player_ability,
                                            false, actor, false, presentation_id,
-                                           effect_code, applied.targets);
+                                           effect_code, applied.targets,
+                                           0, 0, false,
+                                           command_targets_monster);
                         continue;
                     }
                     const auto applied = apply_player_ability_effect(
@@ -550,7 +554,9 @@ BattleRoundResult BattleSession::play_round(
                     add_ability_events(result.events,
                                        BattleEventKind::player_ability,
                                        false, actor, true, presentation_id,
-                                       effect_code, applied.targets);
+                                       effect_code, applied.targets,
+                                       0, 0, false,
+                                       command_targets_monster);
                 }
                 return true;
             };

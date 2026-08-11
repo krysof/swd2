@@ -32,6 +32,10 @@ EXPECTED_COMPOSITE_MISSING_MEDIA_SAVE = \
     "71918bc80a20815ec32427579f4755e15c9987a62760d1936102881a93bbbc61"
 EXPECTED_COMPOSITE_STATUS_DAMAGE_SAVE = \
     "88e7f6ef3394b5496bff83573cecc25e17e6ae52bf3ea09bbf667d9a2d9ae00f"
+EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_SAVE = \
+    "0dc9306fa4a63d86970860f27508af622ee0b0e8e9a441cafb32a1786edac539"
+EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_ITEM = \
+    "a6b20ac28d560c23f1a00c24b1bb1319381b2218ce5b4433b308a9a1c5954003"
 EXPECTED_AF_MEDIUM_SAVE = \
     "8d0feca88f2056ae83aa3c3ab266fed141e3efbedd870cab64a0225432736f60"
 EXPECTED_B0_MEDIUM_SAVE = \
@@ -99,6 +103,9 @@ def main() -> int:
         "--composite-status-damage-item", action="store_true",
         help="replace direct damage item 192 with item 220/effect 6bh")
     finish.add_argument(
+        "--composite-targetless-damage-item", action="store_true",
+        help="replace direct damage item 192 with item 202/effect 6bh")
+    finish.add_argument(
         "--medium-item-af", action="store_true",
         help="replace direct damage item 192 with item 206/effect 3bh")
     finish.add_argument(
@@ -138,6 +145,29 @@ def main() -> int:
                         args.dismiss_medium_item_b0) else 0x1020)
         word(save, 0x49E, 20)           # stable physical/damage draws
         word(save, 0x4A0, 392)          # one-monster test formation
+
+        # Item 202's 39h/44h pair otherwise kills formation 392's monster 500
+        # after the first nested selector.  Keep the established formation,
+        # random consumption, turn order and same-turn expiry, but raise only
+        # that fixture monster's HP from 120 to 1200 so both selectors run.
+        # ITEM.EXE directory entry 500+2 points at the original record.
+        if args.composite_targetless_damage_item:
+            item_path = args.output / "ITEM.EXE"
+            item = bytearray(item_path.read_bytes())
+            if item[:2] != b"MZ" or len(item) < 0x1c:
+                raise ValueError("FIG targetless fixture ITEM.EXE is not MZ")
+            header = int.from_bytes(item[8:10], "little") * 16
+            directory = header + (500 + 2) * 2
+            record = header + int.from_bytes(
+                item[directory:directory + 2], "little")
+            if int.from_bytes(item[record + 0x2c:record + 0x2e], "little") != 120:
+                raise ValueError("FIG targetless fixture monster 500 HP differs")
+            word(item, record + 0x2c, 1200)
+            item_digest = sha256(item)
+            if item_digest != EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_ITEM:
+                raise ValueError(
+                    f"FIG targetless fixture ITEM differs: {item_digest}")
+            item_path.write_bytes(item)
 
         # Ability 38 applies effect 67 (力量加強).  The selected random-buffer
         # window gives its minimum duration: two deliberately non-lethal
@@ -182,6 +212,7 @@ def main() -> int:
             193 if args.empty_medium_item else
             222 if args.medium_item_b0 else
             206 if args.medium_item_af else
+            202 if args.composite_targetless_damage_item else
             220 if args.composite_status_damage_item else
             225 if args.composite_missing_media_item else
             230 if args.composite_damage_item else
@@ -218,6 +249,8 @@ def main() -> int:
             if args.composite_missing_media_item else
             EXPECTED_COMPOSITE_STATUS_DAMAGE_SAVE
             if args.composite_status_damage_item else
+            EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_SAVE
+            if args.composite_targetless_damage_item else
             EXPECTED_COMPOSITE_MEDIA_SAVE if args.composite_media_item else
             EXPECTED_MEDIUM_SAVE if args.medium_item else
             EXPECTED_BARRIER_SAVE if args.barrier_item else
@@ -237,7 +270,9 @@ def main() -> int:
         save_path.write_bytes(save)
         print(
             "FIG player-buff-expiry-item fixture: "
-            f"SAVE={save_digest} MAPZ={mapz_digest} NAME={name_digest}")
+            f"SAVE={save_digest} MAPZ={mapz_digest} NAME={name_digest}" +
+            (f" ITEM={EXPECTED_COMPOSITE_TARGETLESS_DAMAGE_ITEM}"
+             if args.composite_targetless_damage_item else ""))
         return 0
     except (OSError, ValueError) as error:
         parser.exit(

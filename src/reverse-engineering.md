@@ -3232,3 +3232,27 @@ The nested voices start at 10,118 ms and 11,492 ms, the restored pose appears
 at 13,362 ms, expiry follows at 13,417 ms, and cleanup occurs after its 989 ms
 hold at 14,406 ms.  The deterministic replay contains 182 submitted pages and
 reaches the next command at 14,791 ms.
+
+### FIG targetless item double-damage composite and expiry
+
+Item 202 is the targetless direct-item wrapper for ability 62.  Its record is
+`type=10h/target=00h/effect=6bh`, with nested selectors `39h/44h`.  The lack of
+the ITEM `20h` target bit is presentation-significant: `1138` keeps pose zero
+at the source actor even though both nested damage bodies resolve against the
+first living monster.  The modern event adapter previously copied the damage
+target into the outer action anchor for every `6bh` selector.  It now carries
+the command's target mode separately, so item 202 retains the actor anchor
+while both 250- and 200-point bodies still strike monster slot zero.
+
+The fixture keeps directory 392, its original random-buffer cursor and turn
+order, but raises only monster 500's ITEM HP word from 120 to 1200; otherwise
+the first body would kill it before `57f2` can dispatch `44h`.  The patched
+ITEM archive is hash-locked and used by both the unmodified DOS executable and
+the rewrite.  One 50-second original capture supplies seventy-four exact
+320x200 RGB pages: actor pose zero, four stable darkening pages, every stable
+`39h` and `44h` effect/damage page, final restoration, same-turn attack-buff
+expiry, the following monster action, round boundary and next command.  Ten
+live menu, duplicate-clean, restoration or shake-transition observations are
+explicitly unpaired.  The two nested voices begin at 10,118 ms and 11,548 ms;
+the restored actor page appears at 12,868 ms, expiry at 12,923 ms, cleanup at
+13,912 ms, and the 203-page replay reaches the next command at 16,111 ms.

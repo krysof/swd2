@@ -4713,6 +4713,54 @@ void test_battle_session(const std::filesystem::path& game_root) {
                         {0x46, swd2::AbilityBlockReason::none}},
             "FIG item 220 did not retain/dispatch/pay its composite action");
 
+    // Item 202 is a targetless direct wrapper around damage selectors 39/44.
+    // The nested effect bodies still resolve against the first living enemy,
+    // but 1138 leaves the action pose at the source actor because the item
+    // record never opened a monster selector.
+    auto targetless_damage_item_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    targetless_damage_item_state.set_u16(0x382, 202);
+    targetless_damage_item_state.set_u16(0x10, 1);
+    targetless_damage_item_state.set_u16(actor_zero + 0x2d, 60000);
+    targetless_damage_item_state.set_u16(actor_zero + 0x2f, 60000);
+    targetless_damage_item_state.set_u16(actor_zero + 0x31, 1);
+    targetless_damage_item_state.set_u16(actor_zero + 0x33, 60000);
+    targetless_damage_item_state.set_u16(actor_zero + 0x5d, 60000);
+    targetless_damage_item_state.set_u16(actor_zero + 0x5f, 60000);
+    targetless_damage_item_state.set_u16(actor_zero + 0x55, 200);
+    targetless_damage_item_state.set_u16(actor_zero + 0x57, 200);
+    const auto targetless_damage_encounter = std::find_if(
+        database.encounters().begin(), database.encounters().end(),
+        [](const swd2::BattleEncounter& encounter) {
+            return encounter.data_offset == 1252;
+        });
+    require(targetless_damage_encounter != database.encounters().end(),
+            "ORC targetless composite regression encounter 1252 is absent");
+    auto targetless_damage_item_session = swd2::BattleSession::create(
+        targetless_damage_item_state, *targetless_damage_encounter, items);
+    auto targetless_damage_item_commands = escape_commands;
+    targetless_damage_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto targetless_damage_item_round =
+        targetless_damage_item_session.play_round(
+            targetless_damage_item_commands, abilities, zero_random);
+    std::vector<std::uint16_t> targetless_damage_effects;
+    for (const auto& event : targetless_damage_item_round.events) {
+        if (event.kind == swd2::BattleEventKind::player_ability &&
+            event.source == 0 && event.ability_id == 202) {
+            require(event.target_is_monster && event.target == 0 &&
+                        !event.action_anchor_is_target,
+                    "FIG targetless composite item borrowed a monster anchor");
+            targetless_damage_effects.push_back(event.effect_code);
+        }
+    }
+    require(targetless_damage_item_session.party()[0].ability_points == 200 &&
+                targetless_damage_item_session.inventory()[0] == 0 &&
+                targetless_damage_effects ==
+                    std::vector<std::uint16_t>{0x39, 0x44},
+            "FIG item 202 did not dispatch/consume both targetless effects");
+
     // The item target bits, not the derived ability's flags, suppress target
     // selection for item 219.  Its nested 66/69 handlers still apply both
     // tactical self buffs and must retain item id 219 in presentation events.
