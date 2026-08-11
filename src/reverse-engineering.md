@@ -2791,3 +2791,29 @@ SP061 与后继 SP106 的提交时刻。
 989ms 后才由 `0d98` 清理。到期相对 pose 4 只改变 `x=12..91,y=120..198` 的 2,568
 个索引像素。校验器同时锁定 `482e` 内的 `cmp x,50h`、五 tick RET、公共姿态/扣费尾、
 `0c41`、`0da7` 和 `0d98`，确认空槽绝不产生媒介 stencil。
+
+### FIG direct item 193 empty-medium return followed by same-turn expiry
+
+A fourth-turn fixture now reaches direct item 193 (`effect 3dh`, canonical
+ability 53) while medium slot zero still contains the original empty sentinel
+`x=50h`, immediately after ability 38's minimum-duration attack buff.  The
+unmodified item path at image offsets `0a84`, `11fc`, and `1235` draws the
+direct-item pose zero before dispatching the unchanged `482e` medium handler.
+Its `4844` empty-slot branch waits five ticks and returns without the eight
+`65f1` medium flips.  Control then enters `0c41` on the same player turn,
+draws the `0da7` expiry card over the retained pose, and reaches the sole
+`0d98` cleanup only after that card's eighteen-tick hold.
+
+The 75-second DOSBox-X capture is driven by one duplicated right-direction
+AUTOTYPE token because the first asynchronous token lands during the original
+command-page transition; the deterministic rewrite replay registers both
+inputs explicitly.  Twenty-eight stable full 320x200 RGB pages match exactly:
+the item pose and four stable darkening pages, expiry and cleanup cards,
+monster attack plus seven shake pages, ten rising-damage pages, action tail,
+round boundary, and next command.  Live DAC restoration plus the two
+mid-page shake transitions leave rewrite frames 122, 127--131, 142, and 143
+explicitly unpaired rather than falsely treated as equality.  The retained
+pose-to-expiry change is 2,568 indexed pixels in `[16,120,95,198]`; expiry to
+cleanup is 3,677 pixels in `[16,120,95,199]`.  `SP061.VOC` commits at 10,393
+ms, restoration starts exactly 275 ms later, expiry appears at 10,943 ms, and
+the ordinary cleanup follows after 989 ms.
