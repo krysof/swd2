@@ -2956,6 +2956,18 @@ bool present_round_events(
                         retained_action->target = event.source;
                         retained_action->action_anchor_is_target = false;
                         retained_pose = 0U;
+                    } else if (previous.kind ==
+                                   BattleEventKind::escape_failed &&
+                               !previous.source_is_monster &&
+                               previous.source == event.source &&
+                               previous.source < visual.party_count) {
+                        // 09b8's failed ordinary escape leaves 31dd on the
+                        // second escape pose (frame five) when it rejoins
+                        // 0c41.  A timer expiring on that turn is therefore
+                        // drawn by 0da7 over the same back-facing fighter,
+                        // not over the ordinary bottom portrait.
+                        retained_action = previous;
+                        retained_pose = fig_player_escape_poses()[1];
                     }
                 }
                 const auto present_player_expiry_card = [&](std::span<const std::uint8_t> text) {
@@ -3585,13 +3597,22 @@ bool present_round_events(
                 // observable between the failure card and the following
                 // monster action; do not jump directly from one card to the
                 // other or retain the bottom party cards on the boundary.
-                const auto clean = compose_event_frame(
-                    context, base_surface, encounter, items, fighters,
-                    menu_sprites, font, fallback, visual, event,
-                    std::nullopt, {}, std::nullopt,
-                    encounter_directory_offset, std::nullopt, false, false);
-                present_battle_surface(context, clean);
-                if (!delay(ward_card_delay)) return false;
+                const auto expires_here =
+                    event_index + 1U < result.events.size() &&
+                    result.events[event_index + 1U].kind ==
+                        BattleEventKind::status_expired &&
+                    !result.events[event_index + 1U].target_is_monster &&
+                    result.events[event_index + 1U].source == event.source;
+                if (!expires_here) {
+                    const auto clean = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                    present_battle_surface(context, clean);
+                    if (!delay(ward_card_delay)) return false;
+                }
             }
             continue;
         }
