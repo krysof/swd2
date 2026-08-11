@@ -4904,6 +4904,43 @@ void test_battle_session(const std::filesystem::path& game_root) {
                         {0x3b, 1}, {0x31, 0}},
             "FIG item 201 did not install/pay AF before AE");
 
+    // Item 209 shares the first AF selector with item 201 but follows it with
+    // 3ch, installing B0 rather than AE.  Both nested flights remain inside
+    // one targetless source-actor envelope and pay embedded ability 69's
+    // 35-point AP cost only after the pair completes.
+    auto af_b0_medium_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    af_b0_medium_state.set_u16(0x10, 1);
+    af_b0_medium_state.set_u16(0x382, 209);
+    af_b0_medium_state.set_u16(actor_zero + 0x55, 1000);
+    af_b0_medium_state.set_u16(actor_zero + 0x57, 1000);
+    af_b0_medium_state.set_u16(actor_zero + 0x5d, 1000);
+    auto af_b0_medium_session = swd2::BattleSession::create(
+        af_b0_medium_state, selected->get(), items);
+    auto af_b0_medium_commands = escape_commands;
+    af_b0_medium_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto af_b0_medium_round = af_b0_medium_session.play_round(
+        af_b0_medium_commands, abilities, zero_random);
+    std::vector<std::pair<std::uint16_t, std::size_t>> af_b0_media;
+    for (const auto& event : af_b0_medium_round.events) {
+        if (event.kind == swd2::BattleEventKind::medium_summoned &&
+            !event.source_is_monster && !event.source_is_summoned_ally &&
+            event.source == 0 && event.ability_id == 209) {
+            require(!event.action_anchor_is_target,
+                    "FIG targetless AF/B0 medium borrowed a target anchor");
+            af_b0_media.emplace_back(event.effect_code, event.target);
+        }
+    }
+    require(af_b0_medium_session.inventory()[0] == 0 &&
+                af_b0_medium_session.party()[0].ability_points == 965 &&
+                af_b0_medium_session.battle_media() ==
+                    std::array<bool, 3>{false, true, true} &&
+                af_b0_media ==
+                    std::vector<std::pair<std::uint16_t, std::size_t>>{
+                        {0x3b, 1}, {0x3c, 2}},
+            "FIG item 209 did not install/pay AF before B0");
+
     // Standalone items 191/193 exercise the same AE slot across consecutive
     // rounds. The first 31h call installs it, the consumed inventory compacts,
     // and the following 3dh call removes it while paying its own cost.

@@ -4117,6 +4117,27 @@ if(BUILD_TESTING)
         PROPERTIES DEPENDS
         fig_player_buff_expiry_item_composite_reversed_media_prepare)
     add_test(
+        NAME fig_player_buff_expiry_item_composite_af_b0_media_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-item-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-composite-af-b0-media-game"
+                --composite-af-b0-media-item
+    )
+    add_test(
+        NAME fig_player_buff_expiry_item_composite_af_b0_media_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry-item-composite-af-b0-media.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-composite-af-b0-media-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-composite-af-b0-media"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-item-composite-af-b0-media-rgb-reference.json"
+    )
+    set_tests_properties(
+        fig_player_buff_expiry_item_composite_af_b0_media_validation
+        PROPERTIES DEPENDS
+        fig_player_buff_expiry_item_composite_af_b0_media_prepare)
+    add_test(
         NAME fig_player_buff_expiry_item_composite_damage_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-item-fixture.py"

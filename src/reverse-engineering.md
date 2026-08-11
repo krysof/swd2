@@ -3307,3 +3307,23 @@ live first-DAC, flight-zero, paid-dark or shake-transition observations remain
 explicitly unpaired.  The medium voices start at 10,393 ms and 11,933 ms, the
 restored AF+AE page appears at 13,308 ms, expiry at 13,363 ms, cleanup at
 14,352 ms, and the 205-page replay reaches the next command at 16,387 ms.
+
+### FIG targetless item AF-then-B0 medium composite and expiry
+
+Item 209 proves that the first `3bh` selector is not tied to item 201's AE
+tail.  Its targetless direct-item record derives embedded ability 69, whose
+`6bh` pair is `3bh/3ch`: AF is installed first and B0 second.  Both selectors
+remain within one source-actor pose-zero/DAC envelope, and only the outer
+return pays the single 35-point AP cost before restoring the palette and
+consuming the item.
+
+The 75-second original capture contributes seventy-nine exact full 320x200
+RGB pages plus five exact top-197 restoration crops.  They cover the actor
+pose, stable darkening, twenty-seven AF-flight pages, twenty-four B0-flight
+pages, the restored AF+B0 state, same-turn attack-buff expiry, the following
+monster action, round boundary and next command.  The five crops exclude only
+the known eight-pixel ZMBV bottom-scanline artifact; five live first-DAC,
+flight-zero, paid-dark or shake-transition observations remain deliberately
+unpaired.  The medium voices begin at 10,393 ms and 11,933 ms, restored AF+B0
+appears at 13,528 ms, expiry follows at 13,583 ms, cleanup at 14,572 ms, and
+the deterministic 209-page replay reaches the next command at 16,607 ms.
