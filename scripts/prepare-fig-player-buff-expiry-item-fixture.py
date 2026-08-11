@@ -10,6 +10,8 @@ from pathlib import Path
 
 
 EXPECTED_SAVE = "32c63d8fee0304b1f81899a0c402d7d693d69a7a44f0d73c80433d457f36755c"
+EXPECTED_MISSING_MEDIUM_SAVE = \
+    "967403714f7d445c8f067fe09a8920163a9c39b2f3b2263b45e80180646d4e85"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 
@@ -26,6 +28,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--missing-medium", action="store_true",
+        help="replace direct damage item 192 with item 226/effect 63h")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -42,8 +47,9 @@ def main() -> int:
 
         # Ability 38 applies effect 67 (力量加強).  The selected random-buffer
         # window gives its minimum duration: two deliberately non-lethal
-        # physical actions followed by direct damage item 192.  The item
-        # returns through 1138 with pose zero when 0c41 enters 0da7.
+        # physical actions followed by direct damage item 192, or by the
+        # optional item-226 missing-medium return. Both leave 1138's pose zero
+        # live when 0c41 enters 0da7.
         word(save, actor + 0x0C, 1)
         word(save, actor + 0x0E, 60000)
         word(save, actor + 0x2D, 60000)
@@ -62,12 +68,14 @@ def main() -> int:
         word(save, actor + 0x6E, 1)
         for offset in range(0x382, 0x3E6, 2):
             word(save, offset, 0)
-        word(save, 0x382, 192)          # 疾電符, direct selector 33h
+        word(save, 0x382, 226 if args.missing_medium else 192)
 
         save_digest = sha256(save)
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
-        if save_digest != EXPECTED_SAVE:
+        expected_save = (EXPECTED_MISSING_MEDIUM_SAVE
+                         if args.missing_medium else EXPECTED_SAVE)
+        if save_digest != expected_save:
             raise ValueError(
                 f"FIG player-buff-expiry-item SAVE differs: {save_digest}")
         if mapz_digest != EXPECTED_MAPZ or name_digest != EXPECTED_NAME:
