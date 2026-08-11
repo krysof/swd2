@@ -29,11 +29,12 @@
   },
   "gesture": {
     "touch_start_events": 1,
-    "hold_milliseconds": 1000,
+    "requested_world_frames": 69,
+    "hold_milliseconds": 2551.1900000572205,
     "touch_end_events": 1,
     "direction": "right",
-    "wasm_world_deliveries": 27,
-    "first_to_last_delivery_milliseconds": 976.545000076294,
+    "wasm_world_deliveries": 71,
+    "first_to_last_delivery_milliseconds": 2530.225000143051,
     "deliveries_before_release_fence": 0,
     "deliveries_after_release_fence": 0
   },
@@ -47,10 +48,10 @@
     "result": "pass"
   },
   "assets": {
-    "index.html": "ab07d8d571fa0ca64b99c5fd21abfd76ef423679e51b197fdf2ab6cc6e0088f5",
-    "index.js": "382829f604ae852b2cc4ffbaa6be624d826565409c7c74e803b7c7a6cfb77f19",
-    "index.wasm": "386ffc085fba725331bcd8a586e93995cc28a3314bdc708f6c3d8d6cabe766f3",
+    "index.html": "ae1558a88aa16a4953373e4f1c442dac3f9c17dff79fdb09b6d167f5d391e9e6",
+    "index.js": "2da9e94394f4889637c2bcf00b139231239fb8f76a772fc14c3b036d46039600",
+    "index.wasm": "ab867cc7bf470bce1fb6dd47c6f35f48e0bfd58aaabcefe56ed0534b47dc54d3",
     "index.data": "cc57db3e8963aaabed56cd2cf9a774da1575175c4182046bebfe828687760321"
   },
-  "captured_at": "2026-08-10T16:15:29+09:00"
+  "captured_at": "2026-08-11T14:37:33+09:00"
 }

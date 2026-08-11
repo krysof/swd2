@@ -2,8 +2,9 @@
 
 // Real-browser boundary test for the touch-hold and IDBFS restart paths. It launches an
 // installed Chromium-family browser with mobile emulation, sends one trusted
-// CDP touchStart, holds it for one second, and sends one touchEnd.  The WASM
-// polling boundary records deliveries only when ?input-self-test=1 is present,
+// CDP touchStart, holds it across at least 69 actual world polls, and sends one
+// touchEnd.  The WASM polling boundary records deliveries only when
+// ?input-self-test=1 is present,
 // proving the input crossed DOM -> generated JS -> ASYNCIFY -> SDL C++.
 
 import childProcess from 'node:child_process';
@@ -169,6 +170,20 @@ async function waitUntil(action, description, timeoutMilliseconds = 20_000) {
 }
 
 
+async function stopChild(child, timeoutMilliseconds = 5_000) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  child.kill('SIGTERM');
+  const exited = await Promise.race([
+    new Promise(resolve => child.once('exit', () => resolve(true))),
+    new Promise(resolve => setTimeout(() => resolve(false), timeoutMilliseconds)),
+  ]);
+  if (!exited && child.exitCode === null && child.signalCode === null) {
+    child.kill('SIGKILL');
+    await new Promise(resolve => child.once('exit', resolve));
+  }
+}
+
+
 function sha256(filename) {
   return crypto.createHash('sha256').update(fs.readFileSync(filename)).digest('hex');
 }
@@ -301,11 +316,18 @@ try {
     type: 'touchStart',
     touchPoints: [{ x, y, id: 7, radiusX: 3, radiusY: 3, force: 1 }],
   });
-  await sleep(1_000);
+  const requestedWorldFrames = 69;
+  const touchStartMilliseconds = await cdp.evaluate('performance.now()');
+  await waitUntil(
+    () => cdp.evaluate(
+      `Module.swd2InputDeliveries.length >= ${requestedWorldFrames}`),
+    `${requestedWorldFrames} consecutive WASM world polls from one touchStart`,
+    8_000);
   const held = await cdp.evaluate(`({
     held: Module.swd2HeldDirection,
     queue: Module.swd2DirectionQueue.slice(),
-    deliveries: Module.swd2InputDeliveries.slice()
+    deliveries: Module.swd2InputDeliveries.slice(),
+    now: performance.now()
   })`);
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchEnd', touchPoints: [],
@@ -334,13 +356,13 @@ try {
   if (held.held !== 4 || held.queue.length !== 0) {
     fail('trusted touchStart did not remain held after its quick-tap queue was consumed');
   }
-  if (held.deliveries.length < 10 ||
+  if (held.deliveries.length < requestedWorldFrames ||
       held.deliveries.some(entry => entry.direction !== 4 || !entry.everyFrame)) {
-    fail(`one-second world hold produced ${held.deliveries.length} valid deliveries`);
+    fail(`69-world-frame hold produced ${held.deliveries.length} valid deliveries`);
   }
   const deliverySpan = held.deliveries.at(-1).milliseconds -
     held.deliveries[0].milliseconds;
-  if (deliverySpan < 500) {
+  if (deliverySpan < 1_000) {
     fail(`direction deliveries did not span the hold (${deliverySpan} ms)`);
   }
   if (releaseFence.held !== 0 || releaseFence.queue.length !== 0 ||
@@ -392,7 +414,8 @@ try {
     layout: { portrait_rotation_applied: true, right_button_rect: directionRect },
     gesture: {
       touch_start_events: 1,
-      hold_milliseconds: 1_000,
+      requested_world_frames: requestedWorldFrames,
+      hold_milliseconds: held.now - touchStartMilliseconds,
       touch_end_events: 1,
       direction: 'right',
       wasm_world_deliveries: held.deliveries.length,
@@ -420,14 +443,16 @@ try {
   }
   console.log(
     `WASM browser input: OK (${held.deliveries.length} world-frame ` +
-    `deliveries from one 1000ms trusted touch hold; release stopped at once; ` +
+    `deliveries from one uninterrupted trusted touch hold; release stopped at once; ` +
     `${options.idbfsCycles} IDBFS restart cycles passed)`);
 } catch (error) {
   if (browserOutput) console.error(browserOutput.slice(-4_000));
   throw error;
 } finally {
   if (cdp) cdp.close();
-  browser.kill('SIGTERM');
+  await stopChild(browser);
   await new Promise(resolve => server.close(resolve));
-  fs.rmSync(profile, { recursive: true, force: true });
+  fs.rmSync(profile, {
+    recursive: true, force: true, maxRetries: 10, retryDelay: 100,
+  });
 }
