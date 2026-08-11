@@ -3298,6 +3298,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_ally_empty_ae_dismiss_validation PROPERTIES
         DEPENDS fig_ally_empty_ae_dismiss_prepare)
     add_test(
+        NAME fig_ally_empty_b0_dismiss_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-empty-b0-dismiss-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-empty-b0-dismiss-game"
+    )
+    add_test(
+        NAME fig_ally_empty_b0_dismiss_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ally-empty-b0-dismiss.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-empty-b0-dismiss-game"
+                "${CMAKE_BINARY_DIR}/fig-ally-empty-b0-dismiss"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ally-empty-b0-dismiss-rgb-reference.json"
+    )
+    set_tests_properties(fig_ally_empty_b0_dismiss_validation PROPERTIES
+        DEPENDS fig_ally_empty_b0_dismiss_prepare)
+    add_test(
         NAME fig_ally_ae_dismiss_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-ae-dismiss-fixture.py"
