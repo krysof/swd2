@@ -2949,3 +2949,48 @@ exact flight page at 11,658 ms, restores at 11,988 ms, and expires one tick
 later.  The retained pose-zero transition changes 3,788 indexed pixels in
 `[16,1,269,198]`; cleanup follows only after 989 ms, changes 3,677 pixels in
 `[16,120,95,199]`, and equals the round-boundary page exactly.
+
+### FIG learned AF dismissal followed by same-turn expiry
+
+The populated player-side `3eh` selector now has its own expiry-boundary
+checkpoint instead of relying on the captured-ally dismissal.  A four-turn
+fixture learns abilities 38, 66, and 67: ability 66 first installs medium
+`AF` in slot one, while ability 67 enters the unchanged `4886` slot/anchor
+stub and common `482e` eight-flip removal handler on the exact turn that the
+attack buff expires.  Learned `4338/4377` retains pose four until `0c41`, so
+`0da7` must composite the expiry card before the sole `0d98` cleanup.
+
+The 100-second DOSBox-X observation uses a duplicated final LEFT to cross the
+asynchronous command boundary without changing the command.  Thirty-six
+stable full 320x200 RGB pages match exactly: both learned poses, stable
+darkening, three dismissal stencil pages, three restoration steps and the
+restored AF page, expiry and cleanup, the complete enemy physical response,
+ten damage rises, tail, round boundary, and next command.  Live DAC writes and
+ZMBV mid-page samples leave eight explicitly listed rewrite pages unpaired.
+`SP061.VOC` and the first flip commit together at 12,428 ms, the last flip is
+at 12,813 ms, restoration reaches the retained AF page at 13,088 ms, and
+expiry follows one tick later.  Removing AF while retaining pose four changes
+3,484 indexed pixels in `[12,1,293,151]`; the unchanged 989 ms expiry hold
+then reaches cleanup, changing 3,704 pixels in `[12,120,91,199]`.  That
+cleanup is exactly the later round-boundary page.
+
+### FIG learned B0 dismissal followed by same-turn expiry
+
+Ability 83 (`effect 3fh`) completes the learned player dismissal matrix at the
+expiry boundary.  Ability 82 first installs sprite `B0h` in slot two; the
+unchanged `4894` entry then selects that slot and right-edge anchor before
+jumping into common `482e`.  Learned pose four remains live across all eight
+55 ms flips and palette restoration, after which `0c41` enters `0da7` and
+only the later `0d98` tail cleans the page.
+
+The original 110-second observation repeats the final ENTER because the first
+scheduled key can arrive while the DOS selector is still transitioning; only
+the first completed dismissal is registered.  Thirty-six stable full-page RGB
+observations match exactly, covering the same pose, fade, dismissal, expiry,
+enemy physical, damage, tail, boundary, and next-command anchors as the AF
+case.  Eight live-DAC or mid-page samples remain explicitly unpaired.  SP061
+and dismissal start at 12,263 ms, the last flip is 12,648 ms, the B0-restored
+pose is 12,923 ms, and expiry follows at 12,978 ms.  The B0-to-expiry change is
+3,484 indexed pixels in `[12,1,269,151]`; expiry-to-clean remains 3,704 pixels
+in `[12,120,91,199]` after the exact 989 ms hold, and the clean page again
+equals the round boundary.

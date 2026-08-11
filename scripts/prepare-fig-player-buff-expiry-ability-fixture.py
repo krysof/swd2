@@ -16,6 +16,10 @@ EXPECTED_RESISTED_SAVE = \
     "776db17ac748099e6347b01c93bb1b4457427ec49a0450d1951edac270cec7f2"
 EXPECTED_DISMISS_MEDIUM_SAVE = \
     "417d52d03978270e06ccd681bc18576186fa28edd79e625665dc8cba4b41b117"
+EXPECTED_DISMISS_AF_MEDIUM_SAVE = \
+    "7f5a22dbcf50a5fcc8e5ce6e4f625833da2714360dba1cefffd849a70c0d18c7"
+EXPECTED_DISMISS_B0_MEDIUM_SAVE = \
+    "960c0a3fd50bc43efb7a31982406d1b9f755b723f1a630451f0ba6680eb8784f"
 EXPECTED_EMPTY_MEDIUM_SAVE = \
     "be254bfb138affa44a1df431c1d5c1ecf0c8005fed6b51290ce2cc19f95858c8"
 EXPECTED_MEDIUM_SAVE = \
@@ -50,6 +54,12 @@ def main() -> int:
     finish.add_argument(
         "--dismiss-medium", action="store_true",
         help="install medium AE with ability 51, then expire on ability 53")
+    finish.add_argument(
+        "--dismiss-medium-af", action="store_true",
+        help="install medium AF with ability 66, then expire on ability 67")
+    finish.add_argument(
+        "--dismiss-medium-b0", action="store_true",
+        help="install medium B0 with ability 82, then expire on ability 83")
     finish.add_argument(
         "--empty-medium", action="store_true",
         help="expire on ability 53 while medium AE is absent")
@@ -94,9 +104,12 @@ def main() -> int:
         word(save, actor + 0x57, 60000)
         word(save, actor + 0x5D, 60000)
         word(save, actor + 0x5F, 60000)
-        if args.dismiss_medium:
+        if args.dismiss_medium or args.dismiss_medium_af or \
+                args.dismiss_medium_b0:
             save[actor + 0x6D:actor + 0x6D + 50] = bytes(50)
-            save[actor + 0x6D:actor + 0x70] = bytes((38, 51, 53))
+            save[actor + 0x6D:actor + 0x70] = bytes(
+                (38, 82, 83) if args.dismiss_medium_b0 else
+                (38, 66, 67) if args.dismiss_medium_af else (38, 51, 53))
         else:
             word(save, actor + 0x6D, 38)
             word(save, actor + 0x6E,
@@ -113,6 +126,8 @@ def main() -> int:
             EXPECTED_B0_MEDIUM_SAVE if args.medium_b0 else
             EXPECTED_AF_MEDIUM_SAVE if args.medium_af else
             EXPECTED_MEDIUM_SAVE if args.medium else
+            EXPECTED_DISMISS_B0_MEDIUM_SAVE if args.dismiss_medium_b0 else
+            EXPECTED_DISMISS_AF_MEDIUM_SAVE if args.dismiss_medium_af else
             EXPECTED_DISMISS_MEDIUM_SAVE if args.dismiss_medium else
             EXPECTED_EMPTY_MEDIUM_SAVE if args.empty_medium else
             EXPECTED_RESISTED_SAVE if args.resisted else
