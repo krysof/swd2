@@ -57,7 +57,8 @@ void add_ability_events(std::vector<BattleSessionEvent>& events,
                         std::uint8_t removed_player_buff_mask = 0,
                         std::uint8_t removed_monster_buff_mask = 0,
                         bool monster_generic_path = false,
-                        bool action_anchor_is_target = true) {
+                        bool action_anchor_is_target = true,
+                        bool source_is_summoned_ally = false) {
     if (targets.empty()) {
         BattleSessionEvent event{
             kind, source_is_monster, source, target_is_monster, 0, ability_id};
@@ -66,6 +67,7 @@ void add_ability_events(std::vector<BattleSessionEvent>& events,
         event.removed_player_buff_mask = removed_player_buff_mask;
         event.removed_monster_buff_mask = removed_monster_buff_mask;
         event.action_anchor_is_target = action_anchor_is_target;
+        event.source_is_summoned_ally = source_is_summoned_ally;
         events.push_back(event);
         return;
     }
@@ -82,6 +84,7 @@ void add_ability_events(std::vector<BattleSessionEvent>& events,
         event.removed_player_buff_mask = removed_player_buff_mask;
         event.removed_monster_buff_mask = removed_monster_buff_mask;
         event.action_anchor_is_target = action_anchor_is_target;
+        event.source_is_summoned_ally = source_is_summoned_ally;
         event.damage = target.damage;
         event.healing = target.healing;
         event.resisted = target.resisted;
@@ -1336,7 +1339,7 @@ BattleRoundResult BattleSession::play_round(
                     add_ability_events(
                         result.events, BattleEventKind::ally_ability, false,
                         ally_index, false, decision.ability_id, effect_code,
-                        support.targets);
+                        support.targets, 0, 0, false, true, true);
                 }
             } else {
                 std::array<PlayerBattleState, 4> player_states{};
@@ -1372,7 +1375,7 @@ BattleRoundResult BattleSession::play_round(
                         result.events, BattleEventKind::ally_ability, false,
                         ally_index, tactical.target_is_monster,
                         decision.ability_id, effect_code, tactical.targets, 0,
-                        tactical.removed_monster_buff_mask);
+                        tactical.removed_monster_buff_mask, false, true, true);
                 } else {
                     const auto effect = apply_player_ability_effect(
                         effect_code, party_[0].level, target_index,
@@ -1387,7 +1390,7 @@ BattleRoundResult BattleSession::play_round(
                             result.events, BattleEventKind::ally_ability, false,
                             ally_index, true, decision.ability_id,
                             effect_code,
-                            effect.targets);
+                            effect.targets, 0, 0, false, true, true);
                     }
                 }
             }

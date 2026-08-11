@@ -1577,14 +1577,20 @@ BattleSurface compose_event_frame(
         draw_weapon_overlay(frame, *weapon_animation, context.game_root,
                             target_x, target_y);
     }
-    if (include_party_cards) {
+    // 1048 enters the player-side selector table from the captured-ally
+    // dispatcher without ever calling 2bb5.  Its effect, status/result and
+    // retained-handler pages therefore keep the bare ally-action bottom
+    // strip even when the packed ally index happens to equal a party index.
+    const auto draw_party_cards =
+        include_party_cards && !event.source_is_summoned_ally;
+    if (draw_party_cards) {
         draw_fig_party_cards(
             frame, menu_sprites,
             std::span<const BattlePartyMember>(visual.party).first(
                 visual.party_count),
             action_actor, action_mode_x_anchor);
     }
-    if (include_party_cards && fighter_pose && player_actor_event(event.kind) &&
+    if (draw_party_cards && fighter_pose && player_actor_event(event.kind) &&
         event.source < visual.party_count) {
         draw_fighter_pose(frame, fighters, visual.party[event.source],
                           *fighter_pose, action_mode_x_anchor);

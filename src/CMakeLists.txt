@@ -3222,6 +3222,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_ally_ability_validation PROPERTIES
         DEPENDS fig_ally_ability_prepare)
     add_test(
+        NAME fig_ally_special_ability_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-special-ability-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-special-ability-save"
+    )
+    add_test(
+        NAME fig_ally_special_ability_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ally-special-ability.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-special-ability-save"
+                "${CMAKE_BINARY_DIR}/fig-ally-special-ability"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ally-special-ability-rgb-reference.json"
+    )
+    set_tests_properties(fig_ally_special_ability_validation PROPERTIES
+        DEPENDS fig_ally_special_ability_prepare)
+    add_test(
         NAME fig_ally_flee_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-flee-fixture.py"

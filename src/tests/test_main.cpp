@@ -5325,6 +5325,7 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 ally_medium_success.events.end(),
                 [](const swd2::BattleSessionEvent& event) {
                     return event.kind == swd2::BattleEventKind::ally_ability &&
+                           event.source_is_summoned_ally &&
                            event.source == 0 && event.ability_id == 12 &&
                            event.effect_code == 0x57;
                 }),
