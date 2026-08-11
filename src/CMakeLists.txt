@@ -2822,6 +2822,24 @@ if(BUILD_TESTING)
     set_tests_properties(fig_player_attack_medium_validation PROPERTIES
         DEPENDS fig_player_attack_medium_prepare)
     add_test(
+        NAME fig_player_attack_b0_medium_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-attack-b0-medium-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-b0-medium-game"
+    )
+    add_test(
+        NAME fig_player_attack_b0_medium_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-attack-b0-medium.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-b0-medium-game"
+                "${CMAKE_BINARY_DIR}/fig-player-attack-b0-medium"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-attack-b0-medium-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_attack_b0_medium_validation PROPERTIES
+        DEPENDS fig_player_attack_b0_medium_prepare)
+    add_test(
         NAME fig_defeat_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-defeat-fixture.py"
