@@ -53,6 +53,9 @@ def main() -> int:
                 reference.get("monster_definition_id") != 456 or \
                 (reference.get("ability_id"), reference.get("effect_code")) != \
                     (117, 0x64) or \
+                "0da7" not in reference.get("rewrite_timeline_note", "") or \
+                "fig-player-buff-expiry" not in \
+                    reference.get("rewrite_timeline_note", "") or \
                 not isinstance(pages, list) or \
                 tuple(page.get("rewrite_frame") for page in pages) != \
                     PAGE_FRAMES or \

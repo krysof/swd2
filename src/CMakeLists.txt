@@ -3601,6 +3601,24 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_buff_expiry_validation PROPERTIES
         DEPENDS fig_monster_buff_expiry_prepare)
     add_test(
+        NAME fig_player_buff_expiry_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-game"
+    )
+    add_test(
+        NAME fig_player_buff_expiry_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-rgb-reference.json"
+    )
+    set_tests_properties(fig_player_buff_expiry_validation PROPERTIES
+        DEPENDS fig_player_buff_expiry_prepare)
+    add_test(
         NAME fig_capture_success_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-capture-success-fixture.py"

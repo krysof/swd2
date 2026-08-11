@@ -21,7 +21,7 @@
     "direct_updates": 0,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "9b596a20d72fd3d7"
+    "fnv1a64": "77a1fbfa878880d6"
   },
   "rewrite_audio": {
     "music_calls": 1,
@@ -103,5 +103,6 @@
       "rewrite_rgb_sha256": "82e4890bf4d9b5e8a039882981749e21b9a82b8f862c3985039816ef60db7dde",
       "original_rgb_sha256": "82e4890bf4d9b5e8a039882981749e21b9a82b8f862c3985039816ef60db7dde"
     }
-  ]
+  ],
+  "rewrite_timeline_note": "The deterministic tail includes the selected player status naturally expiring after a physical attack; its 0da7 card now retains the final action anchor and its 0d98 cleanup is bare, as proved independently by fig-player-buff-expiry-rgb-reference.json."
 }

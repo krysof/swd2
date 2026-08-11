@@ -2898,6 +2898,79 @@ bool present_round_events(
                 // FIG 0c41..0d98 reports five expiring party buffs followed
                 // by four recovered status bits, all through 0da7's neutral
                 // four-column bottom card rather than 2338's colour-6b card.
+                //
+                // 0da7 does not reset the physical-action globals before it
+                // calls 2db8/137a.  When this event immediately follows a
+                // player attack, 31e1/31e3 therefore still describe the
+                // attack's final fighter pose at the selected monster.  The
+                // compact panel is placed eight Mode-X columns left of the
+                // fighter sprite and is drawn *after* 137a, covering the top
+                // of that relocated action card.  Reusing the ordinary
+                // party-slot status helper instead moves the panel to x=0,
+                // replaces the fighter with a portrait and cannot match the
+                // original 0c41 path.
+                const BattleSessionEvent* physical_backing = nullptr;
+                std::optional<std::size_t> physical_pose;
+                if (event_index != 0) {
+                    const auto& previous = result.events[event_index - 1U];
+                    if (previous.kind == BattleEventKind::player_attack &&
+                        !previous.source_is_monster &&
+                        previous.source == event.source &&
+                        previous.source < visual.party_count) {
+                        physical_backing = &previous;
+                        physical_pose = previous.critical ? 3U : 2U;
+                    }
+                }
+                const auto present_player_expiry_card = [&](std::span<const std::uint8_t> text) {
+                    if (physical_backing != nullptr && physical_pose) {
+                        auto frame = compose_event_frame(
+                            context, base_surface, encounter, items, fighters,
+                            menu_sprites, font, fallback, visual,
+                            *physical_backing, *physical_pose, {}, std::nullopt,
+                            encounter_directory_offset);
+                        const auto [target_x, target_y] = event_target_center(
+                            encounter, items, context.game_root, visual,
+                            *physical_backing, fighters);
+                        static_cast<void>(target_y);
+                        const auto action_anchor =
+                            physical_backing->action_anchor_is_target
+                                ? (physical_backing->target_is_monster
+                                       ? target_x / 4 - 3
+                                       : 12 + static_cast<int>(
+                                                  physical_backing->target) *
+                                                  18)
+                                : 12 + static_cast<int>(
+                                           physical_backing->source) * 18;
+                        auto placement = fig_fighter_placement(
+                            visual.party[physical_backing->source].identity,
+                            visual.party[physical_backing->source].party_index,
+                            *physical_pose, fighters.sprites().size());
+                        const auto normal_anchor =
+                            12 + static_cast<int>(
+                                     visual.party[physical_backing->source]
+                                         .party_index) *
+                                     18;
+                        placement.left +=
+                            (action_anchor - normal_anchor) * 4;
+                        auto panel_column = placement.left / 4 - 8;
+                        // 0dbb performs an unsigned bound check after the
+                        // subtraction, folding both underflow and >=100 back
+                        // to column zero.
+                        if (panel_column < 0 || panel_column >= 100) {
+                            panel_column = 0;
+                        }
+                        draw_message_panel(
+                            frame, menu_sprites, panel_column, 120, 4);
+                        draw_big5(frame, font, fallback, text,
+                                  (panel_column + 2) * 4, 129, 0x00);
+                        present_battle_surface(context, frame);
+                        return;
+                    }
+                    present_player_status_card(
+                        context, base_surface, encounter, items, menu_sprites,
+                        font, fallback, visual, event, text,
+                        encounter_directory_offset, 4, 0x00, 0, 2);
+                };
                 for (std::size_t slot = 0; slot < 5U; ++slot) {
                     if ((event.expired_player_buff_mask & (1U << slot)) == 0) {
                         continue;
@@ -2907,11 +2980,8 @@ bool present_round_events(
                         static_cast<std::uint8_t>(1U << slot);
                     visual_expiry.recovered_player_status_mask = 0;
                     apply_visual_event(visual, visual_expiry, abilities);
-                    present_player_status_card(
-                        context, base_surface, encounter, items, menu_sprites,
-                        font, fallback, visual, event,
-                        abilities.player_removed_buff_text(slot),
-                        encounter_directory_offset, 4, 0x00, 0, 2);
+                    present_player_expiry_card(
+                        abilities.player_removed_buff_text(slot));
                     if (!delay(status_card_delay)) return false;
                 }
                 for (std::size_t slot = 0; slot < 4U; ++slot) {
@@ -2923,17 +2993,14 @@ bool present_round_events(
                     visual_recovery.recovered_player_status_mask =
                         static_cast<std::uint8_t>(1U << slot);
                     apply_visual_event(visual, visual_recovery, abilities);
-                    present_player_status_card(
-                        context, base_surface, encounter, items, menu_sprites,
-                        font, fallback, visual, event,
-                        abilities.recovered_player_status_text(slot),
-                        encounter_directory_offset, 4, 0x00, 0, 2);
+                    present_player_expiry_card(
+                        abilities.recovered_player_status_text(slot));
                     if (!delay(status_card_delay)) return false;
                 }
                 present_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event, std::nullopt, {}, std::nullopt,
-                    encounter_directory_offset);
+                    encounter_directory_offset, std::nullopt, false, false);
                 if (!delay(ward_card_delay)) return false;
             }
             continue;
@@ -4416,7 +4483,13 @@ bool present_round_events(
                         ? std::optional<std::size_t>{poses[pose_count - 1U]}
                         : std::nullopt,
                     {}, std::nullopt, encounter_directory_offset);
-                if (event_index + 1U < result.events.size()) {
+                if (event_index + 1U < result.events.size() &&
+                    result.events[event_index + 1U].kind !=
+                        BattleEventKind::status_expired) {
+                    // 0c41 calls 0da7 before the initiative-loop rejoin.  A
+                    // natural expiry therefore draws directly over 1358's
+                    // retained final physical pose; the monster-only 2db8
+                    // page belongs after 0da7, not between the pose and card.
                     present_event_frame(
                         context, base_surface, encounter, items, fighters,
                         menu_sprites, font, fallback, visual, event,
