@@ -8,6 +8,7 @@
 #include "swd2/battle_presentation.hpp"
 #include "swd2/battle_session.hpp"
 #include "swd2/dialogue.hpp"
+#include "swd2/fig_timing.hpp"
 #include "swd2/legacy_font.hpp"
 #include "swd2/monster_definition.hpp"
 #include "swd2/rsk_decoder.hpp"
@@ -1101,7 +1102,7 @@ bool present_story_battle_setup(GameContext& context,
     };
     // FIG 32d4..3385: CD348, the four CD521 frames moving two byte
     // columns left each time, then CD352. 3386 presents each composition for
-    // exactly three 70-Hz ticks and restores the decoded background.
+    // exactly three FIG INT-08h timer ticks and restores the decoded background.
     static constexpr std::array<Step, 6> steps = {{
         {348, 0, 30, 21},
         {521, 0, 28, 21},
@@ -1123,7 +1124,7 @@ bool present_story_battle_setup(GameContext& context,
             std::span<const std::uint8_t, 768>(frame.palette),
         });
         if (!delay_for_or_frontend_quit(
-                context.platform, std::chrono::milliseconds(43))) {
+                context.platform, fig_timer_ticks(3))) {
             return false;
         }
     }
@@ -2106,7 +2107,7 @@ bool present_medium_summon_animation(
             *retained_action_surface = frame;
         }
         if (!delay_for_or_frontend_quit(
-                context.platform, std::chrono::milliseconds(14))) {
+                context.platform, fig_timer_ticks(1))) {
             return false;
         }
 
@@ -2142,19 +2143,15 @@ bool present_round_events(
     std::uint16_t encounter_directory_offset,
     const std::array<PlayerBattleCommand, 4>& commands,
     std::size_t& existing_result_palette_shift) {
-    constexpr auto action_delay = std::chrono::milliseconds(43);  // 3/70 s
-    constexpr auto effect_delay = std::chrono::milliseconds(14);  // 1/70 s
-    constexpr auto status_card_delay = std::chrono::milliseconds(257); // 18/70 s
-    constexpr auto ward_card_delay = std::chrono::milliseconds(71); // 5/70 s
-    constexpr auto immunity_card_delay = std::chrono::milliseconds(114); // 8/70 s
-    constexpr auto monster_action_card_delay =
-        std::chrono::milliseconds(57); // 4/70 s
-    constexpr auto summoned_action_card_delay =
-        std::chrono::milliseconds(129); // 9/70 s
-    constexpr auto capture_action_card_delay =
-        std::chrono::milliseconds(257); // 18/70 s
-    constexpr auto summon_install_delay =
-        std::chrono::milliseconds(143); // 10/70 s
+    constexpr auto action_delay = fig_timer_ticks(3);
+    constexpr auto effect_delay = fig_timer_ticks(1);
+    constexpr auto status_card_delay = fig_timer_ticks(18);
+    constexpr auto ward_card_delay = fig_timer_ticks(5);
+    constexpr auto immunity_card_delay = fig_timer_ticks(8);
+    constexpr auto monster_action_card_delay = fig_timer_ticks(4);
+    constexpr auto summoned_action_card_delay = fig_timer_ticks(9);
+    constexpr auto capture_action_card_delay = fig_timer_ticks(18);
+    constexpr auto summon_install_delay = fig_timer_ticks(10);
     std::map<std::uint16_t, SpriteArchive> effect_cache;
     std::array<bool, 4> player_resource_cost_presented{};
     const auto present_player_resource_cost = [&](const BattleSessionEvent& event) {
@@ -2547,7 +2544,7 @@ bool present_round_events(
                     context, base_surface, encounter, items, menu_sprites,
                     font, fallback, visual, summon_name_event, abilities,
                     encounter_directory_offset, false, &alternate_page);
-                if (!delay(std::chrono::milliseconds(100))) return false;
+                if (!delay(fig_timer_ticks(7))) return false;
             }
             play_voice_cue(context, {FigVoiceFile::sp, 0x31,
                                      FigVoiceTiming::before_action});
@@ -2716,8 +2713,8 @@ bool present_round_events(
                 font, fallback, visual, event, abilities,
                 encounter_directory_offset, false, &dismissal_name_page);
             // 262f suppresses the normal ability voice for 35h/43h/53h but
-            // still retains the name card for seven 70-Hz ticks.
-            if (!delay(std::chrono::milliseconds(100))) return false;
+            // still retains the name card for seven INT-08h timer ticks.
+            if (!delay(fig_timer_ticks(7))) return false;
             play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
                                      FigVoiceTiming::before_action});
 
@@ -3158,7 +3155,7 @@ bool present_round_events(
             }
         }
         if (monster_named_action && !monster_special_player_resistance) {
-            if (!delay(std::chrono::milliseconds(100))) return false; // 7/70 s
+            if (!delay(fig_timer_ticks(7))) return false;
             if (event.monster_generic_path) {
                 // 2464 first flips the bare scratch page that 262f restored;
                 // the single-target path then composes its selected card page.
@@ -4737,7 +4734,7 @@ bool present_defeat_summary(
         std::span<const std::uint8_t, 768>(frame.palette),
     });
     return delay_for_or_frontend_quit(
-        context.platform, std::chrono::milliseconds(771)); // 54/70 s
+        context.platform, fig_timer_ticks(54));
 }
 
 bool present_level_ups(
@@ -4911,9 +4908,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 });
                 const auto text_delay = context.shared_state.u16(0x3f2);
                 if (text_delay != 0) {
-                    context.platform.delay_for(std::chrono::milliseconds(
-                        (static_cast<std::uint64_t>(text_delay) * 1000U + 69U) /
-                        70U));
+                    context.platform.delay_for(fig_timer_ticks(text_delay));
                 }
                 const auto text_action = context.platform.poll_text_input();
                 if (text_action == InputAction::quit) {
@@ -5090,11 +5085,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                                 context.shared_state.u16(0x3f2);
                             if (text_delay != 0) {
                                 context.platform.delay_for(
-                                    std::chrono::milliseconds(
-                                        (static_cast<std::uint64_t>(text_delay) *
-                                             1000U +
-                                         69U) /
-                                        70U));
+                                    fig_timer_ticks(text_delay));
                             }
                             const auto text_action =
                                 context.platform.poll_text_input();
@@ -5193,7 +5184,8 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             }
             // 09b8's successful random-encounter escape returns from FIG as
             // soon as the second fighter pose and SV3 submission complete.
-            // It never rejoins the ordinary round-boundary 2db8/80ms page.
+            // It never rejoins the ordinary round-boundary 2db8 page and its
+            // two FIG timer ticks.
             if (session.outcome() == BattleOutcome::escaped) break;
 
             // The initiative loop rejoins through 2db8, not 137a.  This clean
@@ -5214,7 +5206,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 std::span<const std::uint8_t, 768>(surface.palette),
             });
             if (!delay_for_or_frontend_quit(
-                    context.platform, std::chrono::milliseconds(80))) {
+                    context.platform, fig_timer_ticks(2))) {
                 quit_battle = true;
                 break;
             }

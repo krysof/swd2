@@ -335,7 +335,7 @@ fig_player_escape_failure_placement() noexcept {
 }
 
 // 3c44 reveals a newly composed VGA page in four consecutive 80-byte by
-// 50-scanline chunks, with one 70 Hz timer wait after each copy.
+// 50-scanline chunks, with one FIG INT-08h timer wait after each copy.
 [[nodiscard]] constexpr std::array<int, 4>
 fig_page_wipe_scanline_ends() noexcept {
     return {50, 100, 150, 200};

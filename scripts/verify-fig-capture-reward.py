@@ -63,7 +63,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 12, "consumed": 12, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 11, "poll": 1, "text": 36, "frontend": 106}:
+                    "wait": 11, "poll": 1, "text": 36, "frontend": 220}:
             raise ValueError("FIG capture-reward input boundaries differ")
         if trace.get("video") != {
                 "frames": expected["rewrite_frames"], "direct_updates": 36,
@@ -76,7 +76,7 @@ def main() -> int:
                 "music_calls": 2, "voice_calls": 2,
                 "stop_music_calls": 0, "stop_audio_calls": 1,
                 "fnv1a64": "6013373949c72bbc"} or \
-                trace.get("delay_milliseconds") != 1408:
+                trace.get("delay_milliseconds") != 5170:
             raise ValueError("FIG capture-reward audio or timing differs")
         checkpoints = trace.get("input_checkpoints", [])
         if len(checkpoints) != 12 or \

@@ -64,7 +64,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 7, "consumed": 7, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 3, "poll": 2, "text": 2, "frontend": 115}:
+                    "wait": 3, "poll": 2, "text": 2, "frontend": 246}:
             raise ValueError("FIG story-42 input boundaries differ")
         if trace.get("video") != {
                 "frames": 55, "direct_updates": 4,
@@ -77,7 +77,7 @@ def main() -> int:
                 "music_calls": 1, "voice_calls": 3,
                 "stop_music_calls": 0, "stop_audio_calls": 1,
                 "fnv1a64": "d8270c80754cd6a1"} or \
-                trace.get("delay_milliseconds") != 1013:
+                trace.get("delay_milliseconds") != 3739:
             raise ValueError("FIG story-42 audio or timing differs")
         if (trace.get("state_fnv1a64"), trace.get("mapz_fnv1a64"),
                 trace.get("name_fnv1a64")) != (

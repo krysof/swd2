@@ -91,7 +91,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 4, "consumed": 4, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 4, "poll": 0, "text": 0, "frontend": 272}:
+                    "wait": 4, "poll": 0, "text": 0, "frontend": 589}:
             raise ValueError("monster-special-buff replay boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \
@@ -113,7 +113,7 @@ def main() -> int:
             for item in trace.get("timeline", []) if item.get("kind") == "frame"
         }
         if tuple(frame_times.get(index) for index in range(4, 8)) != \
-                (0, 0, 171, 214):
+                (0, 0, 659, 824):
             raise ValueError("26af monster self-buff flip timing differs")
 
         frames = load_indexed_frames(frame_path)

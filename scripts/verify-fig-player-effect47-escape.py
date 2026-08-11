@@ -115,7 +115,7 @@ def main() -> int:
             for item in timeline if item.get("kind") == "frame"
         }
         if tuple(frame_times.get(index) for index in range(1, 6)) != \
-                (0, 0, 0, 0, 43):
+                (0, 0, 0, 0, 165):
             raise ValueError("FIG player-effect-47 pose timing differs")
         voices = [item for item in timeline if item.get("kind") == "voice"]
         if len(voices) != 1 or (

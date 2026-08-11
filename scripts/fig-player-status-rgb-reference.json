@@ -27,7 +27,7 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 107
+        "frontend": 248
       },
       "rewrite_video": {
         "frames": 42,
@@ -36,7 +36,7 @@
         "last_height": 200,
         "fnv1a64": "7022514a9ae6f759"
       },
-      "rewrite_delay_milliseconds": 1057,
+      "rewrite_delay_milliseconds": 3904,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,
@@ -125,7 +125,7 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 107
+        "frontend": 248
       },
       "rewrite_video": {
         "frames": 42,
@@ -134,7 +134,7 @@
         "last_height": 200,
         "fnv1a64": "d995a4d3d81dad02"
       },
-      "rewrite_delay_milliseconds": 1057,
+      "rewrite_delay_milliseconds": 3904,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,
@@ -193,7 +193,7 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 78
+        "frontend": 199
       },
       "rewrite_video": {
         "frames": 24,
@@ -202,7 +202,7 @@
         "last_height": 200,
         "fnv1a64": "43d95ebb1100c923"
       },
-      "rewrite_delay_milliseconds": 919,
+      "rewrite_delay_milliseconds": 3353,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 1,
@@ -261,7 +261,7 @@
         "wait": 4,
         "poll": 0,
         "text": 0,
-        "frontend": 107
+        "frontend": 248
       },
       "rewrite_video": {
         "frames": 42,
@@ -270,7 +270,7 @@
         "last_height": 200,
         "fnv1a64": "6d3a1c9931961db8"
       },
-      "rewrite_delay_milliseconds": 1057,
+      "rewrite_delay_milliseconds": 3904,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,

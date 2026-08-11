@@ -166,8 +166,8 @@ def main() -> int:
         # plays SP061, waits five ticks, then 0fb9 contributes the clean five-
         # tick page before the next enemy action.
         if frames[26] != frames[31] or \
-                frame_times[30:33] != [646, 846, 917] or \
-                expected["dismiss_voice_at_milliseconds"] != 775:
+                frame_times[30:33] != [2309, 3078, 3353] or \
+                expected["dismiss_voice_at_milliseconds"] != 2803:
             raise ValueError("FIG captured-ally empty-B0-dismiss sentinel timing differs")
         clean = frames[31][0]
         for index in PAGE_INDICES[:3]:

@@ -31,7 +31,7 @@
         "wait": 5,
         "poll": 0,
         "text": 0,
-        "frontend": 103
+        "frontend": 238
       },
       "rewrite_video": {
         "frames": 42,
@@ -40,7 +40,7 @@
         "last_height": 200,
         "fnv1a64": "0a16f818f42c900a"
       },
-      "rewrite_delay_milliseconds": 1014,
+      "rewrite_delay_milliseconds": 3739,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,
@@ -183,7 +183,7 @@
         "wait": 5,
         "poll": 0,
         "text": 0,
-        "frontend": 97
+        "frontend": 213
       },
       "rewrite_video": {
         "frames": 41,
@@ -192,7 +192,7 @@
         "last_height": 200,
         "fnv1a64": "6b749de609d538dd"
       },
-      "rewrite_delay_milliseconds": 886,
+      "rewrite_delay_milliseconds": 3244,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,

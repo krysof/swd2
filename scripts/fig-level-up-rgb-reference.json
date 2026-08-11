@@ -25,7 +25,27 @@
       "rewrite_indexed_sha256": "2415157707364c99f638167fe19d7684eced0e2f501eb948c4f4d790867a2831",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
       "rewrite_rgb_sha256": "4c3fb864bf41cad16d14a78f081d19585e0a467db2e03e7086462924f463a751",
-      "rewrite_frames": 27
+      "rewrite_frames": 27,
+      "rewrite_input": {
+        "total": 4,
+        "consumed": 4,
+        "remaining": 0,
+        "implicit_quit_calls": 0
+      },
+      "rewrite_boundaries": {
+        "wait": 4,
+        "poll": 0,
+        "text": 0,
+        "frontend": 114
+      },
+      "rewrite_audio": {
+        "music_calls": 3,
+        "voice_calls": 1,
+        "stop_music_calls": 0,
+        "stop_audio_calls": 1,
+        "fnv1a64": "7b969b8fb8024a39"
+      },
+      "rewrite_delay_milliseconds": 1650
     },
     {
       "label": "learned_ability_9",
@@ -46,7 +66,27 @@
       "rewrite_indexed_sha256": "8704d6023ab5ca7d616329ca112e6c358e343cce6b632f4729722053489b0d0c",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
       "rewrite_rgb_sha256": "f05d674c82227fb3cbfd2f2c44ee8de125f5e9ae02304c2872a986403ab494f7",
-      "rewrite_frames": 27
+      "rewrite_frames": 27,
+      "rewrite_input": {
+        "total": 4,
+        "consumed": 4,
+        "remaining": 0,
+        "implicit_quit_calls": 0
+      },
+      "rewrite_boundaries": {
+        "wait": 4,
+        "poll": 0,
+        "text": 0,
+        "frontend": 114
+      },
+      "rewrite_audio": {
+        "music_calls": 3,
+        "voice_calls": 1,
+        "stop_music_calls": 0,
+        "stop_audio_calls": 1,
+        "fnv1a64": "7b969b8fb8024a39"
+      },
+      "rewrite_delay_milliseconds": 1650
     }
   ]
 }

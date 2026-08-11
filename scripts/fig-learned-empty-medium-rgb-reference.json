@@ -33,7 +33,7 @@
     "wait": 4,
     "poll": 0,
     "text": 0,
-    "frontend": 98
+    "frontend": 212
   },
   "rewrite_video": {
     "frames": 40,
@@ -42,7 +42,7 @@
     "last_height": 200,
     "fnv1a64": "548774d4c881424a"
   },
-  "rewrite_delay_milliseconds": 871,
+  "rewrite_delay_milliseconds": 3190,
   "rewrite_audio": {
     "music_calls": 1,
     "voice_calls": 2,
@@ -55,13 +55,13 @@
   "voice_checkpoints": [
     {
       "call": 0,
-      "at_milliseconds": 156,
+      "at_milliseconds": 605,
       "payload_fnv1a64": "309e81a048cdcef2",
       "resource": "SP061.VOC"
     },
     {
       "call": 1,
-      "at_milliseconds": 425,
+      "at_milliseconds": 1650,
       "payload_fnv1a64": "ce3659387971554b",
       "resource": "SP106.VOC"
     }

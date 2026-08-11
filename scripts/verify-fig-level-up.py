@@ -47,10 +47,8 @@ def verify_case(
         "--frame-output", str(frame_path),
     ], check=True, stdout=subprocess.DEVNULL)
     trace = json.loads(trace_path.read_text(encoding="utf-8"))
-    if trace.get("input") != {
-            "total": 4, "consumed": 4, "remaining": 0,
-            "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                "wait": 4, "poll": 0, "text": 0, "frontend": 56}:
+    if trace.get("input") != expected["rewrite_input"] or \
+            trace.get("boundaries") != expected["rewrite_boundaries"]:
         raise ValueError(f"FIG {label} input boundaries differ")
     if trace.get("video") != {
             "frames": rewrite_frames, "direct_updates": 0,
@@ -59,11 +57,9 @@ def verify_case(
             trace.get("frame_fnv1a64", [])[-1:] != [
                 expected["rewrite_final_fnv1a64"]]:
         raise ValueError(f"FIG {label} video differs")
-    if trace.get("audio") != {
-            "music_calls": 3, "voice_calls": 1,
-            "stop_music_calls": 0, "stop_audio_calls": 1,
-            "fnv1a64": "7b969b8fb8024a39"} or \
-            trace.get("delay_milliseconds") != 474:
+    if trace.get("audio") != expected["rewrite_audio"] or \
+            trace.get("delay_milliseconds") != \
+                expected["rewrite_delay_milliseconds"]:
         raise ValueError(f"FIG {label} audio or delay boundary differs")
     if (trace.get("state_fnv1a64"), trace.get("mapz_fnv1a64"),
             trace.get("name_fnv1a64")) != (

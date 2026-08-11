@@ -22,7 +22,7 @@
     "wait": 4,
     "poll": 0,
     "text": 0,
-    "frontend": 124
+    "frontend": 254
   },
   "rewrite_video": {
     "frames": 60,

@@ -34,7 +34,7 @@
     "wait": 8,
     "poll": 0,
     "text": 0,
-    "frontend": 230
+    "frontend": 470
   },
   "rewrite_video": {
     "frames": 111,
@@ -43,7 +43,7 @@
     "last_height": 200,
     "fnv1a64": "f38cac97152888e0"
   },
-  "rewrite_delay_milliseconds": 1820,
+  "rewrite_delay_milliseconds": 6710,
   "rewrite_audio": {
     "music_calls": 2,
     "voice_calls": 3,

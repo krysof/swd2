@@ -14,9 +14,9 @@ from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 PAGE_FRAMES = tuple(range(1, 32))
 PAGE_TIMES = (
-    0, 0, 0, 0, 0, 43, 86, 157, 228, 285, 285, 299, 313, 327,
-    341, 355, 369, 383, 397, 411, 425, 439, 453, 467, 481, 495,
-    509, 523, 608, 651, 731,
+    0, 0, 0, 0, 0, 165, 330, 605, 880, 1100, 1100, 1155, 1210,
+    1265, 1320, 1375, 1430, 1485, 1540, 1595, 1650, 1705, 1760,
+    1815, 1870, 1925, 1980, 2035, 2365, 2530, 2640,
 )
 
 
@@ -91,7 +91,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 5, "consumed": 5, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 5, "poll": 0, "text": 0, "frontend": 78}:
+                    "wait": 5, "poll": 0, "text": 0, "frontend": 172}:
             raise ValueError("FIG escape-failure replay boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \

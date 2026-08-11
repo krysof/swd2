@@ -96,7 +96,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 5, "consumed": 5, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 4, "poll": 1, "text": 36, "frontend": 68}:
+                    "wait": 4, "poll": 1, "text": 36, "frontend": 148}:
             raise ValueError("monster-flee replay input boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \

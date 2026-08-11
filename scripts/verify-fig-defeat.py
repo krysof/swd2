@@ -61,7 +61,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 3, "consumed": 3, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 2, "poll": 0, "text": 0, "frontend": 99}:
+                    "wait": 2, "poll": 0, "text": 0, "frontend": 271}:
             raise ValueError("FIG defeat input boundaries differ")
         if trace.get("video") != {
                 "frames": 26, "direct_updates": 0,
@@ -74,7 +74,7 @@ def main() -> int:
                 "music_calls": 2, "voice_calls": 2,
                 "stop_music_calls": 0, "stop_audio_calls": 1,
                 "fnv1a64": "2931f6ce9cd2e62d"} or \
-                trace.get("delay_milliseconds") != 1274:
+                trace.get("delay_milliseconds") != 4726:
             raise ValueError("FIG defeat audio or delay boundary differs")
         if (trace.get("state_fnv1a64"), trace.get("mapz_fnv1a64"),
                 trace.get("name_fnv1a64")) != (

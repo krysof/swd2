@@ -5,8 +5,14 @@
   "item_id": 195,
   "canonical_ability_id": 55,
   "effect_code": 107,
-  "nested_effects": [49, 60],
-  "installed_media": [0, 2],
+  "nested_effects": [
+    49,
+    60
+  ],
+  "installed_media": [
+    0,
+    2
+  ],
   "resource_cost": 34,
   "payment_pool": "ability_points",
   "target_source": "item_record",
@@ -34,7 +40,7 @@
     "wait": 4,
     "poll": 0,
     "text": 0,
-    "frontend": 181
+    "frontend": 371
   },
   "rewrite_video": {
     "frames": 85,
@@ -43,7 +49,7 @@
     "last_height": 200,
     "fnv1a64": "02d4bebaf8221508"
   },
-  "rewrite_delay_milliseconds": 1401,
+  "rewrite_delay_milliseconds": 5280,
   "rewrite_audio": {
     "music_calls": 1,
     "voice_calls": 3,

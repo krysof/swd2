@@ -30,7 +30,7 @@
     "wait": 6,
     "poll": 0,
     "text": 0,
-    "frontend": 159
+    "frontend": 347
   },
   "rewrite_video": {
     "frames": 68,
@@ -46,27 +46,27 @@
     "stop_audio_calls": 1,
     "fnv1a64": "4832d0203965b277"
   },
-  "rewrite_delay_milliseconds": 1460,
+  "rewrite_delay_milliseconds": 5278,
   "rewrite_state_fnv1a64": "282bf64a51a65c09",
   "rewrite_mapz_fnv1a64": "827f0f1b725a0958",
   "rewrite_name_fnv1a64": "e3d2853e2676513b",
   "rewrite_final_fnv1a64": "22a1572ec33b6e51",
   "rewrite_checkpoint_frame_times_milliseconds": [
-    1040,
-    1040,
-    1169,
-    1169,
-    1183,
-    1197,
-    1211,
-    1225,
-    1239,
-    1253,
-    1267,
-    1281,
-    1295,
-    1309,
-    1380
+    3849,
+    3849,
+    4343,
+    4343,
+    4398,
+    4453,
+    4508,
+    4563,
+    4618,
+    4673,
+    4728,
+    4783,
+    4838,
+    4893,
+    5168
   ],
   "full_modern_frames": [
     {

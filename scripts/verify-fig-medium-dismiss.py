@@ -21,7 +21,7 @@ PAGE_LABELS = (
     "22e0 bare cleanup page after mediator removal",
 )
 FLIP_FRAMES = tuple(range(38, 47))
-FLIP_TIMES = (720, 720, 734, 748, 762, 776, 790, 804, 818)
+FLIP_TIMES = (2803, 2803, 2858, 2913, 2968, 3023, 3078, 3133, 3188)
 
 
 def sha256(data: bytes) -> str:
@@ -100,7 +100,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 4, "consumed": 4, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 4, "poll": 0, "text": 0, "frontend": 313}:
+                    "wait": 4, "poll": 0, "text": 0, "frontend": 675}:
             raise ValueError("FIG medium-dismiss replay boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \
@@ -122,8 +122,8 @@ def main() -> int:
             for item in trace.get("timeline", []) if item.get("kind") == "frame"
         }
         if tuple(frame_times.get(index) for index in FLIP_FRAMES) != \
-                FLIP_TIMES or frame_times.get(36) != 620 or \
-                frame_times.get(37) != 620 or frame_times.get(47) != 903:
+                FLIP_TIMES or frame_times.get(36) != 2419 or \
+                frame_times.get(37) != 2419 or frame_times.get(47) != 3518:
             raise ValueError("2731 eight-flip or 22e0 timing differs")
         voices = [
             item for item in trace.get("timeline", [])

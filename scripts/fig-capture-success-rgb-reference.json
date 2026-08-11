@@ -32,7 +32,7 @@
     "stop_audio_calls": 1,
     "fnv1a64": "6b2a0aa289c3cec6"
   },
-  "rewrite_delay_milliseconds": 466,
+  "rewrite_delay_milliseconds": 1593,
   "rewrite_state_fnv1a64": "0afbe72af596acc9",
   "voice_checkpoints": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "call": 1,
-      "at_milliseconds": 257,
+      "at_milliseconds": 989,
       "payload_fnv1a64": "9cfd5f74c6cf3fed",
       "resource": "SP015.VOC"
     }

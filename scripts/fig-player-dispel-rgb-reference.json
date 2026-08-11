@@ -25,7 +25,7 @@
     "wait": 6,
     "poll": 0,
     "text": 0,
-    "frontend": 139
+    "frontend": 327
   },
   "rewrite_video": {
     "frames": 58,
@@ -34,7 +34,7 @@
     "last_height": 200,
     "fnv1a64": "9d39c6cea25d5b2d"
   },
-  "rewrite_delay_milliseconds": 1383,
+  "rewrite_delay_milliseconds": 5168,
   "rewrite_audio": {
     "music_calls": 1,
     "voice_calls": 3,
@@ -45,11 +45,31 @@
   "rewrite_state_fnv1a64": "929d31ec2a1d61a0",
   "rewrite_final_fnv1a64": "97f016ebb8c37b8e",
   "restoration_frames": [
-    {"rewrite_frame": 47, "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda", "palette_sha256": "e4ff077bee4189c2f4be84be1a141d6ec724dbe3c5b5b622e021d920481150de"},
-    {"rewrite_frame": 48, "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda", "palette_sha256": "24a69bc69503b37c53c75a3a48d98e2fd7e50f6f8378f3a5f1e2ba5ca4e7a1b7"},
-    {"rewrite_frame": 49, "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda", "palette_sha256": "c2f4b44265021fb283dc81f87b829b8f980bdb2ec1b29a75452eff9df48ae18e"},
-    {"rewrite_frame": 50, "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda", "palette_sha256": "e5297190c7505360553484502d130cf928e7d70f01ceeaac2fdb61bdb396ae2d"},
-    {"rewrite_frame": 51, "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda", "palette_sha256": "b194f186f2d1a147e3a8d6228b9b73e5368e4bc9226b3bff0e4da53065ca4877"}
+    {
+      "rewrite_frame": 47,
+      "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda",
+      "palette_sha256": "e4ff077bee4189c2f4be84be1a141d6ec724dbe3c5b5b622e021d920481150de"
+    },
+    {
+      "rewrite_frame": 48,
+      "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda",
+      "palette_sha256": "24a69bc69503b37c53c75a3a48d98e2fd7e50f6f8378f3a5f1e2ba5ca4e7a1b7"
+    },
+    {
+      "rewrite_frame": 49,
+      "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda",
+      "palette_sha256": "c2f4b44265021fb283dc81f87b829b8f980bdb2ec1b29a75452eff9df48ae18e"
+    },
+    {
+      "rewrite_frame": 50,
+      "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda",
+      "palette_sha256": "e5297190c7505360553484502d130cf928e7d70f01ceeaac2fdb61bdb396ae2d"
+    },
+    {
+      "rewrite_frame": 51,
+      "indexed_sha256": "53408fe7ef2dff13f0387b2c61e6eaa25f3ceae53ee99e9f1f0a96b445f29cda",
+      "palette_sha256": "b194f186f2d1a147e3a8d6228b9b73e5368e4bc9226b3bff0e4da53065ca4877"
+    }
   ],
   "matched_frames": [
     {

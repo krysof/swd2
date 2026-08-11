@@ -92,7 +92,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 4, "consumed": 4, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 4, "poll": 0, "text": 0, "frontend": 266}:
+                    "wait": 4, "poll": 0, "text": 0, "frontend": 568}:
             raise ValueError("monster-special-silent replay boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \
@@ -113,7 +113,7 @@ def main() -> int:
             item["frame"]: item["at_milliseconds"]
             for item in trace.get("timeline", []) if item.get("kind") == "frame"
         }
-        if tuple(frame_times.get(index) for index in (4, 5, 6)) != (0, 71, 114):
+        if tuple(frame_times.get(index) for index in (4, 5, 6)) != (0, 275, 440):
             raise ValueError(
                 "silent 26af action regained a name-card/effect hold")
 

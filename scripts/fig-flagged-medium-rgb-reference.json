@@ -68,17 +68,17 @@
     "stop_audio_calls": 1,
     "fnv1a64": "90c3d55487c97850"
   },
-  "rewrite_delay_milliseconds": 789,
+  "rewrite_delay_milliseconds": 2859,
   "voice_checkpoints": [
     {
       "call": 0,
-      "at_milliseconds": 86,
+      "at_milliseconds": 330,
       "payload_fnv1a64": "2956be0892aeb426",
       "resource": "SP002.VOC"
     },
     {
       "call": 1,
-      "at_milliseconds": 343,
+      "at_milliseconds": 1319,
       "payload_fnv1a64": "ce3659387971554b",
       "resource": "SP106.VOC"
     }

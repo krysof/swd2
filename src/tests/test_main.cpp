@@ -19,6 +19,7 @@
 #include "swd2/event_program.hpp"
 #include "swd2/event_vm.hpp"
 #include "swd2/field_action_system.hpp"
+#include "swd2/fig_timing.hpp"
 #include "swd2/inventory_system.hpp"
 #include "swd2/item_database.hpp"
 #include "swd2/launcher.hpp"
@@ -66,6 +67,23 @@ void require(bool condition, const char* message) {
     if (!condition) {
         throw std::runtime_error(message);
     }
+}
+
+void test_fig_timer_ticks() {
+    using swd2::fig_timer_ticks;
+    require(fig_timer_ticks(0).count() == 0 &&
+                fig_timer_ticks(1).count() == 55 &&
+                fig_timer_ticks(2).count() == 110 &&
+                fig_timer_ticks(3).count() == 165 &&
+                fig_timer_ticks(4).count() == 220 &&
+                fig_timer_ticks(5).count() == 275 &&
+                fig_timer_ticks(7).count() == 384 &&
+                fig_timer_ticks(8).count() == 439 &&
+                fig_timer_ticks(9).count() == 494 &&
+                fig_timer_ticks(10).count() == 549 &&
+                fig_timer_ticks(18).count() == 989 &&
+                fig_timer_ticks(54).count() == 2966,
+            "FIG INT-08h PIT timer conversion differs");
 }
 
 void test_launcher() {
@@ -10585,7 +10603,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
         swd2::InputAction::quit,
     };
     status_card_quit_platform.frontend_actions.assign(
-        19U, swd2::InputAction::none);
+        42U, swd2::InputAction::none);
     status_card_quit_platform.frontend_actions.push_back(
         swd2::InputAction::quit);
     auto status_card_quit_state =
@@ -10606,13 +10624,13 @@ void test_battle_module(const std::filesystem::path& game_root) {
         status_card_quit_context, swd2::Marker::open_figure);
     require(status_card_quit_result == swd2::Marker::none &&
                 status_card_quit_platform.cursor == 3U &&
-                status_card_quit_platform.frontend_cursor == 20U &&
-                status_card_quit_platform.frontend_quit_poll_calls == 20U &&
+                status_card_quit_platform.frontend_cursor == 43U &&
+                status_card_quit_platform.frontend_quit_poll_calls == 43U &&
                 status_card_quit_platform.frame_hashes.size() == 12U &&
                 status_card_quit_platform.frame_hashes.back() ==
                     2224825471123321483ULL &&
-                status_card_quit_platform.delay_calls == 11U &&
-                status_card_quit_platform.delayed_milliseconds == 156U &&
+                status_card_quit_platform.delay_calls == 34U &&
+                status_card_quit_platform.delayed_milliseconds == 625U &&
                 status_card_quit_platform.stop_calls == 1U &&
                 status_card_quit_context.shared_state.u16(0x4a0) == 0U,
             "FIG 57d6 fixed status-card hold ignored frontend quit");
@@ -10811,6 +10829,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
 int main(int argc, char** argv) {
     try {
         require(argc == 2, "test requires the game directory argument");
+        test_fig_timer_ticks();
         test_launcher();
         test_paths();
         test_replay_input();

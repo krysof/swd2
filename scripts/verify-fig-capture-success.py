@@ -98,7 +98,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 5, "consumed": 5, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 5, "poll": 0, "text": 0, "frontend": 29}:
+                    "wait": 5, "poll": 0, "text": 0, "frontend": 86}:
             raise ValueError("FIG capture-success replay boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \
@@ -121,7 +121,7 @@ def main() -> int:
             for item in timeline if item.get("kind") == "frame"
         }
         if tuple(frame_times.get(index) for index in PAGE_FRAMES) != \
-                (0, 0, 0, 0, 0, 0, 257, 386, 466):
+                (0, 0, 0, 0, 0, 0, 989, 1483, 1593):
             raise ValueError("FIG capture-success frame timing differs")
         voices = [item for item in timeline if item.get("kind") == "voice"]
         checks = reference.get("voice_checkpoints")

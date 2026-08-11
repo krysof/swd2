@@ -36,10 +36,10 @@
     "stop_audio_calls": 1,
     "fnv1a64": "b7ec18ed1c77e973"
   },
-  "rewrite_delay_milliseconds": 2602,
+  "rewrite_delay_milliseconds": 9953,
   "rewrite_state_fnv1a64": "6e7c291fb31a320c",
   "dismiss_voice_call": 1,
-  "dismiss_voice_at_milliseconds": 720,
+  "dismiss_voice_at_milliseconds": 2803,
   "dismiss_voice_payload_fnv1a64": "309e81a048cdcef2",
   "stencil_checkpoint": {
     "status": "original_instruction_checkpoint",

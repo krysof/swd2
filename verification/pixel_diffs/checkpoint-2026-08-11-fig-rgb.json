@@ -19,7 +19,7 @@
     },
     {
       "path": "scripts/fig-ally-ability-rgb-reference.json",
-      "sha256": "df38c48adb4cd48d9aa51ac1996671127a8f09b097b1ce43242d3510d55b56ff",
+      "sha256": "be11ed41b26cf7a48541d782663e177b9360b1b397137576d246089189ebeceb",
       "kind": "original_fig_captured_ally_offensive_ability",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -27,7 +27,7 @@
     },
     {
       "path": "scripts/fig-ally-ae-dismiss-rgb-reference.json",
-      "sha256": "18ff30f82a447a04d22423f107e285cb1d0f7e1f09f1c9a7134728ff20d57135",
+      "sha256": "540bcc88c155e97703ecf65ec8526949836f768230997d306e6de1f4a2420da7",
       "kind": "original_fig_captured_ally_ae_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
@@ -35,7 +35,7 @@
     },
     {
       "path": "scripts/fig-ally-b0-dismiss-rgb-reference.json",
-      "sha256": "2c0554cb11510531063a2716f350768cfe578f671962ec436cc70c7b61d236b8",
+      "sha256": "0a27b6e382d3b79c22b5a4157d6767326e213a038c9b819721ba5200c6ed8e54",
       "kind": "original_fig_captured_ally_b0_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
@@ -43,7 +43,7 @@
     },
     {
       "path": "scripts/fig-ally-empty-ae-dismiss-rgb-reference.json",
-      "sha256": "c7cdd6873244f3199cd2f07b1f6a7661b4d133b6319f20f2feae97392b3deb91",
+      "sha256": "2d838b9030be2c31b2e9d185cbededafd0bcdea19c9c21b4df5d5c43c1ee6bab",
       "kind": "original_fig_captured_ally_empty_ae_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -51,7 +51,7 @@
     },
     {
       "path": "scripts/fig-ally-empty-b0-dismiss-rgb-reference.json",
-      "sha256": "3ca9de3d784cd69c44a0dd29d4727da133482fc71da05abf8b910c3df04ea208",
+      "sha256": "72458835b15b1588e639cc20c3f54bc09aae0bcc3c3eb783195d66ea1d772e20",
       "kind": "original_fig_captured_ally_empty_b0_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -59,7 +59,7 @@
     },
     {
       "path": "scripts/fig-ally-empty-medium-dismiss-rgb-reference.json",
-      "sha256": "fbf692402fcffd3c2bbf75c3279373b39c26868f8fd4bb4b85402fce40597479",
+      "sha256": "309618f39566c088b70568febfec3f1b6e6afd0d4bcab9a3d7ad7af56bd1a347",
       "kind": "original_fig_captured_ally_empty_medium_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -67,7 +67,7 @@
     },
     {
       "path": "scripts/fig-ally-evasion-rgb-reference.json",
-      "sha256": "4ab41593e397793abed58ba96479789cf9fd7bd064019c56f875d213e66f8afc",
+      "sha256": "fa2af3ac19e7c07f04649b7dec56472fc23c412b43731c9988e35505ed5936b4",
       "kind": "original_fig_captured_ally_physical_evasion",
       "registered_rgb_pairs": 3,
       "exact_rgb_pages": 3,
@@ -75,7 +75,7 @@
     },
     {
       "path": "scripts/fig-ally-flee-rgb-reference.json",
-      "sha256": "751ae9bbc460700ea9409df5f4e2fd1549027169c2b775fea83e5ae31d1dfb6e",
+      "sha256": "d37342295f71266ee515a73448dcf1d5b95ce9b044f9013dd6426efa3ae23fb5",
       "kind": "original_fig_captured_ally_departure",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -83,7 +83,7 @@
     },
     {
       "path": "scripts/fig-ally-hit-rgb-reference.json",
-      "sha256": "f41ac3ccd0642250ae2c93d92521bf27a948919472f1342ce3f65facc78526df",
+      "sha256": "62cae256d58307819624f28dee7c41d587f911e94cd5fbade58b8dd24c81b640",
       "kind": "original_fig_captured_ally_lethal_physical_hit",
       "registered_rgb_pairs": 14,
       "exact_rgb_pages": 14,
@@ -91,7 +91,7 @@
     },
     {
       "path": "scripts/fig-ally-hit-survives-rgb-reference.json",
-      "sha256": "d17042e60ab08ac84bf512e05a5e784f35f6922b957d9893e54ed1bebafb5691",
+      "sha256": "3af82e1c166a7f99b3ed766a3692862a09df89b3edbad72f1e00e68c996f9c19",
       "kind": "original_fig_captured_ally_nonlethal_physical_hit",
       "registered_rgb_pairs": 17,
       "exact_rgb_pages": 17,
@@ -99,7 +99,7 @@
     },
     {
       "path": "scripts/fig-ally-medium-dismiss-rgb-reference.json",
-      "sha256": "e3b3a4edc09187140f12defe4646c1f274a1f36498ffd92c0a02619945284f93",
+      "sha256": "9a1e73906c10a0348834cc3efa818a5295244dd920a82088efaee6dbb7531a58",
       "kind": "original_fig_captured_ally_medium_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
@@ -107,7 +107,7 @@
     },
     {
       "path": "scripts/fig-ally-medium-rgb-reference.json",
-      "sha256": "c3c498e5667db0966ebb6901dd6025c616a2e7cb0b0ee8d362f7ce4e269ec1a8",
+      "sha256": "e76364b3c19ddcb1f2422cd7e7b9cef243add6a5756ac9a970472d001469e6cf",
       "kind": "original_fig_captured_ally_medium_install",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -115,7 +115,7 @@
     },
     {
       "path": "scripts/fig-ally-multitarget-rgb-reference.json",
-      "sha256": "5daec994eba5df044cc782b6c81cc8f9adc8489a50b7390735187086671cc20c",
+      "sha256": "4149ccf3c1dcb93e759b3c80c431d477bf095ab31af4f50cb30607e71c0003a4",
       "kind": "original_fig_captured_ally_multitarget_ability",
       "registered_rgb_pairs": 37,
       "exact_rgb_pages": 37,
@@ -123,7 +123,7 @@
     },
     {
       "path": "scripts/fig-ally-special-ability-rgb-reference.json",
-      "sha256": "6446ac6183b9cad507e62fa5640e0612e8022dee91e8bec7eced7479dc5404d3",
+      "sha256": "391dd2647cfa3954048d2122a2bcd245c9677f619b41164791acbb55a55f0871",
       "kind": "original_fig_captured_ally_special_ability",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
@@ -131,7 +131,7 @@
     },
     {
       "path": "scripts/fig-ally-zero-rgb-reference.json",
-      "sha256": "e0ce80e21325ccac0e8691d8188d67d1ee0bba75d70689ae67e19c9f40d1b71e",
+      "sha256": "a785dc0040544c70554e55fcc569a4f33d4ab23670a14ea3da39b5db39eefc0c",
       "kind": "original_fig_captured_ally_zero_physical",
       "registered_rgb_pairs": 57,
       "exact_rgb_pages": 57,
@@ -147,7 +147,7 @@
     },
     {
       "path": "scripts/fig-capture-success-rgb-reference.json",
-      "sha256": "000cf43d8c3ad18836814126a3b82f40a2e7ac8cc8f45e9306822ea4f002d64c",
+      "sha256": "0de25b83903eb2ad992ea421527a5c3cab60d542029e3ea09ef77568d037bdec",
       "kind": "original_fig_random_capture_success_sequence",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -163,7 +163,7 @@
     },
     {
       "path": "scripts/fig-flagged-medium-rgb-reference.json",
-      "sha256": "6b4be582693432d480cc4a3754c9c828c0579d792856edd535019f95b0c69c1c",
+      "sha256": "f993c2630491ec411349e9de5b274c48418f94bf4d0b363d40043c08a0a3372b",
       "kind": "original_fig_flagged_medium",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -171,7 +171,7 @@
     },
     {
       "path": "scripts/fig-implicit-damage-rgb-reference.json",
-      "sha256": "129c18dc5b1c3aa31c2afbc5e6141b9d3bfc4b7a38dbee674e4b03615b084162",
+      "sha256": "52fa27076a1531f78dfed06ef8358e2e2c761471c6360de6f55b6858483c0713",
       "kind": "original_fig_implicit_monster_damage_dispatcher",
       "registered_rgb_pairs": 22,
       "exact_rgb_pages": 22,
@@ -179,7 +179,7 @@
     },
     {
       "path": "scripts/fig-item-barrier-rgb-reference.json",
-      "sha256": "6b14541d5bf8de705c9e65ca63c16d15a35d6abffcf1551773ee14a663ea1313",
+      "sha256": "ddbb28dbf933da8e4e4069eea41b9adad816262d0310e7d54dfce2ed81d7eab7",
       "kind": "original_fig_direct_item_barrier",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -187,7 +187,7 @@
     },
     {
       "path": "scripts/fig-item-composite-media-rgb-reference.json",
-      "sha256": "c98331ba06135a73dd2bdc7918e5c49d8fc41282c9ff2d53a500ce4c5ae76662",
+      "sha256": "49468d57c190cacfd8a6abec09eb2b56998c58f16bfa102c838a9cd131567ce2",
       "kind": "original_fig_type10_composite_media_item",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -195,7 +195,7 @@
     },
     {
       "path": "scripts/fig-item-composite-rgb-reference.json",
-      "sha256": "b7ede79356b5463781ad73aab451432ae580a26f22ab325893e13444879865d2",
+      "sha256": "b6790dfcdd3f3922910d5c1205a38d6f6e3efacc56413d0bb11214e9546195b4",
       "kind": "original_fig_type10_composite_item",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 5,
@@ -203,7 +203,7 @@
     },
     {
       "path": "scripts/fig-item-composite-support-rgb-reference.json",
-      "sha256": "3d865216c9f2a568616bccd43845015449483579f48a522de95ec3fde8136f58",
+      "sha256": "309f721733896538f70e5a99eb7e6922c11aa0a3f34915718dd4ddeae0753f33",
       "kind": "original_fig_type10_composite_support_item",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -211,7 +211,7 @@
     },
     {
       "path": "scripts/fig-item-damage-rgb-reference.json",
-      "sha256": "fe19623437feef20c2aa63c9fbf03bc1f43566135fa40f0beb9bf61c03e7b355",
+      "sha256": "790c1bf5a20357f125941aac88f1428fac14db72f6f3148c6daffc3cb823e4c0",
       "kind": "original_fig_direct_item_damage_dispatcher",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 10,
@@ -219,7 +219,7 @@
     },
     {
       "path": "scripts/fig-item-dispel-rgb-reference.json",
-      "sha256": "8d494d393ce396a72f83483b6f000091d5d698fef00196842b7790ae3139e3c5",
+      "sha256": "38acff3fa18286b50dd8f03b81e201a3de9e9db90cb242ba32c230454deaa3a0",
       "kind": "original_fig_item_dispel",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 13,
@@ -227,7 +227,7 @@
     },
     {
       "path": "scripts/fig-item-effect47-escape-rgb-reference.json",
-      "sha256": "80d86a8876bde8660ebf1cca7be3395c07a0dd26e5354bd1ce74b585059defbf",
+      "sha256": "0e46c23cc31ef2e21e89d0b40d15ab1c9cebeb98195d3aa68c31a5394529d628",
       "kind": "original_fig_item_effect47_escape",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -235,7 +235,7 @@
     },
     {
       "path": "scripts/fig-item-effect47-fixed-rgb-reference.json",
-      "sha256": "17b310738d4cdb38a9193cda163ce3df67baf8aa0f12358ecc353b6bde1973ed",
+      "sha256": "04bbb635da77f1016086276c99cd3f67ff72d82859b481d490ce8a015ed8f43e",
       "kind": "original_fig_item_effect47_fixed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -243,7 +243,7 @@
     },
     {
       "path": "scripts/fig-item-monster-status-rgb-reference.json",
-      "sha256": "5d887ef174b0489b91fb9a971b149e1a207fac29e342412a5879f24ec3938f7b",
+      "sha256": "b3f161b17d40be2f3d3a859e940876816b7e513d71feeebf1000e88097846c14",
       "kind": "original_fig_direct_item_monster_status",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 11,
@@ -259,7 +259,7 @@
     },
     {
       "path": "scripts/fig-item-status-rgb-reference.json",
-      "sha256": "a6a63c03c38a7c6176bf7dc1827ebac437489afdc1c20cacafefee4e43529545",
+      "sha256": "78641520c8c43fd458f3cdbd4efd475957d1e08cc1ade8e2d0a8a56e0ab5df42",
       "kind": "original_fig_direct_item_status_paths",
       "registered_rgb_pairs": 12,
       "exact_rgb_pages": 12,
@@ -267,7 +267,7 @@
     },
     {
       "path": "scripts/fig-item-support-class5-rgb-reference.json",
-      "sha256": "1b43bb0bbc2c6845479f202b8c77904d63f9d46dc45990f288a0def66788ff85",
+      "sha256": "2ee902e6cec96c8f254c6cf4dc980903bf3adbd46bcbf355b2c9f88c29762be4",
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -275,7 +275,7 @@
     },
     {
       "path": "scripts/fig-item-support-class5-selector-rgb-reference.json",
-      "sha256": "4a581cb493bb180a19b5679bc30f1161d2ac822d9724a722cbd6cb39b152f068",
+      "sha256": "807c816954253cb452ddc9ca989317ea8fe6c610e7a6bbbfd56950ace644e544",
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -283,7 +283,7 @@
     },
     {
       "path": "scripts/fig-item-support-dispatch-rgb-reference.json",
-      "sha256": "568d50ff5dff801dce0e26166fbbcb1cf88ad8ee0ef6013e6d72dfe0b9c7cde6",
+      "sha256": "1a65ce5900b79a8c456edc5e881b0c3964cf633c3bfed9ae201b3c5b2ddd1669",
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -291,7 +291,7 @@
     },
     {
       "path": "scripts/fig-item-support-rgb-reference.json",
-      "sha256": "53372c281a4c1857bc663f85a2fb87c3045e16c030eacada98309d8288ee2961",
+      "sha256": "770147563add410dfc1a1670b84281b4d0cd847ca7edd990bc1fcfcb4b63db13",
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -299,7 +299,7 @@
     },
     {
       "path": "scripts/fig-learned-empty-medium-rgb-reference.json",
-      "sha256": "39d1c66b34305ef581df7bcb3294b8f661c8b4a4a0efa9332eb4170f71636205",
+      "sha256": "85954433c2b92e488bfd4b82e2b806755e97a955fa576d2a35e79c909d7487f0",
       "kind": "original_fig_learned_empty_medium_dismissal",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -307,7 +307,7 @@
     },
     {
       "path": "scripts/fig-learned-medium-rgb-reference.json",
-      "sha256": "07e0d2a963a62ad88a6bd1d6849742b72c62beb927665013d775bff16552610b",
+      "sha256": "e9b3fdbcb52d39fcd308f75f80ca4bf10b82d0043c622d9ce0d8cd7da4d4f5b2",
       "kind": "original_fig_learned_medium_install_dismiss",
       "registered_rgb_pairs": 12,
       "exact_rgb_pages": 12,
@@ -315,7 +315,7 @@
     },
     {
       "path": "scripts/fig-level-up-rgb-reference.json",
-      "sha256": "835d8ef34a0bfe1f98f549eba79f1d1b36118737c6a23dc2ba3ae6afd6793aae",
+      "sha256": "996b0b2735a959aad9f9f516d5a6c1da7786fd3d1beeed161d1380dfeece88b3",
       "kind": "original_fig_level_up_pages",
       "registered_rgb_pairs": 2,
       "exact_rgb_pages": 2,
@@ -323,7 +323,7 @@
     },
     {
       "path": "scripts/fig-medium-dismiss-rgb-reference.json",
-      "sha256": "30d516ba811c19b99addd3b1d1e70a36122f348adc49f81d173a35f121d1bc46",
+      "sha256": "25ce4dd2271364a37b82c33d5553bb7b74f6fe4e3ffcf73706491c92eec931c1",
       "kind": "original_fig_medium_summon_dismiss_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -331,7 +331,7 @@
     },
     {
       "path": "scripts/fig-monster-buff-expiry-rgb-reference.json",
-      "sha256": "e2a0e30758f8df47f99c800739b5a0effa0360198a36512158558cc28671e9bf",
+      "sha256": "7cead8a78dd4e62b96201041c3c8d36435c14ece28ad423b13d2a393ab5340b9",
       "kind": "original_fig_monster_buff_expiry",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -339,7 +339,7 @@
     },
     {
       "path": "scripts/fig-monster-escape-failed-rgb-reference.json",
-      "sha256": "9f2305c312bdbac78a6909c237c802a3b60770676f397cecf54f4cfd408dd704",
+      "sha256": "87a1d211eb0ea2af3880f1c5d4f498702bf6546698ccc6b027e407bf9d7ead38",
       "kind": "original_fig_monster_escape_failed_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -347,7 +347,7 @@
     },
     {
       "path": "scripts/fig-monster-first-slot-medium-rgb-reference.json",
-      "sha256": "939b7a25c9afda79145dfed1c1333dd17afe00af490fe4b17b6203ffa7e7b067",
+      "sha256": "6dce8b6f42d137c7c48d0f09eb1135e82975f5359876726e59884f8cacc7b84b",
       "kind": "original_fig_first_monster_ae_medium_install",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
@@ -355,7 +355,7 @@
     },
     {
       "path": "scripts/fig-monster-flee-rgb-reference.json",
-      "sha256": "c2273b08da22e6b2f6c9d27a10e0b374ab23640a1a79696be5df30f0e3f2abe7",
+      "sha256": "0b15f0e880de897a33fbd2bb757bf07c07f22affde6affc77192cb45b0bf4c2a",
       "kind": "original_fig_monster_flee_sequence",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -363,7 +363,7 @@
     },
     {
       "path": "scripts/fig-monster-generic-rgb-reference.json",
-      "sha256": "6b1d837dc9a7183002a18b4ee0e1d9b3c6f3d311b010cebdc00071737ce340e4",
+      "sha256": "9b99cb4a1e043a0ccb0afb421b5f792524c310312ae4c3dbb01495e8bac5a042",
       "kind": "original_fig_monster_generic_ability_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -371,7 +371,7 @@
     },
     {
       "path": "scripts/fig-monster-heal-rgb-reference.json",
-      "sha256": "8c7686f19d31a9589f89c340a6caccb8237cb104dbeb34f8aea72b0ee6b0fbcc",
+      "sha256": "e65b553c7cc6606bffdf67a15afd63b5ab57049cc4b876505789957b67c23661",
       "kind": "original_fig_monster_self_heal_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -379,7 +379,7 @@
     },
     {
       "path": "scripts/fig-monster-immunity-rgb-reference.json",
-      "sha256": "cf3977d065294fed0e74a3e1d24325bb3560e4713e4b6fdd7af51c71d13d490e",
+      "sha256": "f9359a7f0b436ed54f2b712ccbb817a6744ef56125d6e5e35d7eaf7063605236",
       "kind": "original_fig_monster_immunity",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 13,
@@ -387,7 +387,7 @@
     },
     {
       "path": "scripts/fig-monster-slot-medium-rgb-reference.json",
-      "sha256": "d63312e37fb7364307d79cf9098b18c96a3ad2ee71834a362e5299fb9284c8b4",
+      "sha256": "c4b3dd41fdc557c240839710e788ebac0e1b5663b010908795f3c5fd86d975f8",
       "kind": "original_fig_second_monster_af_medium_install",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
@@ -395,7 +395,7 @@
     },
     {
       "path": "scripts/fig-monster-special-buff-rgb-reference.json",
-      "sha256": "a53abc7767c649a394a9235c38264e452b5031f32b80214dbdf1c2b598e3db45",
+      "sha256": "c6c1f46d17df923090db9cac7455bdf5e2578d4ab1c82c04af1e2b8729e4b7b2",
       "kind": "original_fig_monster_special_buff_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -403,7 +403,7 @@
     },
     {
       "path": "scripts/fig-monster-special-resistance-rgb-reference.json",
-      "sha256": "5c8885e65c60126f426ceec0156caf1fdf2307f2a2b98911a98fc64c6c2ecd63",
+      "sha256": "4907a9d282e79aebc4dfb07e946495ebedface7b521dbe65286d95c55035faf1",
       "kind": "original_fig_monster_special_resistance_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -411,7 +411,7 @@
     },
     {
       "path": "scripts/fig-monster-special-silent-rgb-reference.json",
-      "sha256": "0a78c5dbd2b1f548278b233c46b1e7afd0a6264d8980802e87801b0962ca1fb3",
+      "sha256": "aa7bc18fbee6d4a7d91f4e90b5565e2b51ad0c9e028a6705e9c293cf95b9a423",
       "kind": "original_fig_monster_special_silent_return_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -419,7 +419,7 @@
     },
     {
       "path": "scripts/fig-monster-special-status-rgb-reference.json",
-      "sha256": "28e7bc73d6d96583d59a5de2961c2579d06e02b735f22441909ebf5bb667e9c0",
+      "sha256": "79d22b5e0f11e058f62ecf5793a7026fcf0b4e340021747e64e891476200ea98",
       "kind": "original_fig_monster_special_status_sequence",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -443,7 +443,7 @@
     },
     {
       "path": "scripts/fig-monster-third-slot-medium-rgb-reference.json",
-      "sha256": "f95935015a7347b8a3fa9699a747259d685eee3224f4421ef07cbfe853d576c5",
+      "sha256": "82b35b5b113638191070edd7dba4f9d4ad09c19438217a2f01d3014155c2b041",
       "kind": "original_fig_third_monster_b0_medium_install",
       "registered_rgb_pairs": 20,
       "exact_rgb_pages": 20,
@@ -459,7 +459,7 @@
     },
     {
       "path": "scripts/fig-periodic-zero-rgb-reference.json",
-      "sha256": "95873a664ecb63791083e1907e30270aca52365dae554a32ca3cc2366ad4beb8",
+      "sha256": "ea3da86398e2651c8a2a921873692cb9533d1af991e3fa7fd4129932e7700c17",
       "kind": "original_fig_periodic_zero_damage",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
@@ -467,7 +467,7 @@
     },
     {
       "path": "scripts/fig-player-attack-af-medium-rgb-reference.json",
-      "sha256": "64f4370238c043b1ba73139d715e65da9d11092172bc22602b637755e8ff4c9a",
+      "sha256": "9366c63b179e2863f13446e3d26ff005dbe834e73646b63f2fbe83e9be17257a",
       "kind": "original_fig_player_attack_af_medium_install",
       "registered_rgb_pairs": 53,
       "exact_rgb_pages": 53,
@@ -475,7 +475,7 @@
     },
     {
       "path": "scripts/fig-player-attack-b0-medium-rgb-reference.json",
-      "sha256": "34d2573f6c0261e93ccd9eb26e9888b8c4c6127f454af8c6889897e08079cb93",
+      "sha256": "797bfbd5191eac796e914c4289cddfa43e463817e54802f8449f7ce23e176cc5",
       "kind": "original_fig_player_attack_b0_medium_install",
       "registered_rgb_pairs": 47,
       "exact_rgb_pages": 47,
@@ -483,7 +483,7 @@
     },
     {
       "path": "scripts/fig-player-attack-basic-rgb-reference.json",
-      "sha256": "f154f609d0c7db017c696a9cbbe9b5febb2b0e7d580e07d8b3ca322e712e32fb",
+      "sha256": "f4ad1b4f09b897c031d972ea7480d6abe7e5fe98d294aaeb64ec31959c0c81b4",
       "kind": "original_fig_player_attack_basic",
       "registered_rgb_pairs": 45,
       "exact_rgb_pages": 45,
@@ -491,7 +491,7 @@
     },
     {
       "path": "scripts/fig-player-attack-evaded-rgb-reference.json",
-      "sha256": "6afb51276d61c3252ac3ed5008027446e303c89b144d2f3363a2c933029ddd6e",
+      "sha256": "ca95558227cb9bad2ab1c49e7e93c750c26f16a1228145d28397e1bb2beea927",
       "kind": "original_fig_player_attack_evaded",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
@@ -499,7 +499,7 @@
     },
     {
       "path": "scripts/fig-player-attack-flee-failed-rgb-reference.json",
-      "sha256": "8c462c5a9cd3b002cce7277cd3969f423171af6161308d94005f9d7651fab462",
+      "sha256": "0feea18de26c0977de679355fc67016e738346de2e3ef3f81864abe0923445b7",
       "kind": "original_fig_player_attack_flee_failed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -507,7 +507,7 @@
     },
     {
       "path": "scripts/fig-player-attack-flee-rgb-reference.json",
-      "sha256": "c9999f233e78f1017f978fd89c3972a94a3aba65f69ec875ad177899daffc6dc",
+      "sha256": "f3ae36bd3c79ae5a8c67b8cd1f784f7c76270fab16296cf30f13483fdbc20aa0",
       "kind": "original_fig_player_attack_flee",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -515,7 +515,7 @@
     },
     {
       "path": "scripts/fig-player-attack-hit-rgb-reference.json",
-      "sha256": "07c33629b3976bc511d5a0f456dda1c62464bfd0ee77839fc673a89fecccdb15",
+      "sha256": "da6d725ef6d1db825e20b9aa6ae26ce28f40e6737c63b8d939362b76bd86c362",
       "kind": "original_fig_player_attack_hit",
       "registered_rgb_pairs": 44,
       "exact_rgb_pages": 44,
@@ -523,7 +523,7 @@
     },
     {
       "path": "scripts/fig-player-attack-medium-rgb-reference.json",
-      "sha256": "0c1b9a39ae643a9e82187cad5f7e20ff547c8d00f2e6a4fb346f438675f3aa34",
+      "sha256": "00ac8d70d124890c7e38e24afd44c3d17ca64226973e0ce477adbd8e195d3560",
       "kind": "original_fig_player_attack_medium_install",
       "registered_rgb_pairs": 59,
       "exact_rgb_pages": 59,
@@ -531,7 +531,7 @@
     },
     {
       "path": "scripts/fig-player-attack-special-buff-rgb-reference.json",
-      "sha256": "3bdaa420cf988a88447dec4593bc65c5bf37e695ae5729ac5d968c4951ee6161",
+      "sha256": "915a5155c468a63b0ba2fc95cdde76f8b9e8b7198658e0934e447c4479b2735d",
       "kind": "original_fig_player_attack_special_buff",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -539,7 +539,7 @@
     },
     {
       "path": "scripts/fig-player-attack-special-resisted-rgb-reference.json",
-      "sha256": "1a91f76ce45876421cd194949959ed53d6a4652a401c89b416f05da06822609f",
+      "sha256": "33eebfb1a13b3c61b2341f7fb9df1431bdf704f44a683d54c52ef8f0b0a8c6df",
       "kind": "original_fig_player_attack_special_resisted",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -547,7 +547,7 @@
     },
     {
       "path": "scripts/fig-player-attack-special-silent-rgb-reference.json",
-      "sha256": "707d92f87287294319b8a40ebdc24f851d98548fd33377388e6717c15d088be0",
+      "sha256": "a1628a61ad1ff8ed45656dfeb826988eb8edb386c1c290f197045e17f0a5e910",
       "kind": "original_fig_player_attack_special_silent",
       "registered_rgb_pairs": 26,
       "exact_rgb_pages": 26,
@@ -555,7 +555,7 @@
     },
     {
       "path": "scripts/fig-player-attack-special-status-rgb-reference.json",
-      "sha256": "b99448b96e7c2602acfd791c2420092a8ea060d97ab16ed74660a9908c2f32cf",
+      "sha256": "629249ec7175d2295a3e21e773f5bd2509d9585367c36587f7dc56ea3e680597",
       "kind": "original_fig_player_attack_special_status",
       "registered_rgb_pairs": 30,
       "exact_rgb_pages": 30,
@@ -563,7 +563,7 @@
     },
     {
       "path": "scripts/fig-player-attack-zero-rgb-reference.json",
-      "sha256": "3629fd7c8ed3ded926ff87bc5fd5fd56bbb8c25a796b40468a6c638e78dbeb43",
+      "sha256": "555fb16836c8368c43d050475f5ad9929b9c99f12a81dd67c9eae1b1a09a27dc",
       "kind": "original_fig_player_attack_zero",
       "registered_rgb_pairs": 46,
       "exact_rgb_pages": 46,
@@ -571,7 +571,7 @@
     },
     {
       "path": "scripts/fig-player-barrier-rgb-reference.json",
-      "sha256": "866f0e5d43f91bb49e5778ffbcd106a592389836ec656415d8b357fe9ec9982d",
+      "sha256": "18224a71f9c2858df54b21b4923b4da17d7ce3d213e7545bb00d3645a3bff40d",
       "kind": "original_fig_player_barrier",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
@@ -579,7 +579,7 @@
     },
     {
       "path": "scripts/fig-player-critical-hit-rgb-reference.json",
-      "sha256": "11d867a3f4606ec15649d6a8a20e72b394ee340b3f860c4abbded13b92d81e4f",
+      "sha256": "f9a5c1178218c48e5e970b17a986ca5740707f03a8b1ea2dfd4d00a29fbc3ca0",
       "kind": "original_fig_player_critical_hit",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
@@ -587,7 +587,7 @@
     },
     {
       "path": "scripts/fig-player-critical-rgb-reference.json",
-      "sha256": "74c21adbab5eba60c7c0f12ef357fb364cea58d5d8348858592d90005de8e6eb",
+      "sha256": "9f9f7dc0ee62f0c2d4d3d9b7777a69ee2a83753c8e93f572ded954da33582449",
       "kind": "original_fig_player_critical_attack",
       "registered_rgb_pairs": 17,
       "exact_rgb_pages": 17,
@@ -595,7 +595,7 @@
     },
     {
       "path": "scripts/fig-player-damage-rgb-reference.json",
-      "sha256": "6f54c4284e57105d1303fa700d6e35e687641f40749494aa069a54244d7a715c",
+      "sha256": "aaddc1d952edff98315a10e04ae61b1ab73266ab9d18f268da8beb7b051d15e0",
       "kind": "original_fig_player_damage_dispatcher",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -603,7 +603,7 @@
     },
     {
       "path": "scripts/fig-player-dispel-rgb-reference.json",
-      "sha256": "0d60d98483ed6dc900a91581b83ea99435c2b24748efb49366dcf510a84b7cfe",
+      "sha256": "a77d3a75224fa42d1d57bf62e96c43c01a9ceeda1ddc9c3af7192ac5947a86d9",
       "kind": "original_fig_player_dispel",
       "registered_rgb_pairs": 14,
       "exact_rgb_pages": 14,
@@ -611,7 +611,7 @@
     },
     {
       "path": "scripts/fig-player-effect32-rgb-reference.json",
-      "sha256": "c0c9a2797053be7b772bde33a35f4187503d8d7692be567c09d09d8aefddeb12",
+      "sha256": "3cbdc787bab2aef83285aab5ffd80501ed359c359b48b33960fa7cbf3dbfc7ac",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 62,
       "exact_rgb_pages": 62,
@@ -619,7 +619,7 @@
     },
     {
       "path": "scripts/fig-player-effect34-rgb-reference.json",
-      "sha256": "45a1a31e2523271d8d3875ef98212e73d082268bf4bfc33ca4e7c15858a74362",
+      "sha256": "4ca1bebb342fbd9bbd32b7c71b73bada3d50aed24c3bbdfc02c7edfbf0f32a1d",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
@@ -627,7 +627,7 @@
     },
     {
       "path": "scripts/fig-player-effect35-rgb-reference.json",
-      "sha256": "63f7399fec05298268aa01447b6221c748b6ac4bff039bc4413a9c8b4f0d6d4a",
+      "sha256": "5a3ee93b4b950a812cb95c357d2b325d79399672c310808c1105f7f48dcd248b",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
@@ -635,7 +635,7 @@
     },
     {
       "path": "scripts/fig-player-effect36-rgb-reference.json",
-      "sha256": "403f78baf04d3d5e62701b97d938cf0197ef6526b1d0b777fc3df4e30e2233cf",
+      "sha256": "3f75c9bf91b4a65c34ed6f2dc617adc9b2d7a921cc5c28a53dc2cb368d4628e8",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 25,
       "exact_rgb_pages": 25,
@@ -643,7 +643,7 @@
     },
     {
       "path": "scripts/fig-player-effect37-rgb-reference.json",
-      "sha256": "66064c80da2c31ecd72ff9f257faf818267272f6b5ad9bae98b288d172e48ce4",
+      "sha256": "112c3c5b51fba756290a6393e5a955cf8e54cf4ae1ff340a7aee49390c04d79b",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
@@ -651,7 +651,7 @@
     },
     {
       "path": "scripts/fig-player-effect38-rgb-reference.json",
-      "sha256": "bf5705d15c1e1bd57bdfda0e8426829950055c34bdc1f8fa988ccb2da028677f",
+      "sha256": "42abf5ee55ab392206839dc08ba89f6f96721dc727daae7fd9970dcebb402221",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 51,
       "exact_rgb_pages": 51,
@@ -659,7 +659,7 @@
     },
     {
       "path": "scripts/fig-player-effect39-rgb-reference.json",
-      "sha256": "87fd19181e2350b492c785779135826fa00a9e291bd429b4f85cb1135731632f",
+      "sha256": "ac770e708412f0db6ca0cba716e5c77604bfbd7902bb0697e1a0258be24e6a90",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
@@ -667,7 +667,7 @@
     },
     {
       "path": "scripts/fig-player-effect3a-rgb-reference.json",
-      "sha256": "38af6057ab1f845e223df5e3311b916e28e7b9bb5689fad44688c0c1ddae7424",
+      "sha256": "536787bbc8bd183de792d669cd00571abbe831d02155707cae267c099937e63c",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 49,
       "exact_rgb_pages": 49,
@@ -675,7 +675,7 @@
     },
     {
       "path": "scripts/fig-player-effect40-rgb-reference.json",
-      "sha256": "f5d4ce98632f1da24fe693912b4befe077a4ae78aa5e771b3a0c2596072f10f0",
+      "sha256": "dab04be4306092d6c5cd7064ade06750786bcfb3cd7a62c65d05f346df2b02aa",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 44,
       "exact_rgb_pages": 44,
@@ -683,7 +683,7 @@
     },
     {
       "path": "scripts/fig-player-effect41-rgb-reference.json",
-      "sha256": "ce4e9a06121a4d2f0459f3b5e91de701f9e6816e0d3a52ac00df7b535de9c155",
+      "sha256": "7e4ee3508136a86e7f5476d29724adc4c0900dcef41089c0899493da3419dbbf",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 55,
       "exact_rgb_pages": 55,
@@ -691,7 +691,7 @@
     },
     {
       "path": "scripts/fig-player-effect42-rgb-reference.json",
-      "sha256": "1996110d9d3344bd23f7a1110a2dd471b53add23fd3790bc44521894f918ab28",
+      "sha256": "4ee63ffc5f67b51dd5d7c9c9ab4e600c10c12ea320765a5624a3ed257c572f58",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 58,
       "exact_rgb_pages": 58,
@@ -699,7 +699,7 @@
     },
     {
       "path": "scripts/fig-player-effect43-rgb-reference.json",
-      "sha256": "d8c389971e56087d714099a4ad429cd5146543aa9775f01e44e37cb58a24aac2",
+      "sha256": "d96f8cc8462700b2fa07f731788ead981f3a3700c4d4dc92c69c8becde74c74a",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 37,
       "exact_rgb_pages": 37,
@@ -707,7 +707,7 @@
     },
     {
       "path": "scripts/fig-player-effect44-rgb-reference.json",
-      "sha256": "722f99dab088c370369bfbf2252df5ebde89b45cbbca724d6f8eabbc15facae1",
+      "sha256": "bf778c9c8999bb3d03097f968f1712ae1a48e1d4bf75f06b3cee1553f93922b8",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
@@ -715,7 +715,7 @@
     },
     {
       "path": "scripts/fig-player-effect45-rgb-reference.json",
-      "sha256": "ac5e7acc795decaf2b8fcfd7856693ead30572d7358eef2089610509985769ad",
+      "sha256": "04704e557d5cdd82d70f0f7e737564e36a7b2e16438216a08e73dc53109efab1",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
@@ -723,7 +723,7 @@
     },
     {
       "path": "scripts/fig-player-effect46-rgb-reference.json",
-      "sha256": "2643982f0987b1c722da9a0743e4e1186b05b54c696967c91153ac1db8e5da2f",
+      "sha256": "623ecbc1b0ac5eba7a8a22e1015e53fb52f3bdb60ed60b3f5b375ec7f6313ed9",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 42,
       "exact_rgb_pages": 42,
@@ -731,7 +731,7 @@
     },
     {
       "path": "scripts/fig-player-effect47-escape-rgb-reference.json",
-      "sha256": "c51cc13e9fe3b2d7cb39f219168bbf11953791aab239228f82c485ec2a68c9df",
+      "sha256": "c0a47fc41adf81d913538a8ee7ccfcb87de6c4d3e2d81cce8e6212c9fb1758ba",
       "kind": "original_fig_player_effect47_escape",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -739,7 +739,7 @@
     },
     {
       "path": "scripts/fig-player-effect47-fixed-rgb-reference.json",
-      "sha256": "eebbe28bd44510e95da9b2817b4dd04ff910cb6db6165058d7eb0fb8c82c3c54",
+      "sha256": "d281bbbd874182620c43edce6a19d9d9a154fce2fc001bc9cb92b2e2abe76d2e",
       "kind": "original_fig_player_effect47_fixed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -747,7 +747,7 @@
     },
     {
       "path": "scripts/fig-player-effect48-rgb-reference.json",
-      "sha256": "ecf3a70589b2d730a917223a5a42f226446e674210c32759b2d205d2cd6a44ac",
+      "sha256": "b35bf85f087fe76828f81d082cad91b7ff5010f199ecb2b03fa617b7cee5f725",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
@@ -755,7 +755,7 @@
     },
     {
       "path": "scripts/fig-player-effect49-rgb-reference.json",
-      "sha256": "d01a14d407749b952f097e2992e16dd395296d1f5864ea302c75ef2eb5320104",
+      "sha256": "1032e6e98c40bfc883073a251ee3d75026715090acef5e508568254695c60d8f",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 52,
       "exact_rgb_pages": 52,
@@ -763,7 +763,7 @@
     },
     {
       "path": "scripts/fig-player-effect4a-rgb-reference.json",
-      "sha256": "e7cfc5f5dc529f93d92680468047b4ae026ebb963bc8450344bbbe7237625d42",
+      "sha256": "8959dab6a95d2ba7de35460dd920b6ec554342bcae56e2493071414c5c7b10d2",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 38,
       "exact_rgb_pages": 38,
@@ -771,7 +771,7 @@
     },
     {
       "path": "scripts/fig-player-effect4b-kill-rgb-reference.json",
-      "sha256": "1e2e1a9cf231169383fef55444c08cfc701c370f98111f1cc0be643c06119414",
+      "sha256": "6e1545787282eefbb0094403c023f7a0368ac3a41f812ba233d33532ebea5a48",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
@@ -779,7 +779,7 @@
     },
     {
       "path": "scripts/fig-player-effect4c-rgb-reference.json",
-      "sha256": "f8f8eb592e4ce39818808ead64ad6801e3ff2ac6e72786d2cb9fb4921b048fea",
+      "sha256": "53c76f614526a052cf16d811c6a86568916d446d35b616d298a41a2bcca81d6a",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 51,
       "exact_rgb_pages": 51,
@@ -787,7 +787,7 @@
     },
     {
       "path": "scripts/fig-player-effect4d-rgb-reference.json",
-      "sha256": "729216376c420bdf0f1cd68fd6c74d7373f8ed4a655def8fc8066480906ed804",
+      "sha256": "ea770e7a3d31e69e897765a4bd2fea3d0bbffc634c7b075d3c073a5905a435a4",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
@@ -795,7 +795,7 @@
     },
     {
       "path": "scripts/fig-player-effect4e-rgb-reference.json",
-      "sha256": "292ea34aa5c40094239c7e3fd062376c5a20e7bb78e6ba5b2017a72e71b69084",
+      "sha256": "b3b5604fa9cf5ae589340ecf627b4c1eb6a32ad601d70963d3c2e5714f943dfe",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -803,7 +803,7 @@
     },
     {
       "path": "scripts/fig-player-effect4f-rgb-reference.json",
-      "sha256": "93628e78dfce18306c3ae560bddd5ce445b9eaf688d5a92f8001ecfe167fa65a",
+      "sha256": "776879ad2a35990286031e144a665fb0ccc839c3ea4bf437e34708b3f0ee639a",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 49,
       "exact_rgb_pages": 49,
@@ -811,7 +811,7 @@
     },
     {
       "path": "scripts/fig-player-effect50-rgb-reference.json",
-      "sha256": "93c3fa946e42c48bfd7e3caaf063a272c2e254ffae3e3671a0512c67402ede2b",
+      "sha256": "8356807694917d5226425a3e253c159fd3a44bc0a39814af15404904ef617485",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
@@ -819,7 +819,7 @@
     },
     {
       "path": "scripts/fig-player-effect51-rgb-reference.json",
-      "sha256": "1919941da2a0b45900cc315a594d36ad1d363d930efc4f4f0e3af4bb398432d2",
+      "sha256": "db1047161bf08085e2e79b3b829dcad3ff1fbdd0da77d1a1dcb4858a1ccc18ed",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 52,
       "exact_rgb_pages": 52,
@@ -827,7 +827,7 @@
     },
     {
       "path": "scripts/fig-player-effect52-kill-rgb-reference.json",
-      "sha256": "59396858b40ae4ad189c5707c9b576f453700db5f6a8cecaac9f77dde7936dbc",
+      "sha256": "4cd43f3f65a1db1e038306e4c0790909b25267cb4bd16c27458eb3a384b45765",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 33,
       "exact_rgb_pages": 33,
@@ -835,7 +835,7 @@
     },
     {
       "path": "scripts/fig-player-effect53-rgb-reference.json",
-      "sha256": "dd41a204112a4586e321ada0428a254f706f7316e3e9ec92c1dab121467399f3",
+      "sha256": "e149698bf960e7bffc247dd9df7913bbd4f24bf59725b2cf3409e819ebcbf00e",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -843,7 +843,7 @@
     },
     {
       "path": "scripts/fig-player-effect54-kill-rgb-reference.json",
-      "sha256": "d1f4b5015b51ce7191647cf6682a1d8fb73f3a05f003a6e34f1c817e87466041",
+      "sha256": "bda8a8ca46bb481125475e343246a3d8e48a9da52e8374495285bbcbe92c0dcc",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
@@ -851,7 +851,7 @@
     },
     {
       "path": "scripts/fig-player-effect55-rgb-reference.json",
-      "sha256": "039e90aa48c63b217d1bde387660dd792dcf5baf7afab563c9d1c1d312e9d2c8",
+      "sha256": "03cef9a1059c22531fb7abc026f408298f62a9553e2464217d8b151e8260f22b",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -859,7 +859,7 @@
     },
     {
       "path": "scripts/fig-player-effect56-kill-rgb-reference.json",
-      "sha256": "bfbde3caf4db42ff2a4da6b4868dacf796c50d8e07a0ca1115245956b029c298",
+      "sha256": "3a7fd75c28556ce5f6f744917f9ada910617c2a2f22d74709ed6365104068d78",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -867,7 +867,7 @@
     },
     {
       "path": "scripts/fig-player-effect57-kill-rgb-reference.json",
-      "sha256": "e22ead6cdda9b1da76ef918f3071df08e9108d1ec8b9699ef9a408db4fb59cf2",
+      "sha256": "c600edf2d8fb9847b37796da57c41334d9396ce91dad3e4364aba6994f76ab8c",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -875,7 +875,7 @@
     },
     {
       "path": "scripts/fig-player-effect58-kill-rgb-reference.json",
-      "sha256": "a1a39d061c960ca36c28c5784658dc9f87995ed62be5249be2d873f7b0d5ab12",
+      "sha256": "b54edbc17cb9e5573ffd819ef17a12d8aa1a0839c90760d15714ab9f1993b3de",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 30,
       "exact_rgb_pages": 30,
@@ -883,7 +883,7 @@
     },
     {
       "path": "scripts/fig-player-effect59-kill-rgb-reference.json",
-      "sha256": "7dd26838e4d95c7ac9bddf50eba93c85c0bde0cc2936ebd39b59b709e2ff86db",
+      "sha256": "e80bf7fe7ab0b09aceeca15e4a018db5c65d3a7bfe75ff0220dc12c9cd66bf31",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
@@ -891,7 +891,7 @@
     },
     {
       "path": "scripts/fig-player-effect5a-rgb-reference.json",
-      "sha256": "ae2a6cb9d728357dc523d39398836d5670d19807a542c0a84a36f0e1dd4c8757",
+      "sha256": "8a454b90396dd2e9d3cce800014fcbb21b3f7e203236fddd9df49c1cc5b00d4a",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
@@ -899,7 +899,7 @@
     },
     {
       "path": "scripts/fig-player-effect5b-kill-rgb-reference.json",
-      "sha256": "4c3b2eab4c2381297e446483e5ebddda2b78c0f24c185ebea6e6f2f8928beb50",
+      "sha256": "f8b4fde54b50298f3fb3002b420698281efe5e8df5bed469519275a99ab28a38",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
@@ -907,7 +907,7 @@
     },
     {
       "path": "scripts/fig-player-effect5c-kill-rgb-reference.json",
-      "sha256": "faea161d7848b46c67042ca07eb1ded828f1dddee60b19ec4762d4d22d41c819",
+      "sha256": "2939714aed5fb55f22f9b34fde039fee724b0e73043d09cafb905a16221b7bba",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -915,7 +915,7 @@
     },
     {
       "path": "scripts/fig-player-effect5d-kill-rgb-reference.json",
-      "sha256": "40d64fc2eb731b47381634b8b616ea67477abdfa1358675224d4d9caa5d8a908",
+      "sha256": "dfea22e78f12ce9017b901511829bb7714d4cd59bc5fdcf7b061b0ca31ed29c0",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 38,
       "exact_rgb_pages": 38,
@@ -923,7 +923,7 @@
     },
     {
       "path": "scripts/fig-player-effect5e-resistance-rgb-reference.json",
-      "sha256": "8e80354e0e8b99c5efaa0ffd5895a159cb796407cd06a7ab108dd8b4a98c0346",
+      "sha256": "e026a48fca55f2f7de2b8a5de3c5055bc76fc3a151cf1f0bada90c60002ca57b",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 42,
       "exact_rgb_pages": 42,
@@ -931,7 +931,7 @@
     },
     {
       "path": "scripts/fig-player-effect5f-status-rgb-reference.json",
-      "sha256": "a5df5b0cef5eb629c5cd3c88ccf571a78e7a810d5c39856f54344ed8b454399d",
+      "sha256": "5f27c7c48433a6391608b62933c466770fb0ad6b0a5135728ddc06e2be25995f",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 21,
       "exact_rgb_pages": 21,
@@ -939,7 +939,7 @@
     },
     {
       "path": "scripts/fig-player-effect60-status-rgb-reference.json",
-      "sha256": "db8dd35dcbb597992f9e2d5de13d7e46f534ed91e71b9b32d7540ed06aa42251",
+      "sha256": "f62db0a35e4a6ed81e299fb9ec3e27baaff4de440df1b62dbadd302c7bd0bab8",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 25,
       "exact_rgb_pages": 25,
@@ -947,7 +947,7 @@
     },
     {
       "path": "scripts/fig-player-effect64-status-rgb-reference.json",
-      "sha256": "5657ed7d9230702c01747c449ef85999e73b2e7fc2b530fd135d371bc70389eb",
+      "sha256": "654aae3246037741763790b1149e620b0c74beef91091aff2a5d39a68fbaa99f",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -955,7 +955,7 @@
     },
     {
       "path": "scripts/fig-player-effect65-status-rgb-reference.json",
-      "sha256": "b9f9c9e847bdc369906fe6a22b38da8c1a15248e5b4cd63ffab030e74e8ce214",
+      "sha256": "eaec1b69bb6bbe637d936049dd298f84e6228bf2bccdcfb8086f1dc8c68e2790",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
@@ -963,7 +963,7 @@
     },
     {
       "path": "scripts/fig-player-empty-medium-rgb-reference.json",
-      "sha256": "a8396c79a25e0cc776c6e8bf5c06e736b8c8fce80ab860d3ba4bea870b14b7b2",
+      "sha256": "6cde6b5b94b71cd38e2ac38e2613ce826187ac5b1d0ab6fac62b8cb63360e6b9",
       "kind": "original_fig_player_empty_medium_dismissal",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -971,7 +971,7 @@
     },
     {
       "path": "scripts/fig-player-escape-failure-rgb-reference.json",
-      "sha256": "9cca5cb693c3be03446007a8c20966649fb6c6075801fc81a1d2c540313f09f0",
+      "sha256": "21ccdf621b949b149f8b9f6e33a6f73e2af141e813fb36833ca7264508e6a523",
       "kind": "original_fig_player_escape_failure_checkpoint",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
@@ -979,7 +979,7 @@
     },
     {
       "path": "scripts/fig-player-escape-success-rgb-reference.json",
-      "sha256": "c3c36ffbc4bb11cc0e94e3fa42462bd419938919700fa687e3063445586d04ac",
+      "sha256": "6fb4d78ffa8543ceddfdb0ae0f7bf3b04d36422442d7bd7e5d4448a9f88e50ca",
       "kind": "original_fig_player_escape_success_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -987,7 +987,7 @@
     },
     {
       "path": "scripts/fig-player-medium-rgb-reference.json",
-      "sha256": "8d999aab9dbd203be6131e64dee5c6aa837365fbc88409bf39667d23f42e63fc",
+      "sha256": "65524af0b01a6dfa8f5005265950fa13cf3707579c77ea567976058b19f5e941",
       "kind": "original_fig_player_medium_install_dismiss",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -995,7 +995,7 @@
     },
     {
       "path": "scripts/fig-player-status-rgb-reference.json",
-      "sha256": "e31011f06eee61db0ebfdc339c75924faee3060746eb8a49a3876b4fa4b499a1",
+      "sha256": "de31f374def844fdc3c8efda4473f08cd8ef393903cc7dfaf75be872b523b331",
       "kind": "original_fig_player_status_variants",
       "registered_rgb_pairs": 15,
       "exact_rgb_pages": 15,
@@ -1003,7 +1003,7 @@
     },
     {
       "path": "scripts/fig-player-support-all-rgb-reference.json",
-      "sha256": "9a6dbdf0c0cdd03b552ae376c308a0f3880908bb0e706cd41d77342ef56d017f",
+      "sha256": "11c61260dd4dfaa216bf85d77a263d26e975fddd5839cc8154bcde5a3e359115",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -1011,7 +1011,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect01-class5-rgb-reference.json",
-      "sha256": "b76f5187bfd5de0c0b9c9351be8f97e7ac905031574a361996c271c3d0d3119e",
+      "sha256": "26c9aa98e919dde103bf821cd1b082546a4565e8b34faaddb6d6a9989d44ae7c",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1019,7 +1019,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect02-class1-rgb-reference.json",
-      "sha256": "a3cfe55663a8402c46679544aaf92e186ce5c0b8477f415b8297e157a345c850",
+      "sha256": "d3e655867cdd91cace6d69f302c3c1a86dce9026500664df138d4d4590b1b9ad",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1027,7 +1027,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect03-reachable-rgb-reference.json",
-      "sha256": "a8a7d7ae831647c9f4c2478db4d8b8a50c78b39ffded86e933628412a7fb35f7",
+      "sha256": "52330bd0b17474ee8bb0a1f4144f905498fd080e5cdcaac3f4b8bba3dcf0b663",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1035,7 +1035,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect07-rgb-reference.json",
-      "sha256": "f89a02761534f24837e6365722bd3f161459f3cee0fd491b0619956c30ad12c6",
+      "sha256": "f568f471343994089608b9d92db09c62f8946d5e38d3b10c489e70ef2c9099cd",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1043,7 +1043,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0a-rgb-reference.json",
-      "sha256": "9101aab807f39aafdaec48882e9a735739353db188c0f202bf56705a4629e765",
+      "sha256": "156e36c3c33bad0e625bc1d72548192c8a40c040c6941afd28fa0451ca85a0cd",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1051,7 +1051,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0b-rgb-reference.json",
-      "sha256": "412c02ac17ed4ca79d51dd483cdc2d2c9ae017c4dc05b24da6b8d4cbf85bf50f",
+      "sha256": "cc1e976f63d948487036691fa518a676b8bc6a64d53f053b9ee5fea96722f0db",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1059,7 +1059,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0d-rgb-reference.json",
-      "sha256": "da40a6a8166431fc0240734e59f28b3ecbccf68dfec923ed1ca5bfb2222d7c57",
+      "sha256": "1c533db1299fca28754f36262881c6f0968478a3e9332e4aa148e8dd41f55ac8",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -1067,7 +1067,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0e-rgb-reference.json",
-      "sha256": "de012825e979efcd18c2c2e457fe3e7550929dcbfccb618ea2361ae8f30adc00",
+      "sha256": "dd8ac23cd6003d63ebfc3669a8367d4b75673c870637916fa8157d904e092e6a",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -1075,7 +1075,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0f-rgb-reference.json",
-      "sha256": "5b35a237818886d21fa6cddb1a9d5152c65abe4b9bd70d4e424ae557bf92e352",
+      "sha256": "65fafe8664628a8dc993147ee147e4bbe1989e6067c04f4343d9e6b9ce06ff8b",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1083,7 +1083,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect19-class2-rgb-reference.json",
-      "sha256": "5c7fb50f41dae98ea6dc18116c2978060dd539c78b4847f5c4347da4e0830d4c",
+      "sha256": "c16e1e45260f40cf069f01a861a905f5c34bc0f842b3f8434e61cbdda88c9648",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1091,7 +1091,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect19-rgb-reference.json",
-      "sha256": "9289134404aa239de40b77488949e1d2d7824319589cff06ef46f962409958f0",
+      "sha256": "80256384c1ab39e53c13e39807cebc6dfccd9fee2aae8ea9bb2051b0b650740f",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1099,7 +1099,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect1a-rgb-reference.json",
-      "sha256": "bf6ac4b4e129d5c3a157f3509c1d1529a5c1dec3033a7ec07be77708d734775d",
+      "sha256": "134d1694a363ac8261693284e8975af4282b7ebafac2d6e9713365417304e95c",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1107,7 +1107,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect1e-rgb-reference.json",
-      "sha256": "b679af116b590c1d862be77d24d1871263c77eee8726edd95ab2a978fa03ae34",
+      "sha256": "319c11bea9af8b10296576c14af469103e0f3e94ac1f1fe235d1f9129a69dfdc",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1115,7 +1115,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect2-rgb-reference.json",
-      "sha256": "984dd9e6fa4e0815f7ebbd2b63780e2776b43ec1c03f822bb5125dcfcce2cdf6",
+      "sha256": "d0cf0b79debf23373641f9586c29f7c189be0c8d458c489f2da5bcbf8916c435",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1123,7 +1123,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect3-rgb-reference.json",
-      "sha256": "de3f8bc477472829b523b9b0644679c25fe57815fce85cb5e027fac4af08edf6",
+      "sha256": "ee4e6d6b79dfbbfb6a072c935d37088080a3b221c9c22a9c99cdc0f47e3e1fd2",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1131,7 +1131,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect4-rgb-reference.json",
-      "sha256": "527c8a7d2287f5c796cc9bac757a981935da3431b029c4fda7bbac3af444c6ab",
+      "sha256": "4816272390045c79a7bdaccdf5231d63dc6aecc97e19904be4b0d451b5238841",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1139,7 +1139,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect9-rgb-reference.json",
-      "sha256": "dcc79494039f5ec2db0f2b9f931e63749d927a56ebfebedc50e6f62ae655b777",
+      "sha256": "5e42c8e50048dc925a29c5ac234b77045d0df077f451fc01706ad0e977c2e7bd",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1147,7 +1147,7 @@
     },
     {
       "path": "scripts/fig-player-support-rgb-reference.json",
-      "sha256": "d772118cda02016f3e5d857eb6a6c42e30e51f136b9c83e00ab15bcc5a06ba5c",
+      "sha256": "028799b4296078af446dbcaa917a9a34f1ec25a2634ffa7331c245d2312f2479",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,

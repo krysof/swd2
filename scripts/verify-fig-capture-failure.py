@@ -14,9 +14,9 @@ from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 SEQUENCE_FRAMES = tuple(range(5, 32))
 SEQUENCE_TIMES = (
-    0, 0, 257, 328, 399, 456, 456, 470, 484, 498, 512, 526,
-    540, 554, 568, 582, 596, 610, 624, 638, 652, 666, 680, 694,
-    779, 822, 902,
+    0, 0, 989, 1264, 1539, 1759, 1759, 1814, 1869, 1924, 1979,
+    2034, 2089, 2144, 2199, 2254, 2309, 2364, 2419, 2474, 2529,
+    2584, 2639, 2694, 3024, 3189, 3299,
 )
 
 
@@ -91,7 +91,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 5, "consumed": 5, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 5, "poll": 0, "text": 0, "frontend": 84}:
+                    "wait": 5, "poll": 0, "text": 0, "frontend": 203}:
             raise ValueError("FIG capture-failure replay boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \

@@ -91,7 +91,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 3, "consumed": 3, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 3, "poll": 0, "text": 0, "frontend": 258}:
+                    "wait": 3, "poll": 0, "text": 0, "frontend": 551}:
             raise ValueError("monster-generic replay input boundaries differ")
         if trace.get("video") != reference["rewrite_video"] or \
                 trace.get("audio") != reference["rewrite_audio"] or \

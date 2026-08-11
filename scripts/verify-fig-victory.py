@@ -75,7 +75,7 @@ def main() -> int:
         if trace.get("input") != {
                 "total": 3, "consumed": 3, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 3, "poll": 0, "text": 0, "frontend": 56}:
+                    "wait": 3, "poll": 0, "text": 0, "frontend": 114}:
             raise ValueError("FIG victory input boundaries differ")
         if trace.get("video") != {
                 "frames": 26, "direct_updates": 0,

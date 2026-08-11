@@ -34,7 +34,7 @@
     "wait": 4,
     "poll": 0,
     "text": 0,
-    "frontend": 11
+    "frontend": 27
   },
   "rewrite_video": {
     "frames": 6,
@@ -50,10 +50,10 @@
     "stop_audio_calls": 1,
     "fnv1a64": "16334c5f6d0530bc"
   },
-  "rewrite_delay_milliseconds": 114,
+  "rewrite_delay_milliseconds": 440,
   "rewrite_state_fnv1a64": "117513a5476d0d4f",
   "rewrite_final_fnv1a64": "62683637f7bcd8bf",
-  "effect_voice_at_milliseconds": 43,
+  "effect_voice_at_milliseconds": 165,
   "effect_voice_payload_fnv1a64": "d3a2203764629faa",
   "pages": [
     {
