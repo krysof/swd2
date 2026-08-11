@@ -3864,8 +3864,9 @@ bool present_round_events(
             // or the clean page still visible.  Only then does 585e debit the
             // pool.  4417 draws pose 4 on the other VGA page, so the visible
             // handler page survives all five C0h..DFh palette restoration
-            // steps.  The ordinary player caller finally exposes 0d98's bare
-            // battlefield for five ticks before initiative continues.
+            // steps. The ordinary player caller next enters 0c41: 0d98 owns
+            // the bare five-tick page only when no same-turn expiry first
+            // enters 0da7 over the retained dispel surface.
             apply_visual_event(visual, event, abilities);
             present_player_resource_cost(event);
             for (auto step = 0; step < 5; ++step) {
@@ -3874,13 +3875,15 @@ bool present_round_events(
                 present_battle_surface(context, dispel_surface);
                 if (!delay(effect_delay)) return false;
             }
-            const auto clean = compose_event_frame(
-                context, base_surface, encounter, items, fighters,
-                menu_sprites, font, fallback, visual, event,
-                std::nullopt, {}, std::nullopt,
-                encounter_directory_offset, std::nullopt, false, false);
-            present_battle_surface(context, clean);
-            if (!delay(ward_card_delay)) return false;
+            if (!same_player_expiry_follows()) {
+                const auto clean = compose_event_frame(
+                    context, base_surface, encounter, items, fighters,
+                    menu_sprites, font, fallback, visual, event,
+                    std::nullopt, {}, std::nullopt,
+                    encounter_directory_offset, std::nullopt, false, false);
+                present_battle_surface(context, clean);
+                if (!delay(ward_card_delay)) return false;
+            }
             continue;
         }
         if (retained_player_status_handler) {
