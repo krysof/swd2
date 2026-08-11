@@ -4282,7 +4282,7 @@ bool present_round_events(
                 retained_effect_surface ? &*retained_effect_surface : nullptr);
             if (!delay(immunity_card_delay)) return false;
             if (retained_immunity_handler) {
-                // 5b06 finishes 5a91 by replacing the immunity card with a
+                // 5a0c finishes 59a1 by replacing the immunity card with a
                 // clean dispatcher-anchor page. Only after that handler
                 // returns does 585e debit the pool; 4417 then redraws the
                 // dispatcher anchor with the paid resource bar before it
@@ -4317,14 +4317,18 @@ bool present_round_events(
                 }
                 // The resisted handler returns through the same 0c41/0d98
                 // player tail as a successful status application. Preserve
-                // its five-tick bare boundary before the next initiative.
-                const auto clean = compose_event_frame(
-                    context, base_surface, encounter, items, fighters,
-                    menu_sprites, font, fallback, visual, event,
-                    std::nullopt, {}, std::nullopt,
-                    encounter_directory_offset, std::nullopt, false, false);
-                present_battle_surface(context, clean);
-                if (!delay(ward_card_delay)) return false;
+                // its five-tick bare boundary before the next initiative,
+                // unless 0c41 first enters 0da7 for a same-turn expiry.
+                if (!same_player_expiry_follows()) {
+                    const auto clean = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                    present_battle_surface(context, clean);
+                    if (!delay(ward_card_delay)) return false;
+                }
                 continue;
             }
         }

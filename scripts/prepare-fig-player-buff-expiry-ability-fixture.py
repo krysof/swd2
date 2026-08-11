@@ -12,6 +12,8 @@ from pathlib import Path
 EXPECTED_SAVE = "1ac72124e46138c5a42b89882a008d87863e6a3c3c805ff993a828a1152c52dc"
 EXPECTED_MISSING_MEDIUM_SAVE = \
     "f6bef40bce5a59c8706dad949ba8caf19c93096b405b1ace638feae80caf8edd"
+EXPECTED_RESISTED_SAVE = \
+    "776db17ac748099e6347b01c93bb1b4457427ec49a0450d1951edac270cec7f2"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 
@@ -28,9 +30,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("game", type=Path)
     parser.add_argument("output", type=Path)
-    parser.add_argument(
+    finish = parser.add_mutually_exclusive_group()
+    finish.add_argument(
         "--missing-medium", action="store_true",
         help="replace the finishing ability with ability 86/effect 63h")
+    finish.add_argument(
+        "--resisted", action="store_true",
+        help="replace the finishing ability with ability 6/effect 5eh")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -64,13 +70,16 @@ def main() -> int:
         word(save, actor + 0x5D, 60000)
         word(save, actor + 0x5F, 60000)
         word(save, actor + 0x6D, 38)
-        word(save, actor + 0x6E, 86 if args.missing_medium else 1)
+        word(save, actor + 0x6E,
+             6 if args.resisted else 86 if args.missing_medium else 1)
 
         save_digest = sha256(save)
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
-        expected_save = (EXPECTED_MISSING_MEDIUM_SAVE
-                         if args.missing_medium else EXPECTED_SAVE)
+        expected_save = (
+            EXPECTED_RESISTED_SAVE if args.resisted else
+            EXPECTED_MISSING_MEDIUM_SAVE if args.missing_medium else
+            EXPECTED_SAVE)
         if save_digest != expected_save:
             raise ValueError(
                 f"FIG player-buff-expiry-ability SAVE differs: {save_digest}")
