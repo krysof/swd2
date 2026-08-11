@@ -3286,3 +3286,24 @@ observations remain explicitly unpaired.  Nested voices start at 10,118 ms
 and 11,493 ms; the restored actor page appears at 12,702 ms, expiry at
 12,757 ms, cleanup at 13,746 ms, and the 189-page replay reaches the next
 command at 15,781 ms.
+
+### FIG targetless item reversed medium composite and expiry
+
+Item 201 closes another shipped `6bh` ordering rather than assuming item 195's
+AE-then-B0 pair represents every medium composite.  Its record is
+`type=10h/use=6eh/target=00h/effect=6bh`; embedded ability 61 has flags `8100h`
+and costs 36 AP, while nested selectors `3bh/31h` install AF first and AE
+second.  `57f2` retains one source-actor pose-zero/DAC envelope, both selectors
+run through `4792/5b41`, and only their outer return reaches the single
+`585e/4417` payment/restoration.
+
+The 75-second original capture contributes seventy-five exact full 320x200
+RGB pages and five exact top-197 restoration crops.  They lock the actor pose,
+stable darkening, twenty-seven observed AF-flight pages, twenty AE-flight
+pages, both persistent medium slots, same-turn attack-buff expiry, the full
+following monster action, round boundary and next command.  The five crops
+exclude only the established eight-pixel ZMBV bottom-scanline artifact; five
+live first-DAC, flight-zero, paid-dark or shake-transition observations remain
+explicitly unpaired.  The medium voices start at 10,393 ms and 11,933 ms, the
+restored AF+AE page appears at 13,308 ms, expiry at 13,363 ms, cleanup at
+14,352 ms, and the 205-page replay reaches the next command at 16,387 ms.
