@@ -2818,13 +2818,22 @@ bool present_round_events(
                 // still flips a bare 2db8 battlefield for five ticks before
                 // the next initiative entry. The capture-failure card must
                 // not remain underneath the following monster action.
-                const auto clean = compose_event_frame(
-                    context, base_surface, encounter, items, fighters,
-                    menu_sprites, font, fallback, visual, event,
-                    std::nullopt, {}, std::nullopt,
-                    encounter_directory_offset, std::nullopt, false, false);
-                present_battle_surface(context, clean);
-                if (!delay(ward_card_delay)) return false;
+                const auto expires_here =
+                    event_index + 1U < result.events.size() &&
+                    result.events[event_index + 1U].kind ==
+                        BattleEventKind::status_expired &&
+                    !result.events[event_index + 1U].target_is_monster &&
+                    result.events[event_index + 1U].source == event.source;
+                if (!expires_here) {
+                    const auto clean = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                    present_battle_surface(context, clean);
+                    if (!delay(ward_card_delay)) return false;
+                }
                 continue;
             }
             apply_visual_event(visual, event, abilities);
@@ -2968,6 +2977,17 @@ bool present_round_events(
                         // not over the ordinary bottom portrait.
                         retained_action = previous;
                         retained_pose = fig_player_escape_poses()[1];
+                    } else if (previous.kind ==
+                                   BattleEventKind::capture_failed &&
+                               !previous.source_is_monster &&
+                               previous.source == event.source &&
+                               previous.source < visual.party_count) {
+                        // 0e83 returns from a failed capture with 31dd still
+                        // on pose zero and 31e3 still anchored to the selected
+                        // monster. The following 0da7 expiry must retain that
+                        // exact capture page until 0d98 runs.
+                        retained_action = previous;
+                        retained_pose = 0U;
                     }
                 }
                 const auto present_player_expiry_card = [&](std::span<const std::uint8_t> text) {
