@@ -378,11 +378,12 @@ void draw_fig_party_cards(BattleSurface& surface,
                           std::optional<std::size_t> action_actor = std::nullopt,
                           std::optional<int> action_mode_x_anchor = std::nullopt) {
     for (const auto& member : party) {
+        const auto is_action_actor = action_actor.has_value() &&
+                                     *action_actor == member.party_index;
+        auto member_action_anchor = std::optional<int>{};
+        if (is_action_actor) member_action_anchor = action_mode_x_anchor;
         draw_fig_party_card(surface, menu_sprites, member,
-                            action_actor == member.party_index,
-                            action_actor == member.party_index
-                                ? action_mode_x_anchor
-                                : std::nullopt);
+                            is_action_actor, member_action_anchor);
     }
 }
 
@@ -417,7 +418,7 @@ void draw_main_command_panel(BattleSurface& surface,
         {16, 8},   // attack
         {16, 72},  // tactics
     }};
-    for (const auto [left, top] : tiles) {
+    for (const auto& [left, top] : tiles) {
         blit(surface, menu_sprites, 0, left * 4, top);
     }
     blit(surface, menu_sprites, 63, 20 * 4, 17);
@@ -3502,11 +3503,11 @@ bool present_round_events(
             // leaves the same anchor in pose 0. Rebuilding these pages with
             // the ordinary portrait loses both frame 180's action backing and
             // FMAN, and also gives 59a1 the wrong page to retain.
-            const auto retained_pose = player_dispatcher_action &&
-                                               !retained_player_barrier_handler
-                                           ? std::optional<std::size_t>{
-                                                 dispatcher_effect_pose}
-                                           : std::nullopt;
+            auto retained_pose = std::optional<std::size_t>{};
+            if (player_dispatcher_action &&
+                !retained_player_barrier_handler) {
+                retained_pose = dispatcher_effect_pose;
+            }
             retained_effect_surface = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event, retained_pose,
@@ -4195,11 +4196,11 @@ bool present_round_events(
                     }
                     present_battle_surface(context, number_frame);
                 } else {
-                    const auto result_pose =
-                        event.kind == BattleEventKind::player_attack &&
-                                pose_count != 0
-                            ? std::optional<std::size_t>{poses[pose_count - 1U]}
-                            : std::nullopt;
+                    auto result_pose = std::optional<std::size_t>{};
+                    if (event.kind == BattleEventKind::player_attack &&
+                        pose_count != 0) {
+                        result_pose = poses[pose_count - 1U];
+                    }
                     present_event_frame(
                         context, base_surface, encounter, items, fighters,
                         menu_sprites, font, fallback, visual, event,

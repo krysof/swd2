@@ -4432,7 +4432,7 @@ std::optional<std::size_t> interaction_entity(const MapLocationRecord& location,
     }
     const auto center_x = static_cast<int>(state.world_x());
     const auto center_y = static_cast<int>(state.world_y());
-    for (const auto [offset_x, offset_y] : ray_offsets) {
+    for (const auto& [offset_x, offset_y] : ray_offsets) {
         auto x = center_x + offset_x;
         auto y = center_y + offset_y;
         for (std::size_t distance = 0; distance < 4U; ++distance) {
