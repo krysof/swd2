@@ -3055,3 +3055,25 @@ selection uses repeated final right/confirm groups; only the first completed
 dismissal is registered.  Both transitions change 2,568 indexed pixels in
 `[16,120,95,198]`, then cleanup changes 3,677 in `[16,120,95,199]` and equals
 the later round boundary.
+
+### FIG composite support item followed by same-turn expiry
+
+Item 219 closes another `6bh` boundary case: after ability 38's minimum
+attack-buff duration reaches its last turn, the direct-item envelope keeps
+pose zero while `57f2` dispatches nested selectors `66h` and `69h`.  Each
+selector owns its 18-tick result card and five-step palette restoration.  The
+first return also exposes one un-delayed bare inter-selector flip before the
+second card; after the second restoration, `0c41` enters `0da7` immediately,
+so no delayed `0d98` cleanup may appear before “力量恢復”.
+
+The 75-second original observation contributes twenty-nine exact full-page
+RGB matches: direct-item pose zero, four stable darkening pages, the first
+composite card, expiry and cleanup, seven stable monster-shake pages, all ten
+damage rises, action tail, round boundary, and next command.  Seventeen live
+DAC/restoration, inter-selector, or mid-shake pages remain explicitly
+unpaired.  The first nested voice starts at 10,118 ms and its card at
+10,393 ms; the first return is 11,382 ms, the 275 ms inter-selector boundary
+ends at 11,932 ms, and the second card returns at 12,921 ms.  The final
+restoration reaches expiry at 13,196 ms, which retains the same 989 ms hold
+before the sole delayed cleanup.  That cleanup is byte-identical to both the
+un-delayed inter-selector bare flip and the later round boundary.
