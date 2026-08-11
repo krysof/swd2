@@ -35,16 +35,16 @@
     "wait": 4,
     "poll": 0,
     "text": 0,
-    "frontend": 337
+    "frontend": 317
   },
   "rewrite_video": {
-    "frames": 85,
+    "frames": 78,
     "direct_updates": 0,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "79fe7871d716ed1c"
+    "fnv1a64": "d3583b68c3c8fe5b"
   },
-  "rewrite_delay_milliseconds": 4730,
+  "rewrite_delay_milliseconds": 4455,
   "rewrite_audio": {
     "music_calls": 1,
     "voice_calls": 3,
@@ -87,7 +87,7 @@
     },
     {
       "kind": "player_action_boundary",
-      "rewrite_frame": 83,
+      "rewrite_frame": 76,
       "original_review_frame": 883,
       "original_png_sha256": "bab70e61e2640c1a0b3637556879cfd1bec2c1c5d64d7ee3178907a75db1428b",
       "rewrite_indexed_sha256": "17a514037c5934fb31bfa48b5b9c552a162511472f75699133393a8c162606f6",
@@ -97,7 +97,7 @@
     },
     {
       "kind": "post_debit_next_command",
-      "rewrite_frame": 84,
+      "rewrite_frame": 77,
       "original_review_frame": 907,
       "original_png_sha256": "6513077568c9a6447be180c9b8fd90b8ef5eb10e08ab02a0155dd1783d154161",
       "rewrite_indexed_sha256": "33dfbbb9f5e4fa0531581f7e98b74a1167ca3337ee0003064a280399c8e813b8",
@@ -107,7 +107,7 @@
     }
   ],
   "second_nested_anchor": {
-    "rewrite_frame": 55,
+    "rewrite_frame": 73,
     "original_review_frame": 845,
     "crop": [
       0,

@@ -2222,6 +2222,8 @@ bool present_round_events(
     };
     auto frontend_abort = false;
     auto alternate_page = previous_page;
+    std::optional<std::array<std::uint8_t, 768>>
+        retained_composite_damage_palette;
     const auto delay = [&](std::chrono::milliseconds duration) {
         if (delay_for_or_frontend_quit(context.platform, duration)) return true;
         frontend_abort = true;
@@ -2244,6 +2246,7 @@ bool present_round_events(
         const auto action_first =
             event_index == 0 ||
             !fig_same_presented_action(result.events[event_index - 1U], event);
+        if (action_first) retained_composite_damage_palette.reset();
         if (action_first && event.source_is_monster) {
             // 22e0 returns monster actions through a fresh 2db8 battlefield;
             // the directory-64h zero-hit capture proves the following
@@ -3658,6 +3661,20 @@ bool present_round_events(
             retained_immunity_handler || retained_monster_status_handler ||
             retained_player_status_handler || retained_player_barrier_handler ||
             retained_player_dispel_handler || retained_monster_damage_handler;
+        const auto is_player_dispatcher_damage = [](const auto& candidate) {
+            return candidate.kind == BattleEventKind::player_ability &&
+                candidate.block_reason == AbilityBlockReason::none &&
+                candidate.target_is_monster && candidate.status_duration == 0 &&
+                (candidate.damage != 0 || candidate.healing != 0) &&
+                candidate.effect_code > 0x30;
+        };
+        const auto composite_damage_continues =
+            retained_monster_damage_handler &&
+            event_index + 1U < result.events.size() &&
+            fig_same_presented_action(
+                event, result.events[event_index + 1U]) &&
+            event.effect_code != result.events[event_index + 1U].effect_code &&
+            is_player_dispatcher_damage(result.events[event_index + 1U]);
         if (action_first && !retained_fading_handler &&
             !retained_player_support_handler) {
             // Non-fading learned handlers expose the paid pool after the
@@ -3680,7 +3697,16 @@ bool present_round_events(
         }
         std::optional<std::array<std::uint8_t, 768>>
             dispatcher_palette_override;
-        if (retained_fading_handler && retained_dispatcher_pose_surface) {
+        if (retained_monster_damage_handler &&
+            retained_composite_damage_palette) {
+            // 57f2 keeps the first nested damage handler's dark DAC table
+            // live while it dispatches the second selector.  The intermediate
+            // handler neither pays/restores nor repeats 43ce; only the final
+            // nested handler reaches the shared 585e/4417 epilogue.
+            dispatcher_palette_override =
+                *retained_composite_damage_palette;
+        } else if (retained_fading_handler &&
+                   retained_dispatcher_pose_surface) {
             auto faded = *retained_dispatcher_pose_surface;
             for (auto step = 0; step < 5; ++step) {
                 darken_fig_dispatcher_palette(faded);
@@ -4585,6 +4611,12 @@ bool present_round_events(
             // epilogue then debits the pool and restores C0h..DFh in five
             // steps without dropping the action anchor between those pages.
             apply_visual_event(visual, event, abilities);
+            if (composite_damage_continues) {
+                retained_composite_damage_palette =
+                    *dispatcher_palette_override;
+                continue;
+            }
+            retained_composite_damage_palette.reset();
             auto restored = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
                 menu_sprites, font, fallback, visual, event,

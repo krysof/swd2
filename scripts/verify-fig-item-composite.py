@@ -117,7 +117,7 @@ def main() -> int:
             digest(page.get("original_png_sha256"), "original_png_sha256")
 
         anchor = expected.get("second_nested_anchor")
-        if not isinstance(anchor, dict) or anchor.get("rewrite_frame") != 55 or \
+        if not isinstance(anchor, dict) or anchor.get("rewrite_frame") != 73 or \
                 anchor.get("original_review_frame") != 845 or \
                 anchor.get("crop") != [0, 0, 320, 197] or \
                 anchor.get("mismatched_full_rgb_pixels") != 8:

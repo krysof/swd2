@@ -2530,8 +2530,9 @@ type-10 的 `6bh` 组合符也必须保留相同的返回协议。物品 230 以
 也不能在第一段结束时提前扣费。原版检查点锁定 pose 0、第一段效果与数字、第二段恢复
 锚点、公共玩家边界，以及下一回合命令页才出现的 960 AP。除 DOSBox-X 在第二段调色板
 恢复时已知的底部两行八像素采样伪影外，该锚点顶部 197 行逐字节一致，其余五张完整
-320×200 RGB 页零差异；现代 85 页、4,730ms、三次语音提交与最终状态摘要也由独立
-回放固定。
+320×200 RGB 页零差异。后续同回合到期捕获进一步证明两个伤害 handler 共用一次
+`585e/4417`：第一段结束后保持暗色 DAC，不能先恢复再把第二段重新暗化。修正后的独立
+回放为 78 页、4,455ms、三次语音提交，并保持相同最终状态摘要。
 
 同为 `6bh` 的物品 219 则证明目标来源不能误用能力 flags：ITEM 的 target byte 为零，
 所以不弹出目标页，两个嵌套 selector `66h/69h` 都作用于调用者并依次留下“護身增加”
@@ -3097,3 +3098,25 @@ explicitly unpaired.  SP049 is submitted at 10,393 ms and 11,548 ms; the last
 B0 flight page appears at 12,813 ms, both media are visible after restoration
 at 13,143 ms, expiry begins one 55 ms tick later, and the card holds 989 ms
 before the sole delayed cleanup at 14,187 ms.
+
+### FIG composite damage item followed by same-turn expiry
+
+Item 230 completes the observed `6bh` item trio with the damage pair
+`38h/3ah`.  `57f2` enters the two selectors under one direct-item pose-zero
+envelope.  The original transition proves that the first handler does not run
+an intermediate `585e/4417`: its dark DAC table passes directly into the
+second effect, and the 40 AP payment plus five-step restoration happen only
+after both rising-number sequences.  The restored pose then enters
+`0c41/0da7` one tick later, so the expiring attack buff is still part of the
+same player turn.
+
+The 100-second original capture records 7,008 video frames.  Forty-eight full
+320x200 RGB pages and nineteen top-197 crops match the rewrite, covering both
+complete effect animations, eighteen sampled nested damage rises, final
+restoration, same-turn expiry, cleanup, monster action, boundary, and next
+command.  Every crop differs only in the established eight bottom-scanline
+ZMBV pixels; eight live DAC/reaction/alternate pages remain explicitly
+unpaired.  The nested voices begin at 10,118 ms and 11,438 ms, the final
+restored pose appears at 12,593 ms, expiry follows at 12,648 ms and holds 989
+ms before the sole cleanup.  The deterministic rewrite now contains 198
+submitted pages and ends at 15,836 ms.
