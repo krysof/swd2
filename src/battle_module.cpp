@@ -228,7 +228,8 @@ void brighten_fig_dispatcher_palette(
 
 void rotate_fig_existing_result_palette(
     std::array<std::uint8_t, 768>& palette,
-    std::size_t page_index) {
+    std::optional<std::size_t> page_index,
+    std::size_t entering_shift = 0) {
     // The autonomous slot-two path enters 5ed8 without calling 14a3 first.
     // Rotate the five E0h..E4h colours already installed by the preceding
     // action instead of replacing them with a canonical ability ramp.
@@ -237,7 +238,9 @@ void rotate_fig_existing_result_palette(
     std::array<std::uint8_t, colors * 3U> source{};
     std::copy_n(palette.begin() + static_cast<std::ptrdiff_t>(first),
                 source.size(), source.begin());
-    const auto shift = ((page_index + 1U) / 2U) % colors;
+    const auto shift =
+        (entering_shift +
+         (page_index ? (*page_index + 1U) / 2U : 0U)) % colors;
     for (std::size_t destination = 0; destination < colors; ++destination) {
         const auto source_color =
             (destination + colors - shift) % colors;
@@ -2135,7 +2138,8 @@ bool present_round_events(
     const SpriteArchive& menu_sprites,
     BattleVisualState& visual, const BattleRoundResult& result,
     std::uint16_t encounter_directory_offset,
-    const std::array<PlayerBattleCommand, 4>& commands) {
+    const std::array<PlayerBattleCommand, 4>& commands,
+    std::size_t& existing_result_palette_shift) {
     constexpr auto action_delay = std::chrono::milliseconds(43);  // 3/70 s
     constexpr auto effect_delay = std::chrono::milliseconds(14);  // 1/70 s
     constexpr auto status_card_delay = std::chrono::milliseconds(257); // 18/70 s
@@ -2234,6 +2238,13 @@ bool present_round_events(
         const auto action_first =
             event_index == 0 ||
             !fig_same_presented_action(result.events[event_index - 1U], event);
+        if (action_first && event.source_is_monster) {
+            // 22e0 returns monster actions through a fresh 2db8 battlefield;
+            // the directory-64h zero-hit capture proves the following
+            // autonomous slot-two action observes the BA ramp rather than a
+            // stale player weapon-wipe phase.
+            existing_result_palette_shift = 0;
+        }
         const auto effect_first =
             event_index == 0 ||
             !fig_same_effect_phase(result.events[event_index - 1U], event);
@@ -3451,6 +3462,9 @@ bool present_round_events(
             // exactly one target reaction frame per weapon. Both calls use
             // 3c44's four 50-line, one-tick top-down page-copy steps rather
             // than a static three-tick hold. SW000 is the real unarmed archive.
+            // 13e8 has just called 14a3 with DATA:2f6a, replacing any older
+            // E0h..E4h order before the first weapon pass begins.
+            existing_result_palette_shift = 0;
             const auto weapon_pose = poses[pose_count - 1U];
             auto prior_weapon_frame = compose_event_frame(
                 context, base_surface, encounter, items, fighters,
@@ -3469,6 +3483,11 @@ bool present_round_events(
                     frontend_abort = true;
                     return false;
                 }
+                // 3c44 calls 5ed8 after each of its four 50-line copies.
+                // Descriptor zero has interval two, so one complete wipe
+                // advances the existing E0h..E4h ramp by two colours.
+                existing_result_palette_shift =
+                    (existing_result_palette_shift + 2U) % 5U;
                 const auto reaction_frame = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event, weapon_pose,
@@ -3480,6 +3499,8 @@ bool present_round_events(
                     frontend_abort = true;
                     return false;
                 }
+                existing_result_palette_shift =
+                    (existing_result_palette_shift + 2U) % 5U;
                 prior_weapon_frame = reaction_frame;
             }
             retained_player_attack_surface = std::move(prior_weapon_frame);
@@ -4138,8 +4159,10 @@ bool present_round_events(
                 // that page in A800h before drawing any digits. It has no
                 // timer wait, but is a real visible page and the immutable
                 // indexed source copied for all ten number pages. Player
-                // effects and periodic damage set +3114 for a reaction sprite;
-                // captured-ally 1020 deliberately retains the normal monster.
+                // Effects and periodic damage set +3114 for a reaction sprite.
+                // Captured-ally 1010 sets the same word before entering 144e
+                // whenever attack exceeds defence, so its nonzero physical
+                // result must retain that reaction sprite as well.
                 auto reaction_frame = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
@@ -4148,7 +4171,7 @@ bool present_round_events(
                         : std::nullopt,
                     {}, std::nullopt,
                     encounter_directory_offset, std::nullopt,
-                    !retained_ally_physical_handler,
+                    !retained_ally_physical_handler || event.damage != 0,
                     !retained_status_damage_handler &&
                         !retained_ally_physical_handler);
                 if (dispatcher_palette_override) {
@@ -4161,7 +4184,8 @@ bool present_round_events(
                 } else if (retained_status_damage_handler ||
                            retained_ally_physical_handler) {
                     rotate_fig_existing_result_palette(
-                        reaction_frame.palette, 0);
+                        reaction_frame.palette, std::nullopt,
+                        existing_result_palette_shift);
                 }
                 present_battle_surface(context, reaction_frame);
             }
@@ -4186,7 +4210,7 @@ bool present_round_events(
                             : std::nullopt,
                         {}, placement,
                         encounter_directory_offset, std::nullopt,
-                        !retained_ally_physical_handler,
+                        !retained_ally_physical_handler || event.damage != 0,
                         !retained_status_damage_handler &&
                             !retained_ally_physical_handler);
                     if (dispatcher_palette_override) {
@@ -4199,7 +4223,8 @@ bool present_round_events(
                     } else if (retained_status_damage_handler ||
                                retained_ally_physical_handler) {
                         rotate_fig_existing_result_palette(
-                            number_frame.palette, page_index);
+                            number_frame.palette, page_index,
+                            existing_result_palette_shift);
                     }
                     present_battle_surface(context, number_frame);
                 } else {
@@ -4928,6 +4953,12 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             context.game_root / "FIG.EXE", context.shared_state);
         bool quit_battle = false;
         std::optional<std::size_t> automatic_target;
+        // FIG's 5ed8 mutates the live E0h..E4h DAC ramp. 144e executes ten
+        // calls and therefore returns it to the entering order, while each
+        // 3c44 weapon wipe advances it by two colours. Preserve that order
+        // across actors and rounds for autonomous/status damage handlers,
+        // which deliberately do not install a canonical ramp through 14a3.
+        std::size_t existing_result_palette_shift = 0;
         // FIG collects every command before rolling initiative. The portable
         // menu does the same and feeds the resulting array into the shared
         // deterministic session instead of launching or emulating FIG.EXE.
@@ -5077,7 +5108,8 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                     context, base_surface, previous_page, encounter, items,
                     abilities, command_font, command_name_font,
                     fighters, menu_sprites, visual, round_result,
-                    encounter_offset, round_commands)) {
+                    encounter_offset, round_commands,
+                    existing_result_palette_shift)) {
                 quit_battle = true;
                 break;
             }
