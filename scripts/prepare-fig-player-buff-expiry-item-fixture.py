@@ -14,6 +14,8 @@ EXPECTED_MISSING_MEDIUM_SAVE = \
     "967403714f7d445c8f067fe09a8920163a9c39b2f3b2263b45e80180646d4e85"
 EXPECTED_STATUS_SAVE = \
     "e09999f59339bd32ec0272c768599ea3bd67ec4ea1853489731d3c4b231255e3"
+EXPECTED_SUPPORT_SAVE = \
+    "9fdac8fcd88f5fa5c095544e193e4564f193a69ce3132fe9dd88d19a23fea2be"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 
@@ -37,6 +39,9 @@ def main() -> int:
     finish.add_argument(
         "--status-item", action="store_true",
         help="replace direct damage item 192 with item 186/effect 69h")
+    finish.add_argument(
+        "--support-item", action="store_true",
+        help="replace direct damage item 192 with item 190/effect 01h")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -72,9 +77,18 @@ def main() -> int:
         word(save, actor + 0x5F, 60000)
         word(save, actor + 0x6D, 38)
         word(save, actor + 0x6E, 1)
+        if args.support_item:
+            word(save, actor + 0x2D, 100)
+            word(save, actor + 0x2F, 1000)
+            word(save, actor + 0x35, 1000)
+            word(save, actor + 0x37, 1000)
+            word(save, actor + 0x55, 1000)
+            word(save, actor + 0x57, 1000)
         for offset in range(0x382, 0x3E6, 2):
             word(save, offset, 0)
-        final_item = 186 if args.status_item else (
+        final_item = (
+            190 if args.support_item else
+            186 if args.status_item else
             226 if args.missing_medium else 192)
         word(save, 0x382, final_item)
 
@@ -82,6 +96,7 @@ def main() -> int:
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
         expected_save = (
+            EXPECTED_SUPPORT_SAVE if args.support_item else
             EXPECTED_STATUS_SAVE if args.status_item else
             EXPECTED_MISSING_MEDIUM_SAVE if args.missing_medium else
             EXPECTED_SAVE)

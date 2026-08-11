@@ -3714,6 +3714,26 @@ if(BUILD_TESTING)
         fig_player_buff_expiry_item_status_validation PROPERTIES
         DEPENDS fig_player_buff_expiry_item_status_prepare)
     add_test(
+        NAME fig_player_buff_expiry_item_support_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-item-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-support-game"
+                --support-item
+    )
+    add_test(
+        NAME fig_player_buff_expiry_item_support_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry-item-support.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-support-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-support"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-item-support-rgb-reference.json"
+    )
+    set_tests_properties(
+        fig_player_buff_expiry_item_support_validation PROPERTIES
+        DEPENDS fig_player_buff_expiry_item_support_prepare)
+    add_test(
         NAME fig_player_buff_expiry_escape_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-ability-fixture.py"

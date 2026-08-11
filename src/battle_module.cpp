@@ -2234,6 +2234,13 @@ bool present_round_events(
         // not render every remaining DOS animation before the process exits.
         if (frontend_abort || context.platform.poll_frontend_quit()) return false;
         const auto& event = result.events[event_index];
+        const auto same_player_expiry_follows = [&] {
+            return event_index + 1U < result.events.size() &&
+                result.events[event_index + 1U].kind ==
+                    BattleEventKind::status_expired &&
+                !result.events[event_index + 1U].target_is_monster &&
+                result.events[event_index + 1U].source == event.source;
+        };
         const auto action_first =
             event_index == 0 ||
             !fig_same_presented_action(result.events[event_index - 1U], event);
@@ -4093,9 +4100,11 @@ bool present_round_events(
                 // Every 447b..478f support selector returns through the
                 // common 585e debit and then the ordinary player caller's
                 // 0c41. With no expiring status, 0d98 flips one bare 2db8
-                // battlefield and holds it for five ticks before the next
-                // initiative entry.
+                // battlefield and holds it for five ticks. A same-turn 0da7
+                // report instead retains the support caller's action pose and
+                // reaches that cleanup only after its eighteen-tick card.
                 present_player_resource_cost(event);
+                if (same_player_expiry_follows()) return true;
                 const auto clean = compose_event_frame(
                     context, base_surface, encounter, items, fighters,
                     menu_sprites, font, fallback, visual, event,
