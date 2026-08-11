@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock FIG same-turn attack-buff expiry after item 191 installs medium AE."""
+"""Lock FIG same-turn attack-buff expiry after learned AE dismissal."""
 
 from __future__ import annotations
 
@@ -12,46 +12,42 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
-PRE_KINDS = (
-    "item_pose_zero", "darkening_step_two", "darkening_step_three",
-    "darkening_step_four", "darkest_item_pose_zero",
-) + tuple(f"flight_frame{index}" for index in range(1, 20))
-PRE_REWRITE = (120, 122, 123, 124, 125) + tuple(range(127, 146))
-PRE_ORIGINAL = (3549, 3559, 3563, 3567, 3571) + (
-    3603, 3604, 3606, 3608, 3610, 3612, 3614, 3616, 3618, 3620,
-    3622, 3624, 3626, 3628, 3630, 3632, 3634, 3636, 3638,
-)
-PRE_STABLE = (3557, 3561, 3565, 3569, 3600) + (
-    3603, 3605, 3607, 3609, 3611, 3613, 3615, 3617, 3619, 3621,
-    3623, 3625, 3627, 3629, 3631, 3633, 3635, 3637, 3639,
-)
-POST_KINDS = (
-    "attack_buff_expired", "expiry_tail_clean", "monster_attack_card",
-) + tuple(f"monster_shake{index}" for index in range(1, 8)) + (
-    "pre_damage_reaction",
+EXPECTED_KINDS = (
+    "pose_zero_with_medium", "pose_four_with_medium",
+    "darkening_step_two", "darkening_step_three", "darkening_step_four",
+    "darkest_pose_four", "dismissal_flip1", "dismissal_flip3",
+    "dismissal_flip7", "restoration_step_two", "restoration_step_three",
+    "restoration_step_four", "restored_pose_four_with_medium",
+    "attack_buff_expired_without_medium", "expiry_tail_clean",
+    "monster_attack_card", "monster_shake1", "monster_shake2",
+    "monster_shake3", "monster_shake4", "monster_shake5",
+    "monster_shake6", "monster_shake7",
 ) + tuple(f"damage_rise{index}" for index in range(1, 11)) + (
     "monster_action_tail", "round_boundary", "next_command",
 )
-POST_REWRITE = (152, 153, 154) + tuple(range(155, 162)) + (163,) + \
-    tuple(range(164, 174)) + (174, 175, 176)
-POST_ORIGINAL = (3681, 3746, 3769, 3787, 3789, 3791, 3793, 3795, 3797, 3799,
-                 3802, 3803, 3805, 3807, 3809, 3811, 3813, 3815, 3817,
-                 3819, 3823, 3825, 3857, 3878)
-POST_STABLE = (3745, 3768, 3786, 3788, 3790, 3792, 3794, 3796, 3798, 3801,
-               3802, 3804, 3806, 3808, 3810, 3812, 3814, 3816, 3818,
-               3821, 3824, 3856, 3877, 5250)
-EXPECTED_KINDS = PRE_KINDS + POST_KINDS
-EXPECTED_REWRITE = PRE_REWRITE + POST_REWRITE
-EXPECTED_ORIGINAL = PRE_ORIGINAL + POST_ORIGINAL
-EXPECTED_STABLE = PRE_STABLE + POST_STABLE
-REWRITE_ONLY_KINDS = (
-    "first_darkening_step", "flight_frame0",
-    "palette_restoration_step1", "palette_restoration_step2",
-    "palette_restoration_step3", "palette_restoration_step4",
-    "palette_restoration_step5", "restored_medium_pose",
-    "final_monster_shake_clean",
+EXPECTED_REWRITE = (
+    155, 156, 158, 159, 160, 161, 163, 165, 169, 171, 172, 173,
+    174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184,
+) + tuple(range(187, 197)) + (197, 198, 199)
+EXPECTED_ORIGINAL = (
+    4966, 4978, 4987, 4991, 4995, 4999, 5032, 5036, 5040, 5044,
+    5046, 5048, 5050, 5083, 5156, 5179, 5197, 5199, 5201, 5203,
+    5205, 5207, 5209, 5213, 5215, 5217, 5219, 5221, 5223, 5225,
+    5227, 5229, 5233, 5234, 5266, 5286,
 )
-REWRITE_ONLY_FRAMES = (121, 126, 146, 147, 148, 149, 150, 151, 162)
+EXPECTED_STABLE = (
+    4977, 4985, 4989, 4993, 4997, 5029, 5033, 5037, 5040, 5044,
+    5046, 5048, 5082, 5155, 5178, 5196, 5198, 5200, 5202, 5204,
+    5206, 5208, 5211, 5213, 5215, 5217, 5219, 5221, 5223, 5225,
+    5227, 5231, 5233, 5265, 5285, 5950,
+)
+REWRITE_ONLY_KINDS = (
+    "first_darkening_step", "dismissal_flip0_zmbv_artifact",
+    "dismissal_flip2_zmbv_artifact", "dismissal_flip4_zmbv_artifact",
+    "dismissal_flip6_zmbv_artifact", "first_restoration_step",
+    "final_shake_alternate", "pre_damage_reaction",
+)
+REWRITE_ONLY_FRAMES = (157, 162, 164, 166, 168, 170, 185, 186)
 
 
 def sha256(data: bytes) -> str:
@@ -61,7 +57,7 @@ def sha256(data: bytes) -> str:
 def digest(value: object, label: str) -> str:
     if not isinstance(value, str) or len(value) != 64 or any(
             char not in "0123456789abcdef" for char in value):
-        raise ValueError(f"malformed item-medium-expiry digest {label}")
+        raise ValueError(f"malformed learned-medium-expiry digest {label}")
     return value
 
 
@@ -97,20 +93,22 @@ def main() -> int:
         rewrite_only = expected.get("rewrite_only_frames")
         if expected.get("schema_version") != 1 or \
                 expected.get("kind") != \
-                    "original_fig_player_buff_expiry_after_item_medium_install" or \
+                    "original_fig_player_buff_expiry_after_learned_medium_dismissal" or \
                 expected.get("status") != "partial_exact_rgb_checkpoint" or \
                 (expected.get("formation_directory_offset"),
                  expected.get("random_buffer_offset"),
                  expected.get("random_cursor")) != (392, 0x1020, 20) or \
                 (expected.get("buff_ability_id"),
                  expected.get("buff_effect_code")) != (38, 0x43) or \
-                (expected.get("item_id"),
-                 expected.get("item_effect_code"),
-                 expected.get("embedded_ability_id")) != (191, 0x31, 51) or \
+                (expected.get("install_ability_id"),
+                 expected.get("install_effect_code"),
+                 expected.get("dismiss_ability_id"),
+                 expected.get("dismiss_effect_code")) != \
+                    (51, 0x31, 53, 0x3d) or \
                 (expected.get("medium_slot"),
                  expected.get("medium_sprite_id"),
                  expected.get("expiry_player_turn")) != (0, 0xae, 4) or \
-                not isinstance(pages, list) or len(pages) != 48 or \
+                not isinstance(pages, list) or len(pages) != 36 or \
                 tuple(page.get("kind") for page in pages) != EXPECTED_KINDS or \
                 tuple(page.get("rewrite_frame") for page in pages) != \
                     EXPECTED_REWRITE or \
@@ -123,25 +121,22 @@ def main() -> int:
                     REWRITE_ONLY_KINDS or \
                 tuple(page.get("rewrite_frame") for page in rewrite_only) != \
                     REWRITE_ONLY_FRAMES:
-            raise ValueError("unsupported FIG item-medium-expiry reference")
+            raise ValueError("unsupported FIG learned-medium-expiry reference")
 
         original = (args.game / "FIG.EXE").read_bytes()
         if sha256(original) != expected["reference_program_sha256"]:
-            raise ValueError("FIG.EXE differs from item-medium-expiry reference")
+            raise ValueError("FIG.EXE differs from learned-medium-expiry reference")
         image = image_bytes(original)
         checks = (
-            ("item_command_image_offset", "item_command_machine_code", 0x0a84,
-             "8b1e3a31d1e383bf232f017506e8a406e9aa01"),
-            ("direct_item_pose_image_offset", "direct_item_pose_machine_code",
-             0x11fc, "e8b91be87801e8d15ce80d2ab80300e82f26"),
-            ("item_dispatch_tail_image_offset", "item_dispatch_tail_machine_code",
-             0x1235,
-             "e89631d1e68b84bd2bc706a93c0200ffd0c706a93c0100e80f46e8c531"),
-            ("medium_install_handler_image_offset",
-             "medium_install_handler_machine_code", 0x4792,
-             "c706b92b4a00c706bb2b0100b83100e89313a1e331a32543c7062743a000c7062343ae00c706a93c0100c7069b310000e87c13c3"),
-            ("medium_flight_image_offset", "medium_flight_machine_code", 0x5b41,
-             "e8d1e0a1b92b2b0625433d50007603b81400ba0000b91400f7f13d000075014050e8c9e0e8d10ae81704e8681358813eb92b9001742e8b0e25438b16b92b3bca771803c83bca730601062543eb1689162543c706b92b9001eb0a2bc83bca76ee29062543813ebb2b9001743a8b0e27438b16bb2b3bca771a83c1083bca73078306274308eb2089162743c706bb2b9001eb1483e9083bca76ed832e274308813e274360ea77e0813eb92b90017403e96fff813ebb2b90017403e964ff8b1e9b31a1234389879d31a125438987a531a127438987ad31c3"),
+            ("player_command_image_offset", "player_command_machine_code",
+             0x0a97, "83bf232f047506e83838e99d01"),
+            ("learned_pose_image_offset", "learned_pose_machine_code", 0x4338,
+             "e87deae83cd0e8952bb80300e8f6f48306e13104e869eae828d0e8812be8bdf8b80300e8dff4"),
+            ("dispatcher_tail_image_offset", "dispatcher_tail_machine_code",
+             0x4377, "d1e68b84bd2bc706a93c0200ffd0c706a93c0100e8d014e88600"),
+            ("medium_dismiss_handler_image_offset",
+             "medium_dismiss_handler_machine_code", 0x482e,
+             "c7069b310000c706b92b4a00b83d00e8f7128b1e9b3183bfa531507207b80500e8ecefc3e8c0f38b1e9b31c787a5315000a1b92ba32543c70627430100c7062343ae00e87d1dc706a93c0100b90800e85626e8ff16e2f8c3"),
             ("player_expiry_dispatch_image_offset",
              "player_expiry_dispatch_machine_code", 0x0c41,
              "8b1e3a31d1e383bf3c3100741bff8f3c3183bf3c310075108b36dd318b445f89445dbe372de83e01"),
@@ -155,7 +150,7 @@ def main() -> int:
                     expected.get(code_key) != code or \
                     image[offset:offset + len(bytes.fromhex(code))].hex() != code:
                 raise ValueError(
-                    f"FIG item-medium-expiry instruction differs: {code_key}")
+                    "FIG learned-medium-expiry instruction differs: " + code_key)
 
         if sha256((args.game / "SAVE.DA1").read_bytes()) != \
                 expected["fixture_save_sha256"] or \
@@ -163,13 +158,13 @@ def main() -> int:
                 expected["fixture_mapz_sha256"] or \
                 sha256((args.game / "NAME1.DSK").read_bytes()) != \
                 expected["fixture_name_sha256"]:
-            raise ValueError("FIG item-medium-expiry fixture differs")
+            raise ValueError("FIG learned-medium-expiry fixture differs")
         autotype = args.reference.with_name(expected["capture_autotype"])
         replay = args.reference.with_name(expected["replay_input"])
         if sha256(autotype.read_bytes()) != \
                 expected["capture_autotype_sha256"] or \
                 sha256(replay.read_bytes()) != expected["replay_input_sha256"]:
-            raise ValueError("FIG item-medium-expiry input evidence differs")
+            raise ValueError("FIG learned-medium-expiry input evidence differs")
         if (expected.get("capture_wait_seconds"),
                 expected.get("capture_pace_seconds"),
                 expected.get("capture_time_limit_seconds"),
@@ -177,20 +172,20 @@ def main() -> int:
                 expected.get("capture_review_frames"),
                 expected.get("capture_video_frames"),
                 expected.get("capture_dosbox_exit_code")) != \
-                (5, 5, 75, 70, 5250, 5256, 0) or \
+                (5, 5, 85, 70, 5950, 5957, 0) or \
                 expected.get("capture_harness_sha256") != \
                     "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba":
-            raise ValueError("FIG item-medium-expiry capture boundary differs")
+            raise ValueError("FIG learned-medium-expiry capture boundary differs")
         for name in ("capture_video_sha256", "capture_manifest_sha256"):
             digest(expected.get(name), name)
         limitation = expected.get("capture_limitation")
         if not isinstance(limitation, str) or \
-                "Forty-eight stable full 320x200 pages" not in limitation or \
+                "Thirty-six stable full 320x200 pages" not in limitation or \
                 "deliberately unpaired" not in limitation or \
                 not all(token in limitation for token in (
-                    "0a84", "11fc", "1235", "4792", "5b41", "0c41",
-                    "0da7", "0d98")):
-            raise ValueError("FIG item-medium-expiry limitation is missing")
+                    "0a97", "4338", "4377", "482e", "0c41", "0da7",
+                    "0d98")):
+            raise ValueError("FIG learned-medium-expiry limitation is missing")
 
         args.output.mkdir(parents=True, exist_ok=True)
         trace_path = args.output / "trace.json"
@@ -216,54 +211,55 @@ def main() -> int:
                     expected["rewrite_state_fnv1a64"],
                     expected["rewrite_mapz_fnv1a64"],
                     expected["rewrite_name_fnv1a64"]):
-            raise ValueError("FIG item-medium-expiry rewrite trace differs")
+            raise ValueError("FIG learned-medium-expiry rewrite trace differs")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--" or \
                 trace.get("transitions") != [{
                     "module": "FIG.EXE", "input": "IF", "output": "--",
                     "launched": True}]:
-            raise ValueError("FIG item-medium-expiry did not reach replay exit")
+            raise ValueError("FIG learned-medium-expiry missed replay exit")
 
         times = [entry["at_milliseconds"] for entry in trace["timeline"]
                  if entry.get("kind") == "frame"]
         timed = (
-            (120, "item_pose_at_milliseconds"),
-            (125, "darkest_item_pose_at_milliseconds"),
-            (126, "first_flight_at_milliseconds"),
-            (145, "last_flight_at_milliseconds"),
-            (151, "restored_medium_at_milliseconds"),
-            (152, "expiry_at_milliseconds"),
-            (153, "clean_at_milliseconds"),
-            (154, "monster_attack_at_milliseconds"),
-            (174, "monster_tail_at_milliseconds"),
-            (175, "round_boundary_at_milliseconds"),
-            (176, "next_command_at_milliseconds"),
+            (155, "pose_zero_at_milliseconds"),
+            (156, "pose_four_at_milliseconds"),
+            (161, "darkest_pose_at_milliseconds"),
+            (162, "first_dismissal_flip_at_milliseconds"),
+            (169, "last_dismissal_flip_at_milliseconds"),
+            (174, "restored_pose_at_milliseconds"),
+            (175, "expiry_at_milliseconds"),
+            (176, "clean_at_milliseconds"),
+            (177, "monster_attack_at_milliseconds"),
+            (197, "monster_tail_at_milliseconds"),
+            (198, "round_boundary_at_milliseconds"),
+            (199, "next_command_at_milliseconds"),
         )
         if any(times[index] != expected[key] for index, key in timed) or \
                 any(times[index + 1] - times[index] != 55
-                    for index in range(126, 151)) or \
-                expected.get("flight_frame_milliseconds") != 55 or \
-                times[152] - times[151] != 55 or \
-                times[153] - times[152] != 989 or \
+                    for index in range(162, 169)) or \
+                expected.get("dismissal_flip_milliseconds") != 55 or \
+                times[175] - times[174] != 55 or \
+                times[176] - times[175] != 989 or \
                 expected.get("expiry_hold_milliseconds") != 989 or \
-                times[154] - times[153] != 275 or \
+                times[177] - times[176] != 275 or \
                 expected.get("clean_hold_milliseconds") != 275 or \
-                times[176] - times[175] != 110:
-            raise ValueError("FIG item-medium-expiry event timing differs")
+                times[199] - times[198] != 110:
+            raise ValueError("FIG learned-medium-expiry timing differs")
         voices = [entry for entry in trace["timeline"]
                   if entry.get("kind") == "voice"]
         if len(voices) != 9 or \
                 (voices[7].get("at_milliseconds"),
                  voices[7].get("payload_fnv1a64")) != \
-                    (10393, "56054b2c8ee75346") or \
+                    (12043, "309e81a048cdcef2") or \
                 (voices[8].get("at_milliseconds"),
                  voices[8].get("payload_fnv1a64")) != \
-                    (13307, "ce3659387971554b"):
-            raise ValueError("FIG item-medium-expiry voices differ")
+                    (14242, "ce3659387971554b"):
+            raise ValueError("FIG learned-medium-expiry voices differ")
 
         frames = load_indexed_frames(frame_path)
         if len(frames) != expected["rewrite_video"]["frames"]:
-            raise ValueError("FIG item-medium-expiry frame count differs")
+            raise ValueError("FIG learned-medium-expiry frame count differs")
         for page in pages:
             pixels, palette = frames[page["rewrite_frame"]]
             rgb = expand_rgb(pixels, palette)
@@ -272,7 +268,7 @@ def main() -> int:
                     sha256(rgb) != page["rewrite_rgb_sha256"] or \
                     sha256(rgb) != page["original_rgb_sha256"]:
                 raise ValueError(
-                    "FIG item-medium-expiry exact page differs: " +
+                    "FIG learned-medium-expiry exact page differs: " +
                     page["kind"])
             digest(page.get("original_png_sha256"),
                    page["kind"] + "/original_png_sha256")
@@ -284,37 +280,38 @@ def main() -> int:
                         page["rewrite_rgb_sha256"] or \
                     "original_rgb_sha256" in page:
                 raise ValueError(
-                    "FIG item-medium-expiry rewrite-only page differs: " +
+                    "FIG learned-medium-expiry rewrite-only page differs: " +
                     page["kind"])
 
-        # 4417 restores the final medium page and returns straight to the item
-        # caller's 0c41 expiry dispatch. There must be no bare 0d98 cleanup
-        # page or five-tick hold between those adjacent modern frames.
-        if changed_box(frames[151][0], frames[152][0]) != (
-                expected["changed_from_restored_medium_pixels"],
-                expected["changed_from_restored_medium_bbox"]) or \
-                changed_box(frames[152][0], frames[153][0]) != (
+        # The last restored 4417 page still contains medium AE. 0c41 must
+        # immediately enter 0da7, which recomposes the retained learned pose
+        # four after the medium state has been cleared. Only after its 18-tick
+        # card may the ordinary 0d98 page appear.
+        if changed_box(frames[174][0], frames[175][0]) != (
+                expected["changed_from_restored_pose_pixels"],
+                expected["changed_from_restored_pose_bbox"]) or \
+                changed_box(frames[175][0], frames[176][0]) != (
                     expected["changed_from_expiry_to_clean_pixels"],
                     expected["changed_from_expiry_to_clean_bbox"]) or \
-                expected["changed_from_restored_medium_pixels"] != 3795 or \
-                expected["changed_from_restored_medium_bbox"] != \
-                    [16, 1, 317, 198] or \
-                expected["changed_from_expiry_to_clean_pixels"] != 3677 or \
+                expected["changed_from_restored_pose_pixels"] != 3484 or \
+                expected["changed_from_restored_pose_bbox"] != \
+                    [12, 1, 317, 151] or \
+                expected["changed_from_expiry_to_clean_pixels"] != 3704 or \
                 expected["changed_from_expiry_to_clean_bbox"] != \
-                    [16, 120, 95, 199] or \
-                frames[151] == frames[152] or frames[152] == frames[153] or \
-                frames[153] != frames[175]:
+                    [12, 120, 91, 199] or \
+                frames[174] == frames[175] or frames[175] == frames[176] or \
+                frames[176] != frames[198]:
             raise ValueError(
-                "FIG item-medium expiry inserted a pre-expiry clean page")
+                "FIG learned-medium expiry lost pose or inserted early cleanup")
 
         print(
-            "FIG item-medium expiry checkpoint: 48 original RGB pages lock "
-            "the medium flight and post-expiry battle; FIG.EXE ordering and "
-            "the rewrite timeline defer cleanup until after same-turn expiry")
+            "FIG learned-medium expiry checkpoint: 36 original RGB pages "
+            "lock AE dismissal, retained pose four, same-turn expiry and the "
+            "sole following cleanup")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:
-        parser.exit(1, f"FIG item-medium expiry checkpoint: FAIL: {error}\n")
+        parser.exit(1, f"FIG learned-medium expiry checkpoint: FAIL: {error}\n")
 
 
 if __name__ == "__main__":

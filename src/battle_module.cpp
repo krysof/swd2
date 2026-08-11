@@ -2721,13 +2721,16 @@ bool present_round_events(
                     present_battle_surface(context, retained);
                     if (!delay(effect_delay)) return false;
                 }
-                const auto clean = compose_event_frame(
-                    context, base_surface, encounter, items, fighters,
-                    menu_sprites, font, fallback, visual, event,
-                    std::nullopt, {}, std::nullopt,
-                    encounter_directory_offset, std::nullopt, false, false);
-                present_battle_surface(context, clean);
-                if (!delay(ward_card_delay)) return false;
+                if (!same_player_expiry_follows()) {
+                    const auto clean = compose_event_frame(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event,
+                        std::nullopt, {}, std::nullopt,
+                        encounter_directory_offset, std::nullopt, false,
+                        false);
+                    present_battle_surface(context, clean);
+                    if (!delay(ward_card_delay)) return false;
+                }
                 continue;
             }
             // 20e7 first exposes a bare 2db8 page. 2731 is reached before the
@@ -3046,6 +3049,34 @@ bool present_round_events(
                         retained_action = previous;
                         retained_action->kind =
                             BattleEventKind::player_ability;
+                        retained_pose =
+                            previous.source < commands.size() &&
+                                    commands[previous.source].kind ==
+                                        PlayerCommandKind::item
+                                ? 0U
+                                : 4U;
+                    } else if ((previous.kind ==
+                                    BattleEventKind::medium_summoned ||
+                                previous.kind ==
+                                    BattleEventKind::medium_dismissed ||
+                                previous.kind ==
+                                    BattleEventKind::medium_dismissal_empty) &&
+                               !previous.source_is_monster &&
+                               !previous.source_is_summoned_ally &&
+                               previous.source == event.source &&
+                               previous.source < visual.party_count) {
+                        // 5b41 and 482e/4844 return through the same retained
+                        // 4338/1138 dispatcher globals as every other player
+                        // selector. Their event target is a medium slot, not
+                        // 31e3's fighter anchor: 0da7 must therefore rebuild
+                        // the source actor at its own bottom-card position,
+                        // with learned pose four or direct-item pose zero.
+                        retained_action = previous;
+                        retained_action->kind =
+                            BattleEventKind::player_ability;
+                        retained_action->target_is_monster = false;
+                        retained_action->target = previous.source;
+                        retained_action->action_anchor_is_target = false;
                         retained_pose =
                             previous.source < commands.size() &&
                                     commands[previous.source].kind ==

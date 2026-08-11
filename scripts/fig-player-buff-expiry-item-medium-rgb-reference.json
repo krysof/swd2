@@ -31,7 +31,7 @@
   "capture_dosbox_exit_code": 0,
   "capture_video_sha256": "b8ea3643da0799ded489a7e2e2838a88adc4fdd2237bb34efd2752b69f8ee92a",
   "capture_manifest_sha256": "0785a86739e460e8b4a27aa2b140d19c510290c869894975488cf0425c7bfd72",
-  "capture_limitation": "The DOSBox-X AVI/PNG sequence is a post-DAC RGB observation. Forty-seven stable full 320x200 pages match exactly. Live DAC restoration and ZMBV mid-page artifacts leave rewrite frames 121, 126, 146..152 and 162 deliberately unpaired. Unmodified FIG.EXE image offsets 0a84, 11fc, 1235, 4792, 5b41, 0c41, 0da7 and 0d98 prove that item 191 installs medium AE through 5b41, returns through 585e/4417, jumps directly into same-turn expiry processing, and reaches the sole cleanup only afterward.",
+  "capture_limitation": "The DOSBox-X AVI/PNG sequence is a post-DAC RGB observation. Forty-eight stable full 320x200 pages match exactly. Live DAC restoration and ZMBV mid-page artifacts leave rewrite frames 121, 126, 146..151 and 162 deliberately unpaired. Unmodified FIG.EXE image offsets 0a84, 11fc, 1235, 4792, 5b41, 0c41, 0da7 and 0d98 prove that item 191 installs medium AE through 5b41, returns through 585e/4417, jumps directly into same-turn expiry processing, and reaches the sole cleanup only afterward.",
   "item_command_image_offset": 2692,
   "item_command_machine_code": "8b1e3a31d1e383bf232f017506e8a406e9aa01",
   "direct_item_pose_image_offset": 4604,
@@ -65,7 +65,7 @@
     "direct_updates": 0,
     "last_width": 320,
     "last_height": 200,
-    "fnv1a64": "10b8311d551b342c"
+    "fnv1a64": "2589c858c4e53ae9"
   },
   "rewrite_delay_milliseconds": 14847,
   "rewrite_audio": {
@@ -93,18 +93,18 @@
   "flight_frame_milliseconds": 55,
   "expiry_hold_milliseconds": 989,
   "clean_hold_milliseconds": 275,
-  "changed_from_restored_medium_pixels": 5463,
+  "changed_from_restored_medium_pixels": 3795,
   "changed_from_restored_medium_bbox": [
-    0,
+    16,
     1,
     317,
     198
   ],
-  "changed_from_expiry_to_clean_pixels": 4864,
+  "changed_from_expiry_to_clean_pixels": 3677,
   "changed_from_expiry_to_clean_bbox": [
-    0,
+    16,
     120,
-    79,
+    95,
     199
   ],
   "matched_frames": [
@@ -371,6 +371,17 @@
       "rewrite_palette_sha256": "a648a697208cde429775676cb0b8a6bc9d2db8db3273f49f3a107d95619032df",
       "rewrite_rgb_sha256": "595b4901b06779908393d1570f9a174e66eac9e2cb7ba34cda52c2a775af531b",
       "original_rgb_sha256": "595b4901b06779908393d1570f9a174e66eac9e2cb7ba34cda52c2a775af531b"
+    },
+    {
+      "kind": "attack_buff_expired",
+      "rewrite_frame": 152,
+      "original_review_frame": 3681,
+      "original_stable_through": 3745,
+      "original_png_sha256": "6da72c3028847572541a17f22740ef2d905d4295334ec4c0872d507bd92b8f1b",
+      "rewrite_indexed_sha256": "9185c784e6b86387c91b08f03f7384f6feb0670f65d448e26b03c1258b79f8b4",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "c2d546b2bc0469e3c1590a95f72e932d3f7c7cfd16c260db23cee0cf2630fc73",
+      "original_rgb_sha256": "c2d546b2bc0469e3c1590a95f72e932d3f7c7cfd16c260db23cee0cf2630fc73"
     },
     {
       "kind": "expiry_tail_clean",
@@ -682,13 +693,6 @@
       "rewrite_indexed_sha256": "ddfb4d91f15f429fbcf0f8f99de4902df641f797022c4c92b0cee4aa20e2c93f",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
       "rewrite_rgb_sha256": "615d2f4ad2a36208d61acbc376de67df3e006108b93de7a98a2d387dad1b60ae"
-    },
-    {
-      "kind": "attack_buff_expired",
-      "rewrite_frame": 152,
-      "rewrite_indexed_sha256": "2319e49ff5cf3f231a9cf82e039fd0e8f14a0699c9eac64dbf22939c603e380c",
-      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "rewrite_rgb_sha256": "7fb0a8c2ec6d271f747f0f6f5aa0342446cb55ab5b7aa9ca45793d9119a867a8"
     },
     {
       "kind": "final_monster_shake_clean",

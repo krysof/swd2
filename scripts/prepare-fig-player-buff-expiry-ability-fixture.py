@@ -14,6 +14,8 @@ EXPECTED_MISSING_MEDIUM_SAVE = \
     "f6bef40bce5a59c8706dad949ba8caf19c93096b405b1ace638feae80caf8edd"
 EXPECTED_RESISTED_SAVE = \
     "776db17ac748099e6347b01c93bb1b4457427ec49a0450d1951edac270cec7f2"
+EXPECTED_DISMISS_MEDIUM_SAVE = \
+    "417d52d03978270e06ccd681bc18576186fa28edd79e625665dc8cba4b41b117"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 
@@ -37,6 +39,9 @@ def main() -> int:
     finish.add_argument(
         "--resisted", action="store_true",
         help="replace the finishing ability with ability 6/effect 5eh")
+    finish.add_argument(
+        "--dismiss-medium", action="store_true",
+        help="install medium AE with ability 51, then expire on ability 53")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -69,14 +74,19 @@ def main() -> int:
         word(save, actor + 0x57, 60000)
         word(save, actor + 0x5D, 60000)
         word(save, actor + 0x5F, 60000)
-        word(save, actor + 0x6D, 38)
-        word(save, actor + 0x6E,
-             6 if args.resisted else 86 if args.missing_medium else 1)
+        if args.dismiss_medium:
+            save[actor + 0x6D:actor + 0x6D + 50] = bytes(50)
+            save[actor + 0x6D:actor + 0x70] = bytes((38, 51, 53))
+        else:
+            word(save, actor + 0x6D, 38)
+            word(save, actor + 0x6E,
+                 6 if args.resisted else 86 if args.missing_medium else 1)
 
         save_digest = sha256(save)
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
         expected_save = (
+            EXPECTED_DISMISS_MEDIUM_SAVE if args.dismiss_medium else
             EXPECTED_RESISTED_SAVE if args.resisted else
             EXPECTED_MISSING_MEDIUM_SAVE if args.missing_medium else
             EXPECTED_SAVE)
