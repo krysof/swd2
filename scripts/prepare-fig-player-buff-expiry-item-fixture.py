@@ -22,6 +22,8 @@ EXPECTED_BARRIER_SAVE = \
     "98ae98e3b129b5ba19ffc3bbac126ade0ae50ab8c182b849341d1ec3b7d2e388"
 EXPECTED_MEDIUM_SAVE = \
     "92853a673585baa5245fcfd5dab055a5e6d680fe5ee3de80126ab36ab16031cf"
+EXPECTED_AF_MEDIUM_SAVE = \
+    "8d0feca88f2056ae83aa3c3ab266fed141e3efbedd870cab64a0225432736f60"
 EXPECTED_EMPTY_MEDIUM_SAVE = \
     "5c9f3697a84462c87cd85bf027ccec8ce5730b14f2e9b3d3038d0188ffd54f7a"
 EXPECTED_DISMISS_MEDIUM_SAVE = \
@@ -61,6 +63,9 @@ def main() -> int:
     finish.add_argument(
         "--medium-item", action="store_true",
         help="replace direct damage item 192 with item 191/effect 31h")
+    finish.add_argument(
+        "--medium-item-af", action="store_true",
+        help="replace direct damage item 192 with item 206/effect 3bh")
     finish.add_argument(
         "--empty-medium-item", action="store_true",
         help="replace direct damage item 192 with item 193/effect 3dh")
@@ -118,6 +123,7 @@ def main() -> int:
         final_item = (
             191 if args.dismiss_medium_item else
             193 if args.empty_medium_item else
+            206 if args.medium_item_af else
             191 if args.medium_item else
             204 if args.barrier_item else
             211 if args.dispel_item else
@@ -134,6 +140,7 @@ def main() -> int:
         expected_save = (
             EXPECTED_DISMISS_MEDIUM_SAVE if args.dismiss_medium_item else
             EXPECTED_EMPTY_MEDIUM_SAVE if args.empty_medium_item else
+            EXPECTED_AF_MEDIUM_SAVE if args.medium_item_af else
             EXPECTED_MEDIUM_SAVE if args.medium_item else
             EXPECTED_BARRIER_SAVE if args.barrier_item else
             EXPECTED_DISPEL_SAVE if args.dispel_item else

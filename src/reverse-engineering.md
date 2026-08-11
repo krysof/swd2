@@ -2909,3 +2909,22 @@ at 12,153 ms and expiry follows at 12,208 ms.  Removing B0 while preserving
 pose four changes 3,788 indexed pixels in `[12,1,269,198]`; the 989 ms expiry
 hold then reaches the sole cleanup, changing 3,704 pixels in
 `[12,120,91,199]`.  Cleanup and the later round boundary are identical.
+
+### FIG direct item AF installation followed by same-turn expiry
+
+Direct item 206 is the item-dispatch counterpart of learned ability 66.  Its
+`3bh` record passes through `11fc/1235`, invokes unchanged `47c6` and common
+`5b41`, and returns through `585e/4417` to the item command's direct `0c41`
+jump.  The retained source pose is therefore pose zero rather than the learned
+pose four, while the installed AF slot and its longer flight remain identical.
+
+The 75-second reference capture supplies fifty-four stable full-page RGB
+matches: direct-item pose zero, stable darkening, AF flight frames 1--26,
+expiry and cleanup, all stable monster physical pages, ten damage rises, and
+the next command.  First DAC darkening, flight frame zero, five restoration
+writes plus the restored AF page, final shake cleanup, and the pre-damage page
+remain explicitly unpaired.  AF begins at 10,393 ms, its last exact flight
+page is at 11,823 ms, restoration completes at 12,153 ms, and expiry follows
+at 12,208 ms.  AF removal with retained pose zero changes 3,798 indexed pixels
+in `[16,1,293,198]`; the following delayed cleanup changes 3,677 in
+`[16,120,95,199]` and exactly equals the round boundary.
