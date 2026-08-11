@@ -2928,3 +2928,24 @@ page is at 11,823 ms, restoration completes at 12,153 ms, and expiry follows
 at 12,208 ms.  AF removal with retained pose zero changes 3,798 indexed pixels
 in `[16,1,293,198]`; the following delayed cleanup changes 3,677 in
 `[16,120,95,199]` and exactly equals the round boundary.
+
+### FIG direct item B0 installation followed by same-turn expiry
+
+Item 222 closes the direct-item medium matrix through selector `3ch`.  It uses
+`11fc/1235`, original handler `47fa`, and common `5b41`, then returns through
+`585e/4417` to `0c41` with source pose zero retained.  Because asynchronous
+DOS command transitions occasionally discard a single scheduled direction,
+the reference AUTOTYPE repeats right/confirm triples; only the first completed
+item action is registered, while the deterministic rewrite records one extra
+right boundary without creating an extra action.
+
+The 110-second original capture provides forty-seven stable full-page RGB
+matches: pose zero, stable darkening, B0 flight frames 1--23, expiry/cleanup,
+three stable monster shake pages, all ten damage rises, action tail, boundary,
+and next command.  The first DAC step, flight zero, restoration/restored B0,
+four interleaved ZMBV shake observations, final shake cleanup, and pre-damage
+reaction are deliberately unpaired.  B0 starts at 10,393 ms, reaches the last
+exact flight page at 11,658 ms, restores at 11,988 ms, and expires one tick
+later.  The retained pose-zero transition changes 3,788 indexed pixels in
+`[16,1,269,198]`; cleanup follows only after 989 ms, changes 3,677 pixels in
+`[16,120,95,199]`, and equals the round-boundary page exactly.
