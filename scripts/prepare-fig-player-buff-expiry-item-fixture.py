@@ -18,6 +18,8 @@ EXPECTED_SUPPORT_SAVE = \
     "9fdac8fcd88f5fa5c095544e193e4564f193a69ce3132fe9dd88d19a23fea2be"
 EXPECTED_DISPEL_SAVE = \
     "dd114978016573e71141d827b2786bfc57da9291d61a5877dbfee42d385983f4"
+EXPECTED_BARRIER_SAVE = \
+    "98ae98e3b129b5ba19ffc3bbac126ade0ae50ab8c182b849341d1ec3b7d2e388"
 EXPECTED_MAPZ = "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917"
 EXPECTED_NAME = "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba"
 
@@ -47,6 +49,9 @@ def main() -> int:
     finish.add_argument(
         "--dispel-item", action="store_true",
         help="replace direct damage item 192 with item 211/effect 61h")
+    finish.add_argument(
+        "--barrier-item", action="store_true",
+        help="replace direct damage item 192 with item 204/effect 62h")
     args = parser.parse_args()
     try:
         if args.output.exists():
@@ -92,6 +97,7 @@ def main() -> int:
         for offset in range(0x382, 0x3E6, 2):
             word(save, offset, 0)
         final_item = (
+            204 if args.barrier_item else
             211 if args.dispel_item else
             190 if args.support_item else
             186 if args.status_item else
@@ -102,6 +108,7 @@ def main() -> int:
         mapz_digest = sha256((args.output / "MAPZ.DA1").read_bytes())
         name_digest = sha256((args.output / "NAME1.DSK").read_bytes())
         expected_save = (
+            EXPECTED_BARRIER_SAVE if args.barrier_item else
             EXPECTED_DISPEL_SAVE if args.dispel_item else
             EXPECTED_SUPPORT_SAVE if args.support_item else
             EXPECTED_STATUS_SAVE if args.status_item else

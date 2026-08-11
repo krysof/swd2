@@ -3754,6 +3754,26 @@ if(BUILD_TESTING)
         fig_player_buff_expiry_item_dispel_validation PROPERTIES
         DEPENDS fig_player_buff_expiry_item_dispel_prepare)
     add_test(
+        NAME fig_player_buff_expiry_item_barrier_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-item-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-barrier-game"
+                --barrier-item
+    )
+    add_test(
+        NAME fig_player_buff_expiry_item_barrier_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-player-buff-expiry-item-barrier.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-barrier-game"
+                "${CMAKE_BINARY_DIR}/fig-player-buff-expiry-item-barrier"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-player-buff-expiry-item-barrier-rgb-reference.json"
+    )
+    set_tests_properties(
+        fig_player_buff_expiry_item_barrier_validation PROPERTIES
+        DEPENDS fig_player_buff_expiry_item_barrier_prepare)
+    add_test(
         NAME fig_player_buff_expiry_escape_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-player-buff-expiry-ability-fixture.py"
