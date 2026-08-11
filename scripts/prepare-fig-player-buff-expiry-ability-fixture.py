@@ -16,6 +16,8 @@ EXPECTED_RESISTED_SAVE = \
     "776db17ac748099e6347b01c93bb1b4457427ec49a0450d1951edac270cec7f2"
 EXPECTED_COMPOSITE_DAMAGE_SAVE = \
     "5db2d2d176004f74aeace91b64870194b4f1b6d128953d6ea50a9d40fbaf05d3"
+EXPECTED_COMPOSITE_STATUS_DAMAGE_SAVE = \
+    "2f41b6a31eb2c110bd2e0362b2c2f8b13dc4c67221b137a8bde76c30991dcaef"
 EXPECTED_DISMISS_MEDIUM_SAVE = \
     "417d52d03978270e06ccd681bc18576186fa28edd79e625665dc8cba4b41b117"
 EXPECTED_DISMISS_AF_MEDIUM_SAVE = \
@@ -60,6 +62,9 @@ def main() -> int:
     finish.add_argument(
         "--composite-damage", action="store_true",
         help="replace the finishing ability with ability 90/effect 6bh")
+    finish.add_argument(
+        "--composite-status-damage", action="store_true",
+        help="replace the finishing ability with ability 80/effect 6bh")
     finish.add_argument(
         "--dismiss-medium", action="store_true",
         help="install medium AE with ability 51, then expire on ability 53")
@@ -134,6 +139,7 @@ def main() -> int:
                  83 if args.empty_medium_b0 else
                  67 if args.empty_medium_af else
                  53 if args.empty_medium else
+                 80 if args.composite_status_damage else
                  90 if args.composite_damage else
                  6 if args.resisted else 86 if args.missing_medium else 1)
 
@@ -150,6 +156,8 @@ def main() -> int:
             EXPECTED_EMPTY_B0_MEDIUM_SAVE if args.empty_medium_b0 else
             EXPECTED_EMPTY_AF_MEDIUM_SAVE if args.empty_medium_af else
             EXPECTED_EMPTY_MEDIUM_SAVE if args.empty_medium else
+            EXPECTED_COMPOSITE_STATUS_DAMAGE_SAVE
+            if args.composite_status_damage else
             EXPECTED_COMPOSITE_DAMAGE_SAVE if args.composite_damage else
             EXPECTED_RESISTED_SAVE if args.resisted else
             EXPECTED_MISSING_MEDIUM_SAVE if args.missing_medium else

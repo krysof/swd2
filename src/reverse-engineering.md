@@ -3139,3 +3139,24 @@ or quit-boundary observations remain explicitly unpaired.  The two nested
 voices begin at 10,283 ms and 11,603 ms; restored pose four appears at 12,758
 ms, expiry at 12,813 ms, cleanup 989 ms later, and the deterministic 201-page
 replay reaches the next command at 16,001 ms.
+
+### FIG learned resisted-status plus damage composite and same-turn expiry
+
+Growth ability 80 reaches the other shipped player `6bh` pair: `60h` then
+`46h`.  In the deterministic one-monster fixture the first selector reaches
+`59a1`'s resistance return.  That return does **not** run the ordinary
+`585e/4417` payment and palette restoration while `57f2` still has the second
+selector pending.  Its clean dark pose-four page remains selected when `46h`
+starts; the 60-point payment and five-step restoration occur only after the
+damage handler completes.  Treating the resisted nested selector as a complete
+action brightened the entire second animation and inserted six nonexistent
+pages, despite producing the correct rules result.
+
+A separate 75-second original capture now contributes fifty-eight exact full
+320x200 RGB pages: both learned poses, the stable `60h`/resistance sequence,
+all twenty `46h` animation pages, the damage reaction/rise, final restoration,
+same-turn attack-buff expiry, cleanup and next-command boundary.  Nine live
+selector, DAC, result or quit observations remain explicitly unpaired.  The
+nested voices begin at 10,283 ms and 11,657 ms; the restored page appears at
+13,527 ms, expiry at 13,582 ms, and the deterministic 185-page replay reaches
+the next command at 14,956 ms.
