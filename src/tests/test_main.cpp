@@ -5452,6 +5452,44 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     }),
             "FIG 1048 captured-ally empty AE dismissal missed its sentinel return");
 
+    auto ally_ae_state = ally_empty_ae_state;
+    ally_ae_state.set_u8(actor_zero + 0x6d, 51);
+    auto ally_ae_session = swd2::BattleSession::create(
+        ally_ae_state, selected->get(), items);
+    auto ally_ae_random = swd2::FigBattleRandom::load(
+        game_root / "FIG.EXE", ally_ae_state);
+    auto ally_ae_draw = ally_ae_random.function();
+    static_cast<void>(ally_ae_session.play_round(
+        ally_summon_commands, abilities, ally_ae_draw));
+    auto install_ae_commands = skip_commands;
+    install_ae_commands[0] = {
+        swd2::PlayerCommandKind::ability, 51, 0, 0,
+    };
+    const auto ally_ae_round = ally_ae_session.play_round(
+        install_ae_commands, abilities, ally_ae_draw);
+    require(!ally_ae_session.battle_media()[0] &&
+                std::any_of(
+                    ally_ae_round.events.begin(), ally_ae_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_summoned &&
+                               !event.source_is_summoned_ally &&
+                               event.source == 0 && event.target == 0 &&
+                               event.ability_id == 51 &&
+                               event.effect_code == 0x31;
+                    }) &&
+                std::any_of(
+                    ally_ae_round.events.begin(), ally_ae_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_dismissed &&
+                               event.source_is_summoned_ally &&
+                               event.source == 0 && event.target == 0 &&
+                               event.ability_id == 53 &&
+                               event.effect_code == 0x3d;
+                    }),
+            "FIG 1048 captured-ally special B did not remove installed AE");
+
     auto medium_success_state = medium_monster_state;
     medium_success_state.set_u8(actor_zero + 0x6d, 54);
     medium_success_state.set_u16(actor_zero + 0x55, 100);
