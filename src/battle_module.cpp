@@ -2925,16 +2925,21 @@ bool present_round_events(
                                previous.source == event.source &&
                                previous.source < visual.party_count) {
                         // Learned abilities leave 31dd at the common 4338
-                        // pose-four phase and retain 31e1/31e3's selected
-                        // action anchor.  If 0c41 expires a party buff as the
-                        // ability returns, 0da7 therefore recomposes that
-                        // pose at the target before overlaying its compact
-                        // card.  Clearing to the ordinary party portrait is
-                        // observably wrong when the ability defeats the last
-                        // monster: the original still shows the relocated
-                        // fighter underneath the expiry card for 18 ticks.
+                        // pose-four phase, while 1138's direct-item entry
+                        // exposes only pose zero.  Both retain 31e1/31e3's
+                        // selected action anchor.  If 0c41 expires a party
+                        // buff as the dispatcher returns, 0da7 recomposes
+                        // that exact final pose at the target before
+                        // overlaying its compact card.  Clearing to the
+                        // ordinary party portrait (or forcing every caller
+                        // to pose four) is observably wrong.
                         retained_action = previous;
-                        retained_pose = 4U;
+                        retained_pose =
+                            previous.source < commands.size() &&
+                                    commands[previous.source].kind ==
+                                        PlayerCommandKind::item
+                                ? 0U
+                                : 4U;
                     } else if (previous.kind == BattleEventKind::skipped &&
                                !previous.source_is_monster &&
                                previous.source == event.source &&

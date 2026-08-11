@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_player_buff_expiry_after_item",
+  "status": "exact_rgb_checkpoint",
+  "formation_directory_offset": 392,
+  "random_buffer_offset": 4128,
+  "random_cursor": 20,
+  "buff_ability_id": 38,
+  "buff_effect_code": 67,
+  "item_id": 192,
+  "item_effect_code": 51,
+  "expiry_player_turn": 4,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "32c63d8fee0304b1f81899a0c402d7d693d69a7a44f0d73c80433d457f36755c",
+  "fixture_mapz_sha256": "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917",
+  "fixture_name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+  "capture_autotype": "original-fig-player-buff-expiry-item-autotype.txt",
+  "capture_autotype_sha256": "e4c0d4e7e66520ecb26ba5ab2e3284d5ad9fb7807de58479714e025479ccb4e0",
+  "replay_input": "replay-fig-player-buff-expiry-item.txt",
+  "replay_input_sha256": "7dc35b58c2d0fede84b81224b3728646f8755351069283f1721f7d8fd1a41fec",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 5,
+  "capture_time_limit_seconds": 75,
+  "capture_review_fps": 70,
+  "capture_review_frames": 5250,
+  "capture_video_frames": 5256,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "9d97849b5a365cf4a3f9035d70db140da154fc54f7c72d5a17a11e7b3771ffc4",
+  "capture_manifest_sha256": "c751676c798a66609f1862b5bcf3c4af504b20bebce7a83f0f327855c2299dd4",
+  "capture_limitation": "The DOSBox-X AVI/PNG sequence is a post-DAC RGB observation. During item effect 33h palette restoration, three action-card observations retain the established eight-pixel ZMBV artifact in x=176..179 or x=72..75 on scanlines 197..198; those pages claim only the explicitly registered top-197 crop, while the three full-page matches remain exact. The 18-tick hold is locked independently by FIG.EXE image bytes at 0de5 and the rewrite timeline, not inferred from RGB video frame counts.",
+  "expiry_wait_image_offset": 3557,
+  "expiry_wait_machine_code": "b81200e8522a",
+  "expiry_wait_ticks": 18,
+  "rewrite_input": {
+    "total": 11,
+    "consumed": 11,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 11,
+    "poll": 0,
+    "text": 0,
+    "frontend": 984
+  },
+  "rewrite_video": {
+    "frames": 182,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "352ab99b94848c6b"
+  },
+  "rewrite_delay_milliseconds": 14957,
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 9,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "3c15efce6d1083b8"
+  },
+  "rewrite_state_fnv1a64": "6cfa0a61e70a7964",
+  "rewrite_mapz_fnv1a64": "827f0f1b725a0958",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "rewrite_final_fnv1a64": "4179c6261fb68ed7",
+  "retained_pose_rewrite_frame": 156,
+  "expiry_rewrite_frame": 157,
+  "expiry_at_milliseconds": 11933,
+  "clean_rewrite_frame": 158,
+  "clean_at_milliseconds": 12922,
+  "expiry_hold_milliseconds": 989,
+  "following_action_rewrite_frame": 159,
+  "following_action_at_milliseconds": 13197,
+  "matched_frames": [
+    {
+      "kind": "action_tail_clean",
+      "rewrite_frame": 158,
+      "original_review_frame": 3769,
+      "original_stable_through": 3777,
+      "original_png_sha256": "af50e9212e6bd18f37ff021ca6207a7648727e9425c8c4b690221e058204df39",
+      "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3",
+      "original_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3"
+    },
+    {
+      "kind": "monster_tail_clean",
+      "rewrite_frame": 180,
+      "original_review_frame": 3864,
+      "original_stable_through": 3884,
+      "original_png_sha256": "af50e9212e6bd18f37ff021ca6207a7648727e9425c8c4b690221e058204df39",
+      "rewrite_indexed_sha256": "bf785e5cb4a137c6970f524a155e895cb2347a6d14a51d920cdd41c529cb2fbb",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3",
+      "original_rgb_sha256": "a0115f9d45f49e2ca41df0a57ecaf4ca4ba6b1d10fe1187448acff3b46e49ad3"
+    },
+    {
+      "kind": "next_command",
+      "rewrite_frame": 181,
+      "original_review_frame": 3885,
+      "original_stable_through": 5250,
+      "original_png_sha256": "4552e0eb7fa234632453345395e885c22ceadee7a948787b0b5ef5c849e47185",
+      "rewrite_indexed_sha256": "919e60bb8a1598fd7c72bd6eb3faa88013efdcee61cf1a0c497d60b59a1b9e26",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "rewrite_rgb_sha256": "2c887304c851e8cb36f34ad6a01b0ce0acaddd6dd2d1f41d2e277c2cf52178b1",
+      "original_rgb_sha256": "2c887304c851e8cb36f34ad6a01b0ce0acaddd6dd2d1f41d2e277c2cf52178b1"
+    }
+  ],
+  "cropped_frames": [
+    {
+      "kind": "retained_item_pose0",
+      "rewrite_frame": 156,
+      "original_review_frame": 3698,
+      "original_stable_through": 3731,
+      "original_png_sha256": "6d9a4e8a1ec93767b860f8c37147d69401a8df032a586d5580a43909d016d016",
+      "rewrite_indexed_sha256": "3643d72ef07781e7dff3f03c1799b7e5d2cc9af481d6b49f5283169482821e07",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "crop": [
+        0,
+        0,
+        320,
+        197
+      ],
+      "mismatched_full_rgb_pixels": 8,
+      "rewrite_full_rgb_sha256": "4cbc735a235500f6f51e629c9825c310773693661ea476e721b44332aefbfba4",
+      "original_full_rgb_sha256": "48cd75e16d206500241e017c6e87d79edc69e40096b506da798cfc9431244ecb",
+      "rewrite_crop_rgb_sha256": "459efc34d070e7ec46023e1fe0740858745acf52676ca4b7e83cb374c36511f1",
+      "original_crop_rgb_sha256": "459efc34d070e7ec46023e1fe0740858745acf52676ca4b7e83cb374c36511f1"
+    },
+    {
+      "kind": "attack_buff_expired",
+      "rewrite_frame": 157,
+      "original_review_frame": 3732,
+      "original_stable_through": 3768,
+      "original_png_sha256": "f0724e7c5656dc9ce502584d7368a4d2480a6e787890f97ed2e6d9fc40540b1a",
+      "rewrite_indexed_sha256": "fc895c93319d6fcd04ad6b20a78bad834aab5f2123638baf6dc832a0e979f9e5",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "crop": [
+        0,
+        0,
+        320,
+        197
+      ],
+      "mismatched_full_rgb_pixels": 8,
+      "rewrite_full_rgb_sha256": "ea4a3f33af991ad38dca8a8b76a0d7eb1d7e3d60a2132ade6bc7ffede8e0dda6",
+      "original_full_rgb_sha256": "9772d11c2f6f42b3498821da8a16b618b5691bb37e6d1463ef1b07e15eefa4c1",
+      "rewrite_crop_rgb_sha256": "1b146949cd20c90da94c54a502084d64287d4d11f7624074c06d0e417270cbc9",
+      "original_crop_rgb_sha256": "1b146949cd20c90da94c54a502084d64287d4d11f7624074c06d0e417270cbc9"
+    },
+    {
+      "kind": "following_monster_action_card",
+      "rewrite_frame": 159,
+      "original_review_frame": 3782,
+      "original_stable_through": 3790,
+      "original_png_sha256": "b6c5f8568a9a91dd226a07791634f25dd6be65213358aa765608ce52986e8a3c",
+      "rewrite_indexed_sha256": "21ad37f0ea8235d7f0f0a0c9623a874ae7fd5990cedea5c85c6046a34660d9b0",
+      "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+      "crop": [
+        0,
+        0,
+        320,
+        197
+      ],
+      "mismatched_full_rgb_pixels": 8,
+      "rewrite_full_rgb_sha256": "0ea38f003458a8636272dc41be6c23f256f27fe92f228eabdb28cd0fad907f42",
+      "original_full_rgb_sha256": "e90bcec6dc0dd00a9e5edc1ec30c72942075af3f2d7ecc6ccb3548185da415ea",
+      "rewrite_crop_rgb_sha256": "ab040cc549bf78a3de59e6f99db2b95b0b7e4d4b7b81e6d402087f67739b82d6",
+      "original_crop_rgb_sha256": "ab040cc549bf78a3de59e6f99db2b95b0b7e4d4b7b81e6d402087f67739b82d6"
+    }
+  ]
+}
