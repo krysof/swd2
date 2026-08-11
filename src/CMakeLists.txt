@@ -2894,6 +2894,24 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_third_slot_medium_validation PROPERTIES
         DEPENDS fig_monster_third_slot_medium_prepare)
     add_test(
+        NAME fig_monster_first_slot_medium_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-first-slot-medium-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-first-slot-medium-game"
+    )
+    add_test(
+        NAME fig_monster_first_slot_medium_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-first-slot-medium.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-monster-first-slot-medium-game"
+                "${CMAKE_BINARY_DIR}/fig-monster-first-slot-medium"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-first-slot-medium-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_first_slot_medium_validation PROPERTIES
+        DEPENDS fig_monster_first_slot_medium_prepare)
+    add_test(
         NAME fig_defeat_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-defeat-fixture.py"
