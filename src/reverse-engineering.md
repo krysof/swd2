@@ -2889,3 +2889,23 @@ explicitly unpaired.  AF starts flying at 10,558 ms, reaches its last point at
 AF-to-expiry transition changes 3,798 indexed pixels in `[12,1,293,198]`;
 expiry-to-clean changes 3,704 in `[12,120,91,199]`, after the unchanged 989 ms
 card hold.  The resulting clean page again equals the round boundary exactly.
+
+### FIG learned B0 installation followed by same-turn expiry
+
+Ability 82 (`effect 3ch`) completes the three player medium-install handlers
+at the same expiry boundary.  Original `47fa` writes sprite `B0h` into slot
+two and calls common `5b41`; learned `4338/4377` retains pose four until
+`0c41` reports the expired attack buff.  The deterministic input is identical
+to the AF capture, with the duplicated left command retained as explicit
+evidence rather than hidden as capture timing noise.
+
+Fifty-three stable full 320x200 RGB pages match in the 85-second DOSBox-X
+observation: both learned poses, stable darkening, B0 flight frames 0--23,
+expiry/cleanup, the complete enemy physical response, and the next command.
+The first DAC step, five restoration steps plus the restored B0 page, and two
+mid-transition physical pages are deliberately unpaired.  B0 flight starts at
+10,558 ms and its last exact page is at 11,823 ms; the restored observation is
+at 12,153 ms and expiry follows at 12,208 ms.  Removing B0 while preserving
+pose four changes 3,788 indexed pixels in `[12,1,269,198]`; the 989 ms expiry
+hold then reaches the sole cleanup, changing 3,704 pixels in
+`[12,120,91,199]`.  Cleanup and the later round boundary are identical.
