@@ -5418,6 +5418,40 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     }),
             "FIG 1048 captured-ally empty AF dismissal missed its sentinel return");
 
+    // Shipped captured item 376 has special-B ability 53/effect 3dh.  Cursor
+    // 12f2 makes its zero primary chance pass on the only accepted roll, so
+    // this locks the captured-ally entry into the empty AE selector without
+    // changing ITEM.EXE.  The RGB checkpoint separately forces the same slot
+    // in an original FIG run and proves the visible nine-tick/SP061 tail.
+    auto ally_empty_ae_state = ally_dismiss_state;
+    ally_empty_ae_state.set_u16(0x382, 376);
+    ally_empty_ae_state.set_u16(0x49c, 0x12f2);
+    for (std::size_t slot = 0; slot < 50; ++slot) {
+        ally_empty_ae_state.set_u8(actor_zero + 0x6d + slot, 0);
+    }
+    auto ally_empty_ae_session = swd2::BattleSession::create(
+        ally_empty_ae_state, selected->get(), items);
+    auto ally_empty_ae_random = swd2::FigBattleRandom::load(
+        game_root / "FIG.EXE", ally_empty_ae_state);
+    auto ally_empty_ae_draw = ally_empty_ae_random.function();
+    static_cast<void>(ally_empty_ae_session.play_round(
+        ally_summon_commands, abilities, ally_empty_ae_draw));
+    const auto ally_empty_ae_round = ally_empty_ae_session.play_round(
+        skip_commands, abilities, ally_empty_ae_draw);
+    require(!ally_empty_ae_session.battle_media()[0] &&
+                std::any_of(
+                    ally_empty_ae_round.events.begin(),
+                    ally_empty_ae_round.events.end(),
+                    [](const swd2::BattleSessionEvent& event) {
+                        return event.kind ==
+                                   swd2::BattleEventKind::medium_dismissal_empty &&
+                               event.source_is_summoned_ally &&
+                               event.source == 0 && event.target == 0 &&
+                               event.ability_id == 53 &&
+                               event.effect_code == 0x3d;
+                    }),
+            "FIG 1048 captured-ally empty AE dismissal missed its sentinel return");
+
     auto medium_success_state = medium_monster_state;
     medium_success_state.set_u8(actor_zero + 0x6d, 54);
     medium_success_state.set_u16(actor_zero + 0x55, 100);
