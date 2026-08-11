@@ -166,6 +166,12 @@ if(BUILD_TESTING)
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-battles
     )
     add_test(
+        NAME fig_rgb_checkpoint_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-rgb-checkpoint.py"
+                "${PROJECT_SOURCE_DIR}/verification/pixel_diffs/checkpoint-2026-08-11-fig-rgb.json"
+    )
+    add_test(
         NAME legacy_program_data_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
                 --verify-legacy-program-data
