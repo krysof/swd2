@@ -2083,12 +2083,9 @@ bool present_medium_summon_animation(
         }
         blit(frame, menu_sprites, sprite_frame,
              static_cast<int>(current_x) * 4, static_cast<int>(current_y));
-        if (summoned_source) {
-            draw_fig_party_cards(
-                frame, menu_sprites,
-                std::span<const BattlePartyMember>(visual.party).first(
-                    visual.party_count));
-        }
+        // 1048 flies a requested mediator over the card-free ally-action
+        // page.  The persistent captured-ally name card remains at the top,
+        // but 2bb5's bottom party cards are not part of this path.
         context.platform.present({
             320, 200, frame.pixels,
             std::span<const std::uint8_t, 768>(frame.palette),
