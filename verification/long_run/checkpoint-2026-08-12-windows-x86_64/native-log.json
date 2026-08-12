@@ -2,7 +2,8 @@
   "schema_version": 1,
   "kind": "swd2_windows_cross_build_checkpoint",
   "status": "verified",
-  "source_commit": "08fdc083f9685fb354f87ab544765938e6068a29",
+  "source_commit": "29beb7ea649f5bb095d35584ace36acbea411202",
+  "source_tree": "0bde3587728d4bd65160fe0656d989ec2c5d26eb",
   "compiler": "x86_64-w64-mingw32-c++ (GCC) 15.2.0",
   "compiler_target": "x86_64-w64-mingw32",
   "build_type": "Release",
@@ -28,6 +29,6 @@
   "pe_sections": 18,
   "pe_characteristics": "0x0026",
   "executable_size": 18257836,
-  "executable_sha256": "a4b77c3dcf79df7d6e293768d52b3af0a6ee12ca0eb9a6d2c50be3af48c540ff",
-  "build_log_sha256": "8d042e91aa144f3a9d46544179645dd4bf8b89a102dd392f3966105e194337fb"
+  "executable_sha256": "710501764fdc588f7a1123baf9a02884df3c1afe12a2ee64946f28addda6167b",
+  "build_log_sha256": "a52efe61b29e2c05b6a2e68e05159fb82c73076b5599e55ce00cbad3bcfef99a"
 }

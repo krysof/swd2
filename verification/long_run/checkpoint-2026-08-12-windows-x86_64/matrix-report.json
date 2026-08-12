@@ -12,9 +12,9 @@
     "exact_indexed_frame_matches": 113
   },
   "artifacts": {
-    "native_log_sha256": "c5e3b7406a98cde8b21cf1790ae71463348a1e14c0db78372bd670985b4c2ae3",
-    "build_log_sha256": "8d042e91aa144f3a9d46544179645dd4bf8b89a102dd392f3966105e194337fb",
-    "wine_execution_log_sha256": "c528c04ff87dd11221e6d300c60b9d4a1a2ee738933193648c8bf3f348b418ba",
+    "native_log_sha256": "47fd79a21e90cf088dfa3a1b5b0629fabd0498adcfabe98d2a08086a43dad878",
+    "build_log_sha256": "a52efe61b29e2c05b6a2e68e05159fb82c73076b5599e55ce00cbad3bcfef99a",
+    "wine_execution_log_sha256": "75a83a64e52f62e32b4c3baef6c673feada2c16b0e7c1f20f6f20d62bbe05028",
     "wine_native_trace_sha256": "27b47e8fd635161fb67e8d4db11d32cfa091c81f5118d7211709f2f92748c51e",
     "wine_windows_trace_sha256": "c0781066eb857cd255f25bfe82673cd615beb1a21a7f50acd3442bc2c23660b5",
     "wine_comparison_sha256": "17fe93b5e2ca6c01fc4841d977e868d4985047316829ed65e54fa277bbaaf297"

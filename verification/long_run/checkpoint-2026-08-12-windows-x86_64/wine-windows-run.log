@@ -1,6 +1,5 @@
 wine: created the configuration directory '/tmp/swd2-wine-prefix'
 wine: failed to open L"C:\\windows\\syswow64\\rundll32.exe": c0000135
-rosetta error: invalid gdt selector index 5
- MEO.EXE -> MT
+MEO.EXE -> MT
 RPG.EXE -> --
 single-process frames=113, position=126,13, stop=module requested exit
