@@ -68,11 +68,12 @@ def main() -> int:
             "--format", "{{.Id}}",
         ], "Linux checkpoint image inspection").stdout.strip()
 
-        for path in (args.output, args.build):
-            if path.exists():
-                shutil.rmtree(path)
-            path.mkdir(parents=True)
-        log_path = args.output / "ctest.log"
+        # Keep the previous committed checkpoint visible while its own CTest
+        # verifier runs inside the read-only source mount. Replace it only
+        # after the new build/test has completed successfully.
+        if args.build.exists():
+            shutil.rmtree(args.build)
+        args.build.mkdir(parents=True)
         command = (
             "set -e; "
             "cmake --version; c++ --version; python3 --version; "
@@ -88,6 +89,10 @@ def main() -> int:
             "-v", f"{args.build}:/build",
             IMAGE_TAG, "bash", "-lc", command,
         ], "Linux ARM64 build/test")
+        if args.output.exists():
+            shutil.rmtree(args.output)
+        args.output.mkdir(parents=True)
+        log_path = args.output / "ctest.log"
         log_path.write_text(result.stdout, encoding="utf-8")
 
         match = re.search(
