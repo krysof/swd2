@@ -1,13 +1,16 @@
 # Deterministic main-story prefix reconstructed from the released MAPZ, MAP0,
 # CHNA1, ORC, ITEM and FIG data. It performs the real single-process startup,
 # completes the DAQ opening and first-village story, enters Wild Bear
-# Stronghold, defeats four ordinary encounters and then wins the Fire-Eyed
-# Suanni chief battle with explicit per-actor commands over nine rounds.
+# Stronghold, defeats four ordinary encounters and wins the Fire-Eyed Suanni
+# chief battle with explicit per-actor commands over nine rounds. It then
+# returns to the freed villager, learns and opens the released secret passage,
+# crosses to AREA1's far side, escapes its deterministic encounter, and enters
+# the next T2 region through MAP0 action 204ah.
 #
-# The final ordinary world poll is in SB-IN after CHNA1 entry 200 has set story
-# flag eight, MAPZ has persisted all one-shot enemies, and FIG has returned OC
-# five times. This is evidence for the first major boss, not a claim of a
-# complete playthrough.
+# The final ordinary world poll is at the exact TW-2A directory-74 spawn after
+# story flags 8/18, travel flag 3 and every Stronghold one-shot MAPZ mutation
+# have persisted. This is evidence through the first major boss and mountain
+# crossing, not a claim of a complete playthrough.
 WAIT:CONFIRM*4
 WAIT:CANCEL
 POLL:CONFIRM*19
@@ -202,4 +205,101 @@ WAIT:CONFIRM*4
 
 # Victory summary.
 WAIT:CONFIRM
+# Leave the defeated Stronghold.
+POLL:DOWN*21
+POLL:LEFT
+POLL:DOWN*20
+POLL:RIGHT*2
+POLL:DOWN*52
+POLL:LEFT*22
+POLL:DOWN*28
+POLL:RIGHT*3
+POLL:DOWN*3
+POLL:RIGHT*10
+POLL:DOWN*25
+POLL:RIGHT
+POLL:DOWN*2
+POLL:RIGHT*9
+POLL:DOWN*16
+POLL:RIGHT*2
+POLL:DOWN*12
+POLL:LEFT*2
+POLL:DOWN*57
+POLL:LEFT*3
+POLL:DOWN*4
+POLL:LEFT*4
+POLL:DOWN
+POLL:UP*21
+POLL:RIGHT*16
+POLL:UP*3
+# Visit the freed father and learn the Stronghold secret-door mechanism.
+POLL:UP*36
+POLL:LEFT*2
+POLL:UP*43
+POLL:LEFT*4
+POLL:UP*15
+POLL:LEFT*4
+POLL:CONFIRM
+POLL:CONFIRM*5
+# Leave MA-DE through its south AREA1 edge.
+POLL:DOWN*42
+POLL:RIGHT
+POLL:DOWN*53
+POLL:RIGHT
+POLL:DOWN*6
+# Return to the Stronghold entrance.
+POLL:DOWN*5
+POLL:LEFT
+POLL:DOWN*13
+POLL:LEFT*5
+POLL:DOWN*17
+POLL:NONE
+# Cross the cleared SBOUT approach.
+POLL:UP*55
+POLL:RIGHT
+POLL:UP*4
+POLL:RIGHT*5
+POLL:UP*7
+POLL:NONE
+# Approach the post-boss mechanism.
+POLL:UP*6
+POLL:LEFT*3
+POLL:UP*7
+POLL:LEFT*4
+POLL:UP*8
+POLL:LEFT*4
+POLL:UP*20
+POLL:LEFT*2
+POLL:UP*2
+POLL:LEFT*8
+POLL:UP*33
+POLL:RIGHT*10
+POLL:UP*3
+POLL:RIGHT*3
+POLL:UP*36
+POLL:RIGHT*3
+POLL:UP*51
+POLL:LEFT*11
+POLL:UP*3
+POLL:LEFT*9
+POLL:CONFIRM
+POLL:CONFIRM*2
+# The released mechanism removes the secret wall; take MAP0 action 42h.
+POLL:UP*14
+POLL:LEFT*19
+POLL:UP*19
+POLL:NONE
+# Continue on the far side of Wild Bear Mountain.
+POLL:DOWN*3
+# Escape the deterministic first far-side encounter.
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:DOWN*48
+POLL:LEFT*3
+POLL:DOWN*3
+POLL:LEFT*7
+POLL:UP*2
+POLL:NONE
 POLL:QUIT

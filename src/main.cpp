@@ -166,6 +166,10 @@ public:
         swd2::InputAction action{swd2::InputAction::none};
         std::uint64_t state_digest{};
         std::optional<std::uint64_t> map_digest;
+        std::uint16_t map_location{};
+        std::uint16_t world_x{};
+        std::uint16_t world_y{};
+        std::uint16_t actor_direction{};
     };
 
     enum class TimelineKind {
@@ -375,7 +379,12 @@ private:
             throw std::runtime_error("replay frontend has no bound game context");
         }
         InputCheckpoint checkpoint{
-            cursor_, boundary, action, hash(context_->shared_state.bytes()), std::nullopt};
+            cursor_, boundary, action, hash(context_->shared_state.bytes()),
+            std::nullopt,
+            context_->shared_state.map_location_directory_offset(),
+            context_->shared_state.world_x(),
+            context_->shared_state.world_y(),
+            context_->shared_state.actor_direction()};
         if (context_->map_database) {
             checkpoint.map_digest = hash(
                 context_->map_database->serialized_bytes());
@@ -530,7 +539,11 @@ void write_replay_trace(const std::filesystem::path& path,
         } else {
             output << "null";
         }
-        output << '}';
+        output << ", \"map_location\": " << checkpoint.map_location
+               << ", \"world_x\": " << checkpoint.world_x
+               << ", \"world_y\": " << checkpoint.world_y
+               << ", \"actor_direction\": "
+               << checkpoint.actor_direction << '}';
         if (index + 1U != platform.input_checkpoints.size()) output << ',';
         output << '\n';
     }

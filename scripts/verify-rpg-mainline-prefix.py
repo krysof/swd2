@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the released first-village main-story prefix and persisted state."""
+"""Lock the released main story through Wild Bear Mountain and T2 entry."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ def main() -> int:
             ("RPG.EXE", "MT", "ED", True),
             ("DEMO.EXE", "ED", "--", True),
         ]
-        for _ in range(5):
+        for _ in range(6):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if len(expected_transitions) == 3 else "OC",
                  "IF", True),
@@ -74,40 +74,40 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 903,
-            ("input", "consumed"): 903,
+            ("input", "total"): 1924,
+            ("input", "consumed"): 1924,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 96,
-            ("boundaries", "poll"): 810,
-            ("boundaries", "text"): 75,
-            ("video", "frames"): 4253,
-            ("video", "direct_updates"): 1649,
-            ("video", "fnv1a64"): "2001dfc89deb026f",
-            ("audio", "music_calls"): 29,
-            ("audio", "voice_calls"): 57,
-            ("audio", "stop_audio_calls"): 14,
-            ("audio", "fnv1a64"): "b92db9fccc6695f4",
+            ("boundaries", "wait"): 100,
+            ("boundaries", "poll"): 1827,
+            ("boundaries", "text"): 129,
+            ("video", "frames"): 5591,
+            ("video", "direct_updates"): 1908,
+            ("video", "fnv1a64"): "00a40c0e3fe0d0dd",
+            ("audio", "music_calls"): 38,
+            ("audio", "voice_calls"): 58,
+            ("audio", "stop_audio_calls"): 16,
+            ("audio", "fnv1a64"): "e787479490195566",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 165942:
+        if trace.get("delay_milliseconds") != 205135:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "e776787f6ae6f5a5",
-            "mapz_fnv1a64": "0f51c5416ef6a73d",
+            "state_fnv1a64": "b7ff851ac0057323",
+            "mapz_fnv1a64": "ae6c1bca924a54ac",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 4253 or frames[-1] != "c708be32781800b7":
-            raise ValueError("mainline final SB-IN world frame differs")
+        if len(frames) != 5591 or frames[-1] != "e8875c4faa5ffc81":
+            raise ValueError("mainline final TW-2A world frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -123,9 +123,21 @@ def main() -> int:
             821: ("POLL", "CONFIRM", "92ca94492a32a65f", "004e684bc1b4f164"),
             827: ("WAIT", "LEFT", "49c1a0ed9d826c07", "0f51c5416ef6a73d"),
             901: ("WAIT", "CONFIRM", "5f9bf4514bc149bd", "0f51c5416ef6a73d"),
-            902: ("POLL", "QUIT", "e776787f6ae6f5a5", "0f51c5416ef6a73d"),
+            902: ("POLL", "DOWN", "e776787f6ae6f5a5", "0f51c5416ef6a73d"),
+            1346: ("POLL", "CONFIRM", "9ceec50582d9d537", "0f51c5416ef6a73d"),
+            1352: ("POLL", "DOWN", "facdcec8072cdd17", "88435907c045bd63"),
+            1496: ("POLL", "NONE", "75edd863c474dafc", "88435907c045bd63"),
+            1569: ("POLL", "NONE", "6950c6eda9b97cad", "88435907c045bd63"),
+            1796: ("POLL", "CONFIRM", "ed84620a2f236f46", "88435907c045bd63"),
+            1799: ("POLL", "UP", "ed84620a2f236f46", "ae6c1bca924a54ac"),
+            1851: ("POLL", "NONE", "05e3ae1a8a1cf49e", "ae6c1bca924a54ac"),
+            1855: ("WAIT", "DOWN", "0bdb7bc7c2296b61", "ae6c1bca924a54ac"),
+            1858: ("WAIT", "CONFIRM", "0bdb7bc7c2296b61", "ae6c1bca924a54ac"),
+            1859: ("POLL", "DOWN", "e310b387046e727f", "ae6c1bca924a54ac"),
+            1922: ("POLL", "NONE", "b7ff851ac0057323", "ae6c1bca924a54ac"),
+            1923: ("POLL", "QUIT", "b7ff851ac0057323", "ae6c1bca924a54ac"),
         }
-        if len(checkpoints) != 903:
+        if len(checkpoints) != 1924:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -136,6 +148,26 @@ def main() -> int:
             if actual != expected:
                 raise ValueError(
                     f"mainline checkpoint {index} is {actual!r}, expected {expected!r}")
+
+        expected_positions = {
+            902: (14, 112, 29, 3),
+            1346: (10, 59, 78, 6),
+            1496: (12, 71, 119, 3),
+            1569: (14, 122, 165, 3),
+            1796: (14, 84, 29, 6),
+            1851: (66, 123, 56, 0),
+            1855: (66, 124, 57, 0),
+            1922: (74, 96, 153, 3),
+            1923: (74, 96, 153, 3),
+        }
+        for index, expected in expected_positions.items():
+            item = checkpoints[index]
+            actual = (item.get("map_location"), item.get("world_x"),
+                      item.get("world_y"), item.get("actor_direction"))
+            if actual != expected:
+                raise ValueError(
+                    f"mainline world checkpoint {index} is {actual!r}, "
+                    f"expected {expected!r}")
 
         save = args.save.read_bytes()
         mapz = args.mapz.read_bytes()
@@ -148,21 +180,26 @@ def main() -> int:
             raise ValueError("persisted mainline NAME differs from live font")
 
         # Flags 0/2/4 come from the village and entrance; entry 200 adds flag 8
-        # after the Fire-Eyed Suanni battle (8080h over the original a800h).
+        # after the Fire-Eyed Suanni battle. The freed father then adds flag 18
+        # in the next story word before the secret mechanism becomes usable.
         if u16(save, 0x4A2) != 0xA880:
             raise ValueError("village/Stronghold/boss story flags are not exact")
-        if u16(save, 0x424) != 14:
-            raise ValueError("mainline did not finish in SB-IN directory 14")
+        if u16(save, 0x4A4) != 0x2000:
+            raise ValueError("freed-father secret-door flag is not exact")
+        if save[0x521] != 1:
+            raise ValueError("far-side AREA1 travel flag three was not set")
+        if u16(save, 0x424) != 74:
+            raise ValueError("mainline did not finish in TW-2A directory 74")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (112, 29):
+        if (world_x, world_y) != (96, 153):
             raise ValueError(
-                f"mainline final Stronghold position is {(world_x, world_y)!r}")
+                f"mainline final T2 position is {(world_x, world_y)!r}")
         if u16(save, 0x10) != 3 or u16(save, 0x104) != 121:
             raise ValueError("boss victory party count or money reward differs")
         expected_party = [
             (0x0000, 28, 59, 1, 36),
-            (0x0000, 5, 59, 2, 37),
+            (0x1000, 5, 59, 2, 37),
             (0x3000, 0, 65, 18, 18),
         ]
         for actor, expected in enumerate(expected_party):
@@ -185,6 +222,10 @@ def main() -> int:
         if map_field(image, 14, 3, 39) != 3 or \
                 map_field(image, 14, 9, 39) != 200:
             raise ValueError("Fire-Eyed Suanni was not persistently hidden")
+        if map_field(image, 14, 3, 25) != 3 or \
+                map_field(image, 14, 3, 38) != 3 or \
+                map_field(image, 14, 3, 41) != 3:
+            raise ValueError("Stronghold secret mechanism/wall mutation differs")
         if any(map_field(image, 12, 3, entity) != 3 for entity in range(10)):
             raise ValueError("SBOUT one-shot residents/guards were not all hidden")
         if trace.get("stop_reason") != "module requested exit" or \
@@ -195,7 +236,7 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(innkeeper -> village chief -> four guards -> Fire-Eyed Suanni victory)"
+        "(village -> Fire-Eyed Suanni -> secret passage -> T2 entry)"
     )
     return 0
 
