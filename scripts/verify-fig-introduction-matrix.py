@@ -216,6 +216,7 @@ def main() -> int:
                 "original-fig-introduction-late-confirm-autotype.txt",
                 "original-fig-introduction-very-late-confirm-autotype.txt",
                 "original-fig-introduction-confirm-sweep-autotype.txt",
+                "original-fig-introduction-phase-confirm-autotype.txt",
             }
             if autotype.name not in prompt_autotypes or \
                     row["capture_harness_sha256"] != CAPTURE_HARNESS_SHA256:

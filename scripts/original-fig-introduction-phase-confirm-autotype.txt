@@ -1,0 +1,3 @@
+# Phase-adjusted final acknowledgement used for short introductions whose
+# animated 95h..98h marker otherwise remains on an adjacent phase.
+enter , , , , enter
