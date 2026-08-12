@@ -3948,3 +3948,24 @@ path suffixes (`RS4`/`RRO`), avoiding a stale-width observation that would
 interpret this map through AREA1's 180-column state.  This is the seventeenth
 original OC world route; it proves the shipped behavior-five animation cycle,
 not the outstanding complete-playthrough requirement.
+
+### RPG BUIN1 lateral interaction ray
+
+The parallel-ray half of `523d/52fd` is now observed directly as well.  The
+fixture preserves the same released BUIN1 entity-zero record and isolated
+behavior vector as the centre-ray test, but moves only the leader from
+`(18,169)` to `(18,168)`.  Facing west, the four centre probes
+`(17..14,168)` are empty.  `DATA:3cbf` then offsets the next ray one row south,
+where its first probe `(17,169)` intersects the released three-word entity
+footprint `(15..17,169)`.
+
+One Confirm reaches CHNA2 directory byte offset 40 without a movement key or
+automatic-event flag.  The initial world, first direct text update, complete
+dialogue and animated-marker pages match the untouched RPG.EXE in all 320×200
+RGB pixels at original review frames 238, 463, 501 and 505.  The turned entity
+visible behind the latter three pages also confirms that the lateral hit enters
+the ordinary `52b4` event path, rather than merely stopping the search.  This
+capture did not observe its final scheduled close key; the existing centre-ray
+reference independently locks the restored world page.  The side-ray evidence
+is therefore the eighteenth original OC world route and makes no broader claim
+about full-playthrough completion.
