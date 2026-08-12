@@ -5,7 +5,7 @@
 # Suanni chief battle with explicit per-actor commands over nine rounds.
 #
 # The final ordinary world poll is in SB-IN after CHNA1 entry 200 has set story
-# flag seven, MAPZ has persisted all one-shot enemies, and FIG has returned OC
+# flag eight, MAPZ has persisted all one-shot enemies, and FIG has returned OC
 # five times. This is evidence for the first major boss, not a claim of a
 # complete playthrough.
 WAIT:CONFIRM*4

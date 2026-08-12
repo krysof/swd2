@@ -147,7 +147,7 @@ def main() -> int:
         if len(name) != 514 or fnv1a64(name) != digests["name_fnv1a64"]:
             raise ValueError("persisted mainline NAME differs from live font")
 
-        # Flags 0/2/4 come from the village and entrance; entry 200 adds flag 7
+        # Flags 0/2/4 come from the village and entrance; entry 200 adds flag 8
         # after the Fire-Eyed Suanni battle (8080h over the original a800h).
         if u16(save, 0x4A2) != 0xA880:
             raise ValueError("village/Stronghold/boss story flags are not exact")
