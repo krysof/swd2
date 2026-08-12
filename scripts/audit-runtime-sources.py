@@ -18,6 +18,11 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 CORE_CMAKE = SRC / "CMakeLists.txt"
+PLACEHOLDER_MARKER = re.compile(
+    r"\b(?:TODO|FIXME|XXX|STUB|PLACEHOLDER|NOT[ _-]IMPLEMENTED|"
+    r"APPROXIMAT(?:E|ED|ES|ING|ION|IONS))\b",
+    re.IGNORECASE,
+)
 
 
 def fail(message: str) -> None:
@@ -56,11 +61,6 @@ def main() -> int:
         )
 
     production_paths = sorted(SRC.glob("*.cpp")) + sorted((SRC / "include").rglob("*.hpp"))
-    placeholder = re.compile(
-        r"\b(?:TODO|FIXME|XXX|STUB|PLACEHOLDER|NOT[ _-]IMPLEMENTED|"
-        r"APPROXIMAT(?:E|ED|ES|ING|ION|IONS))\b",
-        re.IGNORECASE,
-    )
     disabled_code = re.compile(r"(?m)^\s*#\s*if\s+0(?:\s|$)")
     emulator = re.compile(r"\b(?:dosbox|dosemu)\b", re.IGNORECASE)
     process_escape = re.compile(
@@ -73,7 +73,7 @@ def main() -> int:
     for path in production_paths:
         text = path.read_text(encoding="utf-8")
         for label, pattern in (
-            ("placeholder marker", placeholder),
+            ("placeholder marker", PLACEHOLDER_MARKER),
             ("disabled #if 0 block", disabled_code),
             ("DOS emulator dependency", emulator),
             ("child-process API", process_escape),

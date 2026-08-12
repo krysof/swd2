@@ -20,4 +20,9 @@ if(BUILD_TESTING)
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/audit-runtime-sources.py"
     )
+    add_test(
+        NAME runtime_source_audit_marker_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/test-audit-runtime-sources.py"
+    )
 endif()
