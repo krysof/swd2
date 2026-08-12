@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_introduction_without_prompt_014",
+  "formation_directory_offset": 20,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "capture_autotype": "original-fig-introduction-none-autotype.txt",
+  "capture_autotype_sha256": "8e60e0dbdaf11881e3829a3696b10a29655e6a68109134656de1fe72e27c4ede",
+  "fixture_save_sha256": "d62bba177ebdd929f6a9ef2a08d1f9c60e18f467c123f1d86599d7ab42344cf0",
+  "capture_video_sha256": "df1885ea2f0bf08da511887ed4f2f0f49f969e717e9cbf7674941edcd2a4ca9e",
+  "capture_manifest_sha256": "1b53b9f2e40ac654161b8466df4290f61a60d3413dd6bbe88d90d9a999f6503e",
+  "capture_limitation": "The 25-second original observation reaches the complete four-phase final marker but does not cross into battle. Six stable full RGB pages are registered; the modern command transition is deliberately not claimed as an original match.",
+  "rewrite_video_fnv1a64": "3cf811001bf1b2ff",
+  "rewrite_state_fnv1a64": "3a1c18cf373aa638",
+  "frames": [
+    {
+      "kind": "bare_enemies",
+      "original_review_frame": 280,
+      "original_png_sha256": "6e77e71c27a25f3e119ee5abd8f82c25f8ef6a1ea7c390a68374b92340c19acd",
+      "original_rgb_sha256": "e776acf7d0932b30810d4b123fbe178c0fb42f9ce03209cbc66c215f5ef49ff8",
+      "rewrite_frame": 0,
+      "rewrite_indexed_sha256": "019c2aa905fb6934eef79b7760f9a98d6c4969e028f605cd03ee81a096880965",
+      "rewrite_palette_sha256": "427299f9175039cd25c5f2a5835db0531ded80910cb3c7085284863afe6d65e1",
+      "rewrite_rgb_sha256": "e776acf7d0932b30810d4b123fbe178c0fb42f9ce03209cbc66c215f5ef49ff8"
+    },
+    {
+      "kind": "first_glyph",
+      "original_review_frame": 311,
+      "original_png_sha256": "d04c71526d09f9e53ea0d1bb958907ee25211ebdfd6ac308e02ed9ca3ade40a5",
+      "original_rgb_sha256": "f83d497a4d03d4f5ed339b3379708711af231d06dcc4442aa06b5a0f2af716cf",
+      "rewrite_frame": 1,
+      "rewrite_indexed_sha256": "05c6505caa5da832816dd7f922e316d6b003f06611db76abb71d520dac03daa9",
+      "rewrite_palette_sha256": "427299f9175039cd25c5f2a5835db0531ded80910cb3c7085284863afe6d65e1",
+      "rewrite_rgb_sha256": "f83d497a4d03d4f5ed339b3379708711af231d06dcc4442aa06b5a0f2af716cf"
+    },
+    {
+      "kind": "cursor_95",
+      "original_review_frame": 358,
+      "original_png_sha256": "762d7ad7bf5d5624c31ef9d83aaf87a9120ebbfd70a72a9247d7ea5324b76801",
+      "original_rgb_sha256": "fa7d2f941120c8d09efb5c6849cda37d3212787282b61c4918c4ffaed6ca9810",
+      "rewrite_frame": 3,
+      "rewrite_indexed_sha256": "d35f0ffe40954bf6671a315122adf06578478819b64ba0f5ce7d22a3ff006537",
+      "rewrite_palette_sha256": "427299f9175039cd25c5f2a5835db0531ded80910cb3c7085284863afe6d65e1",
+      "rewrite_rgb_sha256": "fa7d2f941120c8d09efb5c6849cda37d3212787282b61c4918c4ffaed6ca9810"
+    },
+    {
+      "kind": "cursor_96",
+      "original_review_frame": 364,
+      "original_png_sha256": "8158b711c302d8916b64feb32c8017924fbb159bbe5681b089c7b507dc4ca203",
+      "original_rgb_sha256": "f88d8663de638b2b1373301d9e433fd2a5ed3841112f42a92cf3b6b0cd599ed6",
+      "rewrite_frame": 4,
+      "rewrite_indexed_sha256": "438c17dd79eb8da690711b22d741ea751e212b04e0a4324fb7bf5de2a0c4618c",
+      "rewrite_palette_sha256": "427299f9175039cd25c5f2a5835db0531ded80910cb3c7085284863afe6d65e1",
+      "rewrite_rgb_sha256": "f88d8663de638b2b1373301d9e433fd2a5ed3841112f42a92cf3b6b0cd599ed6"
+    },
+    {
+      "kind": "cursor_97",
+      "original_review_frame": 372,
+      "original_png_sha256": "56cde5576c585d8f1acdeb8ac01a63af42579a1ebb5e527f2da73d1f7cfcb4ac",
+      "original_rgb_sha256": "3c1bdb75f6303049027a575a6c79ec96bb6efa258bc594631476ff4a84618f97",
+      "rewrite_frame": 5,
+      "rewrite_indexed_sha256": "9ac76567e969ee14459d46406c0ae19f2d5217b824898f609d47586f46e5db12",
+      "rewrite_palette_sha256": "427299f9175039cd25c5f2a5835db0531ded80910cb3c7085284863afe6d65e1",
+      "rewrite_rgb_sha256": "3c1bdb75f6303049027a575a6c79ec96bb6efa258bc594631476ff4a84618f97"
+    },
+    {
+      "kind": "cursor_98",
+      "original_review_frame": 380,
+      "original_png_sha256": "92b00ac187dc875662c036e4c3c16f5725ebb7a29e9c80f3a63eb9b565297a12",
+      "original_rgb_sha256": "423118f722232388265d971c263bf4aa7badd9eb7d1aefc19a1c493e9ad67cec",
+      "rewrite_frame": 6,
+      "rewrite_indexed_sha256": "cde1b175a8fdc39ebb36d7c8dd2898c68bc472df866d7ccc4a5acbce9a9e108f",
+      "rewrite_palette_sha256": "427299f9175039cd25c5f2a5835db0531ded80910cb3c7085284863afe6d65e1",
+      "rewrite_rgb_sha256": "423118f722232388265d971c263bf4aa7badd9eb7d1aefc19a1c493e9ad67cec"
+    }
+  ]
+}

@@ -3164,6 +3164,28 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_introduction_none_validation PROPERTIES
         DEPENDS fig_introduction_none_prepare)
+    foreach(fig_intro_none_suffix IN ITEMS 014 3e8)
+        add_test(
+            NAME fig_introduction_none_${fig_intro_none_suffix}_prepare
+            COMMAND "${Python3_EXECUTABLE}"
+                    "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-introduction-none-${fig_intro_none_suffix}-fixture.py"
+                    "${PROJECT_SOURCE_DIR}/game"
+                    "${CMAKE_BINARY_DIR}/fig-introduction-none-${fig_intro_none_suffix}-save"
+        )
+        add_test(
+            NAME fig_introduction_none_${fig_intro_none_suffix}_validation
+            COMMAND "${Python3_EXECUTABLE}"
+                    "${PROJECT_SOURCE_DIR}/scripts/verify-fig-introduction-none-${fig_intro_none_suffix}.py"
+                    "$<TARGET_FILE:swd2_rewrite>"
+                    "${PROJECT_SOURCE_DIR}/game"
+                    "${CMAKE_BINARY_DIR}/fig-introduction-none-${fig_intro_none_suffix}-save"
+                    "${CMAKE_BINARY_DIR}/fig-introduction-none-${fig_intro_none_suffix}"
+                    "${PROJECT_SOURCE_DIR}/scripts/fig-introduction-none-${fig_intro_none_suffix}-rgb-reference.json"
+        )
+        set_tests_properties(
+            fig_introduction_none_${fig_intro_none_suffix}_validation PROPERTIES
+            DEPENDS fig_introduction_none_${fig_intro_none_suffix}_prepare)
+    endforeach()
     add_test(
         NAME fig_introduction_multipage_prepare
         COMMAND "${Python3_EXECUTABLE}"
