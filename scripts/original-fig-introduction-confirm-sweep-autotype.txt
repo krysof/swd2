@@ -1,0 +1,5 @@
+# Start FIG and retry confirmation at paced intervals.  This keeps each
+# resulting prompt/command page visible for two no-op slots, while preventing
+# a scheduled key that lands during a long typewriter pass from being the only
+# acknowledgement attempt.
+enter , , , , enter , , enter , , enter , , enter , , enter , , enter

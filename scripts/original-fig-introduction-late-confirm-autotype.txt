@@ -1,0 +1,3 @@
+# Start the FIG overlay, then leave enough one-second pacing slots for the
+# longest one-page introduction before acknowledging its final $$ marker.
+enter , , , , , , , enter

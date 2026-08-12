@@ -1,0 +1,3 @@
+# Start the FIG overlay and acknowledge an unusually long one-page speech only
+# after eleven paced no-op key slots have allowed its full typewriter pass.
+enter , , , , , , , , , , , enter
