@@ -3978,6 +3978,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_special_status_validation PROPERTIES
         DEPENDS fig_monster_special_status_prepare)
     add_test(
+        NAME fig_monster_special_effect5f_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-special-effect5f-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect5f-save"
+    )
+    add_test(
+        NAME fig_monster_special_effect5f_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-special-effect5f.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect5f-save"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect5f"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-special-effect5f-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_special_effect5f_validation PROPERTIES
+        DEPENDS fig_monster_special_effect5f_prepare)
+    add_test(
         NAME fig_monster_special_resistance_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-special-resistance-fixture.py"

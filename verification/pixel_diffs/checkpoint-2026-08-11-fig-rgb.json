@@ -3,13 +3,13 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG RGB reference; every reference must contain registered rewrite/original RGB page or crop digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
-  "reference_file_count": 215,
-  "source_count": 215,
-  "registered_rgb_pair_count": 5500,
-  "exact_rgb_page_count": 5427,
+  "reference_file_count": 216,
+  "source_count": 216,
+  "registered_rgb_pair_count": 5552,
+  "exact_rgb_page_count": 5479,
   "exact_rgb_crop_count": 73,
   "nonmatching_rgb_pair_count": 0,
-  "unique_exact_rgb_page_count": 3043,
+  "unique_exact_rgb_page_count": 3075,
   "unique_exact_rgb_crop_count": 57,
   "sources": [
     {
@@ -657,6 +657,15 @@
       "kind": "original_fig_monster_special_buff_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-special-effect5f-rgb-reference.json",
+      "sha256": "958955f4781303a82df8487027a3fc9b30e7cfac35152d97d6a033c90b2e553a",
+      "kind": "original_fig_monster_special_effect5f_sequence",
+      "registered_rgb_pairs": 52,
+      "exact_rgb_pages": 52,
       "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },

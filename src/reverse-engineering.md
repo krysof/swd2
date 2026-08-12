@@ -3663,3 +3663,24 @@ frame zero is excluded because DOSBox-X had not yet reached a stable DAC page.
 The schema-2 aggregate advances to 215 references, 5,427 exact full pages, 73
 exact crops and 3,043 unique exact full-page digests, with zero registered
 unequal pairs.  This remains a non-final checkpoint.
+
+### FIG monster special effect-5F route
+
+The shipped special-action status dispatcher now has an independent original
+capture for effect `5fh`, rather than being inferred from a neighbouring
+status selector.  ORC directory `2eh` selects monster definition 514; cursor
+`1010h` selects its special-A ability 139 with duration two.  The unchanged
+ability record is `a103h/5fh`, so this route enters the monster-special
+dispatcher and applies its status to the sole living player before two
+autonomous attack rounds and the recovery tail.
+
+The deterministic rewrite submits 58 pages.  Fifty-two of them, covering the
+stable entry, special name/status sequence, both autonomous rounds and the next
+command page, match the unmodified `FIG.EXE` capture as full 320x200 RGB pages.
+Frame zero precedes stable DAC capture; frames 4, 13, 17, 36 and 40 are
+zero-hold preparation/page-wipe submissions which the 70 Hz DOSBox video did
+not sample as stable pages.  They are explicitly excluded instead of being
+mislabelled as original matches.  The schema-2 aggregate therefore advances to
+216 references, 5,479 exact full pages, 73 exact crops and 3,075 unique exact
+full-page RGB digests, with zero registered unequal pairs.  This remains a
+non-final checkpoint.
