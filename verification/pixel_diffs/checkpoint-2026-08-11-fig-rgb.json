@@ -1,21 +1,24 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
-  "scope": "Aggregate index of every committed FIG reference containing registered rewrite/original RGB digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
+  "scope": "Aggregate index of every committed FIG reference containing registered rewrite/original RGB page or crop digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
   "source_count": 191,
-  "registered_rgb_pair_count": 4765,
+  "registered_rgb_pair_count": 4827,
   "exact_rgb_page_count": 4754,
-  "nonmatching_rgb_pair_count": 11,
+  "exact_rgb_crop_count": 73,
+  "nonmatching_rgb_pair_count": 0,
   "unique_exact_rgb_page_count": 2531,
+  "unique_exact_rgb_crop_count": 57,
   "sources": [
     {
       "path": "scripts/fig-ability-pages-rgb-reference.json",
-      "sha256": "62dc0a175b7470ee4106e61dce1b5720b6a8ebdf92fa0265e37b7bcf5da752ec",
+      "sha256": "598cd4f62ae1406911654516b6526788949326a6e7bdf2904735a5abba5ab94b",
       "kind": "original_fig_ability_resource_pages",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 0,
-      "nonmatching_rgb_pairs": 5
+      "exact_rgb_crops": 5,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-ally-ability-rgb-reference.json",
@@ -23,6 +26,7 @@
       "kind": "original_fig_captured_ally_offensive_ability",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -31,6 +35,7 @@
       "kind": "original_fig_captured_ally_ae_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -39,6 +44,7 @@
       "kind": "original_fig_captured_ally_b0_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -47,6 +53,7 @@
       "kind": "original_fig_captured_ally_empty_ae_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -55,6 +62,7 @@
       "kind": "original_fig_captured_ally_empty_b0_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -63,6 +71,7 @@
       "kind": "original_fig_captured_ally_empty_medium_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -71,6 +80,7 @@
       "kind": "original_fig_captured_ally_physical_evasion",
       "registered_rgb_pairs": 3,
       "exact_rgb_pages": 3,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -79,6 +89,7 @@
       "kind": "original_fig_captured_ally_departure",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -87,6 +98,7 @@
       "kind": "original_fig_captured_ally_lethal_physical_hit",
       "registered_rgb_pairs": 14,
       "exact_rgb_pages": 14,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -95,6 +107,7 @@
       "kind": "original_fig_captured_ally_nonlethal_physical_hit",
       "registered_rgb_pairs": 17,
       "exact_rgb_pages": 17,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -103,6 +116,7 @@
       "kind": "original_fig_captured_ally_medium_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -111,6 +125,7 @@
       "kind": "original_fig_captured_ally_medium_install",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -119,6 +134,7 @@
       "kind": "original_fig_captured_ally_multitarget_ability",
       "registered_rgb_pairs": 37,
       "exact_rgb_pages": 37,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -127,6 +143,7 @@
       "kind": "original_fig_captured_ally_special_ability",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -135,6 +152,7 @@
       "kind": "original_fig_captured_ally_zero_physical",
       "registered_rgb_pairs": 57,
       "exact_rgb_pages": 57,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -143,6 +161,7 @@
       "kind": "original_fig_encounter_capture_reward",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -151,6 +170,7 @@
       "kind": "original_fig_random_capture_success_sequence",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -159,6 +179,7 @@
       "kind": "original_fig_defeat_epilogue",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -167,6 +188,7 @@
       "kind": "original_fig_flagged_medium",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -175,6 +197,7 @@
       "kind": "original_fig_implicit_monster_damage_dispatcher",
       "registered_rgb_pairs": 22,
       "exact_rgb_pages": 22,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -183,6 +206,7 @@
       "kind": "original_fig_direct_item_barrier",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -191,6 +215,7 @@
       "kind": "original_fig_type10_composite_media_item",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -199,7 +224,8 @@
       "kind": "original_fig_type10_composite_item",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 5,
-      "nonmatching_rgb_pairs": 1
+      "exact_rgb_crops": 1,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-composite-support-rgb-reference.json",
@@ -207,6 +233,7 @@
       "kind": "original_fig_type10_composite_support_item",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -215,7 +242,8 @@
       "kind": "original_fig_direct_item_damage_dispatcher",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 10,
-      "nonmatching_rgb_pairs": 3
+      "exact_rgb_crops": 3,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-dispel-rgb-reference.json",
@@ -223,6 +251,7 @@
       "kind": "original_fig_item_dispel",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 13,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -231,6 +260,7 @@
       "kind": "original_fig_item_effect47_escape",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -239,6 +269,7 @@
       "kind": "original_fig_item_effect47_fixed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -247,7 +278,8 @@
       "kind": "original_fig_direct_item_monster_status",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 11,
-      "nonmatching_rgb_pairs": 2
+      "exact_rgb_crops": 2,
+      "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-item-page-rgb-reference.json",
@@ -255,6 +287,7 @@
       "kind": "original_fig_item_page",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -263,6 +296,7 @@
       "kind": "original_fig_direct_item_status_paths",
       "registered_rgb_pairs": 12,
       "exact_rgb_pages": 12,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -271,6 +305,7 @@
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -279,6 +314,7 @@
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -287,6 +323,7 @@
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -295,6 +332,7 @@
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -303,6 +341,7 @@
       "kind": "original_fig_learned_empty_medium_dismissal",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -311,6 +350,7 @@
       "kind": "original_fig_learned_medium_install_dismiss",
       "registered_rgb_pairs": 12,
       "exact_rgb_pages": 12,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -319,6 +359,7 @@
       "kind": "original_fig_level_up_pages",
       "registered_rgb_pairs": 2,
       "exact_rgb_pages": 2,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -327,6 +368,7 @@
       "kind": "original_fig_medium_summon_dismiss_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -335,6 +377,7 @@
       "kind": "original_fig_monster_buff_expiry",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -343,6 +386,7 @@
       "kind": "original_fig_monster_escape_failed_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -351,6 +395,7 @@
       "kind": "original_fig_first_monster_ae_medium_install",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -359,6 +404,7 @@
       "kind": "original_fig_monster_flee_sequence",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -367,6 +413,7 @@
       "kind": "original_fig_monster_generic_ability_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -375,6 +422,7 @@
       "kind": "original_fig_monster_self_heal_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -383,6 +431,7 @@
       "kind": "original_fig_monster_immunity",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 13,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -391,6 +440,7 @@
       "kind": "original_fig_second_monster_af_medium_install",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -399,6 +449,7 @@
       "kind": "original_fig_monster_special_buff_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -407,6 +458,7 @@
       "kind": "original_fig_monster_special_resistance_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -415,6 +467,7 @@
       "kind": "original_fig_monster_special_silent_return_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -423,6 +476,7 @@
       "kind": "original_fig_monster_special_status_sequence",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -431,6 +485,7 @@
       "kind": "original_fig_monster_status_variants",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -439,6 +494,7 @@
       "kind": "original_fig_monster_target",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -447,6 +503,7 @@
       "kind": "original_fig_third_monster_b0_medium_install",
       "registered_rgb_pairs": 20,
       "exact_rgb_pages": 20,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -455,6 +512,7 @@
       "kind": "original_fig_ordinary_attack_actor_advance",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -463,6 +521,7 @@
       "kind": "original_fig_periodic_zero_damage",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -471,6 +530,7 @@
       "kind": "original_fig_player_attack_af_medium_install",
       "registered_rgb_pairs": 53,
       "exact_rgb_pages": 53,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -479,6 +539,7 @@
       "kind": "original_fig_player_attack_b0_medium_install",
       "registered_rgb_pairs": 47,
       "exact_rgb_pages": 47,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -487,6 +548,7 @@
       "kind": "original_fig_player_attack_basic",
       "registered_rgb_pairs": 45,
       "exact_rgb_pages": 45,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -495,6 +557,7 @@
       "kind": "original_fig_player_attack_evaded",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -503,6 +566,7 @@
       "kind": "original_fig_player_attack_flee_failed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -511,6 +575,7 @@
       "kind": "original_fig_player_attack_flee",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -519,6 +584,7 @@
       "kind": "original_fig_player_attack_hit",
       "registered_rgb_pairs": 44,
       "exact_rgb_pages": 44,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -527,6 +593,7 @@
       "kind": "original_fig_player_attack_medium_install",
       "registered_rgb_pairs": 59,
       "exact_rgb_pages": 59,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -535,6 +602,7 @@
       "kind": "original_fig_player_attack_special_buff",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -543,6 +611,7 @@
       "kind": "original_fig_player_attack_special_resisted",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -551,6 +620,7 @@
       "kind": "original_fig_player_attack_special_silent",
       "registered_rgb_pairs": 26,
       "exact_rgb_pages": 26,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -559,6 +629,7 @@
       "kind": "original_fig_player_attack_special_status",
       "registered_rgb_pairs": 30,
       "exact_rgb_pages": 30,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -567,6 +638,7 @@
       "kind": "original_fig_player_attack_zero",
       "registered_rgb_pairs": 46,
       "exact_rgb_pages": 46,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -575,6 +647,7 @@
       "kind": "original_fig_player_barrier",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -583,6 +656,7 @@
       "kind": "original_fig_player_buff_expiry_after_learned_af_install",
       "registered_rgb_pairs": 56,
       "exact_rgb_pages": 56,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -591,6 +665,7 @@
       "kind": "original_fig_player_buff_expiry_after_learned_b0_install",
       "registered_rgb_pairs": 53,
       "exact_rgb_pages": 53,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -599,6 +674,7 @@
       "kind": "original_fig_player_buff_expiry_after_ability_composite_damage",
       "registered_rgb_pairs": 69,
       "exact_rgb_pages": 69,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -607,6 +683,7 @@
       "kind": "original_fig_player_buff_expiry_after_ability_composite_missing_media",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -615,6 +692,7 @@
       "kind": "original_fig_player_buff_expiry_after_ability_composite_status_damage",
       "registered_rgb_pairs": 58,
       "exact_rgb_pages": 58,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -623,6 +701,7 @@
       "kind": "original_fig_player_buff_expiry_after_learned_af_dismissal",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -631,6 +710,7 @@
       "kind": "original_fig_player_buff_expiry_after_learned_b0_dismissal",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -639,6 +719,7 @@
       "kind": "original_fig_player_buff_expiry_after_learned_medium_dismissal",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -647,6 +728,7 @@
       "kind": "original_fig_player_buff_expiry_after_empty_af_medium_dismissal",
       "registered_rgb_pairs": 29,
       "exact_rgb_pages": 29,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -655,6 +737,7 @@
       "kind": "original_fig_player_buff_expiry_after_empty_b0_medium_dismissal",
       "registered_rgb_pairs": 29,
       "exact_rgb_pages": 29,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -663,6 +746,7 @@
       "kind": "original_fig_player_buff_expiry_after_empty_medium_dismissal",
       "registered_rgb_pairs": 29,
       "exact_rgb_pages": 29,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -671,6 +755,7 @@
       "kind": "original_fig_player_buff_expiry_after_learned_medium_install",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -679,6 +764,7 @@
       "kind": "original_fig_player_buff_expiry_after_resisted_ability",
       "registered_rgb_pairs": 24,
       "exact_rgb_pages": 24,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -687,6 +773,7 @@
       "kind": "original_fig_player_buff_expiry_after_ability",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -695,6 +782,7 @@
       "kind": "original_fig_player_buff_expiry_after_capture_failure",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -703,6 +791,7 @@
       "kind": "original_fig_player_buff_expiry_after_capture_success",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -711,6 +800,7 @@
       "kind": "original_fig_player_buff_expiry_after_escape_failure",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -719,6 +809,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_af_install",
       "registered_rgb_pairs": 54,
       "exact_rgb_pages": 54,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -727,6 +818,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_b0_install",
       "registered_rgb_pairs": 47,
       "exact_rgb_pages": 47,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -735,14 +827,16 @@
       "kind": "original_fig_player_buff_expiry_after_item_barrier",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-af-b0-media-rgb-reference.json",
       "sha256": "37c9b1b3f6c6e5cbb937914bf73b38c99ae58d3e085d5b33734891190c0ee552",
       "kind": "original_fig_player_buff_expiry_after_item_composite_af_b0_media",
-      "registered_rgb_pairs": 79,
+      "registered_rgb_pairs": 84,
       "exact_rgb_pages": 79,
+      "exact_rgb_crops": 5,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -751,14 +845,16 @@
       "kind": "original_fig_player_buff_expiry_after_item_composite_damage_missing_af",
       "registered_rgb_pairs": 56,
       "exact_rgb_pages": 56,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-damage-rgb-reference.json",
       "sha256": "fe6cd54e2acd8bf0c5789011720efe2d046bc3e214dae1b0d0fcbea13d46a8a2",
       "kind": "original_fig_player_buff_expiry_after_item_composite_damage",
-      "registered_rgb_pairs": 48,
+      "registered_rgb_pairs": 67,
       "exact_rgb_pages": 48,
+      "exact_rgb_crops": 19,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -767,6 +863,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_composite_media",
       "registered_rgb_pairs": 71,
       "exact_rgb_pages": 71,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -775,30 +872,34 @@
       "kind": "original_fig_player_buff_expiry_after_item_composite_missing_af_b0",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-missing-media-rgb-reference.json",
       "sha256": "f65515a3bca7c366d943ad794789e9afcbcef653e501f9ff89c89cc02bb52a62",
       "kind": "original_fig_player_buff_expiry_after_item_composite_missing_media",
-      "registered_rgb_pairs": 10,
+      "registered_rgb_pairs": 32,
       "exact_rgb_pages": 10,
+      "exact_rgb_crops": 22,
       "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-reversed-media-rgb-reference.json",
       "sha256": "67a2219566c96e3039a146de6f57bb18adc93cc0617a6da532dd2e343e3ef000",
       "kind": "original_fig_player_buff_expiry_after_item_composite_reversed_media",
-      "registered_rgb_pairs": 75,
+      "registered_rgb_pairs": 80,
       "exact_rgb_pages": 75,
+      "exact_rgb_crops": 5,
       "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-status-damage-rgb-reference.json",
       "sha256": "06da65a56af4fad33695fbea7fb38b8f719a527d465b6e6a3800f34bd0107810",
       "kind": "original_fig_player_buff_expiry_after_item_composite_status_damage",
-      "registered_rgb_pairs": 52,
+      "registered_rgb_pairs": 57,
       "exact_rgb_pages": 52,
+      "exact_rgb_crops": 5,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -807,6 +908,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_composite_support",
       "registered_rgb_pairs": 29,
       "exact_rgb_pages": 29,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -815,6 +917,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_composite_targetless_damage",
       "registered_rgb_pairs": 74,
       "exact_rgb_pages": 74,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -823,6 +926,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_composite_targetless_status",
       "registered_rgb_pairs": 65,
       "exact_rgb_pages": 65,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -831,6 +935,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_af_dismissal",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -839,6 +944,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_b0_dismissal",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -847,6 +953,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_medium_dismissal",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -855,6 +962,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_dispel",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 13,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -863,6 +971,7 @@
       "kind": "original_fig_player_buff_expiry_after_empty_af_medium_item",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -871,6 +980,7 @@
       "kind": "original_fig_player_buff_expiry_after_empty_b0_medium_item",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -879,6 +989,7 @@
       "kind": "original_fig_player_buff_expiry_after_empty_medium_item",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -887,22 +998,25 @@
       "kind": "original_fig_player_buff_expiry_after_item_medium_install",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-missing-medium-rgb-reference.json",
       "sha256": "3d5e016abf4b5bfb6a9351e756c24fb65e9ad4fba5356fa938e67cecaa48006b",
       "kind": "original_fig_player_buff_expiry_after_item_missing_medium",
-      "registered_rgb_pairs": 6,
+      "registered_rgb_pairs": 9,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 3,
       "nonmatching_rgb_pairs": 0
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-rgb-reference.json",
       "sha256": "fc92bcb67351476da74bc2500d70ef531ad0b33fc18f3c0b963465225b7f9fcf",
       "kind": "original_fig_player_buff_expiry_after_item",
-      "registered_rgb_pairs": 3,
+      "registered_rgb_pairs": 6,
       "exact_rgb_pages": 3,
+      "exact_rgb_crops": 3,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -911,6 +1025,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_status",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -919,6 +1034,7 @@
       "kind": "original_fig_player_buff_expiry_after_item_support",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -927,6 +1043,7 @@
       "kind": "original_fig_player_buff_expiry_after_missing_medium",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -935,6 +1052,7 @@
       "kind": "original_fig_player_buff_expiry",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -943,6 +1061,7 @@
       "kind": "original_fig_player_critical_hit",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -951,6 +1070,7 @@
       "kind": "original_fig_player_critical_attack",
       "registered_rgb_pairs": 17,
       "exact_rgb_pages": 17,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -959,6 +1079,7 @@
       "kind": "original_fig_player_damage_dispatcher",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -967,6 +1088,7 @@
       "kind": "original_fig_player_dispel",
       "registered_rgb_pairs": 14,
       "exact_rgb_pages": 14,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -975,6 +1097,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 62,
       "exact_rgb_pages": 62,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -983,6 +1106,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -991,6 +1115,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -999,6 +1124,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 25,
       "exact_rgb_pages": 25,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1007,6 +1133,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1015,6 +1142,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 51,
       "exact_rgb_pages": 51,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1023,6 +1151,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1031,6 +1160,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 49,
       "exact_rgb_pages": 49,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1039,6 +1169,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 44,
       "exact_rgb_pages": 44,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1047,6 +1178,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 55,
       "exact_rgb_pages": 55,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1055,6 +1187,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 58,
       "exact_rgb_pages": 58,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1063,6 +1196,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 37,
       "exact_rgb_pages": 37,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1071,6 +1205,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1079,6 +1214,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1087,6 +1223,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 42,
       "exact_rgb_pages": 42,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1095,6 +1232,7 @@
       "kind": "original_fig_player_effect47_escape",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1103,6 +1241,7 @@
       "kind": "original_fig_player_effect47_fixed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1111,6 +1250,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1119,6 +1259,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 52,
       "exact_rgb_pages": 52,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1127,6 +1268,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 38,
       "exact_rgb_pages": 38,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1135,6 +1277,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1143,6 +1286,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 51,
       "exact_rgb_pages": 51,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1151,6 +1295,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1159,6 +1304,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1167,6 +1313,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 49,
       "exact_rgb_pages": 49,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1175,6 +1322,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1183,6 +1331,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 52,
       "exact_rgb_pages": 52,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1191,6 +1340,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 33,
       "exact_rgb_pages": 33,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1199,6 +1349,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1207,6 +1358,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1215,6 +1367,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1223,6 +1376,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1231,6 +1385,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1239,6 +1394,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 30,
       "exact_rgb_pages": 30,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1247,6 +1403,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1255,6 +1412,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1263,6 +1421,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1271,6 +1430,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1279,6 +1439,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 38,
       "exact_rgb_pages": 38,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1287,6 +1448,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 42,
       "exact_rgb_pages": 42,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1295,6 +1457,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 21,
       "exact_rgb_pages": 21,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1303,6 +1466,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 25,
       "exact_rgb_pages": 25,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1311,6 +1475,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1319,6 +1484,7 @@
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1327,6 +1493,7 @@
       "kind": "original_fig_player_empty_medium_dismissal",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1335,6 +1502,7 @@
       "kind": "original_fig_player_escape_failure_checkpoint",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1343,6 +1511,7 @@
       "kind": "original_fig_player_escape_success_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1351,6 +1520,7 @@
       "kind": "original_fig_player_medium_install_dismiss",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1359,6 +1529,7 @@
       "kind": "original_fig_player_status_variants",
       "registered_rgb_pairs": 15,
       "exact_rgb_pages": 15,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1367,6 +1538,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1375,6 +1547,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1383,6 +1556,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1391,6 +1565,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1399,6 +1574,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1407,6 +1583,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1415,6 +1592,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1423,6 +1601,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1431,6 +1610,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1439,6 +1619,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1447,6 +1628,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1455,6 +1637,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1463,6 +1646,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1471,6 +1655,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1479,6 +1664,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1487,6 +1673,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1495,6 +1682,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1503,6 +1691,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1511,6 +1700,7 @@
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1519,6 +1709,7 @@
       "kind": "original_fig_story_30_opening",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1527,6 +1718,7 @@
       "kind": "original_fig_story_42_hit_reaction",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
     {
@@ -1535,6 +1727,7 @@
       "kind": "original_fig_victory_summary",
       "registered_rgb_pairs": 19,
       "exact_rgb_pages": 19,
+      "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     }
   ]

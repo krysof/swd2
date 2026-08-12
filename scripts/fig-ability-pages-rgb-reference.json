@@ -30,7 +30,15 @@
       "rewrite_final_fnv1a64": "456cf503fdb59bc5",
       "rewrite_indexed_sha256": "e21090c3873e18b9b135d14f265f64b9769cc2b7d8002cd2c587ec8a86291f35",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "rewrite_rgb_sha256": "e2b85080b23850b318231b389bf68dcf61eda04efca9684256daa4ebc60bab2c"
+      "rewrite_rgb_sha256": "e2b85080b23850b318231b389bf68dcf61eda04efca9684256daa4ebc60bab2c",
+      "crop": [
+        0,
+        0,
+        320,
+        198
+      ],
+      "original_crop_rgb_sha256": "fa481ffe207bd64dbca77339ce19cf1468ae133e97ad8d01bbacc0285166fcc0",
+      "rewrite_crop_rgb_sha256": "fa481ffe207bd64dbca77339ce19cf1468ae133e97ad8d01bbacc0285166fcc0"
     },
     {
       "ability_id": 4,
@@ -48,7 +56,15 @@
       "rewrite_final_fnv1a64": "881210ffd3466fd7",
       "rewrite_indexed_sha256": "1d33d3fbdff591770bc0ce614df693a17aceda55777d07d8d7a20f14e0203b58",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "rewrite_rgb_sha256": "a4002e336c86d63931416d2751c296562496a4ac092a28e8db85396c07fc7b7c"
+      "rewrite_rgb_sha256": "a4002e336c86d63931416d2751c296562496a4ac092a28e8db85396c07fc7b7c",
+      "crop": [
+        0,
+        0,
+        320,
+        198
+      ],
+      "original_crop_rgb_sha256": "c5872e953c8d95128e683bfbc2fe7cc5a084974092a2aa57a9760f395fc3be3c",
+      "rewrite_crop_rgb_sha256": "c5872e953c8d95128e683bfbc2fe7cc5a084974092a2aa57a9760f395fc3be3c"
     },
     {
       "ability_id": 33,
@@ -66,7 +82,15 @@
       "rewrite_final_fnv1a64": "b32cb66b361be6c1",
       "rewrite_indexed_sha256": "1f43852ad59f157fbd77a8b63040aa0164ce9b75d585580afb43e995209e00f7",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "rewrite_rgb_sha256": "e53e567a7a8a02d31d8f5d0ef6259a84d9506e915d3163cb6b62a8ecf8ca05fb"
+      "rewrite_rgb_sha256": "e53e567a7a8a02d31d8f5d0ef6259a84d9506e915d3163cb6b62a8ecf8ca05fb",
+      "crop": [
+        0,
+        0,
+        320,
+        198
+      ],
+      "original_crop_rgb_sha256": "52b0265279ab736e1c486cdcc4aed8d1681c5cb918fd29d9999a2335f24a8f16",
+      "rewrite_crop_rgb_sha256": "52b0265279ab736e1c486cdcc4aed8d1681c5cb918fd29d9999a2335f24a8f16"
     },
     {
       "ability_id": 3,
@@ -84,7 +108,15 @@
       "rewrite_final_fnv1a64": "33cf36ff0301ba52",
       "rewrite_indexed_sha256": "6e89595673f5d06fd7fecbebca2ec93bb2a45d11fedb4301fa84700dd8abe93f",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "rewrite_rgb_sha256": "db5962845db541b0e45828d715ad0954ae99cfcfe83c6e8f3c0861f644360789"
+      "rewrite_rgb_sha256": "db5962845db541b0e45828d715ad0954ae99cfcfe83c6e8f3c0861f644360789",
+      "crop": [
+        0,
+        0,
+        320,
+        198
+      ],
+      "original_crop_rgb_sha256": "d1d31a3a549cfc38f0cafa4f8d119bd45bcf84b38f4b0995a60781b75b5fda9f",
+      "rewrite_crop_rgb_sha256": "d1d31a3a549cfc38f0cafa4f8d119bd45bcf84b38f4b0995a60781b75b5fda9f"
     },
     {
       "ability_id": 41,
@@ -102,7 +134,16 @@
       "rewrite_final_fnv1a64": "831bbdd3957c58e1",
       "rewrite_indexed_sha256": "fd97fef68acaa8756ecfe5fdf6fe4d260638a65b5df18b33ac0447e4f522bcca",
       "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
-      "rewrite_rgb_sha256": "f845340d8f62d4f44f0530b48aeda02130195c18cbea5bafcd396b745e3ba4b4"
+      "rewrite_rgb_sha256": "f845340d8f62d4f44f0530b48aeda02130195c18cbea5bafcd396b745e3ba4b4",
+      "crop": [
+        0,
+        0,
+        320,
+        198
+      ],
+      "original_crop_rgb_sha256": "6d5fbfa377c71bc9ee5ac5c004f98dbfa95b8bc0c69c420497d98b4e4e9e618b",
+      "rewrite_crop_rgb_sha256": "6d5fbfa377c71bc9ee5ac5c004f98dbfa95b8bc0c69c420497d98b4e4e9e618b"
     }
-  ]
+  ],
+  "capture_limitation": "The five stable DOSBox-X ZMBV observations retain the established eight-pixel artifact in the bottom two scanlines. Rows 0..197 match exactly; full-page original and rewrite RGB digests remain recorded as post-DAC observations rather than equality claims."
 }

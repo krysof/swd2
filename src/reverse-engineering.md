@@ -2382,9 +2382,11 @@ trace 的独立验证器会拒绝剩余动作、隐式退出、无帧/非 320×2
 
 FIG 的专用原版捕获现另有一个非最终聚合检查点，避免手工累加证据数量掩盖漏登记或哈希
 漂移。`build-fig-rgb-checkpoint.py` 递归扫描所有 FIG RGB reference 的原版/现代摘要对，记录
-每个源文件 SHA-256、摘要对和页数；`verify-fig-rgb-checkpoint.py` 重新发现源集并核对 147 个
-reference 的哈希。当前聚合明确认领 3,205 张零差异页，其中 1,773 个不同 RGB 画面；另
-有 11 对用于裁剪或差异说明的非等值摘要只计数、不冒充等值页。它的状态明确是
+每个源文件 SHA-256、摘要对和页数；`verify-fig-rgb-checkpoint.py` 重新发现源集并核对 191 个
+reference 的哈希。schema 2 会区分完整 320x200 页面与明确标框的 RGB crop：当前聚合认领
+4,754 张零差异完整页（2,531 个不同 RGB 页面）和 73 个零差异 crop（57 个不同摘要），
+没有把任何非等值摘要注册成等值证据。DOSBox-X 在实时 DAC 写入时留下的十一组完整页
+观察仍保存在各 reference 中，但其等值声明只登记已验证的 top-197 crop。它的状态明确是
 `checkpoint_not_complete`，不代替最终必须覆盖
 全部 RPG/FIG 场景的四角色 `verification/pixel_diffs/manifest.json`，因此不会抬高完成门。
 

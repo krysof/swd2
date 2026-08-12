@@ -112,7 +112,11 @@ def main() -> int:
                     sha256(palette) != expected["rewrite_palette_sha256"] or \
                     sha256(rgb) != expected["rewrite_rgb_sha256"]:
                 raise ValueError(f"ability {ability_id} indexed VGA page differs")
-            if sha256(crop_rgb(rgb, box)) != expected["matched_rgb_sha256"]:
+            crop_digest = sha256(crop_rgb(rgb, box))
+            if expected.get("crop") != box or \
+                    expected.get("original_crop_rgb_sha256") != crop_digest or \
+                    expected.get("rewrite_crop_rgb_sha256") != crop_digest or \
+                    expected.get("matched_rgb_sha256") != crop_digest:
                 raise ValueError(
                     f"ability {ability_id} no longer matches original RGB")
             for name in (
