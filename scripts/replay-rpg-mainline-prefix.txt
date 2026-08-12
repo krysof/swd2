@@ -3,11 +3,14 @@
 # DAQ opening, walks through AREA1 into the first village, visits the inn,
 # acknowledges all three innkeeper pages, returns to the village, completes
 # both seven-page blocking-villager dialogues, enters the chief's house and
-# completes the chief's twenty-one-page first-story event.
+# completes the chief's twenty-one-page first-story event, enters Wild Bear
+# Stronghold, wins the first deterministic random encounter, then collides
+# with and defeats the first one-shot bandit guard.
 #
-# The final ordinary world poll is in SWRO4 after CHNA1 entry 64 has set story
-# flag 4 and persistently redirected the chief to entry 66.  This is evidence
-# for the beginning of the main route, not a claim of a complete playthrough.
+# The final ordinary world poll is in SBOUT after CHNA1 entry 224 has changed
+# the guard to hidden behavior three and FIG has returned OC a second time.
+# This is evidence for the beginning of the main route, not a claim of a
+# complete playthrough.
 WAIT:CONFIRM*4
 WAIT:CANCEL
 POLL:CONFIRM*19
@@ -59,5 +62,44 @@ POLL:RIGHT*5
 POLL:UP*3
 POLL:CONFIRM
 POLL:CONFIRM*21
+
+# Leave SWRO4, cross MA-DE and take its northern AREA1 transition.
+POLL:DOWN*7
+POLL:LEFT*5
+POLL:DOWN*14
+POLL:DOWN*2
+POLL:RIGHT*12
+POLL:UP*19
+POLL:RIGHT*33
+POLL:UP*7
+POLL:RIGHT*3
+POLL:UP*5
+
+# AREA1 -> Wild Bear Stronghold (MAP0 action 200ch / SBOUT directory 12).
+POLL:DOWN*5
+POLL:LEFT
+POLL:DOWN*13
+POLL:LEFT*5
+POLL:DOWN*15
+POLL:DOWN
 POLL:NONE
+
+# Nine north steps reach the deterministic random-encounter threshold. Select
+# FIG automatic attack and acknowledge the victory card before OC returns.
+POLL:UP*9
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:CONFIRM
+
+# The sixth west step collides with SBOUT entity seven's 8000h event 224.
+# Confirm closes its single dialogue page; the event persists behavior three,
+# launches encounter 116, and another automatic victory returns to OC.
+POLL:UP*2
+POLL:LEFT*6
+POLL:CONFIRM
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:CONFIRM
 POLL:QUIT

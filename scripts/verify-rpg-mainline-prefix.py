@@ -57,7 +57,11 @@ def main() -> int:
             ("MEO.EXE", "--", "MT", True),
             ("RPG.EXE", "MT", "ED", True),
             ("DEMO.EXE", "ED", "--", True),
-            ("RPG.EXE", "OM", "--", True),
+            ("RPG.EXE", "OM", "IF", True),
+            ("FIG.EXE", "IF", "OC", True),
+            ("RPG.EXE", "OC", "IF", True),
+            ("FIG.EXE", "IF", "OC", True),
+            ("RPG.EXE", "OC", "--", True),
         ]
         transitions = [
             (item.get("module"), item.get("input"), item.get("output"),
@@ -68,40 +72,40 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 347,
-            ("input", "consumed"): 347,
+            ("input", "total"): 520,
+            ("input", "consumed"): 520,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 5,
-            ("boundaries", "poll"): 342,
-            ("boundaries", "text"): 38,
-            ("video", "frames"): 2134,
-            ("video", "direct_updates"): 1401,
-            ("video", "fnv1a64"): "d2ba1f560eb01bd6",
-            ("audio", "music_calls"): 7,
-            ("audio", "voice_calls"): 0,
-            ("audio", "stop_audio_calls"): 4,
-            ("audio", "fnv1a64"): "185d19f46686aa62",
+            ("boundaries", "wait"): 13,
+            ("boundaries", "poll"): 508,
+            ("boundaries", "text"): 75,
+            ("video", "frames"): 2596,
+            ("video", "direct_updates"): 1438,
+            ("video", "fnv1a64"): "c818a096326effc8",
+            ("audio", "music_calls"): 17,
+            ("audio", "voice_calls"): 10,
+            ("audio", "stop_audio_calls"): 8,
+            ("audio", "fnv1a64"): "84747fb970d89876",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 59743:
+        if trace.get("delay_milliseconds") != 78968:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "86f36d75184bf502",
-            "mapz_fnv1a64": "2ff9efae32900757",
+            "state_fnv1a64": "ddaf90d252d244fe",
+            "mapz_fnv1a64": "004e684bc1b4f164",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 2134 or frames[-1] != "1566f5112e47c999":
-            raise ValueError("mainline final SWRO4 world frame differs")
+        if len(frames) != 2596 or frames[-1] != "604fff82dfd8c947":
+            raise ValueError("mainline final SBOUT world frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -115,12 +119,24 @@ def main() -> int:
                   "c0ddff17acca830b"),
             323: ("POLL", "CONFIRM", "d2adef9285728fd4",
                   "c0ddff17acca830b"),
-            345: ("POLL", "NONE", "86f36d75184bf502",
+            345: ("POLL", "DOWN", "86f36d75184bf502",
                   "2ff9efae32900757"),
-            346: ("POLL", "QUIT", "86f36d75184bf502",
+            492: ("POLL", "NONE", "d39de551726475a6",
                   "2ff9efae32900757"),
+            502: ("WAIT", "CONFIRM", "e150dc57aedb9788",
+                  "2ff9efae32900757"),
+            505: ("WAIT", "CONFIRM", "42ca87e59dbbfb56",
+                  "2ff9efae32900757"),
+            514: ("POLL", "CONFIRM", "9e6b8e2829a04cb3",
+                  "2ff9efae32900757"),
+            515: ("WAIT", "CONFIRM", "6b2035b69889b10f",
+                  "004e684bc1b4f164"),
+            518: ("WAIT", "CONFIRM", "59b2007f90ba8ed2",
+                  "004e684bc1b4f164"),
+            519: ("POLL", "QUIT", "ddaf90d252d244fe",
+                  "004e684bc1b4f164"),
         }
-        if len(checkpoints) != 347:
+        if len(checkpoints) != 520:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -143,16 +159,17 @@ def main() -> int:
             raise ValueError("persisted mainline NAME differs from live font")
 
         # Story flags use the original high-bit-first layout. The innkeeper
-        # sets flag 2 (2000h); the chief sets flag 4 (0800h).
-        if u16(save, 0x4A2) != 0x2800:
-            raise ValueError("innkeeper/chief story flags 2 and 4 are not exact")
-        if u16(save, 0x424) != 50:
-            raise ValueError("mainline did not finish in SWRO4 directory 50")
+        # sets flag 2 (2000h), the chief sets flag 4 (0800h), and AREA1's
+        # one-shot Stronghold entrance sets flag zero (8000h).
+        if u16(save, 0x4A2) != 0xA800:
+            raise ValueError("innkeeper/chief/Stronghold story flags are not exact")
+        if u16(save, 0x424) != 12:
+            raise ValueError("mainline did not finish in SBOUT directory 12")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (56, 16):
+        if (world_x, world_y) != (66, 108):
             raise ValueError(
-                f"mainline final chief-house position is {(world_x, world_y)!r}")
+                f"mainline final Stronghold position is {(world_x, world_y)!r}")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -164,13 +181,18 @@ def main() -> int:
             raise ValueError("blocking-villager MAPZ mutation differs")
         if map_field(image, 50, 9) != 66:
             raise ValueError("village-chief persistent event redirect differs")
+        if map_field(image, 12, 3, 7) != 3:
+            raise ValueError("first Stronghold bandit was not persistently hidden")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--":
             raise ValueError("mainline prefix did not stop at explicit world quit")
     except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
         print(f"RPG mainline prefix validation: FAIL: {error}", file=sys.stderr)
         return 1
-    print("RPG mainline prefix validation: OK (innkeeper -> blocker -> chief)")
+    print(
+        "RPG mainline prefix validation: OK "
+        "(innkeeper -> blocker -> chief -> Stronghold -> two FIG victories)"
+    )
     return 0
 
 
