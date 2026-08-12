@@ -5493,6 +5493,38 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     std::vector<std::uint16_t>{0x43, 0x36},
             "FIG 57f2 did not continue/pay two failed nested medium effects");
 
+    // Item 215 is the targetless direct-item AF/B0 failure pair.  Its own
+    // zero target byte keeps both 58fa cards at the source actor, while the
+    // embedded zero-cost ability and the inventory slot are finalized once.
+    auto missing_af_b0_item_state = missing_medium_state;
+    missing_af_b0_item_state.set_u16(0x382, 215);
+    missing_af_b0_item_state.set_u16(actor_zero + 0x55, 200);
+    auto missing_af_b0_item_session = swd2::BattleSession::create(
+        missing_af_b0_item_state, selected->get(), items);
+    auto missing_af_b0_item_commands = escape_commands;
+    missing_af_b0_item_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto missing_af_b0_item_round =
+        missing_af_b0_item_session.play_round(
+            missing_af_b0_item_commands, abilities, zero_random);
+    std::vector<std::uint16_t> missing_af_b0_effects;
+    for (const auto& event : missing_af_b0_item_round.events) {
+        if (event.kind == swd2::BattleEventKind::missing_medium &&
+            event.source == 0 && event.ability_id == 215) {
+            require(!event.target_is_monster && event.target == 0 &&
+                        !event.action_anchor_is_target,
+                    "FIG targetless item 215 borrowed a monster anchor");
+            missing_af_b0_effects.push_back(event.effect_code);
+        }
+    }
+    require(missing_af_b0_item_session.monsters()[0].hit_points == 120 &&
+                missing_af_b0_item_session.party()[0].ability_points == 200 &&
+                missing_af_b0_item_session.inventory()[0] == 0 &&
+                missing_af_b0_effects ==
+                    std::vector<std::uint16_t>{0x43, 0x45},
+            "FIG item 215 did not dispatch/consume missing AF then B0");
+
     auto missing_composite_item_state = missing_medium_state;
     missing_composite_item_state.set_u16(0x382, 225);
     missing_composite_item_state.set_u16(actor_zero + 0x55, 200);

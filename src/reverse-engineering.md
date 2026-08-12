@@ -3354,3 +3354,21 @@ deliberately unpaired.  The first effect voice begins at 10,118 ms, `SP002`
 and the missing-AF card at 11,603 ms, the restored card at 12,317 ms, expiry
 at 12,372 ms, cleanup at 13,361 ms, and the corrected 180-page replay reaches
 the next command at 15,396 ms.
+
+### FIG targetless item missing-AF then missing-B0 composite and expiry
+
+Item 215 covers the remaining targetless double-`58fa` item arrangement.  Its
+embedded ability 75 has zero cost and a `43h/45h` pair: the first selector
+requires AF and the second B0.  With no battle media installed, `57f2` keeps
+both failures in one `1138/43ce` source-actor envelope, displays the two
+missing-medium cards in order, consumes the inventory slot once, and reaches
+one zero-cost `585e/4417` restoration.
+
+The 75-second original capture contributes thirty-five exact full 320x200 RGB
+pages.  They cover pose zero, stable darkening, both missing cards, the final
+four restoration checkpoints, same-turn attack-buff expiry, cleanup, the
+following monster action, ten damage rises, round boundary and next command.
+Three live first-DAC, first-restoration or final-shake observations remain
+deliberately unpaired.  Both `SP002` calls begin at 10,393 ms and 10,887 ms;
+restoration starts at 11,381 ms, expiry at 11,656 ms, cleanup at 12,645 ms,
+and the deterministic 158-page replay reaches the next command at 14,680 ms.
