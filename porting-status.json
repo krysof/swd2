@@ -992,10 +992,11 @@
         "scripts/fig-player-buff-expiry-item-composite-missing-af-b0-rgb-reference.json",
         "scripts/verify-fig-player-buff-expiry-item-composite-missing-af-b0.py",
         "scripts/audit-fig-type10-composites.py",
-        "scripts/audit-fig-learned-composites.py"
+        "scripts/audit-fig-learned-composites.py",
+        "scripts/audit-fig-story-visual-branches.py"
       ],
       "remaining": [
-        "继续对尚未登记的剧情专用战斗组合、信息卡和特殊状态路径做原版逐页差分；当前 schema-2 聚合检查点覆盖 191 份 reference、4,754 张精确 RGB 完整页、73 个精确 crop 和 2,531 张唯一完整页，注册的非等值摘要为 0",
+        "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 191 份 reference、4,754 张精确 RGB 完整页、73 个精确 crop 和 2,531 张唯一完整页，注册的非等值摘要为 0",
         "把现有单场景确定性回放扩展到全部可达战斗组合及完整剧情战串联，消除仍可能存在的未观察分支",
         "以完整通关战斗轨迹验证帧顺序、PIT timer 停留、调色板、语音提交点和最终状态均无分歧"
       ]

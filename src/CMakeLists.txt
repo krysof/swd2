@@ -216,6 +216,14 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/game"
     )
     add_test(
+        NAME fig_story_visual_branch_coverage
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/audit-fig-story-visual-branches.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${PROJECT_SOURCE_DIR}/src/battle_module.cpp"
+                "${PROJECT_SOURCE_DIR}/scripts"
+    )
+    add_test(
         NAME legacy_program_data_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
                 --verify-legacy-program-data
