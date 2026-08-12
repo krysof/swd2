@@ -1467,6 +1467,126 @@ void test_item_inventory(const std::filesystem::path& game_root) {
 }
 
 void test_field_actions(const std::filesystem::path& game_root) {
+    const auto rpg_mz = swd2::dos::MzExecutable::load(game_root / "RPG.EXE");
+    const auto rpg_file = read_file(game_root / "RPG.EXE");
+    const auto rpg_image = std::span<const std::uint8_t>(rpg_file).subspan(
+        rpg_mz.header_size(), rpg_mz.load_image_size());
+    const auto rpg_entry =
+        static_cast<std::size_t>(rpg_mz.header().initial_cs) * 16U +
+        rpg_mz.header().initial_ip;
+
+    // DATA:37a0 is the literal pointer table indexed by both the Magic and
+    // ITEM paths.  Lock every entry rather than inferring the 00h..29h domain
+    // from the modern switch statement.
+    const std::array<std::uint16_t, 42> original_handlers{
+        0x3423, 0x3407, 0x3424, 0x3432, 0x3440, 0x344e, 0x3468,
+        0x3470, 0x3478, 0x3480, 0x349a, 0x34a2, 0x34aa, 0x34ea,
+        0x34f8, 0x3506, 0x352a, 0x3548, 0x3556, 0x35b0, 0x35e6,
+        0x35f4, 0x3602, 0x3625, 0x362d, 0x3635, 0x3658, 0x3660,
+        0x3668, 0x3698, 0x36b0, 0x36b5, 0x36ba, 0x36bf, 0x36c4,
+        0x36d7, 0x36df, 0x36ec, 0x36f4, 0x3701, 0x3709, 0x3725,
+    };
+    const auto handler_bytes = swd2::extract_rpg_embedded_data(
+        rpg_image, rpg_entry, 0x37a0, original_handlers.size() * 2U);
+    for (std::size_t index = 0; index < original_handlers.size(); ++index) {
+        require(static_cast<std::uint16_t>(
+                    handler_bytes[index * 2U] |
+                    (static_cast<std::uint16_t>(handler_bytes[index * 2U + 1U])
+                     << 8U)) == original_handlers[index],
+                "RPG DATA:37a0 field-action pointer table changed");
+    }
+    std::uint64_t original_handler_hash = 1469598103934665603ULL;
+    for (const auto byte : rpg_image.subspan(0x3407U, 0x3939U - 0x3407U)) {
+        original_handler_hash ^= byte;
+        original_handler_hash *= 1099511628211ULL;
+    }
+    require(original_handler_hash == 0x524241501fb76f39ULL,
+            "RPG 3407..3938 field-action handlers/helpers changed");
+
+    // Build the actual player ability domain from all four shipped growth
+    // tables and five initial SAVE triples.  Eighteen reachable abilities are
+    // field-enabled, and every one stays inside the original 42-entry table.
+    const auto field_ability_records = swd2::extract_rpg_embedded_data(
+        rpg_image, rpg_entry, 0x1dce, 151U * 20U);
+    std::set<std::uint16_t> reachable_abilities;
+    const auto battle_database =
+        swd2::BattleDatabase::load(game_root / "ORC.EXE");
+    for (const auto& table : battle_database.growth_tables()) {
+        for (const auto& row : table) {
+            if (row.fields[8] != 0U) reachable_abilities.insert(row.fields[8]);
+        }
+    }
+    for (unsigned slot = 1; slot <= 5; ++slot) {
+        const auto shipped = swd2::SharedState::load(
+            game_root / ("SAVE.DA" + std::to_string(slot)));
+        for (std::size_t actor = 0; actor < 4U; ++actor) {
+            for (std::size_t ability_slot = 0; ability_slot < 50U;
+                 ++ability_slot) {
+                const auto id = shipped.u8(
+                    0x106U + actor * 0x9fU + 0x6dU + ability_slot);
+                if (id != 0U) reachable_abilities.insert(id);
+            }
+        }
+    }
+    std::vector<std::pair<std::uint16_t, std::uint16_t>> reachable_field;
+    std::vector<std::uint16_t> record_only_out_of_domain;
+    for (std::uint16_t id = 0; id < 151U; ++id) {
+        const auto offset = static_cast<std::size_t>(id) * 20U;
+        const auto flags = field_ability_records[offset + 13U];
+        const auto effect = static_cast<std::uint16_t>(
+            field_ability_records[offset + 14U] |
+            (static_cast<std::uint16_t>(field_ability_records[offset + 15U])
+             << 8U));
+        if ((flags & 0x80U) == 0U && effect > 0x29U) {
+            record_only_out_of_domain.push_back(id);
+        }
+        if (reachable_abilities.contains(id) && (flags & 0x80U) == 0U) {
+            reachable_field.emplace_back(id, effect);
+        }
+    }
+    const std::vector<std::pair<std::uint16_t, std::uint16_t>>
+        expected_reachable_field{
+            {9, 0x09}, {41, 0x11}, {42, 0x1e}, {43, 0x11},
+            {44, 0x0a}, {49, 0x0f}, {50, 0x01}, {68, 0x02},
+            {94, 0x04}, {98, 0x28}, {99, 0x29}, {101, 0x03},
+            {103, 0x0b}, {104, 0x0c}, {107, 0x1e}, {108, 0x02},
+            {112, 0x0d}, {113, 0x0e},
+        };
+    require(reachable_abilities.size() == 75U &&
+                reachable_field == expected_reachable_field &&
+                std::all_of(
+                    reachable_field.begin(), reachable_field.end(),
+                    [](const auto& entry) { return entry.second <= 0x29U; }) &&
+                record_only_out_of_domain == std::vector<std::uint16_t>{144},
+            "RPG shipped field-ability reachability/domain changed");
+
+    // Forty-nine ordinary ITEM records advertise field use. Forty-six enter
+    // DATA:37a0, two 6ah records use the dedicated save path, and 石生菖莆
+    // (248/6bh) is the sole shipped out-of-table original fault. The portable
+    // runtime must reject that one deterministically rather than calling the
+    // Big5 status word at DATA:3876 as executable code.
+    const auto item_database = swd2::ItemDatabase::load(game_root / "ITEM.EXE");
+    std::size_t field_item_count = 0;
+    std::vector<std::uint16_t> field_table_items;
+    std::vector<std::uint16_t> portable_save_items;
+    std::vector<std::uint16_t> out_of_table_items;
+    for (std::size_t id = 0; id < item_database.size(); ++id) {
+        const auto& item = item_database.at(static_cast<std::uint16_t>(id));
+        if (!item.field_usable() || item.equipment_category() != 0U) continue;
+        ++field_item_count;
+        if (item.effect_code <= 0x29U) {
+            field_table_items.push_back(static_cast<std::uint16_t>(id));
+        } else if (item.effect_code == 0x6aU) {
+            portable_save_items.push_back(static_cast<std::uint16_t>(id));
+        } else {
+            out_of_table_items.push_back(static_cast<std::uint16_t>(id));
+        }
+    }
+    require(field_item_count == 49U && field_table_items.size() == 46U &&
+                portable_save_items == std::vector<std::uint16_t>({257, 259}) &&
+                out_of_table_items == std::vector<std::uint16_t>{248},
+            "RPG shipped field ITEM dispatch domain changed");
+
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     state.set_u16(0x10, 4);
     const auto base = std::size_t{0x106};
@@ -1568,6 +1688,107 @@ void test_field_actions(const std::filesystem::path& game_root) {
                 swd2::FieldActionSystem::travel_directory_offset(33) == 0x0372 &&
                 !swd2::FieldActionSystem::travel_directory_offset(34),
             "RPG DS:3a8a travel table/SAVE+51e unlock list was not reproduced");
+
+    // Independent state signatures cover every table entry. The fixture uses
+    // actor one as the selected target, actor zero as DS:35fc's action owner,
+    // ordinary condition bits on all living actors, and a stale secondary
+    // operand of 30 for the duplicated-primary resurrection entry 1ch.
+    const std::array<std::uint64_t, 42> expected_state_hashes{
+        0x880c76493c62d163ULL, 0x913c87be52274699ULL,
+        0x0e3d3d2421596e34ULL, 0x80edfebed9489667ULL,
+        0xe3fa414530898cd6ULL, 0x8747c5854a46bf8aULL,
+        0xa5ade7d9ad72b2e4ULL, 0x9eee6545c00dae30ULL,
+        0x9eee6545c00dae30ULL, 0xe5e7368ce987637bULL,
+        0xb32aaa173c4c352fULL, 0x1bdda1f92a8937deULL,
+        0x39049bdf13d68efaULL, 0x5519981b14b0e9c2ULL,
+        0x36f63ac802c24384ULL, 0x33695fea0c49311cULL,
+        0x7751e51cb7c00db0ULL, 0x4661be3289a02f85ULL,
+        0x83f8050e5d475048ULL, 0xfe1c3fd535950fecULL,
+        0x9c13c6aeb42347c7ULL, 0xa14b504691c77953ULL,
+        0xa3d78809bd8e461dULL, 0xb6b5a8032e6906e3ULL,
+        0x19b8282a657934daULL, 0x16f718a970b7afb6ULL,
+        0xc5732d4a739c4255ULL, 0x9eee6545c00dae30ULL,
+        0xa6d089b305956f2fULL, 0x8ba7aa70bbdf214aULL,
+        0x8d2f5711cef45b19ULL, 0x925634f113fc2cb8ULL,
+        0x852484a58b9ced6fULL, 0x2c9a64567ddcfd0bULL,
+        0x2194bd7bbb121812ULL, 0x8f6175b950a999eaULL,
+        0x3bbe6d9c5548ce5dULL, 0xcc1a9ae1b53cc654ULL,
+        0x0283c755184f481fULL, 0x4d446116648a0a0eULL,
+        0x880c76493c62d163ULL, 0x880c76493c62d163ULL,
+    };
+    const std::array<std::uint16_t, 42> expected_primary{
+        0x7777, 25, 45, 70, 100, 25, 45, 70, 100, 25, 45, 70,
+        25, 45, 70, 0x7777, 30, 100, 100, 50, 200, 400, 50, 200,
+        400, 50, 200, 400, 10, 0x7777, 0x7777, 0x7777, 0x7777,
+        0x7777, 0x2f, 0x37, 0x3d, 0x45, 0x4f, 0x57, 0x7777, 0x7777,
+    };
+    const std::array<std::uint16_t, 42> expected_secondary{
+        30, 25, 45, 100, 100, 30, 30, 30, 30, 30, 30, 30,
+        25, 45, 100, 30, 30, 100, 100, 50, 200, 400,
+        30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
+        30, 30, 30, 30, 30, 30, 30,
+    };
+    for (std::uint16_t code = 0; code <= 0x29U; ++code) {
+        std::array<std::uint8_t, swd2::SharedState::byte_size> bytes{};
+        auto exhaustive = swd2::SharedState::from_bytes(bytes);
+        exhaustive.set_u16(0x10U, 3U);
+        exhaustive.set_u16(0x408U, 0x8000U);
+        for (std::size_t actor = 0; actor < 3U; ++actor) {
+            const auto actor_base = 0x106U + actor * 0x9fU;
+            exhaustive.set_u16(actor_base + 8U, 0x1f00U);
+            exhaustive.set_u16(actor_base + 0x2dU,
+                               static_cast<std::uint16_t>(100U + actor * 11U));
+            exhaustive.set_u16(actor_base + 0x2fU,
+                               static_cast<std::uint16_t>(1000U + actor * 101U));
+            exhaustive.set_u16(actor_base + 0x35U,
+                               static_cast<std::uint16_t>(200U + actor * 13U));
+            exhaustive.set_u16(actor_base + 0x37U,
+                               static_cast<std::uint16_t>(800U + actor * 103U));
+            exhaustive.set_u16(actor_base + 0x0cU,
+                               static_cast<std::uint16_t>(400U + actor));
+            exhaustive.set_u16(actor_base + 0x3dU,
+                               static_cast<std::uint16_t>(500U + actor));
+            exhaustive.set_u16(actor_base + 0x45U,
+                               static_cast<std::uint16_t>(80U + actor * 4U));
+            exhaustive.set_u16(actor_base + 0x4fU,
+                               static_cast<std::uint16_t>(600U + actor));
+            exhaustive.set_u16(actor_base + 0x5dU,
+                               static_cast<std::uint16_t>(700U + actor));
+            exhaustive.set_u16(actor_base + 0x55U,
+                               static_cast<std::uint16_t>(300U + actor * 17U));
+            exhaustive.set_u16(actor_base + 0x57U,
+                               static_cast<std::uint16_t>(600U + actor * 107U));
+        }
+        if (code == 0x1cU) {
+            exhaustive.set_u16(0x106U + 0x9fU + 8U, 0x2000U);
+        }
+        swd2::FieldActionRuntime runtime{0x7777U, 30U};
+        swd2::FieldActionSystem exhaustive_actions(exhaustive, &runtime, 0U);
+        std::optional<std::size_t> target;
+        if (swd2::FieldActionSystem::requires_target(code)) target = 1U;
+        const auto result = exhaustive_actions.apply(code, target);
+        const auto expected_status =
+            code == 0U ? swd2::FieldActionStatus::no_effect
+            : code == 0x28U ? swd2::FieldActionStatus::travel_current
+            : code == 0x29U ? swd2::FieldActionStatus::travel_select
+                            : swd2::FieldActionStatus::applied;
+        require(result.status == expected_status && result.dispatched() &&
+                    runtime.primary_operand == expected_primary[code] &&
+                    runtime.secondary_operand == expected_secondary[code],
+                "RPG exhaustive field-action status/operand differs");
+        std::uint64_t state_hash = 1469598103934665603ULL;
+        for (const auto byte : exhaustive.bytes()) {
+            state_hash ^= byte;
+            state_hash *= 1099511628211ULL;
+        }
+        require(state_hash == expected_state_hashes[code],
+                "RPG exhaustive field-action state signature differs");
+    }
+    require(actions.apply(0x2aU, 0U).status ==
+                swd2::FieldActionStatus::invalid_action &&
+                actions.apply(0x6bU, 0U).status ==
+                swd2::FieldActionStatus::invalid_action,
+            "RPG field dispatcher accepted an out-of-table action");
 }
 
 void test_map_resource(const std::filesystem::path& game_root) {
