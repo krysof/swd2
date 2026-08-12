@@ -3911,6 +3911,24 @@ The strict two-poll trace locks all SAVE/MAPZ/NAME summaries and both pages.
 This is the twenty-first original OC world route and directly proves the
 released behavior-four render, occupancy and nonautomatic-event semantics.
 
+The complementary hidden class is measured on the same released AREA1 MAPZ.
+Entity zero remains
+`sprite=0000h, direction=0, cell=9270, behavior=3, delay=10, offsets=1/-4,
+animation=4, flags=000ah, event=40, frame=0`; two more shipped behavior-three
+records overlap its footprint `(131..133,25)`.  The leader begins at world
+`(129,25)`.  One Right pulse moves its centre to `(130,25)`, so the new leading
+edge traverses hidden cell `(131,25)` rather than colliding, rendering a sprite
+or dispatching any of those dormant event words.
+
+Both complete modern 320×200 pages match original review frames 493 and 763
+in every RGB pixel, with the latter again sampled at its matching AREA1 palette
+phase.  CTest requires the original MAPZ without modification, the exact
+entity record and behavior vector, the `(1,0)` world delta, zero Confirm/text
+boundaries, and unchanged MAPZ serialization.  This twenty-second original OC
+world route proves behavior three is excluded from drawing, autonomous updates
+and the transient three-cell occupancy layer rather than merely appearing
+invisible.
+
 ### RPG MA-DE autonomous behavior-zero entity
 
 The nonblocking world loop's autonomous path now also has direct original
