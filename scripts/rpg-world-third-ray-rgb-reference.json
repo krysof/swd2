@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_buin1_third_ray_interaction_sequence",
+  "status": "exact_rgb_checkpoint",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_harness_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "release_mapz_sha256": "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917",
+  "name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+  "area_layout_sha256": "beb80f72b096bad87e9a5f3817bf50038db2238812a233815e12496de15b6752",
+  "area_graphics_metadata_sha256": "c3a09c63d0634bd2fabcd8dbc836c42600067a5d2a1431badaf8a0d9016963a7",
+  "area_overlay_sha256": "77e1387d4e14cb7e2eb42ea264b049fb190bbc1b2f9105589b4ecba554ca0e08",
+  "entity_sprite_archive_sha256": "6a6aaa018645ad3a241d54938622416a4b45c197b7e8f551855f5bb1c797e581",
+  "music_sha256": "036fcf18cf8cd57e00dba304d7865f04917f2f9062021afb884b80331a178f0f",
+  "event_archive_sha256": "6940c589ae9d2ea3a4f960bd3b8b4d8621ca598da747e11da76463464c63072b",
+  "event_font_sha256": "8403126e430decc5a37a6256b3a785b278f93c34634754f9ec347c84dc9eb348",
+  "fixture_mapz_sha256": "c8b35df562edaa1929ba3e79b324e885b5b0893f5fa53447488d18f7cabdf433",
+  "fixture_save_sha256": "91d24dc8049641730b9c7c83f83db04bea818e9f687435beed7e99e88a827e4c",
+  "map_location_directory_offset": 268,
+  "entity_index": 0,
+  "release_entity_fields": [
+    5120,
+    6,
+    60878,
+    1,
+    10,
+    0,
+    65520,
+    4,
+    10,
+    40,
+    1
+  ],
+  "fixture_behaviors": [
+    1,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "player_world_position": [
+    18,
+    170
+  ],
+  "player_direction": 6,
+  "empty_center_ray": [
+    [
+      17,
+      170
+    ],
+    [
+      16,
+      170
+    ],
+    [
+      15,
+      170
+    ],
+    [
+      14,
+      170
+    ]
+  ],
+  "empty_second_ray": [
+    [
+      17,
+      171
+    ],
+    [
+      16,
+      171
+    ],
+    [
+      15,
+      171
+    ],
+    [
+      14,
+      171
+    ]
+  ],
+  "selected_side_ray": 2,
+  "selected_side_ray_first_cell": [
+    17,
+    169
+  ],
+  "entity_world_footprint": [
+    [
+      15,
+      169
+    ],
+    [
+      16,
+      169
+    ],
+    [
+      17,
+      169
+    ]
+  ],
+  "entity_initial_direction": 6,
+  "entity_faced_direction": 9,
+  "entity_restored_direction": 6,
+  "event_directory_offset": 40,
+  "automatic_event_flag": false,
+  "capture_autotype": "original-rpg-world-interaction-autotype.txt",
+  "capture_autotype_sha256": "0b916ec702331841fc0855e1d0f6470197729cd18c82a79aaffe1b262715cfb0",
+  "replay_input": "replay-rpg-world-interaction.txt",
+  "replay_input_sha256": "0ee7e7c683587163f1e244bf237620b906a957c658ffa491f05601b58dda705b",
+  "capture_wait_seconds": 6.5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 16,
+  "capture_review_fps": 70,
+  "capture_video_frames": 1121,
+  "capture_review_frames": 1120,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "888730bce2701c5cbf9cc71214472049202aecba6e3ef1f96e7bd89551d7d9fe",
+  "capture_manifest_sha256": "48264055d7b5bb0a7b339eeaf9e13357e636620d6b5c793cec955fa369146824",
+  "rewrite_input": {
+    "total": 4,
+    "consumed": 4,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 0,
+    "poll": 3,
+    "text": 1,
+    "frontend": 0
+  },
+  "rewrite_video": {
+    "frames": 6,
+    "direct_updates": 2,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "e3393a84471bb5e1"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 0,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "dfcf0c93a81299a9"
+  },
+  "rewrite_delay_milliseconds": 73,
+  "rewrite_state_fnv1a64": "8aa86dad444eae0a",
+  "rewrite_mapz_fnv1a64": "21d25caefe119ae0",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "matched_frames": [
+    {
+      "kind": "initial_third_ray_world",
+      "rewrite_frame": 0,
+      "original_review_frame": 238,
+      "original_png_sha256": "cbcd91cf568976a0f4e0227422a0e3453ffb2f4011615cce7d6ad7df01d080b8",
+      "rewrite_indexed_sha256": "aa5ca2ee1cdc7953dd0963714e9ed6ad458d34b0ffbc105890484bf5f069146b",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "fc03a3875e16fe165e6bf155280045cd78ec76323ffac7ce2faccfae50aeccf8",
+      "original_rgb_sha256": "fc03a3875e16fe165e6bf155280045cd78ec76323ffac7ce2faccfae50aeccf8"
+    },
+    {
+      "kind": "third_ray_first_text_update",
+      "rewrite_frame": 2,
+      "original_review_frame": 463,
+      "original_png_sha256": "076f2c0a9f3d9a5fddd330a8f43346f3bfd41e42abbaed7ebfeebf93562c2732",
+      "rewrite_indexed_sha256": "bfdd410296e4a0fb343bf1c0a4394169f6da5b335a30b58550474d6fcc466154",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "80d1c563d26686eb5d3a82ee77550eecb0c07d1f2e4e869129ed3463f150d489",
+      "original_rgb_sha256": "80d1c563d26686eb5d3a82ee77550eecb0c07d1f2e4e869129ed3463f150d489"
+    },
+    {
+      "kind": "third_ray_complete_dialogue",
+      "rewrite_frame": 3,
+      "original_review_frame": 501,
+      "original_png_sha256": "0ee4076b3077b2fc279eb39bb98ad57c535bdcdadf3368bfc5ea1f9a48b8d77b",
+      "rewrite_indexed_sha256": "33fd435afd84e604c0812e3d8d73e11471392249dfb4d3f9cbd5199d2fdfc3e0",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "51f86a93c51d728d1b5ae33cbbe53e504a5d4c6e285baf105dbb48c20069dde6",
+      "original_rgb_sha256": "51f86a93c51d728d1b5ae33cbbe53e504a5d4c6e285baf105dbb48c20069dde6"
+    },
+    {
+      "kind": "third_ray_animated_marker",
+      "rewrite_frame": 4,
+      "original_review_frame": 505,
+      "original_png_sha256": "480e702107f7e0b52c8966fc10671f0f9fa8b79789b11513a1d66b0c365b6d76",
+      "rewrite_indexed_sha256": "c8918d2a2d19ae2d771482340336e1b038e15cf0b98283212f33f6881c781ed3",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "b56ad6a8492b724c625334acdca3427b62e4500b6d92425c2085a6f892d21a6d",
+      "original_rgb_sha256": "b56ad6a8492b724c625334acdca3427b62e4500b6d92425c2085a6f892d21a6d"
+    },
+    {
+      "kind": "third_ray_restored_world",
+      "rewrite_frame": 5,
+      "original_review_frame": 544,
+      "original_png_sha256": "cbcd91cf568976a0f4e0227422a0e3453ffb2f4011615cce7d6ad7df01d080b8",
+      "rewrite_indexed_sha256": "aa5ca2ee1cdc7953dd0963714e9ed6ad458d34b0ffbc105890484bf5f069146b",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "fc03a3875e16fe165e6bf155280045cd78ec76323ffac7ce2faccfae50aeccf8",
+      "original_rgb_sha256": "fc03a3875e16fe165e6bf155280045cd78ec76323ffac7ce2faccfae50aeccf8"
+    }
+  ]
+}

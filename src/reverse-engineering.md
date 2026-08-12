@@ -3969,3 +3969,14 @@ capture did not observe its final scheduled close key; the existing centre-ray
 reference independently locks the restored world page.  The side-ray evidence
 is therefore the eighteenth original OC world route and makes no broader claim
 about full-playthrough completion.
+
+The opposite lateral branch is measured independently.  Moving the same
+leader to `(18,170)` leaves both the centre probes `(17..14,170)` and the
+second, south probes `(17..14,171)` empty.  The third ray offsets north and its
+first word `(17,169)` selects the entity.  Original review frames
+`238/463/501/505/544` match the modern initial page, two dialogue stages,
+marker and restored world page completely.  Thus the nineteenth OC route locks
+all three west-facing `52fd` ray starts, including the second lateral offset
+and normal direction restoration; vertical-facing symmetry remains established
+from the original offset table and synthetic exhaustive test rather than being
+misreported as another captured route.

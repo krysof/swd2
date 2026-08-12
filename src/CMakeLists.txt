@@ -912,6 +912,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_side_ray_validation PROPERTIES
         DEPENDS rpg_world_side_ray_prepare)
     add_test(
+        NAME rpg_world_third_ray_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-third-ray-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-third-ray-save"
+    )
+    add_test(
+        NAME rpg_world_third_ray_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-third-ray.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-third-ray-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-third-ray"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-third-ray-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_third_ray_validation PROPERTIES
+        DEPENDS rpg_world_third_ray_prepare)
+    add_test(
         NAME rpg_magic_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"
