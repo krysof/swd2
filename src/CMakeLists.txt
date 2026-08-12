@@ -166,6 +166,12 @@ if(BUILD_TESTING)
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-battles
     )
     add_test(
+        NAME fig_type10_composite_coverage
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/audit-fig-type10-composites.py"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    add_test(
         NAME fig_rgb_checkpoint_validation
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-fig-rgb-checkpoint.py"

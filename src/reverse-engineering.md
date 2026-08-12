@@ -3372,3 +3372,14 @@ Three live first-DAC, first-restoration or final-shake observations remain
 deliberately unpaired.  Both `SP002` calls begin at 10,393 ms and 10,887 ms;
 restoration starts at 11,381 ms, expiry at 11,656 ms, cleanup at 12,645 ms,
 and the deterministic 158-page replay reaches the next command at 14,680 ms.
+
+### FIG shipped type-10 composite item coverage
+
+`audit-fig-type10-composites.py` now derives the complete `type=10h` and
+`effect=6bh` domain directly from `ITEM.EXE` rather than maintaining an
+informal to-do list.  The shipped set is exactly items 195, 201, 202, 209,
+215, 219, 220, 225, 230, 232 and 236.  Their nested selector pairs are checked
+against the archive, and every item is tied to its original capture,
+deterministic replay, verifier and exact-RGB reference.  Together this closed
+family currently contributes 594 exact full pages and 56 exact crops; a new
+shipped composite or a missing/mislabelled evidence file makes CTest fail.
