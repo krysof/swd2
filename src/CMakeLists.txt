@@ -665,6 +665,44 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_south_scroll_validation PROPERTIES
         DEPENDS rpg_world_east_scroll_prepare)
     add_test(
+        NAME rpg_world_west_scroll_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-west-scroll-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-west-scroll-save"
+    )
+    add_test(
+        NAME rpg_world_west_scroll_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-scroll.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-west-scroll-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-west-scroll"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-west-scroll-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_west_scroll_validation PROPERTIES
+        DEPENDS rpg_world_west_scroll_prepare)
+    add_test(
+        NAME rpg_world_north_scroll_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-north-scroll-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-north-scroll-save"
+    )
+    add_test(
+        NAME rpg_world_north_scroll_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-scroll.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-north-scroll-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-north-scroll"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-north-scroll-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_north_scroll_validation PROPERTIES
+        DEPENDS rpg_world_north_scroll_prepare)
+    add_test(
         NAME rpg_world_screen_east_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-screen-east-fixture.py"

@@ -3814,3 +3814,12 @@ X `26h`.  At south-limit viewport `(0,155)`, world `(20,168)` and screen Y
 `58h`, one Up poll follows `1e03..1e2e` back to world `(20,167)` and screen Y
 `50h`.  Each route has exact full-page entry and result RGB matches, so all
 four successful directional screen-motion handlers have original evidence.
+
+Viewport scrolling in the reverse directions is also measured rather than
+assumed.  Four Left polls move staged AREA1 world `(130,13)` / viewport
+`(110,1)` back to `(126,13)` / `(106,1)` through `1b56..1b80`; four Up polls
+move `(126,17)` / `(106,5)` back to `(126,13)` / `(106,1)` through
+`1d54..1d7f`.  Each route locks its complete five-poll modern timeline and two
+full-page RGB equalities sampled from the original capture.  All four viewport
+scroll directions and all four on-screen movement directions now have direct
+original evidence.
