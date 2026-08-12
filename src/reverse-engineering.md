@@ -3870,6 +3870,28 @@ hash and stationary final state are failure-closed.  Together with SBOUT this
 directly covers both collision branches described above: behavior-six removal
 before flags, and non-six `8000h` automatic event dispatch.
 
+The remaining invisible collision class now has its own released-data capture.
+MA-DE entity nine remains exactly
+`sprite=0300h, direction=0, cell=36114, behavior=7, delay=10, offsets=0/-16,
+animation=4, flags=000ah, event=204, frame=0`; only the other twelve fixture
+entities are changed to hidden behavior three.  Behavior seven is not submitted
+to the sprite renderer and never enters the autonomous `4f1c` update path, but
+original `5298` still places its three-word footprint `(53..55,100)` in the
+transient entity collision layer.  The leader starts immediately south at
+world `(54,101)`.  One Up pulse turns the party north without changing that
+coordinate, entering CHNA or producing a text boundary.
+
+The original pulse is deliberately scheduled seven seconds after launch so
+the MA-DE field is already stable rather than losing inputs during OC startup.
+Original review frames 413 and 502 match modern pages zero and one over the
+complete `x=0..319,y=56..151` strip: all 30,720 RGB pixels are identical both
+before the input and after the blocked step.  The excluded upper/lower foliage
+continues its unrelated DAC phase, so no whole-page claim is made.  CTest locks
+the untouched entity words, hidden fixture vector, one-direction/zero-Confirm
+input, stationary final state, unchanged serialized MAPZ and the two-page
+58 ms trace.  This is the twentieth original OC world route and proves that
+behavior seven is invisible and motionless without becoming passable.
+
 ### RPG MA-DE autonomous behavior-zero entity
 
 The nonblocking world loop's autonomous path now also has direct original
