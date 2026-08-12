@@ -4801,6 +4801,51 @@ void test_battle_session(const std::filesystem::path& game_root) {
                     std::vector<std::uint16_t>{0x4c, 0x5f},
             "FIG item 232 did not dispatch/consume damage plus status");
 
+    // Item 236 enters a successful 41h damage handler before nested 37h
+    // reports the absent AF medium.  The second return remains part of the
+    // same target-flagged item action and keeps the selected-monster anchor.
+    auto damage_missing_af_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    damage_missing_af_state.set_u16(0x382, 236);
+    damage_missing_af_state.set_u16(0x10, 1);
+    damage_missing_af_state.set_u16(actor_zero + 0x2d, 60000);
+    damage_missing_af_state.set_u16(actor_zero + 0x2f, 60000);
+    damage_missing_af_state.set_u16(actor_zero + 0x31, 1);
+    damage_missing_af_state.set_u16(actor_zero + 0x33, 60000);
+    damage_missing_af_state.set_u16(actor_zero + 0x5d, 60000);
+    damage_missing_af_state.set_u16(actor_zero + 0x5f, 60000);
+    damage_missing_af_state.set_u16(actor_zero + 0x55, 200);
+    damage_missing_af_state.set_u16(actor_zero + 0x57, 200);
+    auto damage_missing_af_session = swd2::BattleSession::create(
+        damage_missing_af_state, *targetless_damage_encounter, items);
+    auto damage_missing_af_commands = escape_commands;
+    damage_missing_af_commands[0] = {
+        swd2::PlayerCommandKind::item, 0, 0, 0,
+    };
+    const auto damage_missing_af_round = damage_missing_af_session.play_round(
+        damage_missing_af_commands, abilities, zero_random);
+    std::vector<std::pair<swd2::BattleEventKind, std::uint16_t>>
+        damage_missing_af_effects;
+    for (const auto& event : damage_missing_af_round.events) {
+        if ((event.kind == swd2::BattleEventKind::player_ability ||
+             event.kind == swd2::BattleEventKind::missing_medium) &&
+            event.source == 0 && event.ability_id == 236) {
+            require(event.target_is_monster && event.target == 0 &&
+                        event.action_anchor_is_target,
+                    "FIG item 236 lost its selected-monster action anchor");
+            damage_missing_af_effects.emplace_back(
+                event.kind, event.effect_code);
+        }
+    }
+    require(damage_missing_af_session.party()[0].ability_points == 200 &&
+                damage_missing_af_session.inventory()[0] == 0 &&
+                damage_missing_af_effects ==
+                    std::vector<
+                        std::pair<swd2::BattleEventKind, std::uint16_t>>{
+                        {swd2::BattleEventKind::player_ability, 0x41},
+                        {swd2::BattleEventKind::missing_medium, 0x37}},
+            "FIG item 236 did not dispatch damage then missing AF");
+
     // The item target bits, not the derived ability's flags, suppress target
     // selection for item 219.  Its nested 66/69 handlers still apply both
     // tactical self buffs and must retain item id 219 in presentation events.

@@ -3327,3 +3327,30 @@ flight-zero, paid-dark or shake-transition observations remain deliberately
 unpaired.  The medium voices begin at 10,393 ms and 11,933 ms, restored AF+B0
 appears at 13,528 ms, expiry follows at 13,583 ms, cleanup at 14,572 ms, and
 the deterministic 209-page replay reaches the next command at 16,607 ms.
+
+### FIG target-flagged item damage then missing-AF composite and expiry
+
+Item 236 reaches a mixed `6bh` return that was not represented by either the
+successful damage pairs or the double-`58fa` fixtures.  Its record is
+`type=10h/use=6eh/target=20h/effect=6bh`, with nested selectors `41h/37h`.
+The first selector completes its damage animation against the selected
+monster.  The second requires AF and therefore enters `58fa`; nevertheless,
+`57f2` still owns both selectors as one outer item action.
+
+The previous presentation code treated `missing_medium` as a new direct-item
+action after the first damage event.  It repeated pose zero and all five
+`43ce` darkening pages, then performed a second restoration.  The original
+instead retains the first handler's dark pose-zero/DAC state, displays the
+missing-AF card immediately, and reaches the sole outer restoration.  The
+rewrite now carries `57f2` ownership across a successful damage handler into
+`58fa`, eliminating thirteen spurious submitted pages.
+
+The 75-second original capture supplies fifty-six exact full 320x200 RGB
+pages.  They cover the item pose, darkening, both SP208..219 effect cycles,
+damage flash/rises, the missing-AF card, restoration, same-turn attack-buff
+expiry, the following monster action, round boundary and next command.  Four
+live first-DAC, reaction, first-restoration or final-shake observations remain
+deliberately unpaired.  The first effect voice begins at 10,118 ms, `SP002`
+and the missing-AF card at 11,603 ms, the restored card at 12,317 ms, expiry
+at 12,372 ms, cleanup at 13,361 ms, and the corrected 180-page replay reaches
+the next command at 15,396 ms.

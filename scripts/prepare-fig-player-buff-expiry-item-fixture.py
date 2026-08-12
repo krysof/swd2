@@ -30,6 +30,8 @@ EXPECTED_COMPOSITE_REVERSED_MEDIA_SAVE = \
     "138f86e0fa3e35b9efc92f4a704087e1a0dbfb0a20fa2926843911b3d64d369f"
 EXPECTED_COMPOSITE_AF_B0_MEDIA_SAVE = \
     "8b41d1378e32a02d8f620cd4b59c9992d69e356696674b794255213f42d6fcbb"
+EXPECTED_COMPOSITE_DAMAGE_MISSING_AF_SAVE = \
+    "c09de0b34bb35ebe3070638ff4332e5c4eb815bb3305effc42a165be156b2a7b"
 EXPECTED_COMPOSITE_DAMAGE_SAVE = \
     "5830d3dd67c76b9dd7f7d0f508e48d400b0ec1f552975c9fe25e6a9b6e5ec339"
 EXPECTED_COMPOSITE_MISSING_MEDIA_SAVE = \
@@ -106,6 +108,9 @@ def main() -> int:
         "--composite-af-b0-media-item", action="store_true",
         help="replace direct damage item 192 with item 209/effect 6bh")
     finish.add_argument(
+        "--composite-damage-missing-af-item", action="store_true",
+        help="replace direct damage item 192 with item 236/effect 6bh")
+    finish.add_argument(
         "--composite-damage-item", action="store_true",
         help="replace direct damage item 192 with item 230/effect 6bh")
     finish.add_argument(
@@ -168,7 +173,8 @@ def main() -> int:
         # ITEM.EXE directory entry 500+2 points at the original record.
         patch_targetless_monster = (
             args.composite_targetless_damage_item or
-            args.composite_targetless_status_item)
+            args.composite_targetless_status_item or
+            args.composite_damage_missing_af_item)
         if patch_targetless_monster:
             item_path = args.output / "ITEM.EXE"
             item = bytearray(item_path.read_bytes())
@@ -232,6 +238,7 @@ def main() -> int:
             206 if args.medium_item_af else
             232 if args.composite_targetless_status_item else
             202 if args.composite_targetless_damage_item else
+            236 if args.composite_damage_missing_af_item else
             209 if args.composite_af_b0_media_item else
             201 if args.composite_reversed_media_item else
             220 if args.composite_status_damage_item else
@@ -278,6 +285,8 @@ def main() -> int:
             if args.composite_reversed_media_item else
             EXPECTED_COMPOSITE_AF_B0_MEDIA_SAVE
             if args.composite_af_b0_media_item else
+            EXPECTED_COMPOSITE_DAMAGE_MISSING_AF_SAVE
+            if args.composite_damage_missing_af_item else
             EXPECTED_COMPOSITE_MEDIA_SAVE if args.composite_media_item else
             EXPECTED_MEDIUM_SAVE if args.medium_item else
             EXPECTED_BARRIER_SAVE if args.barrier_item else

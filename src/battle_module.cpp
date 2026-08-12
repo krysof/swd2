@@ -2372,6 +2372,49 @@ bool present_round_events(
                 const auto direct_item =
                     event.source < commands.size() &&
                     commands[event.source].kind == PlayerCommandKind::item;
+                if (direct_item && retained_composite_dispatcher_palette) {
+                    // 57f2 can reach 58fa after a successful first nested
+                    // dispatcher handler.  Item 236's 41h damage therefore
+                    // leaves its dark pose-zero/DAC page live while 37h
+                    // reports the absent AF medium.  Do not repeat 1138's
+                    // pose or 43ce darkening; the missing-medium card and the
+                    // sole 4417 restoration complete the existing envelope.
+                    BattleSurface missing;
+                    present_missing_medium_card(
+                        context, base_surface, encounter, items, fighters,
+                        menu_sprites, font, fallback, visual, event, abilities,
+                        encounter_directory_offset,
+                        fig_player_ability_poses()[0],
+                        &*retained_composite_dispatcher_palette, &missing);
+                    play_voice_cue(context, {FigVoiceFile::sp, 2,
+                                             FigVoiceTiming::before_action});
+                    if (!delay(summoned_action_card_delay)) return false;
+                    present_player_resource_cost(event);
+                    for (auto step = 0; step < 5; ++step) {
+                        brighten_fig_dispatcher_palette(
+                            missing, base_surface.palette);
+                        present_battle_surface(context, missing);
+                        if (!delay(effect_delay)) return false;
+                    }
+                    retained_composite_dispatcher_palette.reset();
+                    const auto expires_here =
+                        event_index + 1U < result.events.size() &&
+                        result.events[event_index + 1U].kind ==
+                            BattleEventKind::status_expired &&
+                        !result.events[event_index + 1U].target_is_monster &&
+                        result.events[event_index + 1U].source == event.source;
+                    if (!expires_here) {
+                        const auto clean = compose_event_frame(
+                            context, base_surface, encounter, items, fighters,
+                            menu_sprites, font, fallback, visual, event,
+                            std::nullopt, {}, std::nullopt,
+                            encounter_directory_offset, std::nullopt, false,
+                            false);
+                        present_battle_surface(context, clean);
+                        if (!delay(ward_card_delay)) return false;
+                    }
+                    continue;
+                }
                 auto composite_group_end = event_index;
                 while (composite_group_end + 1U < result.events.size()) {
                     const auto& next =
@@ -3749,7 +3792,10 @@ bool present_round_events(
             retained_player_status_handler || retained_player_barrier_handler ||
             retained_player_dispel_handler || retained_monster_damage_handler;
         const auto is_player_dispatcher_handler = [](const auto& candidate) {
-            return candidate.kind == BattleEventKind::player_ability &&
+            return (candidate.kind == BattleEventKind::player_ability ||
+                    candidate.kind == BattleEventKind::missing_medium) &&
+                !candidate.source_is_monster &&
+                !candidate.source_is_summoned_ally &&
                 candidate.effect_code > 0x30;
         };
         const auto composite_dispatcher_continues =
