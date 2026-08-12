@@ -3160,6 +3160,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_introduction_2e8_validation PROPERTIES
         DEPENDS fig_introduction_2e8_prepare)
     add_test(
+        NAME fig_introduction_3e6_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-introduction-3e6-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-introduction-3e6-save"
+    )
+    add_test(
+        NAME fig_introduction_3e6_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-introduction-3e6.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-introduction-3e6-save"
+                "${CMAKE_BINARY_DIR}/fig-introduction-3e6"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-introduction-3e6-rgb-reference.json"
+    )
+    set_tests_properties(fig_introduction_3e6_validation PROPERTIES
+        DEPENDS fig_introduction_3e6_prepare)
+    add_test(
         NAME fig_ordinary_attack_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ordinary-attack-fixture.py"
