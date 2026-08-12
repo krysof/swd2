@@ -3640,3 +3640,26 @@ remains locked by its indexed `5ch` fill and timer sequence instead of being
 misrepresented as a DOSBox video match.  The aggregate consequently advances
 to 214 references, 5,390 exact full pages, 73 exact crops and 3,016 unique
 exact full-page digests, still as a non-final checkpoint.
+
+### FIG generic all-target living-slot ownership
+
+A second ability-74 capture fixes the `2485` slot walk when the four physical
+party slots are not all alive.  Slots one and three enter dead (`HP=0`, status
+`2000h`), while slots zero and two enter at one HP and are both defeated by
+`三昧真火符`.  Original `2485` calls `2bb5` only for the two targets which were
+living at action entry.  Consequently its post-name clean page, all clean halves
+of the eight `25ee` flips, every rising-number frame, the retained final result
+and the death-reaction/tail pages omit slots one and three.  Ordinary command
+pages before the action still contain all four physical cards, including the
+two death overlays, so globally hiding dead party cards would also be wrong.
+
+The session event now carries the exact action-owned party-card bit mask.  It is
+computed once from the generic resolver's target set, copied to every result
+and to a following death-reaction event, and consumed only by event-page
+composition.  This prevents the presentation layer from recomputing visibility
+after an earlier result has already changed HP/status.  A fresh unmodified
+`FIG.EXE` IF capture matches modern frames 1..37 as full 320x200 RGB pages;
+frame zero is excluded because DOSBox-X had not yet reached a stable DAC page.
+The schema-2 aggregate advances to 215 references, 5,427 exact full pages, 73
+exact crops and 3,043 unique exact full-page digests, with zero registered
+unequal pairs.  This remains a non-final checkpoint.

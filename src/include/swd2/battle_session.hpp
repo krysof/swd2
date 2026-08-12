@@ -123,6 +123,11 @@ struct BattleSessionEvent {
     // enemy-turn preparation and cleanup pages, but there is no 262f card,
     // voice or effect between them.
     bool monster_special_silent_return{};
+    // Generic enemy 2464/2485 pages contain only the player slots selected
+    // for that action. Pre-dead slots remain visible on ordinary command
+    // pages but disappear from the generic clean/effect/result sequence.
+    // Retain the original target set because later result events mutate HP.
+    std::optional<std::uint8_t> party_card_mask;
     std::size_t source{};
     bool target_is_monster{};
     std::size_t target{};
@@ -239,7 +244,8 @@ private:
     void finish_player_turn(std::size_t actor,
                             std::vector<BattleSessionEvent>& events);
     void add_player_death_reaction(
-        std::vector<BattleSessionEvent>& events, const BattleRandom& random);
+        std::vector<BattleSessionEvent>& events, const BattleRandom& random,
+        std::optional<std::uint8_t> party_card_mask = std::nullopt);
     void compact_inventory() noexcept;
 
     std::array<BattlePartyMember, 4> party_{};

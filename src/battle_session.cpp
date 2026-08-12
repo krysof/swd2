@@ -59,11 +59,23 @@ void add_ability_events(std::vector<BattleSessionEvent>& events,
                         bool monster_generic_path = false,
                         bool action_anchor_is_target = true,
                         bool source_is_summoned_ally = false) {
+    std::optional<std::uint8_t> party_card_mask;
+    if (monster_generic_path && !target_is_monster && !targets.empty()) {
+        auto mask = std::uint8_t{};
+        for (const auto& target : targets) {
+            if (target.target_index < 8U) {
+                mask = static_cast<std::uint8_t>(
+                    mask | (1U << target.target_index));
+            }
+        }
+        party_card_mask = mask;
+    }
     if (targets.empty()) {
         BattleSessionEvent event{
             kind, source_is_monster, source, target_is_monster, 0, ability_id};
         event.effect_code = effect_code;
         event.monster_generic_path = monster_generic_path;
+        event.party_card_mask = party_card_mask;
         event.removed_player_buff_mask = removed_player_buff_mask;
         event.removed_monster_buff_mask = removed_monster_buff_mask;
         event.action_anchor_is_target = action_anchor_is_target;
@@ -81,6 +93,7 @@ void add_ability_events(std::vector<BattleSessionEvent>& events,
         event.ability_id = ability_id;
         event.effect_code = effect_code;
         event.monster_generic_path = monster_generic_path;
+        event.party_card_mask = party_card_mask;
         event.removed_player_buff_mask = removed_player_buff_mask;
         event.removed_monster_buff_mask = removed_monster_buff_mask;
         event.action_anchor_is_target = action_anchor_is_target;
@@ -279,7 +292,8 @@ void BattleSession::finish_player_turn(
 }
 
 void BattleSession::add_player_death_reaction(
-    std::vector<BattleSessionEvent>& events, const BattleRandom& random) {
+    std::vector<BattleSessionEvent>& events, const BattleRandom& random,
+    std::optional<std::uint8_t> party_card_mask) {
     // FIG 2293 consumes the global death flag once after the complete enemy
     // action, forces the next player critical countdown to one, then samples
     // exactly one party slot. It does not reroll if that actor is dead or
@@ -295,6 +309,7 @@ void BattleSession::add_player_death_reaction(
     event.kind = BattleEventKind::death_reaction;
     event.source = actor;
     event.target = actor;
+    event.party_card_mask = party_card_mask;
     events.push_back(event);
 }
 
@@ -1674,7 +1689,15 @@ BattleRoundResult BattleSession::play_round(
                         [](const AbilityTargetResult& target) {
                             return target.defeated;
                         })) {
-            add_player_death_reaction(result.events, random);
+            auto party_card_mask = std::uint8_t{};
+            for (const auto& target : applied.targets) {
+                if (target.target_index < 8U) {
+                    party_card_mask = static_cast<std::uint8_t>(
+                        party_card_mask | (1U << target.target_index));
+                }
+            }
+            add_player_death_reaction(
+                result.events, random, party_card_mask);
         }
     }
 

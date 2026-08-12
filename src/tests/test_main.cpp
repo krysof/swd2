@@ -5903,6 +5903,48 @@ void test_battle_session(const std::filesystem::path& game_root) {
                 medium_monster_session.battle_media()[0],
             "FIG 23b1 generic-path marker/refunded prepaid casts differ");
 
+    // 2485 walks every physical party slot but calls 2bb5 only for targets
+    // which were living when the generic all-target action began.  That
+    // action-owned mask must remain identical on every emitted result event;
+    // recomputing it after earlier targets die would create spurious cards.
+    auto generic_mask_state =
+        swd2::SharedState::load(game_root / "SAVE.DA1");
+    generic_mask_state.set_u16(0x10, 4);
+    generic_mask_state.set_u16(0x4a0, 734);
+    generic_mask_state.set_u16(0x49c, 0x1004);
+    generic_mask_state.set_u16(0x49e, 20);
+    for (std::size_t actor = 0; actor < 4; ++actor) {
+        const auto base = 0x106 + actor * 0x9f;
+        generic_mask_state.set_u16(base + 8,
+            actor == 1 || actor == 3 ? 0x2000 : 0);
+        generic_mask_state.set_u16(base + 0x0e, 0);
+        generic_mask_state.set_u16(base + 0x2d,
+            actor == 1 || actor == 3 ? 0 : 1);
+        generic_mask_state.set_u16(base + 0x2f, 60000);
+        generic_mask_state.set_u16(base + 0x31, 1);
+        generic_mask_state.set_u16(base + 0x33, 1);
+        generic_mask_state.set_u16(base + 0x43, 0);
+        generic_mask_state.set_u16(base + 0x5d, 0);
+        generic_mask_state.set_u16(base + 0x65, 0);
+    }
+    const auto generic_mask_encounter =
+        database.encounter_at_directory_offset(734);
+    require(generic_mask_encounter.has_value(),
+            "FIG all-target mask encounter is absent");
+    auto generic_mask_session = swd2::BattleSession::create(
+        generic_mask_state, generic_mask_encounter->get(), items);
+    const auto generic_mask_round = generic_mask_session.play_round(
+        skip_commands, abilities, zero_random);
+    const auto generic_mask_events = std::count_if(
+        generic_mask_round.events.begin(), generic_mask_round.events.end(),
+        [](const swd2::BattleSessionEvent& event) {
+            return event.kind == swd2::BattleEventKind::monster_ability &&
+                   event.ability_id == 74 && event.monster_generic_path &&
+                   event.party_card_mask == std::optional<std::uint8_t>{0x05};
+        });
+    require(generic_mask_events == 2,
+            "FIG 2485 living-party card mask was not retained across targets");
+
     // Captured ally 374 selects generic ability 12 with zero_random.  Its
     // effect 57 itself needs no mediator, but the ability record's low-byte
     // 40h flag makes 1048 install MENU AF before dispatch.  This is distinct

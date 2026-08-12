@@ -382,8 +382,13 @@ void draw_fig_party_cards(BattleSurface& surface,
                           const SpriteArchive& menu_sprites,
                           std::span<const BattlePartyMember> party,
                           std::optional<std::size_t> action_actor = std::nullopt,
-                          std::optional<int> action_mode_x_anchor = std::nullopt) {
+                          std::optional<int> action_mode_x_anchor = std::nullopt,
+                          std::optional<std::uint8_t> visible_mask = std::nullopt) {
     for (const auto& member : party) {
+        if (visible_mask &&
+            ((*visible_mask & (1U << member.party_index)) == 0)) {
+            continue;
+        }
         const auto is_action_actor = action_actor.has_value() &&
                                      *action_actor == member.party_index;
         if (is_action_actor) {
@@ -1592,7 +1597,7 @@ BattleSurface compose_event_frame(
             frame, menu_sprites,
             std::span<const BattlePartyMember>(visual.party).first(
                 visual.party_count),
-            action_actor, action_mode_x_anchor);
+            action_actor, action_mode_x_anchor, event.party_card_mask);
     }
     if (draw_party_cards && fighter_pose && player_actor_event(event.kind) &&
         event.source < visual.party_count) {
@@ -1730,7 +1735,8 @@ void present_player_status_card(
         draw_fig_party_cards(
             frame, menu_sprites,
             std::span<const BattlePartyMember>(visual.party).first(
-                visual.party_count));
+                visual.party_count),
+            std::nullopt, std::nullopt, event.party_card_mask);
     }
 
     // FIG 57d6 -> 2338: after 2bb5 leaves x=party*18+8, the compact

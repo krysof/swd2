@@ -3900,7 +3900,7 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/scripts"
     )
     set_tests_properties(fig_monster_generic_flash_domain_audit PROPERTIES
-        DEPENDS "fig_monster_generic_validation;fig_monster_generic_color81_validation;fig_monster_generic_color5c_validation;fig_monster_generic_all_target_validation")
+        DEPENDS "fig_monster_generic_validation;fig_monster_generic_color81_validation;fig_monster_generic_color5c_validation;fig_monster_generic_all_target_validation;fig_monster_generic_dead_slots_validation")
     add_test(
         NAME fig_monster_generic_all_target_prepare
         COMMAND "${Python3_EXECUTABLE}"
@@ -3920,6 +3920,25 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_monster_generic_all_target_validation PROPERTIES
         DEPENDS fig_monster_generic_all_target_prepare)
+    add_test(
+        NAME fig_monster_generic_dead_slots_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-generic-dead-slots-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-generic-dead-slots-save"
+    )
+    add_test(
+        NAME fig_monster_generic_dead_slots_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-generic-dead-slots.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-generic-dead-slots-save"
+                "${CMAKE_BINARY_DIR}/fig-monster-generic-dead-slots"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-generic-dead-slots-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_generic_dead_slots_validation PROPERTIES
+        DEPENDS fig_monster_generic_dead_slots_prepare)
     add_test(
         NAME fig_monster_special_silent_prepare
         COMMAND "${Python3_EXECUTABLE}"

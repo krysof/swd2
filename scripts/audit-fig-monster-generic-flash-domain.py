@@ -166,11 +166,23 @@ def main() -> int:
                 len(all_target_pairs) != 57:
             raise ValueError("generic four-party all-target evidence changed")
         total_pairs += len(all_target_pairs)
+        dead_slots = json.loads((
+            args.evidence /
+            "fig-monster-generic-dead-slots-rgb-reference.json"
+        ).read_text(encoding="utf-8"))
+        dead_slot_pairs = list(exact_pairs(dead_slots))
+        if tuple(dead_slots.get(name) for name in (
+                "monster_definition_id", "ability_id", "effect_code",
+                "target_flags")) != (334, 74, 0x42, 0x8401) or \
+                dead_slots.get("initial_living_party_slots") != [0, 2] or \
+                len(dead_slot_pairs) != 37:
+            raise ValueError("generic dead-slot evidence changed")
+        total_pairs += len(dead_slot_pairs)
         print(
             "FIG generic-monster flash audit: 550 encounters / 174 monster "
             "definitions expose 41 affordable generic abilities in exactly "
-            f"three 25ee colour classes; all {total_pairs} archetype and "
-            "four-party all-target RGB pages match the original")
+            f"three 25ee colour classes; all {total_pairs} archetype, "
+            "four-party and dead-slot all-target RGB pages match original")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError) as error:
