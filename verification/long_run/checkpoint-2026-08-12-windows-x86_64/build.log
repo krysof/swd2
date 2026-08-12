@@ -1,0 +1,63 @@
+-- The CXX compiler identification is GNU 15.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /opt/homebrew/bin/x86_64-w64-mingw32-c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /tmp/swd2-windows-x86_64-build
+[1/54] Building CXX object src/CMakeFiles/ymfm_core.dir/third_party/ymfm/ymfm_adpcm.cpp.obj
+[2/54] Building CXX object src/CMakeFiles/ymfm_core.dir/third_party/ymfm/ymfm_pcm.cpp.obj
+[3/54] Building CXX object src/CMakeFiles/swd2_core.dir/asset_catalog.cpp.obj
+[4/54] Building CXX object src/CMakeFiles/swd2_core.dir/audio_loop_clock.cpp.obj
+[5/54] Building CXX object src/CMakeFiles/ymfm_core.dir/third_party/ymfm/ymfm_opl.cpp.obj
+[6/54] Linking CXX static library src/libymfm_core.a
+[7/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_ai.cpp.obj
+[8/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_composite_effect.cpp.obj
+[9/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_ability_database.cpp.obj
+[10/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_command_menu.cpp.obj
+[11/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_database.cpp.obj
+[12/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_item_definition.cpp.obj
+[13/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_effects.cpp.obj
+[14/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_party.cpp.obj
+[15/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_presentation.cpp.obj
+[16/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_random.cpp.obj
+[17/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_rules.cpp.obj
+[18/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_module.cpp.obj
+[19/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_session.cpp.obj
+[20/54] Building CXX object src/CMakeFiles/swd2_core.dir/dialogue.cpp.obj
+[21/54] Building CXX object src/CMakeFiles/swd2_core.dir/demo_timeline.cpp.obj
+[22/54] Building CXX object src/CMakeFiles/swd2_core.dir/demo_module.cpp.obj
+[23/54] Building CXX object src/CMakeFiles/swd2_core.dir/event_program.cpp.obj
+[24/54] Building CXX object src/CMakeFiles/swd2_core.dir/field_action_system.cpp.obj
+[25/54] Building CXX object src/CMakeFiles/swd2_core.dir/event_vm.cpp.obj
+[26/54] Building CXX object src/CMakeFiles/swd2_core.dir/inventory_system.cpp.obj
+[27/54] Building CXX object src/CMakeFiles/swd2_core.dir/launcher.cpp.obj
+[28/54] Building CXX object src/CMakeFiles/swd2_core.dir/item_database.cpp.obj
+[29/54] Building CXX object src/CMakeFiles/swd2_core.dir/legacy_font.cpp.obj
+[30/54] Building CXX object src/CMakeFiles/swd2_core.dir/map_database.cpp.obj
+[31/54] Building CXX object src/CMakeFiles/swd2_core.dir/map_resource.cpp.obj
+[32/54] Building CXX object src/CMakeFiles/swd2_core.dir/map_transition_database.cpp.obj
+[33/54] Building CXX object src/CMakeFiles/swd2_core.dir/meo.cpp.obj
+[34/54] Building CXX object src/CMakeFiles/swd2_core.dir/mon_database.cpp.obj
+[35/54] Building CXX object src/CMakeFiles/swd2_core.dir/monster_definition.cpp.obj
+[36/54] Building CXX object src/CMakeFiles/swd2_core.dir/meo_module.cpp.obj
+[37/54] Building CXX object src/CMakeFiles/swd2_core.dir/mz_executable.cpp.obj
+[38/54] Building CXX object src/CMakeFiles/swd2_core.dir/planar_sprite_set.cpp.obj
+[39/54] Building CXX object src/CMakeFiles/swd2_core.dir/rsk_decoder.cpp.obj
+[40/54] Building CXX object src/CMakeFiles/swd2_core.dir/rpg_entity_system.cpp.obj
+[41/54] Building CXX object src/CMakeFiles/swd2_core.dir/rpg_presentation.cpp.obj
+[42/54] Building CXX object src/CMakeFiles/swd2_core.dir/replay_input.cpp.obj
+[43/54] Building CXX object src/CMakeFiles/swd2_core.dir/rix_decoder.cpp.obj
+[44/54] Building CXX object src/CMakeFiles/swd2_core.dir/runtime.cpp.obj
+[45/54] Building CXX object src/CMakeFiles/swd2_core.dir/save_slot.cpp.obj
+[46/54] Building CXX object src/CMakeFiles/swd2_core.dir/script_archive.cpp.obj
+[47/54] Building CXX object src/CMakeFiles/swd2_core.dir/rpg_module.cpp.obj
+[48/54] Building CXX object src/CMakeFiles/swd2_core.dir/shared_state.cpp.obj
+[49/54] Building CXX object src/CMakeFiles/swd2_core.dir/sprite_archive.cpp.obj
+[50/54] Building CXX object src/CMakeFiles/swd2_core.dir/voc_decoder.cpp.obj
+[51/54] Building CXX object src/CMakeFiles/swd2_core.dir/ym3812_synth.cpp.obj
+[52/54] Linking CXX static library src/libswd2_core.a
+[53/54] Building CXX object src/CMakeFiles/swd2_rewrite.dir/main.cpp.obj
+[54/54] Linking CXX executable src/swd2_rewrite.exe

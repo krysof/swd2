@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "swd2_windows_cross_build_checkpoint",
+  "status": "verified",
+  "source_commit": "e2fbfc6e81e06340740d673fcfaabd619b28f015",
+  "compiler": "x86_64-w64-mingw32-c++ (GCC) 15.2.0",
+  "compiler_target": "x86_64-w64-mingw32",
+  "build_type": "Release",
+  "sdl_frontend": "disabled_for_cross_build",
+  "warning_count": 0,
+  "pe_machine": "0x8664",
+  "pe_sections": 18,
+  "pe_characteristics": "0x0026",
+  "executable_size": 1683711,
+  "executable_sha256": "72b1183384dbc2a71b46d190dca0f85febe41e532a7de46b54df00087a8a46e3",
+  "build_log_sha256": "7ae895496aaaeeb9052fe2ac41d569d47f19a66867e309581c3a9286c5355b13"
+}

@@ -2314,6 +2314,17 @@ runner 锁定源提交、容器镜像 ID、ELF 摘要和完整 CTest 日志 SHA-
 容器后端，不冒充物理 Linux 桌面的图形/声音/手柄长跑；Windows、物理设备与多小时活动
 音频仍列在 matrix 的 remaining 中，所以长期平台门继续保持 `in_progress`。
 
+Windows 目标也已有可重复的第一道真实编译边界。macOS arm64 主机上的 MinGW-w64
+GCC 15.2 以 `CMAKE_SYSTEM_NAME=Windows`、Release 从空目录构建完整 `swd2_core` 和
+统一 `swd2_rewrite.exe`；这次交叉配置先发现 CMake 会误拾取宿主 SDL2 target，现由
+`SWD2_NATIVE_SDL2=OFF` 明确只关闭前端而不裁掉任何核心/CLI 代码。产物是 1,683,711
+byte、18 sections 的 AMD64 PE32+，SHA-256 为
+`72b1183384dbc2a71b46d190dca0f85febe41e532a7de46b54df00087a8a46e3`，编译警告为零。
+runner 锁定源提交、编译器 target、PE machine/characteristics、产物和完整 build log；
+独立 verifier 同时要求 matrix 保持 `in_progress`。这证明 Windows ABI 的核心/命令行
+可生成，不代表已经在 Windows 主机执行，也不代表 SDL2 显示、输入、音频或手柄通过，
+因此长期平台门仍不能关闭。
+
 五个便携槽实际是 SAVE/MAPZ/NAME 三件套，而不是两件套：原版 `4ce6..4d29` 写
 `SAVE.DAn`、`MAPZ.DAn` 和 `NAME<n>.DSK`，`4c16..4c73` 读三者并把槽位 NAME
 复制为活动 `NAMEQ.DSK`。`SaveSlot` 现在先完成三份临时文件，再安装 `SWD2SLOT2`

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "swd2_windows_platform_checkpoint",
+  "status": "in_progress",
+  "coverage": {
+    "platform": "windows",
+    "architecture": "x86_64",
+    "native_release_cross_builds": 1,
+    "pe_cli_outputs": 1
+  },
+  "artifacts": {
+    "native_log_sha256": "6a8af00723fb1714105834adf2effebf610f17d7af3b4ac3d8f7c2c801fe7d3b",
+    "build_log_sha256": "7ae895496aaaeeb9052fe2ac41d569d47f19a66867e309581c3a9286c5355b13"
+  },
+  "remaining": [
+    "Windows-hosted execution and deterministic replay",
+    "Windows SDL2 display/input/audio frontend build and run",
+    "multi-hour active Windows gameplay/audio soak",
+    "physical gamepad matrix"
+  ]
+}
