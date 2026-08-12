@@ -75,6 +75,20 @@ endif()
 add_executable(swd2_rewrite main.cpp)
 target_link_libraries(swd2_rewrite PRIVATE swd2_core)
 
+# MinGW's default driver links libgcc and libstdc++ as adjacent DLLs.  That is
+# easy to miss when copying the single executable to a clean Windows machine.
+# Keep the compiler runtime inside the unified binary while leaving the normal
+# Windows system/UCRT imports dynamic.  Downstream packagers can disable this
+# when they deliberately ship a shared MinGW runtime.
+if(MINGW)
+    option(SWD2_STATIC_MINGW_RUNTIME
+        "Link the MinGW compiler runtime into swd2_rewrite" ON)
+    if(SWD2_STATIC_MINGW_RUNTIME)
+        target_link_options(swd2_rewrite PRIVATE
+            -static -static-libgcc -static-libstdc++)
+    endif()
+endif()
+
 # SDL is a shell around the platform-independent core. It is linked into the
 # same swd2_rewrite program rather than producing another game executable.
 # Emscripten supplies SDL2 as a port, while native builds discover an installed
@@ -4894,6 +4908,14 @@ if(BUILD_TESTING)
             NAME windows_x86_64_checkpoint_validation
             COMMAND "${Python3_EXECUTABLE}"
                     "${PROJECT_SOURCE_DIR}/scripts/verify-windows-x86_64-checkpoint.py"
+                    "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-12-windows-x86_64"
+        )
+    endif()
+    if(EXISTS "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-12-windows-x86_64/wine-execution-log.json")
+        add_test(
+            NAME windows_wine_checkpoint_validation
+            COMMAND "${Python3_EXECUTABLE}"
+                    "${PROJECT_SOURCE_DIR}/scripts/verify-windows-wine-checkpoint.py"
                     "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-12-windows-x86_64"
         )
     endif()

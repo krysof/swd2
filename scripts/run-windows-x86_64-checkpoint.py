@@ -59,6 +59,9 @@ def main() -> int:
             raise ValueError("x86_64-w64-mingw32-c++ is required")
         if shutil.which("cmake") is None or shutil.which("ninja") is None:
             raise ValueError("cmake and ninja are required")
+        objdump = shutil.which("x86_64-w64-mingw32-objdump")
+        if objdump is None:
+            raise ValueError("x86_64-w64-mingw32-objdump is required")
         if checked(["git", "status", "--porcelain"], "git status",
                    cwd=root).stdout.strip():
             raise ValueError("Windows checkpoint requires a clean worktree")
@@ -101,6 +104,16 @@ def main() -> int:
         machine, sections, characteristics = pe_identity(executable)
         if machine != 0x8664 or sections == 0 or (characteristics & 0x0002) == 0:
             raise ValueError("Windows output is not an executable AMD64 PE")
+        pe_dump = checked([objdump, "-p", str(executable)], "PE import inspection")
+        imports = sorted(set(re.findall(r"DLL Name: ([^\r\n]+)", pe_dump.stdout)))
+        forbidden_runtime_imports = [
+            name for name in imports
+            if name.lower().startswith(("libgcc_", "libstdc++-", "libwinpthread-"))
+        ]
+        if forbidden_runtime_imports:
+            raise ValueError(
+                "Windows output still requires adjacent MinGW runtime DLLs: "
+                + ", ".join(forbidden_runtime_imports))
 
         native = {
             "schema_version": 1,
@@ -111,6 +124,8 @@ def main() -> int:
             "compiler_target": target,
             "build_type": "Release",
             "sdl_frontend": "disabled_for_cross_build",
+            "mingw_runtime": "statically_linked",
+            "pe_imports": imports,
             "warning_count": warning_count,
             "pe_machine": "0x8664",
             "pe_sections": sections,
