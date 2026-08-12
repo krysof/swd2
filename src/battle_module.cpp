@@ -1723,7 +1723,9 @@ void present_player_status_card(
                  std::nullopt, encounter_directory_offset);
     const auto actor_column = static_cast<int>(event.target) * 18;
     const auto action_status_card =
-        fighters != nullptr && fighter_pose && event.source < visual.party_count;
+        fighters != nullptr && fighter_pose &&
+        !event.source_is_summoned_ally &&
+        event.source < visual.party_count;
     if (!action_status_card) {
         draw_fig_party_cards(
             frame, menu_sprites,
@@ -1742,7 +1744,10 @@ void present_player_status_card(
         // 57d6's compact panel is already on the page when 2bb5 redraws the
         // acting card; the card's top two rows therefore cover the panel's
         // overlapping bottom edge.  Finally 137a restores pose4 over that
-        // paid-resource card.
+        // paid-resource card. Captured allies enter through 1048 and do not
+        // own a party-card slot: their self-buff still targets party slot
+        // zero, so event.source must not be mistaken for player zero merely
+        // because both indices happen to be zero.
         draw_fig_party_card(frame, menu_sprites, visual.party[event.source], false);
         draw_fighter_pose(frame, *fighters, visual.party[event.source],
                           *fighter_pose);

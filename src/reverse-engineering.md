@@ -3534,3 +3534,24 @@ TODO/FIXME/XXX、stub、placeholder、not-implemented 和所有 `approximate` �
 `#if 0`、DOS 模拟器名及子进程/exec 逃逸 API。这样任何后来明确标作近似实现的生产代码
 都会直接使 CTest 失败，而不能藏在一次绿色构建中。该静态门只排除已标记占位；所有可达
 行为是否忠实仍必须由逐场景原版差分和完整通关门证明，所以占位清除门继续保持进行中。
+
+### FIG captured-ally self-buff party-card ownership
+
+Captured item 390 exposes the player-side status-card selector from an otherwise
+captured-ally-only route.  With random cursor `1002h`, its special-A ability 38
+enters `1048` and applies effect `67h` to party slot zero.  The old compositor
+used the ally slot number as if it were a player actor number.  Because both are
+zero in this fixture, it redrew player zero in learned-caster pose four over the
+`力量增加` card even though the captured ally never owns a `2bb5` party card.
+The original instead retains player zero's ordinary pose-zero card: the ally
+name remains in the independent `2f1f` card and `1048` targets the party state
+without transferring action-card ownership.
+
+`present_player_status_card` now excludes `source_is_summoned_ally` from its
+learned/direct-player pose override.  A fresh, unmodified `FIG.EXE` IF-harness
+capture locks item 390, ability 38/effect `67h`, the seven-input deterministic
+replay and all 55 submitted pages after the initial entry page.  Every one is a
+full 320x200 RGB byte match, including the corrected status page and its
+following clean/monster-result tail.  The aggregate checkpoint consequently
+contains 209 references, 5,223 exact full pages, 73 exact crops and 2,900
+unique exact full-page RGB digests; it remains a non-final checkpoint.
