@@ -146,7 +146,7 @@ def main() -> int:
             "remaining": [
                 "multi-hour active Linux gameplay/audio soak",
                 "physical Linux desktop SDL/input/audio run",
-                "Windows native backend",
+                "physical Windows native SDL/input/audio backend",
                 "physical iOS/Android browser and gamepad matrix",
             ],
         }

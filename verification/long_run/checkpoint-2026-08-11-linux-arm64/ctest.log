@@ -34,8 +34,8 @@ Python 3.13.5
 [15/60] Building CXX object src/CMakeFiles/swd2_core.dir/battle_presentation.cpp.o
 [16/60] Building CXX object src/CMakeFiles/swd2_core.dir/battle_random.cpp.o
 [17/60] Building CXX object src/CMakeFiles/swd2_core.dir/battle_rules.cpp.o
-[18/60] Building CXX object src/CMakeFiles/swd2_core.dir/battle_module.cpp.o
-[19/60] Building CXX object src/CMakeFiles/swd2_core.dir/battle_session.cpp.o
+[18/60] Building CXX object src/CMakeFiles/swd2_core.dir/battle_session.cpp.o
+[19/60] Building CXX object src/CMakeFiles/swd2_core.dir/battle_module.cpp.o
 [20/60] Building CXX object src/CMakeFiles/swd2_core.dir/dialogue.cpp.o
 [21/60] Building CXX object src/CMakeFiles/swd2_core.dir/demo_timeline.cpp.o
 [22/60] Building CXX object src/CMakeFiles/swd2_core.dir/demo_module.cpp.o
@@ -48,8 +48,8 @@ Python 3.13.5
 [29/60] Building CXX object src/CMakeFiles/swd2_core.dir/legacy_font.cpp.o
 [30/60] Building CXX object src/CMakeFiles/swd2_core.dir/map_database.cpp.o
 [31/60] Building CXX object src/CMakeFiles/swd2_core.dir/map_resource.cpp.o
-[32/60] Building CXX object src/CMakeFiles/swd2_core.dir/meo.cpp.o
-[33/60] Building CXX object src/CMakeFiles/swd2_core.dir/map_transition_database.cpp.o
+[32/60] Building CXX object src/CMakeFiles/swd2_core.dir/map_transition_database.cpp.o
+[33/60] Building CXX object src/CMakeFiles/swd2_core.dir/meo.cpp.o
 [34/60] Building CXX object src/CMakeFiles/swd2_core.dir/mon_database.cpp.o
 [35/60] Building CXX object src/CMakeFiles/swd2_core.dir/monster_definition.cpp.o
 [36/60] Building CXX object src/CMakeFiles/swd2_core.dir/meo_module.cpp.o
@@ -81,1019 +81,1021 @@ Internal ctest changing into directory: /build
 Test project /build
         Start  20: replay_trace_smoke
         Start  27: new_game_startup_replay
-  1/507 Test  #20: replay_trace_smoke ...................................................   Passed    0.05 sec
+  1/508 Test  #20: replay_trace_smoke ...................................................   Passed    0.07 sec
         Start  42: rpg_system_record_commit_prepare
-  2/507 Test  #42: rpg_system_record_commit_prepare .....................................   Passed    0.02 sec
+  2/508 Test  #42: rpg_system_record_commit_prepare .....................................   Passed    0.03 sec
         Start  53: rpg_travel_prepare
-  3/507 Test  #53: rpg_travel_prepare ...................................................   Passed    0.03 sec
+  3/508 Test  #53: rpg_travel_prepare ...................................................   Passed    0.02 sec
         Start  56: rpg_shop_prepare
-  4/507 Test  #27: new_game_startup_replay ..............................................   Passed    0.11 sec
+  4/508 Test  #27: new_game_startup_replay ..............................................   Passed    0.12 sec
         Start  59: rpg_sell_prepare
-  5/507 Test  #56: rpg_shop_prepare .....................................................   Passed    0.02 sec
+  5/508 Test  #56: rpg_shop_prepare .....................................................   Passed    0.02 sec
         Start  62: rpg_item_action_prepare
-  6/507 Test  #59: rpg_sell_prepare .....................................................   Passed    0.02 sec
+  6/508 Test  #59: rpg_sell_prepare .....................................................   Passed    0.03 sec
         Start  65: rpg_party_target_prepare
-  7/507 Test  #62: rpg_item_action_prepare ..............................................   Passed    0.02 sec
-  8/507 Test  #65: rpg_party_target_prepare .............................................   Passed    0.02 sec
+  7/508 Test  #62: rpg_item_action_prepare ..............................................   Passed    0.02 sec
         Start  82: explicit_save_routing_prepare
+  8/508 Test  #65: rpg_party_target_prepare .............................................   Passed    0.02 sec
         Start  85: no_save_mode_prepare
-  9/507 Test  #82: explicit_save_routing_prepare ........................................   Passed    0.00 sec
- 10/507 Test  #85: no_save_mode_prepare .................................................   Passed    0.00 sec
+  9/508 Test  #82: explicit_save_routing_prepare ........................................   Passed    0.00 sec
         Start  24: frame_capture_comparison
+ 10/508 Test  #85: no_save_mode_prepare .................................................   Passed    0.00 sec
         Start  28: new_game_startup_validation
- 11/507 Test  #28: new_game_startup_validation ..........................................   Passed    0.02 sec
+ 11/508 Test  #28: new_game_startup_validation ..........................................   Passed    0.02 sec
         Start  30: rpg_name_bitmap_replay
- 12/507 Test  #24: frame_capture_comparison .............................................   Passed    0.06 sec
+ 12/508 Test  #24: frame_capture_comparison .............................................   Passed    0.06 sec
         Start  32: rpg_system_menu_replay
- 13/507 Test  #32: rpg_system_menu_replay ...............................................   Passed    0.07 sec
+ 13/508 Test  #32: rpg_system_menu_replay ...............................................   Passed    0.07 sec
         Start  34: rpg_system_toggles_replay
- 14/507 Test  #30: rpg_name_bitmap_replay ...............................................   Passed    0.12 sec
+ 14/508 Test  #30: rpg_name_bitmap_replay ...............................................   Passed    0.13 sec
         Start  36: rpg_system_speed_wrap_replay
- 15/507 Test  #34: rpg_system_toggles_replay ............................................   Passed    0.06 sec
+ 15/508 Test  #34: rpg_system_toggles_replay ............................................   Passed    0.06 sec
         Start  38: rpg_system_exit_replay
- 16/507 Test  #36: rpg_system_speed_wrap_replay .........................................   Passed    0.06 sec
+ 16/508 Test  #36: rpg_system_speed_wrap_replay .........................................   Passed    0.07 sec
         Start  40: rpg_system_record_replay
- 17/507 Test  #38: rpg_system_exit_replay ...............................................   Passed    0.06 sec
+ 17/508 Test  #38: rpg_system_exit_replay ...............................................   Passed    0.07 sec
         Start  43: rpg_system_record_commit_replay
- 18/507 Test  #40: rpg_system_record_replay .............................................   Passed    0.06 sec
+ 18/508 Test  #40: rpg_system_record_replay .............................................   Passed    0.07 sec
         Start  45: rpg_system_read_replay
- 19/507 Test  #43: rpg_system_record_commit_replay ......................................   Passed    0.07 sec
+ 19/508 Test  #43: rpg_system_record_commit_replay ......................................   Passed    0.07 sec
         Start  47: rpg_inventory_replay
- 20/507 Test  #45: rpg_system_read_replay ...............................................   Passed    0.06 sec
+ 20/508 Test  #45: rpg_system_read_replay ...............................................   Passed    0.06 sec
         Start  49: rpg_field_diamond_replay
- 21/507 Test  #49: rpg_field_diamond_replay .............................................   Passed    0.06 sec
+ 21/508 Test  #47: rpg_inventory_replay .................................................   Passed    0.08 sec
         Start  51: rpg_magic_replay
- 22/507 Test  #47: rpg_inventory_replay .................................................   Passed    0.08 sec
+ 22/508 Test  #49: rpg_field_diamond_replay .............................................   Passed    0.07 sec
         Start  54: rpg_travel_replay
- 23/507 Test  #54: rpg_travel_replay ....................................................   Passed    0.06 sec
+ 23/508 Test  #54: rpg_travel_replay ....................................................   Passed    0.07 sec
         Start  57: rpg_shop_replay
- 24/507 Test  #51: rpg_magic_replay .....................................................   Passed    0.08 sec
+ 24/508 Test  #51: rpg_magic_replay .....................................................   Passed    0.09 sec
         Start  60: rpg_sell_replay
- 25/507 Test  #57: rpg_shop_replay ......................................................   Passed    0.06 sec
+ 25/508 Test  #57: rpg_shop_replay ......................................................   Passed    0.07 sec
         Start  63: rpg_item_action_replay
- 26/507 Test  #60: rpg_sell_replay ......................................................   Passed    0.06 sec
+ 26/508 Test  #60: rpg_sell_replay ......................................................   Passed    0.06 sec
         Start  66: rpg_party_target_replay
- 27/507 Test  #63: rpg_item_action_replay ...............................................   Passed    0.06 sec
+ 27/508 Test  #63: rpg_item_action_replay ...............................................   Passed    0.06 sec
         Start  68: rpg_equipment_actors_prepare
- 28/507 Test  #66: rpg_party_target_replay ..............................................   Passed    0.05 sec
+ 28/508 Test  #66: rpg_party_target_replay ..............................................   Passed    0.06 sec
         Start  70: rpg_equipment_errors_prepare
- 29/507 Test  #68: rpg_equipment_actors_prepare .........................................   Passed    0.03 sec
+ 29/508 Test  #68: rpg_equipment_actors_prepare .........................................   Passed    0.02 sec
         Start  72: rpg_magic_actors_prepare
- 30/507 Test  #72: rpg_magic_actors_prepare .............................................   Passed    0.02 sec
+ 30/508 Test  #70: rpg_equipment_errors_prepare .........................................   Passed    0.04 sec
         Start  74: rpg_status_actors_prepare
- 31/507 Test  #70: rpg_equipment_errors_prepare .........................................   Passed    0.04 sec
+ 31/508 Test  #72: rpg_magic_actors_prepare .............................................   Passed    0.03 sec
         Start  76: rpg_status_replay
- 32/507 Test  #74: rpg_status_actors_prepare ............................................   Passed    0.02 sec
+ 32/508 Test  #74: rpg_status_actors_prepare ............................................   Passed    0.03 sec
         Start  78: rpg_equipment_replay
- 33/507 Test  #76: rpg_status_replay ....................................................   Passed    0.07 sec
+ 33/508 Test  #76: rpg_status_replay ....................................................   Passed    0.07 sec
         Start  80: new_game_exit_checkpoint_replay
- 34/507 Test  #78: rpg_equipment_replay .................................................   Passed    0.07 sec
+ 34/508 Test  #78: rpg_equipment_replay .................................................   Passed    0.07 sec
         Start  83: explicit_save_routing_replay
- 35/507 Test  #83: explicit_save_routing_replay .........................................   Passed    0.05 sec
+ 35/508 Test  #83: explicit_save_routing_replay .........................................   Passed    0.06 sec
         Start  86: no_save_mode_replay
- 36/507 Test  #80: new_game_exit_checkpoint_replay ......................................   Passed    0.08 sec
+ 36/508 Test  #80: new_game_exit_checkpoint_replay ......................................   Passed    0.08 sec
         Start  88: fig_ability_pages_prepare
- 37/507 Test  #86: no_save_mode_replay ..................................................   Passed    0.04 sec
+ 37/508 Test  #88: fig_ability_pages_prepare ............................................   Passed    0.03 sec
         Start  90: fig_item_page_prepare
- 38/507 Test  #88: fig_ability_pages_prepare ............................................   Passed    0.04 sec
+ 38/508 Test  #86: no_save_mode_replay ..................................................   Passed    0.04 sec
         Start  92: fig_monster_target_prepare
- 39/507 Test  #90: fig_item_page_prepare ................................................   Passed    0.02 sec
+ 39/508 Test  #90: fig_item_page_prepare ................................................   Passed    0.02 sec
         Start  94: fig_player_status_prepare
- 40/507 Test  #92: fig_monster_target_prepare ...........................................   Passed    0.02 sec
+ 40/508 Test  #92: fig_monster_target_prepare ...........................................   Passed    0.02 sec
         Start  96: fig_player_support_prepare
- 41/507 Test  #94: fig_player_status_prepare ............................................   Passed    0.03 sec
- 42/507 Test  #96: fig_player_support_prepare ...........................................   Passed    0.02 sec
+ 41/508 Test  #96: fig_player_support_prepare ...........................................   Passed    0.02 sec
         Start  98: fig_player_support_all_prepare
+ 42/508 Test  #94: fig_player_status_prepare ............................................   Passed    0.04 sec
         Start 100: fig_player_support_effect2_prepare
- 43/507 Test  #98: fig_player_support_all_prepare .......................................   Passed    0.02 sec
+ 43/508 Test  #98: fig_player_support_all_prepare .......................................   Passed    0.02 sec
         Start 102: fig_player_support_effect3_prepare
- 44/507 Test #100: fig_player_support_effect2_prepare ...................................   Passed    0.02 sec
+ 44/508 Test #100: fig_player_support_effect2_prepare ...................................   Passed    0.02 sec
         Start 104: fig_player_support_effect4_prepare
- 45/507 Test #102: fig_player_support_effect3_prepare ...................................   Passed    0.02 sec
+ 45/508 Test #102: fig_player_support_effect3_prepare ...................................   Passed    0.02 sec
         Start 106: fig_player_support_effect9_prepare
- 46/507 Test #104: fig_player_support_effect4_prepare ...................................   Passed    0.02 sec
+ 46/508 Test #104: fig_player_support_effect4_prepare ...................................   Passed    0.02 sec
         Start 108: fig_player_support_effect0a_prepare
- 47/507 Test #106: fig_player_support_effect9_prepare ...................................   Passed    0.02 sec
+ 47/508 Test #106: fig_player_support_effect9_prepare ...................................   Passed    0.03 sec
         Start 110: fig_player_support_effect0b_prepare
- 48/507 Test #108: fig_player_support_effect0a_prepare ..................................   Passed    0.02 sec
+ 48/508 Test #108: fig_player_support_effect0a_prepare ..................................   Passed    0.02 sec
         Start 112: fig_player_support_effect0d_prepare
- 49/507 Test #110: fig_player_support_effect0b_prepare ..................................   Passed    0.02 sec
+ 49/508 Test #110: fig_player_support_effect0b_prepare ..................................   Passed    0.02 sec
         Start 114: fig_player_support_effect0e_prepare
- 50/507 Test #112: fig_player_support_effect0d_prepare ..................................   Passed    0.02 sec
+ 50/508 Test #112: fig_player_support_effect0d_prepare ..................................   Passed    0.02 sec
         Start 116: fig_player_support_effect0f_prepare
- 51/507 Test #114: fig_player_support_effect0e_prepare ..................................   Passed    0.02 sec
+ 51/508 Test #114: fig_player_support_effect0e_prepare ..................................   Passed    0.02 sec
         Start 118: fig_player_support_effect19_prepare
- 52/507 Test #116: fig_player_support_effect0f_prepare ..................................   Passed    0.02 sec
+ 52/508 Test #116: fig_player_support_effect0f_prepare ..................................   Passed    0.02 sec
         Start 120: fig_player_support_effect1a_prepare
- 53/507 Test #118: fig_player_support_effect19_prepare ..................................   Passed    0.02 sec
+ 53/508 Test #118: fig_player_support_effect19_prepare ..................................   Passed    0.03 sec
         Start 122: fig_player_support_effect1e_prepare
- 54/507 Test #120: fig_player_support_effect1a_prepare ..................................   Passed    0.03 sec
+ 54/508 Test #120: fig_player_support_effect1a_prepare ..................................   Passed    0.02 sec
         Start 124: fig_player_support_effect01_class5_prepare
- 55/507 Test #122: fig_player_support_effect1e_prepare ..................................   Passed    0.02 sec
+ 55/508 Test #122: fig_player_support_effect1e_prepare ..................................   Passed    0.02 sec
         Start 126: fig_player_support_effect03_reachable_prepare
- 56/507 Test #124: fig_player_support_effect01_class5_prepare ...........................   Passed    0.02 sec
+ 56/508 Test #124: fig_player_support_effect01_class5_prepare ...........................   Passed    0.02 sec
         Start 128: fig_player_support_effect02_class1_prepare
- 57/507 Test #126: fig_player_support_effect03_reachable_prepare ........................   Passed    0.02 sec
+ 57/508 Test #126: fig_player_support_effect03_reachable_prepare ........................   Passed    0.02 sec
         Start 130: fig_player_support_effect19_class2_prepare
- 58/507 Test #128: fig_player_support_effect02_class1_prepare ...........................   Passed    0.02 sec
+ 58/508 Test #128: fig_player_support_effect02_class1_prepare ...........................   Passed    0.02 sec
         Start 133: fig_player_effect32_prepare
- 59/507 Test #130: fig_player_support_effect19_class2_prepare ...........................   Passed    0.02 sec
+ 59/508 Test #130: fig_player_support_effect19_class2_prepare ...........................   Passed    0.02 sec
         Start 135: fig_player_effect34_prepare
- 60/507 Test #133: fig_player_effect32_prepare ..........................................   Passed    0.02 sec
+ 60/508 Test #133: fig_player_effect32_prepare ..........................................   Passed    0.02 sec
         Start 137: fig_player_effect35_prepare
- 61/507 Test #135: fig_player_effect34_prepare ..........................................   Passed    0.02 sec
+ 61/508 Test #135: fig_player_effect34_prepare ..........................................   Passed    0.02 sec
         Start 139: fig_player_effect36_prepare
- 62/507 Test #137: fig_player_effect35_prepare ..........................................   Passed    0.02 sec
+ 62/508 Test #137: fig_player_effect35_prepare ..........................................   Passed    0.02 sec
         Start 141: fig_player_effect37_prepare
- 63/507 Test #139: fig_player_effect36_prepare ..........................................   Passed    0.02 sec
+ 63/508 Test #139: fig_player_effect36_prepare ..........................................   Passed    0.02 sec
         Start 143: fig_player_effect38_prepare
- 64/507 Test #141: fig_player_effect37_prepare ..........................................   Passed    0.02 sec
+ 64/508 Test #141: fig_player_effect37_prepare ..........................................   Passed    0.02 sec
         Start 145: fig_player_effect39_prepare
- 65/507 Test #143: fig_player_effect38_prepare ..........................................   Passed    0.02 sec
+ 65/508 Test #143: fig_player_effect38_prepare ..........................................   Passed    0.02 sec
         Start 147: fig_player_effect3a_prepare
- 66/507 Test #145: fig_player_effect39_prepare ..........................................   Passed    0.02 sec
+ 66/508 Test #145: fig_player_effect39_prepare ..........................................   Passed    0.02 sec
         Start 149: fig_player_effect40_prepare
- 67/507 Test #147: fig_player_effect3a_prepare ..........................................   Passed    0.02 sec
+ 67/508 Test #147: fig_player_effect3a_prepare ..........................................   Passed    0.02 sec
         Start 151: fig_player_effect41_prepare
- 68/507 Test #149: fig_player_effect40_prepare ..........................................   Passed    0.02 sec
+ 68/508 Test #149: fig_player_effect40_prepare ..........................................   Passed    0.02 sec
         Start 153: fig_player_effect42_prepare
- 69/507 Test #151: fig_player_effect41_prepare ..........................................   Passed    0.02 sec
+ 69/508 Test #151: fig_player_effect41_prepare ..........................................   Passed    0.02 sec
         Start 155: fig_player_effect43_prepare
- 70/507 Test #153: fig_player_effect42_prepare ..........................................   Passed    0.02 sec
+ 70/508 Test #153: fig_player_effect42_prepare ..........................................   Passed    0.02 sec
         Start 157: fig_player_effect44_prepare
- 71/507 Test #155: fig_player_effect43_prepare ..........................................   Passed    0.02 sec
+ 71/508 Test #155: fig_player_effect43_prepare ..........................................   Passed    0.02 sec
         Start 159: fig_player_effect45_prepare
- 72/507 Test #157: fig_player_effect44_prepare ..........................................   Passed    0.02 sec
+ 72/508 Test #157: fig_player_effect44_prepare ..........................................   Passed    0.02 sec
         Start 161: fig_player_effect46_prepare
- 73/507 Test #159: fig_player_effect45_prepare ..........................................   Passed    0.02 sec
+ 73/508 Test #159: fig_player_effect45_prepare ..........................................   Passed    0.02 sec
         Start 163: fig_player_effect47_escape_prepare
- 74/507 Test #161: fig_player_effect46_prepare ..........................................   Passed    0.02 sec
+ 74/508 Test #161: fig_player_effect46_prepare ..........................................   Passed    0.03 sec
         Start 165: fig_player_effect47_fixed_prepare
- 75/507 Test #165: fig_player_effect47_fixed_prepare ....................................   Passed    1.37 sec
+ 75/508 Test #165: fig_player_effect47_fixed_prepare ....................................   Passed    1.83 sec
         Start 167: fig_item_effect47_escape_prepare
- 76/507 Test #163: fig_player_effect47_escape_prepare ...................................   Passed    1.39 sec
+ 76/508 Test #163: fig_player_effect47_escape_prepare ...................................   Passed    1.85 sec
         Start 169: fig_item_effect47_fixed_prepare
- 77/507 Test #167: fig_item_effect47_escape_prepare .....................................   Passed    1.31 sec
+ 77/508 Test #167: fig_item_effect47_escape_prepare .....................................   Passed    1.45 sec
         Start 171: fig_player_effect48_prepare
- 78/507 Test #169: fig_item_effect47_fixed_prepare ......................................   Passed    1.31 sec
+ 78/508 Test #169: fig_item_effect47_fixed_prepare ......................................   Passed    1.45 sec
         Start 173: fig_player_effect49_prepare
- 79/507 Test #171: fig_player_effect48_prepare ..........................................   Passed    0.02 sec
+ 79/508 Test #171: fig_player_effect48_prepare ..........................................   Passed    0.02 sec
         Start 175: fig_player_effect4a_prepare
- 80/507 Test #173: fig_player_effect49_prepare ..........................................   Passed    0.03 sec
+ 80/508 Test #173: fig_player_effect49_prepare ..........................................   Passed    0.02 sec
         Start 177: fig_player_effect4c_prepare
- 81/507 Test #175: fig_player_effect4a_prepare ..........................................   Passed    0.02 sec
+ 81/508 Test #175: fig_player_effect4a_prepare ..........................................   Passed    0.02 sec
         Start 179: fig_player_effect4d_prepare
- 82/507 Test #177: fig_player_effect4c_prepare ..........................................   Passed    0.02 sec
+ 82/508 Test #177: fig_player_effect4c_prepare ..........................................   Passed    0.02 sec
         Start 181: fig_player_effect4e_prepare
- 83/507 Test #179: fig_player_effect4d_prepare ..........................................   Passed    0.02 sec
+ 83/508 Test #179: fig_player_effect4d_prepare ..........................................   Passed    0.02 sec
         Start 183: fig_player_effect4f_prepare
- 84/507 Test #181: fig_player_effect4e_prepare ..........................................   Passed    0.02 sec
+ 84/508 Test #181: fig_player_effect4e_prepare ..........................................   Passed    0.02 sec
         Start 185: fig_player_effect50_prepare
- 85/507 Test #183: fig_player_effect4f_prepare ..........................................   Passed    0.02 sec
+ 85/508 Test #183: fig_player_effect4f_prepare ..........................................   Passed    0.02 sec
         Start 187: fig_player_effect5a_prepare
- 86/507 Test #185: fig_player_effect50_prepare ..........................................   Passed    0.02 sec
+ 86/508 Test #185: fig_player_effect50_prepare ..........................................   Passed    0.02 sec
         Start 189: fig_player_effect51_prepare
- 87/507 Test #187: fig_player_effect5a_prepare ..........................................   Passed    0.02 sec
+ 87/508 Test #187: fig_player_effect5a_prepare ..........................................   Passed    0.02 sec
         Start 191: fig_player_effect52_kill_prepare
- 88/507 Test #189: fig_player_effect51_prepare ..........................................   Passed    0.02 sec
+ 88/508 Test #189: fig_player_effect51_prepare ..........................................   Passed    0.02 sec
         Start 193: fig_player_effect53_prepare
- 89/507 Test #191: fig_player_effect52_kill_prepare .....................................   Passed    0.02 sec
- 90/507 Test #193: fig_player_effect53_prepare ..........................................   Passed    0.02 sec
+ 89/508 Test #191: fig_player_effect52_kill_prepare .....................................   Passed    0.02 sec
         Start 195: fig_player_effect4b_kill_prepare
+ 90/508 Test #193: fig_player_effect53_prepare ..........................................   Passed    0.02 sec
         Start 197: fig_player_effect54_kill_prepare
- 91/507 Test #195: fig_player_effect4b_kill_prepare .....................................   Passed    0.02 sec
+ 91/508 Test #195: fig_player_effect4b_kill_prepare .....................................   Passed    0.02 sec
         Start 199: fig_player_effect55_prepare
- 92/507 Test #197: fig_player_effect54_kill_prepare .....................................   Passed    0.03 sec
+ 92/508 Test #197: fig_player_effect54_kill_prepare .....................................   Passed    0.02 sec
         Start 201: fig_player_effect5b_kill_prepare
- 93/507 Test #201: fig_player_effect5b_kill_prepare .....................................   Passed    0.02 sec
+ 93/508 Test #199: fig_player_effect55_prepare ..........................................   Passed    0.02 sec
         Start 203: fig_player_effect5c_kill_prepare
- 94/507 Test #199: fig_player_effect55_prepare ..........................................   Passed    0.02 sec
+ 94/508 Test #201: fig_player_effect5b_kill_prepare .....................................   Passed    0.02 sec
         Start 205: fig_player_effect56_kill_prepare
- 95/507 Test #205: fig_player_effect56_kill_prepare .....................................   Passed    0.02 sec
+ 95/508 Test #203: fig_player_effect5c_kill_prepare .....................................   Passed    0.02 sec
         Start 207: fig_player_effect57_kill_prepare
- 96/507 Test #203: fig_player_effect5c_kill_prepare .....................................   Passed    0.02 sec
+ 96/508 Test #205: fig_player_effect56_kill_prepare .....................................   Passed    0.03 sec
         Start 209: fig_player_effect58_kill_prepare
- 97/507 Test #207: fig_player_effect57_kill_prepare .....................................   Passed    0.02 sec
- 98/507 Test #209: fig_player_effect58_kill_prepare .....................................   Passed    0.02 sec
+ 97/508 Test #207: fig_player_effect57_kill_prepare .....................................   Passed    0.02 sec
         Start 211: fig_player_effect59_kill_prepare
+ 98/508 Test #209: fig_player_effect58_kill_prepare .....................................   Passed    0.02 sec
         Start 213: fig_player_effect5d_kill_prepare
- 99/507 Test #211: fig_player_effect59_kill_prepare .....................................   Passed    0.02 sec
+ 99/508 Test #211: fig_player_effect59_kill_prepare .....................................   Passed    0.02 sec
         Start 215: fig_player_effect5e_resistance_prepare
-100/507 Test #213: fig_player_effect5d_kill_prepare .....................................   Passed    0.02 sec
+100/508 Test #213: fig_player_effect5d_kill_prepare .....................................   Passed    0.02 sec
         Start 217: fig_player_effect5f_status_prepare
-101/507 Test #215: fig_player_effect5e_resistance_prepare ...............................   Passed    0.02 sec
-102/507 Test #217: fig_player_effect5f_status_prepare ...................................   Passed    0.02 sec
+101/508 Test #215: fig_player_effect5e_resistance_prepare ...............................   Passed    0.02 sec
         Start 219: fig_player_effect60_status_prepare
+102/508 Test #217: fig_player_effect5f_status_prepare ...................................   Passed    0.02 sec
         Start 221: fig_player_effect64_status_prepare
-103/507 Test #219: fig_player_effect60_status_prepare ...................................   Passed    0.02 sec
-104/507 Test #221: fig_player_effect64_status_prepare ...................................   Passed    0.02 sec
+103/508 Test #219: fig_player_effect60_status_prepare ...................................   Passed    0.02 sec
         Start 223: fig_player_effect65_status_prepare
+104/508 Test #221: fig_player_effect64_status_prepare ...................................   Passed    0.02 sec
         Start 226: fig_player_support_effect07_prepare
-105/507 Test #223: fig_player_effect65_status_prepare ...................................   Passed    0.02 sec
+105/508 Test #223: fig_player_effect65_status_prepare ...................................   Passed    0.02 sec
         Start 228: fig_player_barrier_prepare
-106/507 Test #226: fig_player_support_effect07_prepare ..................................   Passed    0.02 sec
+106/508 Test #226: fig_player_support_effect07_prepare ..................................   Passed    0.02 sec
         Start 230: fig_player_dispel_prepare
-107/507 Test #230: fig_player_dispel_prepare ............................................   Passed    0.02 sec
+107/508 Test #228: fig_player_barrier_prepare ...........................................   Passed    0.02 sec
         Start 232: fig_item_dispel_prepare
-108/507 Test #228: fig_player_barrier_prepare ...........................................   Passed    0.03 sec
+108/508 Test #230: fig_player_dispel_prepare ............................................   Passed    0.02 sec
         Start 234: fig_item_status_prepare
-109/507 Test #232: fig_item_dispel_prepare ..............................................   Passed    0.02 sec
+109/508 Test #232: fig_item_dispel_prepare ..............................................   Passed    0.02 sec
         Start 236: fig_item_monster_status_prepare
-110/507 Test #234: fig_item_status_prepare ..............................................   Passed    0.03 sec
+110/508 Test #234: fig_item_status_prepare ..............................................   Passed    0.02 sec
         Start 238: fig_item_damage_prepare
-111/507 Test #236: fig_item_monster_status_prepare ......................................   Passed    0.02 sec
+111/508 Test #236: fig_item_monster_status_prepare ......................................   Passed    0.02 sec
         Start 240: fig_item_composite_prepare
-112/507 Test #238: fig_item_damage_prepare ..............................................   Passed    0.02 sec
+112/508 Test #238: fig_item_damage_prepare ..............................................   Passed    0.02 sec
         Start 242: fig_item_composite_media_prepare
-113/507 Test #240: fig_item_composite_prepare ...........................................   Passed    0.02 sec
+113/508 Test #240: fig_item_composite_prepare ...........................................   Passed    0.02 sec
         Start 244: fig_player_medium_prepare
-114/507 Test #242: fig_item_composite_media_prepare .....................................   Passed    0.02 sec
+114/508 Test #242: fig_item_composite_media_prepare .....................................   Passed    0.02 sec
         Start 246: fig_learned_medium_prepare
-115/507 Test #244: fig_player_medium_prepare ............................................   Passed    0.02 sec
+115/508 Test #244: fig_player_medium_prepare ............................................   Passed    0.02 sec
         Start 248: fig_player_empty_medium_prepare
-116/507 Test #246: fig_learned_medium_prepare ...........................................   Passed    0.02 sec
+116/508 Test #246: fig_learned_medium_prepare ...........................................   Passed    0.02 sec
         Start 250: fig_learned_empty_medium_prepare
-117/507 Test #248: fig_player_empty_medium_prepare ......................................   Passed    0.02 sec
+117/508 Test #248: fig_player_empty_medium_prepare ......................................   Passed    0.02 sec
         Start 252: fig_item_composite_support_prepare
-118/507 Test #250: fig_learned_empty_medium_prepare .....................................   Passed    0.02 sec
+118/508 Test #250: fig_learned_empty_medium_prepare .....................................   Passed    0.02 sec
         Start 254: fig_item_support_prepare
-119/507 Test #252: fig_item_composite_support_prepare ...................................   Passed    0.02 sec
+119/508 Test #252: fig_item_composite_support_prepare ...................................   Passed    0.02 sec
         Start 256: fig_item_support_class5_prepare
-120/507 Test #254: fig_item_support_prepare .............................................   Passed    0.02 sec
+120/508 Test #254: fig_item_support_prepare .............................................   Passed    0.02 sec
         Start 258: fig_item_support_dispatch_prepare
-121/507 Test #256: fig_item_support_class5_prepare ......................................   Passed    0.02 sec
+121/508 Test #256: fig_item_support_class5_prepare ......................................   Passed    0.02 sec
         Start 260: fig_item_support_class5_selector_prepare
-122/507 Test #258: fig_item_support_dispatch_prepare ....................................   Passed    0.02 sec
+122/508 Test #258: fig_item_support_dispatch_prepare ....................................   Passed    0.02 sec
         Start 262: fig_item_barrier_prepare
-123/507 Test #260: fig_item_support_class5_selector_prepare .............................   Passed    0.02 sec
+123/508 Test #260: fig_item_support_class5_selector_prepare .............................   Passed    0.03 sec
         Start 264: fig_flagged_medium_prepare
-124/507 Test #262: fig_item_barrier_prepare .............................................   Passed    0.02 sec
+124/508 Test #262: fig_item_barrier_prepare .............................................   Passed    0.02 sec
         Start 266: fig_victory_prepare
-125/507 Test #264: fig_flagged_medium_prepare ...........................................   Passed    0.02 sec
+125/508 Test #264: fig_flagged_medium_prepare ...........................................   Passed    0.02 sec
         Start 268: fig_player_critical_prepare
-126/507 Test #266: fig_victory_prepare ..................................................   Passed    0.02 sec
+126/508 Test #266: fig_victory_prepare ..................................................   Passed    0.02 sec
         Start 270: fig_player_attack_evaded_prepare
-127/507 Test #268: fig_player_critical_prepare ..........................................   Passed    0.04 sec
+127/508 Test #268: fig_player_critical_prepare ..........................................   Passed    0.03 sec
         Start 272: fig_player_attack_zero_prepare
-128/507 Test #270: fig_player_attack_evaded_prepare .....................................   Passed    1.37 sec
+128/508 Test #270: fig_player_attack_evaded_prepare .....................................   Passed    1.48 sec
         Start 274: fig_player_attack_hit_prepare
-129/507 Test #272: fig_player_attack_zero_prepare .......................................   Passed    1.34 sec
+129/508 Test #272: fig_player_attack_zero_prepare .......................................   Passed    1.48 sec
         Start 276: fig_player_critical_hit_prepare
-130/507 Test #276: fig_player_critical_hit_prepare ......................................   Passed    1.29 sec
+130/508 Test #274: fig_player_attack_hit_prepare ........................................   Passed    1.48 sec
         Start 278: fig_player_attack_basic_prepare
-131/507 Test #274: fig_player_attack_hit_prepare ........................................   Passed    1.30 sec
+131/508 Test #276: fig_player_critical_hit_prepare ......................................   Passed    1.48 sec
         Start 280: fig_player_attack_flee_prepare
-132/507 Test #278: fig_player_attack_basic_prepare ......................................   Passed    1.36 sec
+132/508 Test #278: fig_player_attack_basic_prepare ......................................   Passed    1.58 sec
         Start 282: fig_player_attack_flee_failed_prepare
-133/507 Test #280: fig_player_attack_flee_prepare .......................................   Passed    1.36 sec
+133/508 Test #280: fig_player_attack_flee_prepare .......................................   Passed    1.58 sec
         Start 284: fig_player_attack_special_silent_prepare
-134/507 Test #284: fig_player_attack_special_silent_prepare .............................   Passed    1.29 sec
+134/508 Test #282: fig_player_attack_flee_failed_prepare ................................   Passed    1.48 sec
         Start 286: fig_player_attack_special_resisted_prepare
-135/507 Test #282: fig_player_attack_flee_failed_prepare ................................   Passed    1.29 sec
+135/508 Test #284: fig_player_attack_special_silent_prepare .............................   Passed    1.48 sec
         Start 288: fig_player_attack_special_status_prepare
-136/507 Test #286: fig_player_attack_special_resisted_prepare ...........................   Passed    1.30 sec
+136/508 Test #286: fig_player_attack_special_resisted_prepare ...........................   Passed    1.49 sec
         Start 290: fig_player_attack_special_buff_prepare
-137/507 Test #288: fig_player_attack_special_status_prepare .............................   Passed    1.30 sec
+137/508 Test #288: fig_player_attack_special_status_prepare .............................   Passed    1.50 sec
         Start 292: fig_player_attack_medium_prepare
-138/507 Test #290: fig_player_attack_special_buff_prepare ...............................   Passed    1.34 sec
+138/508 Test #290: fig_player_attack_special_buff_prepare ...............................   Passed    1.42 sec
         Start 294: fig_player_attack_b0_medium_prepare
-139/507 Test #292: fig_player_attack_medium_prepare .....................................   Passed    1.34 sec
+139/508 Test #292: fig_player_attack_medium_prepare .....................................   Passed    1.42 sec
         Start 296: fig_player_attack_af_medium_prepare
-140/507 Test #294: fig_player_attack_b0_medium_prepare ..................................   Passed    1.30 sec
+140/508 Test #294: fig_player_attack_b0_medium_prepare ..................................   Passed    1.40 sec
         Start 298: fig_monster_slot_medium_prepare
-141/507 Test #296: fig_player_attack_af_medium_prepare ..................................   Passed    1.29 sec
+141/508 Test #296: fig_player_attack_af_medium_prepare ..................................   Passed    1.40 sec
         Start 300: fig_monster_third_slot_medium_prepare
-142/507 Test #298: fig_monster_slot_medium_prepare ......................................   Passed    1.31 sec
+142/508 Test #298: fig_monster_slot_medium_prepare ......................................   Passed    1.41 sec
         Start 302: fig_monster_first_slot_medium_prepare
-143/507 Test #300: fig_monster_third_slot_medium_prepare ................................   Passed    1.31 sec
+143/508 Test #300: fig_monster_third_slot_medium_prepare ................................   Passed    1.40 sec
         Start 304: fig_defeat_prepare
-144/507 Test #304: fig_defeat_prepare ...................................................   Passed    0.03 sec
+144/508 Test #304: fig_defeat_prepare ...................................................   Passed    0.02 sec
         Start 306: fig_level_up_prepare
-145/507 Test #306: fig_level_up_prepare .................................................   Passed    0.02 sec
+145/508 Test #306: fig_level_up_prepare .................................................   Passed    0.02 sec
         Start 308: fig_story_30_prepare
-146/507 Test #308: fig_story_30_prepare .................................................   Passed    0.02 sec
+146/508 Test #308: fig_story_30_prepare .................................................   Passed    0.02 sec
         Start 310: fig_story_42_prepare
-147/507 Test #310: fig_story_42_prepare .................................................   Passed    0.02 sec
+147/508 Test #310: fig_story_42_prepare .................................................   Passed    0.02 sec
         Start 312: fig_introduction_ny_prepare
-148/507 Test #312: fig_introduction_ny_prepare ..........................................   Passed    0.02 sec
+148/508 Test #312: fig_introduction_ny_prepare ..........................................   Passed    0.02 sec
         Start 314: fig_introduction_ny_1e4_prepare
-149/507 Test #314: fig_introduction_ny_1e4_prepare ......................................   Passed    0.02 sec
+149/508 Test #314: fig_introduction_ny_1e4_prepare ......................................   Passed    0.02 sec
         Start 316: fig_introduction_yn_prepare
-150/507 Test #316: fig_introduction_yn_prepare ..........................................   Passed    0.02 sec
+150/508 Test #316: fig_introduction_yn_prepare ..........................................   Passed    0.02 sec
         Start 318: fig_introduction_yn_1e8_prepare
-151/507 Test #318: fig_introduction_yn_1e8_prepare ......................................   Passed    0.02 sec
+151/508 Test #318: fig_introduction_yn_1e8_prepare ......................................   Passed    0.02 sec
         Start 320: fig_introduction_yn_34c_prepare
-152/507 Test #320: fig_introduction_yn_34c_prepare ......................................   Passed    0.02 sec
+152/508 Test #320: fig_introduction_yn_34c_prepare ......................................   Passed    0.02 sec
         Start 322: fig_introduction_none_prepare
-153/507 Test #322: fig_introduction_none_prepare ........................................   Passed    0.02 sec
+153/508 Test #322: fig_introduction_none_prepare ........................................   Passed    0.03 sec
         Start 324: fig_introduction_none_014_prepare
-154/507 Test #324: fig_introduction_none_014_prepare ....................................   Passed    0.02 sec
+154/508 Test #324: fig_introduction_none_014_prepare ....................................   Passed    0.02 sec
         Start 326: fig_introduction_none_2ce_prepare
-155/507 Test #326: fig_introduction_none_2ce_prepare ....................................   Passed    0.02 sec
+155/508 Test #326: fig_introduction_none_2ce_prepare ....................................   Passed    0.02 sec
         Start 328: fig_introduction_none_2d8_prepare
-156/507 Test #328: fig_introduction_none_2d8_prepare ....................................   Passed    0.02 sec
+156/508 Test #328: fig_introduction_none_2d8_prepare ....................................   Passed    0.02 sec
         Start 330: fig_introduction_none_3e8_prepare
-157/507 Test #330: fig_introduction_none_3e8_prepare ....................................   Passed    0.02 sec
+157/508 Test #330: fig_introduction_none_3e8_prepare ....................................   Passed    0.02 sec
         Start 332: fig_introduction_multipage_prepare
-158/507 Test #332: fig_introduction_multipage_prepare ...................................   Passed    0.02 sec
+158/508 Test #332: fig_introduction_multipage_prepare ...................................   Passed    0.02 sec
         Start 334: fig_introduction_two_page_prepare
-159/507 Test #334: fig_introduction_two_page_prepare ....................................   Passed    0.02 sec
+159/508 Test #334: fig_introduction_two_page_prepare ....................................   Passed    0.03 sec
         Start 336: fig_introduction_2e8_prepare
-160/507 Test #336: fig_introduction_2e8_prepare .........................................   Passed    0.02 sec
+160/508 Test #336: fig_introduction_2e8_prepare .........................................   Passed    0.02 sec
         Start 338: fig_introduction_3e6_prepare
-161/507 Test #338: fig_introduction_3e6_prepare .........................................   Passed    0.02 sec
+161/508 Test #338: fig_introduction_3e6_prepare .........................................   Passed    0.02 sec
         Start 341: fig_ordinary_attack_prepare
-162/507 Test #341: fig_ordinary_attack_prepare ..........................................   Passed    0.02 sec
+162/508 Test #341: fig_ordinary_attack_prepare ..........................................   Passed    0.03 sec
         Start 343: fig_capture_reward_prepare
-163/507 Test #343: fig_capture_reward_prepare ...........................................   Passed    0.02 sec
+163/508 Test #343: fig_capture_reward_prepare ...........................................   Passed    0.02 sec
         Start 345: fig_monster_status_prepare
-164/507 Test #345: fig_monster_status_prepare ...........................................   Passed    0.03 sec
+164/508 Test #345: fig_monster_status_prepare ...........................................   Passed    0.03 sec
         Start 347: fig_monster_immunity_prepare
-165/507 Test #347: fig_monster_immunity_prepare .........................................   Passed    0.02 sec
+165/508 Test #347: fig_monster_immunity_prepare .........................................   Passed    0.02 sec
         Start 349: fig_player_damage_prepare
-166/507 Test #349: fig_player_damage_prepare ............................................   Passed    0.02 sec
+166/508 Test #349: fig_player_damage_prepare ............................................   Passed    0.03 sec
         Start 351: fig_implicit_damage_prepare
-167/507 Test #351: fig_implicit_damage_prepare ..........................................   Passed    0.02 sec
+167/508 Test #351: fig_implicit_damage_prepare ..........................................   Passed    0.02 sec
         Start 353: fig_periodic_zero_prepare
-168/507 Test #353: fig_periodic_zero_prepare ............................................   Passed    0.02 sec
+168/508 Test #353: fig_periodic_zero_prepare ............................................   Passed    0.03 sec
         Start 355: fig_ally_zero_prepare
-169/507 Test #355: fig_ally_zero_prepare ................................................   Passed    0.02 sec
+169/508 Test #355: fig_ally_zero_prepare ................................................   Passed    0.03 sec
         Start 357: fig_ally_evasion_prepare
-170/507 Test #357: fig_ally_evasion_prepare .............................................   Passed    0.02 sec
+170/508 Test #357: fig_ally_evasion_prepare .............................................   Passed    0.02 sec
         Start 359: fig_ally_hit_prepare
-171/507 Test #359: fig_ally_hit_prepare .................................................   Passed    0.02 sec
+171/508 Test #359: fig_ally_hit_prepare .................................................   Passed    0.02 sec
         Start 361: fig_ally_hit_survives_prepare
-172/507 Test #361: fig_ally_hit_survives_prepare ........................................   Passed    0.02 sec
+172/508 Test #361: fig_ally_hit_survives_prepare ........................................   Passed    0.03 sec
         Start 363: fig_ally_ability_prepare
-173/507 Test #363: fig_ally_ability_prepare .............................................   Passed    0.02 sec
+173/508 Test #363: fig_ally_ability_prepare .............................................   Passed    0.02 sec
         Start 365: fig_ally_multitarget_prepare
-174/507 Test #365: fig_ally_multitarget_prepare .........................................   Passed    0.02 sec
+174/508 Test #365: fig_ally_multitarget_prepare .........................................   Passed    0.02 sec
         Start 367: fig_ally_special_ability_prepare
-175/507 Test #367: fig_ally_special_ability_prepare .....................................   Passed    0.02 sec
+175/508 Test #367: fig_ally_special_ability_prepare .....................................   Passed    0.02 sec
         Start 369: fig_ally_medium_dismiss_prepare
-176/507 Test #369: fig_ally_medium_dismiss_prepare ......................................   Passed    0.02 sec
+176/508 Test #369: fig_ally_medium_dismiss_prepare ......................................   Passed    0.02 sec
         Start 371: fig_ally_empty_medium_dismiss_prepare
-177/507 Test #371: fig_ally_empty_medium_dismiss_prepare ................................   Passed    0.02 sec
+177/508 Test #371: fig_ally_empty_medium_dismiss_prepare ................................   Passed    0.02 sec
         Start 373: fig_ally_empty_ae_dismiss_prepare
-178/507 Test #302: fig_monster_first_slot_medium_prepare ................................   Passed    1.32 sec
+178/508 Test #302: fig_monster_first_slot_medium_prepare ................................   Passed    1.45 sec
         Start 375: fig_ally_empty_b0_dismiss_prepare
-179/507 Test #373: fig_ally_empty_ae_dismiss_prepare ....................................   Passed    1.31 sec
+179/508 Test #373: fig_ally_empty_ae_dismiss_prepare ....................................   Passed    1.41 sec
         Start 377: fig_ally_ae_dismiss_prepare
-180/507 Test #375: fig_ally_empty_b0_dismiss_prepare ....................................   Passed    1.31 sec
+180/508 Test #375: fig_ally_empty_b0_dismiss_prepare ....................................   Passed    1.42 sec
         Start 379: fig_ally_b0_dismiss_prepare
-181/507 Test #377: fig_ally_ae_dismiss_prepare ..........................................   Passed    1.30 sec
+181/508 Test #377: fig_ally_ae_dismiss_prepare ..........................................   Passed    1.41 sec
         Start 381: fig_ally_flee_prepare
-182/507 Test #381: fig_ally_flee_prepare ................................................   Passed    0.02 sec
+182/508 Test #381: fig_ally_flee_prepare ................................................   Passed    0.02 sec
         Start 383: fig_ally_medium_prepare
-183/507 Test #383: fig_ally_medium_prepare ..............................................   Passed    0.02 sec
+183/508 Test #383: fig_ally_medium_prepare ..............................................   Passed    0.02 sec
         Start 385: fig_summon_replace_prepare
-184/507 Test #385: fig_summon_replace_prepare ...........................................   Passed    0.02 sec
+184/508 Test #385: fig_summon_replace_prepare ...........................................   Passed    0.02 sec
         Start 387: fig_monster_flee_prepare
-185/507 Test #387: fig_monster_flee_prepare .............................................   Passed    0.02 sec
+185/508 Test #387: fig_monster_flee_prepare .............................................   Passed    0.02 sec
         Start 389: fig_monster_escape_failed_prepare
-186/507 Test #389: fig_monster_escape_failed_prepare ....................................   Passed    0.02 sec
+186/508 Test #389: fig_monster_escape_failed_prepare ....................................   Passed    0.03 sec
         Start 391: fig_monster_heal_prepare
-187/507 Test #391: fig_monster_heal_prepare .............................................   Passed    0.02 sec
+187/508 Test #391: fig_monster_heal_prepare .............................................   Passed    0.02 sec
         Start 393: fig_monster_generic_prepare
-188/507 Test #393: fig_monster_generic_prepare ..........................................   Passed    0.02 sec
+188/508 Test #393: fig_monster_generic_prepare ..........................................   Passed    0.02 sec
         Start 395: fig_monster_special_silent_prepare
-189/507 Test #395: fig_monster_special_silent_prepare ...................................   Passed    0.02 sec
+189/508 Test #395: fig_monster_special_silent_prepare ...................................   Passed    0.02 sec
         Start 397: fig_monster_special_status_prepare
-190/507 Test #397: fig_monster_special_status_prepare ...................................   Passed    0.02 sec
+190/508 Test #397: fig_monster_special_status_prepare ...................................   Passed    0.02 sec
         Start 399: fig_monster_special_resistance_prepare
-191/507 Test #399: fig_monster_special_resistance_prepare ...............................   Passed    0.02 sec
+191/508 Test #399: fig_monster_special_resistance_prepare ...............................   Passed    0.02 sec
         Start 401: fig_monster_special_buff_prepare
-192/507 Test #401: fig_monster_special_buff_prepare .....................................   Passed    0.02 sec
+192/508 Test #401: fig_monster_special_buff_prepare .....................................   Passed    0.03 sec
         Start 403: fig_monster_buff_expiry_prepare
-193/507 Test #379: fig_ally_b0_dismiss_prepare ..........................................   Passed    1.30 sec
+193/508 Test #379: fig_ally_b0_dismiss_prepare ..........................................   Passed    1.43 sec
         Start 405: fig_player_buff_expiry_prepare
-194/507 Test #403: fig_monster_buff_expiry_prepare ......................................   Passed    1.31 sec
+194/508 Test #403: fig_monster_buff_expiry_prepare ......................................   Passed    1.43 sec
         Start 407: fig_player_buff_expiry_ability_prepare
-195/507 Test #405: fig_player_buff_expiry_prepare .......................................   Passed    1.31 sec
+195/508 Test #405: fig_player_buff_expiry_prepare .......................................   Passed    1.48 sec
         Start 409: fig_player_buff_expiry_ability_composite_damage_prepare
-196/507 Test #407: fig_player_buff_expiry_ability_prepare ...............................   Passed    1.34 sec
+196/508 Test #407: fig_player_buff_expiry_ability_prepare ...............................   Passed    1.44 sec
         Start 411: fig_player_buff_expiry_ability_composite_status_damage_prepare
-197/507 Test #409: fig_player_buff_expiry_ability_composite_damage_prepare ..............   Passed    1.35 sec
+197/508 Test #409: fig_player_buff_expiry_ability_composite_damage_prepare ..............   Passed    1.40 sec
         Start 413: fig_player_buff_expiry_ability_composite_missing_media_prepare
-198/507 Test #411: fig_player_buff_expiry_ability_composite_status_damage_prepare .......   Passed    1.33 sec
+198/508 Test #411: fig_player_buff_expiry_ability_composite_status_damage_prepare .......   Passed    1.40 sec
         Start 415: fig_player_buff_expiry_ability_medium_prepare
-199/507 Test #413: fig_player_buff_expiry_ability_composite_missing_media_prepare .......   Passed    1.31 sec
+199/508 Test #413: fig_player_buff_expiry_ability_composite_missing_media_prepare .......   Passed    1.41 sec
         Start 417: fig_player_buff_expiry_ability_af_prepare
-200/507 Test #415: fig_player_buff_expiry_ability_medium_prepare ........................   Passed    1.31 sec
+200/508 Test #415: fig_player_buff_expiry_ability_medium_prepare ........................   Passed    1.39 sec
         Start 419: fig_player_buff_expiry_ability_b0_prepare
-201/507 Test #417: fig_player_buff_expiry_ability_af_prepare ............................   Passed    1.30 sec
+201/508 Test #417: fig_player_buff_expiry_ability_af_prepare ............................   Passed    1.38 sec
         Start 421: fig_player_buff_expiry_ability_resisted_prepare
-202/507 Test #419: fig_player_buff_expiry_ability_b0_prepare ............................   Passed    1.33 sec
+202/508 Test #419: fig_player_buff_expiry_ability_b0_prepare ............................   Passed    1.41 sec
         Start 423: fig_player_buff_expiry_ability_dismiss_medium_prepare
-203/507 Test #421: fig_player_buff_expiry_ability_resisted_prepare ......................   Passed    1.35 sec
+203/508 Test #421: fig_player_buff_expiry_ability_resisted_prepare ......................   Passed    1.39 sec
         Start 425: fig_player_buff_expiry_ability_dismiss_af_prepare
-204/507 Test #423: fig_player_buff_expiry_ability_dismiss_medium_prepare ................   Passed    1.33 sec
+204/508 Test #423: fig_player_buff_expiry_ability_dismiss_medium_prepare ................   Passed    1.39 sec
         Start 427: fig_player_buff_expiry_ability_dismiss_b0_prepare
-205/507 Test #425: fig_player_buff_expiry_ability_dismiss_af_prepare ....................   Passed    1.30 sec
+205/508 Test #425: fig_player_buff_expiry_ability_dismiss_af_prepare ....................   Passed    1.40 sec
         Start 429: fig_player_buff_expiry_ability_empty_medium_prepare
-206/507 Test #427: fig_player_buff_expiry_ability_dismiss_b0_prepare ....................   Passed    1.31 sec
+206/508 Test #427: fig_player_buff_expiry_ability_dismiss_b0_prepare ....................   Passed    1.42 sec
         Start 431: fig_player_buff_expiry_ability_empty_af_prepare
-207/507 Test #429: fig_player_buff_expiry_ability_empty_medium_prepare ..................   Passed    1.32 sec
+207/508 Test #429: fig_player_buff_expiry_ability_empty_medium_prepare ..................   Passed    1.39 sec
         Start 433: fig_player_buff_expiry_ability_empty_b0_prepare
-208/507 Test #431: fig_player_buff_expiry_ability_empty_af_prepare ......................   Passed    1.30 sec
+208/508 Test #431: fig_player_buff_expiry_ability_empty_af_prepare ......................   Passed    1.37 sec
         Start 435: fig_player_buff_expiry_missing_medium_prepare
-209/507 Test #433: fig_player_buff_expiry_ability_empty_b0_prepare ......................   Passed    1.31 sec
+209/508 Test #433: fig_player_buff_expiry_ability_empty_b0_prepare ......................   Passed    1.38 sec
         Start 437: fig_player_buff_expiry_item_prepare
-210/507 Test #435: fig_player_buff_expiry_missing_medium_prepare ........................   Passed    1.42 sec
+210/508 Test #435: fig_player_buff_expiry_missing_medium_prepare ........................   Passed    1.40 sec
         Start 439: fig_player_buff_expiry_item_missing_medium_prepare
-211/507 Test #437: fig_player_buff_expiry_item_prepare ..................................   Passed    1.43 sec
+211/508 Test #437: fig_player_buff_expiry_item_prepare ..................................   Passed    1.39 sec
         Start 441: fig_player_buff_expiry_item_status_prepare
-212/507 Test #439: fig_player_buff_expiry_item_missing_medium_prepare ...................   Passed    1.41 sec
+212/508 Test #439: fig_player_buff_expiry_item_missing_medium_prepare ...................   Passed    1.40 sec
         Start 443: fig_player_buff_expiry_item_support_prepare
-213/507 Test #441: fig_player_buff_expiry_item_status_prepare ...........................   Passed    1.41 sec
+213/508 Test #441: fig_player_buff_expiry_item_status_prepare ...........................   Passed    1.42 sec
         Start 445: fig_player_buff_expiry_item_composite_support_prepare
-214/507 Test #443: fig_player_buff_expiry_item_support_prepare ..........................   Passed    1.38 sec
+214/508 Test #443: fig_player_buff_expiry_item_support_prepare ..........................   Passed    1.42 sec
         Start 447: fig_player_buff_expiry_item_dispel_prepare
-215/507 Test #445: fig_player_buff_expiry_item_composite_support_prepare ................   Passed    1.38 sec
+215/508 Test #445: fig_player_buff_expiry_item_composite_support_prepare ................   Passed    1.41 sec
         Start 449: fig_player_buff_expiry_item_barrier_prepare
-216/507 Test #447: fig_player_buff_expiry_item_dispel_prepare ...........................   Passed    1.38 sec
+216/508 Test #447: fig_player_buff_expiry_item_dispel_prepare ...........................   Passed    1.40 sec
         Start 451: fig_player_buff_expiry_item_medium_prepare
-217/507 Test #449: fig_player_buff_expiry_item_barrier_prepare ..........................   Passed    1.37 sec
+217/508 Test #449: fig_player_buff_expiry_item_barrier_prepare ..........................   Passed    1.40 sec
         Start 453: fig_player_buff_expiry_item_composite_media_prepare
-218/507 Test #451: fig_player_buff_expiry_item_medium_prepare ...........................   Passed    1.37 sec
+218/508 Test #451: fig_player_buff_expiry_item_medium_prepare ...........................   Passed    1.39 sec
         Start 455: fig_player_buff_expiry_item_composite_reversed_media_prepare
-219/507 Test #453: fig_player_buff_expiry_item_composite_media_prepare ..................   Passed    1.39 sec
+219/508 Test #453: fig_player_buff_expiry_item_composite_media_prepare ..................   Passed    1.41 sec
         Start 457: fig_player_buff_expiry_item_composite_af_b0_media_prepare
-220/507 Test #455: fig_player_buff_expiry_item_composite_reversed_media_prepare .........   Passed    1.39 sec
+220/508 Test #455: fig_player_buff_expiry_item_composite_reversed_media_prepare .........   Passed    1.53 sec
         Start 459: fig_player_buff_expiry_item_composite_damage_prepare
-221/507 Test #457: fig_player_buff_expiry_item_composite_af_b0_media_prepare ............   Passed    1.39 sec
+221/508 Test #457: fig_player_buff_expiry_item_composite_af_b0_media_prepare ............   Passed    1.51 sec
         Start 461: fig_player_buff_expiry_item_composite_status_damage_prepare
-222/507 Test #459: fig_player_buff_expiry_item_composite_damage_prepare .................   Passed    1.51 sec
+222/508 Test #459: fig_player_buff_expiry_item_composite_damage_prepare .................   Passed    1.40 sec
         Start 463: fig_player_buff_expiry_item_composite_targetless_damage_prepare
-223/507 Test #461: fig_player_buff_expiry_item_composite_status_damage_prepare ..........   Passed    1.50 sec
+223/508 Test #461: fig_player_buff_expiry_item_composite_status_damage_prepare ..........   Passed    1.42 sec
         Start 465: fig_player_buff_expiry_item_composite_targetless_status_prepare
-224/507 Test #463: fig_player_buff_expiry_item_composite_targetless_damage_prepare ......   Passed    1.37 sec
+224/508 Test #463: fig_player_buff_expiry_item_composite_targetless_damage_prepare ......   Passed    1.41 sec
         Start 467: fig_player_buff_expiry_item_composite_damage_missing_af_prepare
-225/507 Test #465: fig_player_buff_expiry_item_composite_targetless_status_prepare ......   Passed    1.39 sec
+225/508 Test #465: fig_player_buff_expiry_item_composite_targetless_status_prepare ......   Passed    1.41 sec
         Start 469: fig_player_buff_expiry_item_composite_missing_af_b0_prepare
-226/507 Test #467: fig_player_buff_expiry_item_composite_damage_missing_af_prepare ......   Passed    1.40 sec
+226/508 Test #467: fig_player_buff_expiry_item_composite_damage_missing_af_prepare ......   Passed    1.42 sec
         Start 471: fig_player_buff_expiry_item_composite_missing_media_prepare
-227/507 Test #469: fig_player_buff_expiry_item_composite_missing_af_b0_prepare ..........   Passed    1.40 sec
+227/508 Test #469: fig_player_buff_expiry_item_composite_missing_af_b0_prepare ..........   Passed    1.40 sec
         Start 473: fig_player_buff_expiry_item_af_prepare
-228/507 Test #471: fig_player_buff_expiry_item_composite_missing_media_prepare ..........   Passed    1.41 sec
+228/508 Test #471: fig_player_buff_expiry_item_composite_missing_media_prepare ..........   Passed    1.40 sec
         Start 475: fig_player_buff_expiry_item_b0_prepare
-229/507 Test #473: fig_player_buff_expiry_item_af_prepare ...............................   Passed    1.40 sec
+229/508 Test #473: fig_player_buff_expiry_item_af_prepare ...............................   Passed    1.39 sec
         Start 477: fig_player_buff_expiry_item_empty_medium_prepare
-230/507 Test #475: fig_player_buff_expiry_item_b0_prepare ...............................   Passed    1.35 sec
+230/508 Test #475: fig_player_buff_expiry_item_b0_prepare ...............................   Passed    1.40 sec
         Start 479: fig_player_buff_expiry_item_empty_af_prepare
-231/507 Test #477: fig_player_buff_expiry_item_empty_medium_prepare .....................   Passed    1.37 sec
+231/508 Test #477: fig_player_buff_expiry_item_empty_medium_prepare .....................   Passed    1.39 sec
         Start 481: fig_player_buff_expiry_item_empty_b0_prepare
-232/507 Test #479: fig_player_buff_expiry_item_empty_af_prepare .........................   Passed    1.40 sec
+232/508 Test #479: fig_player_buff_expiry_item_empty_af_prepare .........................   Passed    1.39 sec
         Start 483: fig_player_buff_expiry_item_dismiss_medium_prepare
-233/507 Test #481: fig_player_buff_expiry_item_empty_b0_prepare .........................   Passed    1.40 sec
+233/508 Test #481: fig_player_buff_expiry_item_empty_b0_prepare .........................   Passed    1.40 sec
         Start 485: fig_player_buff_expiry_item_dismiss_af_prepare
-234/507 Test #483: fig_player_buff_expiry_item_dismiss_medium_prepare ...................   Passed    1.37 sec
+234/508 Test #483: fig_player_buff_expiry_item_dismiss_medium_prepare ...................   Passed    1.40 sec
         Start 487: fig_player_buff_expiry_item_dismiss_b0_prepare
-235/507 Test #485: fig_player_buff_expiry_item_dismiss_af_prepare .......................   Passed    1.37 sec
+235/508 Test #485: fig_player_buff_expiry_item_dismiss_af_prepare .......................   Passed    1.38 sec
         Start 489: fig_player_buff_expiry_escape_prepare
-236/507 Test #487: fig_player_buff_expiry_item_dismiss_b0_prepare .......................   Passed    1.36 sec
+236/508 Test #487: fig_player_buff_expiry_item_dismiss_b0_prepare .......................   Passed    1.39 sec
         Start 491: fig_player_buff_expiry_capture_prepare
-237/507 Test #489: fig_player_buff_expiry_escape_prepare ................................   Passed    1.36 sec
+237/508 Test #489: fig_player_buff_expiry_escape_prepare ................................   Passed    1.39 sec
         Start 493: fig_player_buff_expiry_capture_success_prepare
-238/507 Test #491: fig_player_buff_expiry_capture_prepare ...............................   Passed    1.39 sec
+238/508 Test #491: fig_player_buff_expiry_capture_prepare ...............................   Passed    1.38 sec
         Start 495: fig_capture_success_prepare
-239/507 Test #493: fig_player_buff_expiry_capture_success_prepare .......................   Passed    1.38 sec
+239/508 Test #493: fig_player_buff_expiry_capture_success_prepare .......................   Passed    1.39 sec
         Start 497: fig_capture_failure_prepare
-240/507 Test #495: fig_capture_success_prepare ..........................................   Passed    1.34 sec
+240/508 Test #495: fig_capture_success_prepare ..........................................   Passed    1.42 sec
         Start 499: fig_player_escape_success_prepare
-241/507 Test #497: fig_capture_failure_prepare ..........................................   Passed    1.34 sec
+241/508 Test #497: fig_capture_failure_prepare ..........................................   Passed    1.41 sec
         Start 501: fig_player_escape_failure_prepare
-242/507 Test #499: fig_player_escape_success_prepare ....................................   Passed    1.38 sec
+242/508 Test #499: fig_player_escape_success_prepare ....................................   Passed    1.42 sec
         Start 503: fig_medium_dismiss_prepare
-243/507 Test #501: fig_player_escape_failure_prepare ....................................   Passed    1.38 sec
+243/508 Test #501: fig_player_escape_failure_prepare ....................................   Passed    1.42 sec
         Start   1: completion_manifest
-244/507 Test   #1: completion_manifest ..................................................   Passed    0.19 sec
+244/508 Test   #1: completion_manifest ..................................................   Passed    0.16 sec
         Start   2: runtime_source_audit
-245/507 Test   #2: runtime_source_audit .................................................   Passed    0.12 sec
+245/508 Test   #2: runtime_source_audit .................................................   Passed    0.13 sec
         Start   3: runtime_source_audit_marker_validation
-246/507 Test   #3: runtime_source_audit_marker_validation ...............................   Passed    0.01 sec
+246/508 Test   #3: runtime_source_audit_marker_validation ...............................   Passed    0.02 sec
         Start   4: sdl_portable_input
-247/507 Test   #4: sdl_portable_input ...................................................   Passed    0.01 sec
+247/508 Test   #4: sdl_portable_input ...................................................   Passed    0.01 sec
         Start   5: swd2_tests
-248/507 Test #503: fig_medium_dismiss_prepare ...........................................   Passed    1.77 sec
+248/508 Test #503: fig_medium_dismiss_prepare ...........................................   Passed    1.85 sec
         Start   6: reachable_event_audit
-249/507 Test   #6: reachable_event_audit ................................................   Passed   10.82 sec
+249/508 Test   #6: reachable_event_audit ................................................   Passed   11.21 sec
         Start   7: resource_audit
-250/507 Test   #7: resource_audit .......................................................   Passed    0.63 sec
+250/508 Test   #7: resource_audit .......................................................   Passed    0.66 sec
         Start   8: map_audit
-251/507 Test   #8: map_audit ............................................................   Passed    0.78 sec
+251/508 Test   #8: map_audit ............................................................   Passed    0.80 sec
         Start   9: battle_audit
-252/507 Test   #9: battle_audit .........................................................   Passed    0.09 sec
+252/508 Test   #9: battle_audit .........................................................   Passed    0.09 sec
         Start  10: fig_type10_composite_coverage
-253/507 Test  #10: fig_type10_composite_coverage ........................................   Passed    0.04 sec
+253/508 Test  #10: fig_type10_composite_coverage ........................................   Passed    0.05 sec
         Start  11: fig_learned_composite_coverage
-254/507 Test  #11: fig_learned_composite_coverage .......................................   Passed    0.03 sec
+254/508 Test  #11: fig_learned_composite_coverage .......................................   Passed    0.03 sec
         Start  12: fig_rgb_checkpoint_validation
-255/507 Test  #12: fig_rgb_checkpoint_validation ........................................   Passed    0.18 sec
+255/508 Test  #12: fig_rgb_checkpoint_validation ........................................   Passed    0.23 sec
         Start  13: wasm_safari_idbfs_checkpoint
-256/507 Test  #13: wasm_safari_idbfs_checkpoint .........................................   Passed    0.02 sec
+256/508 Test  #13: wasm_safari_idbfs_checkpoint .........................................   Passed    0.02 sec
         Start  14: wasm_firefox_idbfs_checkpoint
-257/507 Test  #14: wasm_firefox_idbfs_checkpoint ........................................   Passed    0.02 sec
+257/508 Test  #14: wasm_firefox_idbfs_checkpoint ........................................   Passed    0.02 sec
         Start  15: rix_audio_clock_soak_checkpoint
-258/507 Test  #15: rix_audio_clock_soak_checkpoint ......................................   Passed    0.05 sec
+258/508 Test  #15: rix_audio_clock_soak_checkpoint ......................................   Passed    0.05 sec
         Start  16: fig_wall_clock_checkpoint
-259/507 Test  #16: fig_wall_clock_checkpoint ............................................   Passed    0.08 sec
+259/508 Test  #16: fig_wall_clock_checkpoint ............................................   Passed    0.09 sec
         Start  17: fig_timer_machine_code_audit
-260/507 Test  #17: fig_timer_machine_code_audit .........................................   Passed    0.02 sec
+260/508 Test  #17: fig_timer_machine_code_audit .........................................   Passed    0.02 sec
         Start  18: fig_story_visual_branch_coverage
-261/507 Test  #18: fig_story_visual_branch_coverage .....................................   Passed    0.02 sec
+261/508 Test  #18: fig_story_visual_branch_coverage .....................................   Passed    0.02 sec
         Start  19: legacy_program_data_audit
-262/507 Test  #19: legacy_program_data_audit ............................................   Passed    0.03 sec
+262/508 Test  #19: legacy_program_data_audit ............................................   Passed    0.03 sec
         Start  21: replay_trace_validation
-263/507 Test  #21: replay_trace_validation ..............................................   Passed    0.02 sec
+263/508 Test  #21: replay_trace_validation ..............................................   Passed    0.02 sec
         Start  22: rpg_opening_pixel_validation
-264/507 Test  #22: rpg_opening_pixel_validation .........................................   Passed    0.09 sec
+264/508 Test  #22: rpg_opening_pixel_validation .........................................   Passed    0.10 sec
         Start  23: replay_trace_comparison
-265/507 Test  #23: replay_trace_comparison ..............................................   Passed    0.02 sec
+265/508 Test  #23: replay_trace_comparison ..............................................   Passed    0.02 sec
         Start  25: frame_capture_report_validation
-266/507 Test  #25: frame_capture_report_validation ......................................   Passed    0.06 sec
+266/508 Test  #25: frame_capture_report_validation ......................................   Passed    0.06 sec
         Start  26: original_capture_autotype_log_validation
-267/507 Test  #26: original_capture_autotype_log_validation .............................   Passed    0.02 sec
+267/508 Test  #26: original_capture_autotype_log_validation .............................   Passed    0.02 sec
         Start  29: new_game_startup_checkpoint
-268/507 Test  #29: new_game_startup_checkpoint ..........................................   Passed    0.02 sec
+268/508 Test  #29: new_game_startup_checkpoint ..........................................   Passed    0.02 sec
         Start  31: rpg_name_bitmap_validation
-269/507 Test  #31: rpg_name_bitmap_validation ...........................................   Passed    0.02 sec
+269/508 Test  #31: rpg_name_bitmap_validation ...........................................   Passed    0.02 sec
         Start  33: rpg_system_menu_validation
-270/507 Test  #33: rpg_system_menu_validation ...........................................   Passed    0.06 sec
+270/508 Test  #33: rpg_system_menu_validation ...........................................   Passed    0.06 sec
         Start  35: rpg_system_toggles_validation
-271/507 Test  #35: rpg_system_toggles_validation ........................................   Passed    0.05 sec
+271/508 Test  #35: rpg_system_toggles_validation ........................................   Passed    0.05 sec
         Start  37: rpg_system_speed_wrap_validation
-272/507 Test  #37: rpg_system_speed_wrap_validation .....................................   Passed    0.06 sec
+272/508 Test  #37: rpg_system_speed_wrap_validation .....................................   Passed    0.07 sec
         Start  39: rpg_system_exit_validation
-273/507 Test  #39: rpg_system_exit_validation ...........................................   Passed    0.03 sec
+273/508 Test  #39: rpg_system_exit_validation ...........................................   Passed    0.04 sec
         Start  41: rpg_system_record_validation
-274/507 Test  #41: rpg_system_record_validation .........................................   Passed    0.06 sec
+274/508 Test  #41: rpg_system_record_validation .........................................   Passed    0.09 sec
         Start  44: rpg_system_record_commit_validation
-275/507 Test  #44: rpg_system_record_commit_validation ..................................   Passed    0.05 sec
+275/508 Test  #44: rpg_system_record_commit_validation ..................................   Passed    0.05 sec
         Start  46: rpg_system_read_validation
-276/507 Test  #46: rpg_system_read_validation ...........................................   Passed    0.06 sec
+276/508 Test  #46: rpg_system_read_validation ...........................................   Passed    0.06 sec
         Start  48: rpg_inventory_validation
-277/507 Test  #48: rpg_inventory_validation .............................................   Passed    0.04 sec
+277/508 Test  #48: rpg_inventory_validation .............................................   Passed    0.04 sec
         Start  50: rpg_field_diamond_validation
-278/507 Test  #50: rpg_field_diamond_validation .........................................   Passed    0.03 sec
+278/508 Test  #50: rpg_field_diamond_validation .........................................   Passed    0.03 sec
         Start  52: rpg_magic_validation
-279/507 Test  #52: rpg_magic_validation .................................................   Passed    0.05 sec
+279/508 Test  #52: rpg_magic_validation .................................................   Passed    0.04 sec
         Start  55: rpg_travel_validation
-280/507 Test  #55: rpg_travel_validation ................................................   Passed    0.12 sec
+280/508 Test  #55: rpg_travel_validation ................................................   Passed    0.11 sec
         Start  58: rpg_shop_validation
-281/507 Test  #58: rpg_shop_validation ..................................................   Passed    0.15 sec
+281/508 Test  #58: rpg_shop_validation ..................................................   Passed    0.13 sec
         Start  61: rpg_sell_validation
-282/507 Test  #61: rpg_sell_validation ..................................................   Passed    0.19 sec
+282/508 Test  #61: rpg_sell_validation ..................................................   Passed    0.21 sec
         Start  64: rpg_item_action_validation
-283/507 Test  #64: rpg_item_action_validation ...........................................   Passed    0.10 sec
+283/508 Test  #64: rpg_item_action_validation ...........................................   Passed    0.11 sec
         Start  67: rpg_party_target_validation
-284/507 Test  #67: rpg_party_target_validation ..........................................   Passed    0.10 sec
+284/508 Test  #67: rpg_party_target_validation ..........................................   Passed    0.13 sec
         Start  69: rpg_equipment_actors_validation
-285/507 Test  #69: rpg_equipment_actors_validation ......................................   Passed    0.42 sec
+285/508 Test  #69: rpg_equipment_actors_validation ......................................   Passed    0.42 sec
         Start  71: rpg_equipment_errors_validation
-286/507 Test  #71: rpg_equipment_errors_validation ......................................   Passed    0.29 sec
+286/508 Test  #71: rpg_equipment_errors_validation ......................................   Passed    0.30 sec
         Start  73: rpg_magic_actors_validation
-287/507 Test  #73: rpg_magic_actors_validation ..........................................   Passed    0.36 sec
+287/508 Test  #73: rpg_magic_actors_validation ..........................................   Passed    0.35 sec
         Start  75: rpg_status_actors_validation
-288/507 Test  #75: rpg_status_actors_validation .........................................   Passed    0.37 sec
+288/508 Test  #75: rpg_status_actors_validation .........................................   Passed    0.37 sec
         Start  77: rpg_status_validation
-289/507 Test  #77: rpg_status_validation ................................................   Passed    0.08 sec
+289/508 Test  #77: rpg_status_validation ................................................   Passed    0.08 sec
         Start  79: rpg_equipment_validation
-290/507 Test  #79: rpg_equipment_validation .............................................   Passed    0.09 sec
+290/508 Test  #79: rpg_equipment_validation .............................................   Passed    0.12 sec
         Start  81: new_game_exit_checkpoint_validation
-291/507 Test  #81: new_game_exit_checkpoint_validation ..................................   Passed    0.02 sec
+291/508 Test  #81: new_game_exit_checkpoint_validation ..................................   Passed    0.02 sec
         Start  84: explicit_save_routing_validation
-292/507 Test  #84: explicit_save_routing_validation .....................................   Passed    0.02 sec
+292/508 Test  #84: explicit_save_routing_validation .....................................   Passed    0.02 sec
         Start  87: no_save_mode_validation
-293/507 Test  #87: no_save_mode_validation ..............................................   Passed    0.02 sec
+293/508 Test  #87: no_save_mode_validation ..............................................   Passed    0.02 sec
         Start  89: fig_ability_pages_validation
-294/507 Test  #89: fig_ability_pages_validation .........................................   Passed    0.19 sec
+294/508 Test  #89: fig_ability_pages_validation .........................................   Passed    0.18 sec
         Start  91: fig_item_page_validation
-295/507 Test  #91: fig_item_page_validation .............................................   Passed    0.05 sec
+295/508 Test  #91: fig_item_page_validation .............................................   Passed    0.06 sec
         Start  93: fig_monster_target_validation
-296/507 Test  #93: fig_monster_target_validation ........................................   Passed    0.05 sec
+296/508 Test  #93: fig_monster_target_validation ........................................   Passed    0.06 sec
         Start  95: fig_player_status_validation
-297/507 Test  #95: fig_player_status_validation .........................................   Passed    0.37 sec
+297/508 Test  #95: fig_player_status_validation .........................................   Passed    0.39 sec
         Start  97: fig_player_support_validation
-298/507 Test  #97: fig_player_support_validation ........................................   Passed    0.15 sec
+298/508 Test  #97: fig_player_support_validation ........................................   Passed    0.13 sec
         Start  99: fig_player_support_all_validation
-299/507 Test  #99: fig_player_support_all_validation ....................................   Passed    0.14 sec
+299/508 Test  #99: fig_player_support_all_validation ....................................   Passed    0.16 sec
         Start 101: fig_player_support_effect2_validation
-300/507 Test #101: fig_player_support_effect2_validation ................................   Passed    0.17 sec
+300/508 Test #101: fig_player_support_effect2_validation ................................   Passed    0.17 sec
         Start 103: fig_player_support_effect3_validation
-301/507 Test #103: fig_player_support_effect3_validation ................................   Passed    0.18 sec
+301/508 Test #103: fig_player_support_effect3_validation ................................   Passed    0.17 sec
         Start 105: fig_player_support_effect4_validation
-302/507 Test #105: fig_player_support_effect4_validation ................................   Passed    0.18 sec
+302/508 Test #105: fig_player_support_effect4_validation ................................   Passed    0.17 sec
         Start 107: fig_player_support_effect9_validation
-303/507 Test #107: fig_player_support_effect9_validation ................................   Passed    0.17 sec
+303/508 Test #107: fig_player_support_effect9_validation ................................   Passed    0.17 sec
         Start 109: fig_player_support_effect0a_validation
-304/507 Test #109: fig_player_support_effect0a_validation ...............................   Passed    0.18 sec
+304/508 Test #109: fig_player_support_effect0a_validation ...............................   Passed    0.17 sec
         Start 111: fig_player_support_effect0b_validation
-305/507 Test #111: fig_player_support_effect0b_validation ...............................   Passed    0.18 sec
+305/508 Test #111: fig_player_support_effect0b_validation ...............................   Passed    0.17 sec
         Start 113: fig_player_support_effect0d_validation
-306/507 Test #113: fig_player_support_effect0d_validation ...............................   Passed    0.13 sec
+306/508 Test #113: fig_player_support_effect0d_validation ...............................   Passed    0.13 sec
         Start 115: fig_player_support_effect0e_validation
-307/507 Test #115: fig_player_support_effect0e_validation ...............................   Passed    0.13 sec
+307/508 Test #115: fig_player_support_effect0e_validation ...............................   Passed    0.13 sec
         Start 117: fig_player_support_effect0f_validation
-308/507 Test #117: fig_player_support_effect0f_validation ...............................   Passed    0.18 sec
+308/508 Test #117: fig_player_support_effect0f_validation ...............................   Passed    0.21 sec
         Start 119: fig_player_support_effect19_validation
-309/507 Test #119: fig_player_support_effect19_validation ...............................   Passed    0.18 sec
+309/508 Test #119: fig_player_support_effect19_validation ...............................   Passed    0.17 sec
         Start 121: fig_player_support_effect1a_validation
-310/507 Test #121: fig_player_support_effect1a_validation ...............................   Passed    0.24 sec
+310/508 Test #121: fig_player_support_effect1a_validation ...............................   Passed    0.19 sec
         Start 123: fig_player_support_effect1e_validation
-311/507 Test #123: fig_player_support_effect1e_validation ...............................   Passed    0.17 sec
+311/508 Test #123: fig_player_support_effect1e_validation ...............................   Passed    0.17 sec
         Start 125: fig_player_support_effect01_class5_validation
-312/507 Test #125: fig_player_support_effect01_class5_validation ........................   Passed    0.18 sec
+312/508 Test #125: fig_player_support_effect01_class5_validation ........................   Passed    0.17 sec
         Start 127: fig_player_support_effect03_reachable_validation
-313/507 Test #127: fig_player_support_effect03_reachable_validation .....................   Passed    0.18 sec
+313/508 Test #127: fig_player_support_effect03_reachable_validation .....................   Passed    0.17 sec
         Start 129: fig_player_support_effect02_class1_validation
-314/507 Test #129: fig_player_support_effect02_class1_validation ........................   Passed    0.18 sec
+314/508 Test #129: fig_player_support_effect02_class1_validation ........................   Passed    0.17 sec
         Start 131: fig_player_support_effect19_class2_validation
-315/507 Test #131: fig_player_support_effect19_class2_validation ........................   Passed    0.18 sec
+315/508 Test #131: fig_player_support_effect19_class2_validation ........................   Passed    0.17 sec
         Start 132: fig_reachable_support_coverage
-316/507 Test #132: fig_reachable_support_coverage .......................................   Passed    0.03 sec
+316/508 Test #132: fig_reachable_support_coverage .......................................   Passed    0.03 sec
         Start 134: fig_player_effect32_validation
-317/507 Test #134: fig_player_effect32_validation .......................................   Passed    0.93 sec
+317/508 Test #134: fig_player_effect32_validation .......................................   Passed    0.91 sec
         Start 136: fig_player_effect34_validation
-318/507 Test #136: fig_player_effect34_validation .......................................   Passed    0.68 sec
+318/508 Test #136: fig_player_effect34_validation .......................................   Passed    0.64 sec
         Start 138: fig_player_effect35_validation
-319/507 Test   #5: swd2_tests ...........................................................   Passed   23.16 sec
+319/508 Test #138: fig_player_effect35_validation .......................................   Passed    0.74 sec
         Start 140: fig_player_effect36_validation
-320/507 Test #138: fig_player_effect35_validation .......................................   Passed    0.73 sec
+320/508 Test   #5: swd2_tests ...........................................................   Passed   23.86 sec
         Start 142: fig_player_effect37_validation
-321/507 Test #140: fig_player_effect36_validation .......................................   Passed    0.37 sec
+321/508 Test #140: fig_player_effect36_validation .......................................   Passed    0.42 sec
         Start 144: fig_player_effect38_validation
-322/507 Test #142: fig_player_effect37_validation .......................................   Passed    0.52 sec
+322/508 Test #142: fig_player_effect37_validation .......................................   Passed    0.51 sec
         Start 146: fig_player_effect39_validation
-323/507 Test #144: fig_player_effect38_validation .......................................   Passed    0.70 sec
+323/508 Test #146: fig_player_effect39_validation .......................................   Passed    0.49 sec
         Start 148: fig_player_effect3a_validation
-324/507 Test #146: fig_player_effect39_validation .......................................   Passed    0.48 sec
+324/508 Test #144: fig_player_effect38_validation .......................................   Passed    0.71 sec
         Start 150: fig_player_effect40_validation
-325/507 Test #148: fig_player_effect3a_validation .......................................   Passed    0.66 sec
+325/508 Test #150: fig_player_effect40_validation .......................................   Passed    0.65 sec
         Start 152: fig_player_effect41_validation
-326/507 Test #150: fig_player_effect40_validation .......................................   Passed    0.63 sec
+326/508 Test #148: fig_player_effect3a_validation .......................................   Passed    0.69 sec
         Start 154: fig_player_effect42_validation
-327/507 Test #152: fig_player_effect41_validation .......................................   Passed    0.74 sec
+327/508 Test #152: fig_player_effect41_validation .......................................   Passed    0.80 sec
         Start 156: fig_player_effect43_validation
-328/507 Test #154: fig_player_effect42_validation .......................................   Passed    0.79 sec
+328/508 Test #154: fig_player_effect42_validation .......................................   Passed    0.92 sec
         Start 158: fig_player_effect44_validation
-329/507 Test #158: fig_player_effect44_validation .......................................   Passed    0.45 sec
+329/508 Test #158: fig_player_effect44_validation .......................................   Passed    0.45 sec
         Start 160: fig_player_effect45_validation
-330/507 Test #156: fig_player_effect43_validation .......................................   Passed    0.54 sec
+330/508 Test #156: fig_player_effect43_validation .......................................   Passed    0.57 sec
         Start 162: fig_player_effect46_validation
-331/507 Test #160: fig_player_effect45_validation .......................................   Passed    0.49 sec
+331/508 Test #160: fig_player_effect45_validation .......................................   Passed    0.51 sec
         Start 164: fig_player_effect47_escape_validation
-332/507 Test #164: fig_player_effect47_escape_validation ................................   Passed    0.09 sec
+332/508 Test #164: fig_player_effect47_escape_validation ................................   Passed    0.11 sec
         Start 166: fig_player_effect47_fixed_validation
-333/507 Test #162: fig_player_effect46_validation .......................................   Passed    0.59 sec
+333/508 Test #162: fig_player_effect46_validation .......................................   Passed    0.63 sec
         Start 168: fig_item_effect47_escape_validation
-334/507 Test #168: fig_item_effect47_escape_validation ..................................   Passed    0.11 sec
+334/508 Test #168: fig_item_effect47_escape_validation ..................................   Passed    0.11 sec
         Start 170: fig_item_effect47_fixed_validation
-335/507 Test #166: fig_player_effect47_fixed_validation .................................   Passed    0.40 sec
+335/508 Test #166: fig_player_effect47_fixed_validation .................................   Passed    0.40 sec
         Start 172: fig_player_effect48_validation
-336/507 Test #170: fig_item_effect47_fixed_validation ...................................   Passed    0.37 sec
+336/508 Test #170: fig_item_effect47_fixed_validation ...................................   Passed    0.40 sec
         Start 174: fig_player_effect49_validation
-337/507 Test #172: fig_player_effect48_validation .......................................   Passed    0.72 sec
+337/508 Test #172: fig_player_effect48_validation .......................................   Passed    0.72 sec
         Start 176: fig_player_effect4a_validation
-338/507 Test #174: fig_player_effect49_validation .......................................   Passed    0.73 sec
+338/508 Test #174: fig_player_effect49_validation .......................................   Passed    0.73 sec
         Start 178: fig_player_effect4c_validation
-339/507 Test #176: fig_player_effect4a_validation .......................................   Passed    0.51 sec
+339/508 Test #176: fig_player_effect4a_validation .......................................   Passed    0.56 sec
         Start 180: fig_player_effect4d_validation
-340/507 Test #178: fig_player_effect4c_validation .......................................   Passed    0.68 sec
+340/508 Test #178: fig_player_effect4c_validation .......................................   Passed    0.72 sec
         Start 182: fig_player_effect4e_validation
-341/507 Test #180: fig_player_effect4d_validation .......................................   Passed    0.66 sec
+341/508 Test #180: fig_player_effect4d_validation .......................................   Passed    0.68 sec
         Start 184: fig_player_effect4f_validation
-342/507 Test #182: fig_player_effect4e_validation .......................................   Passed    0.68 sec
+342/508 Test #182: fig_player_effect4e_validation .......................................   Passed    0.61 sec
         Start 186: fig_player_effect50_validation
-343/507 Test #184: fig_player_effect4f_validation .......................................   Passed    0.65 sec
+343/508 Test #184: fig_player_effect4f_validation .......................................   Passed    0.70 sec
         Start 188: fig_player_effect5a_validation
-344/507 Test #186: fig_player_effect50_validation .......................................   Passed    0.70 sec
+344/508 Test #186: fig_player_effect50_validation .......................................   Passed    0.74 sec
         Start 190: fig_player_effect51_validation
-345/507 Test #188: fig_player_effect5a_validation .......................................   Passed    0.68 sec
+345/508 Test #188: fig_player_effect5a_validation .......................................   Passed    0.71 sec
         Start 192: fig_player_effect52_kill_validation
-346/507 Test #190: fig_player_effect51_validation .......................................   Passed    0.69 sec
+346/508 Test #190: fig_player_effect51_validation .......................................   Passed    0.73 sec
         Start 194: fig_player_effect53_validation
-347/507 Test #192: fig_player_effect52_kill_validation ..................................   Passed    0.46 sec
+347/508 Test #192: fig_player_effect52_kill_validation ..................................   Passed    0.51 sec
         Start 196: fig_player_effect4b_kill_validation
-348/507 Test #194: fig_player_effect53_validation .......................................   Passed    0.37 sec
+348/508 Test #194: fig_player_effect53_validation .......................................   Passed    0.40 sec
         Start 198: fig_player_effect54_kill_validation
-349/507 Test #196: fig_player_effect4b_kill_validation ..................................   Passed    0.40 sec
+349/508 Test #196: fig_player_effect4b_kill_validation ..................................   Passed    0.41 sec
         Start 200: fig_player_effect55_validation
-350/507 Test #200: fig_player_effect55_validation .......................................   Passed    0.37 sec
+350/508 Test #198: fig_player_effect54_kill_validation ..................................   Passed    0.61 sec
         Start 202: fig_player_effect5b_kill_validation
-351/507 Test #198: fig_player_effect54_kill_validation ..................................   Passed    0.57 sec
+351/508 Test #200: fig_player_effect55_validation .......................................   Passed    0.40 sec
         Start 204: fig_player_effect5c_kill_validation
-352/507 Test #202: fig_player_effect5b_kill_validation ..................................   Passed    0.38 sec
+352/508 Test #202: fig_player_effect5b_kill_validation ..................................   Passed    0.41 sec
         Start 206: fig_player_effect56_kill_validation
-353/507 Test #204: fig_player_effect5c_kill_validation ..................................   Passed    0.44 sec
+353/508 Test #204: fig_player_effect5c_kill_validation ..................................   Passed    0.51 sec
         Start 208: fig_player_effect57_kill_validation
-354/507 Test #206: fig_player_effect56_kill_validation ..................................   Passed    0.47 sec
+354/508 Test #206: fig_player_effect56_kill_validation ..................................   Passed    0.49 sec
         Start 210: fig_player_effect58_kill_validation
-355/507 Test #208: fig_player_effect57_kill_validation ..................................   Passed    0.44 sec
+355/508 Test #208: fig_player_effect57_kill_validation ..................................   Passed    0.47 sec
         Start 212: fig_player_effect59_kill_validation
-356/507 Test #210: fig_player_effect58_kill_validation ..................................   Passed    0.41 sec
+356/508 Test #210: fig_player_effect58_kill_validation ..................................   Passed    0.44 sec
         Start 214: fig_player_effect5d_kill_validation
-357/507 Test #212: fig_player_effect59_kill_validation ..................................   Passed    0.47 sec
+357/508 Test #212: fig_player_effect59_kill_validation ..................................   Passed    0.51 sec
         Start 216: fig_player_effect5e_resistance_validation
-358/507 Test #214: fig_player_effect5d_kill_validation ..................................   Passed    0.51 sec
+358/508 Test #214: fig_player_effect5d_kill_validation ..................................   Passed    0.56 sec
         Start 218: fig_player_effect5f_status_validation
-359/507 Test #216: fig_player_effect5e_resistance_validation ............................   Passed    0.59 sec
+359/508 Test #216: fig_player_effect5e_resistance_validation ............................   Passed    0.58 sec
         Start 220: fig_player_effect60_status_validation
-360/507 Test #218: fig_player_effect5f_status_validation ................................   Passed    0.31 sec
+360/508 Test #218: fig_player_effect5f_status_validation ................................   Passed    0.33 sec
         Start 222: fig_player_effect64_status_validation
-361/507 Test #220: fig_player_effect60_status_validation ................................   Passed    0.36 sec
+361/508 Test #220: fig_player_effect60_status_validation ................................   Passed    0.40 sec
         Start 224: fig_player_effect65_status_validation
-362/507 Test #222: fig_player_effect64_status_validation ................................   Passed    0.55 sec
+362/508 Test #222: fig_player_effect64_status_validation ................................   Passed    0.48 sec
         Start 225: fig_player_effect_coverage
-363/507 Test #225: fig_player_effect_coverage ...........................................   Passed    0.03 sec
+363/508 Test #225: fig_player_effect_coverage ...........................................   Passed    0.03 sec
         Start 227: fig_player_support_effect07_validation
-364/507 Test #227: fig_player_support_effect07_validation ...............................   Passed    0.15 sec
+364/508 Test #227: fig_player_support_effect07_validation ...............................   Passed    0.16 sec
         Start 229: fig_player_barrier_validation
-365/507 Test #229: fig_player_barrier_validation ........................................   Passed    0.14 sec
+365/508 Test #229: fig_player_barrier_validation ........................................   Passed    0.15 sec
         Start 231: fig_player_dispel_validation
-366/507 Test #224: fig_player_effect65_status_validation ................................   Passed    0.61 sec
+366/508 Test #224: fig_player_effect65_status_validation ................................   Passed    0.63 sec
         Start 233: fig_item_dispel_validation
-367/507 Test #231: fig_player_dispel_validation .........................................   Passed    0.25 sec
+367/508 Test #231: fig_player_dispel_validation .........................................   Passed    0.24 sec
         Start 235: fig_item_status_validation
-368/507 Test #233: fig_item_dispel_validation ...........................................   Passed    0.24 sec
+368/508 Test #233: fig_item_dispel_validation ...........................................   Passed    0.23 sec
         Start 237: fig_item_monster_status_validation
-369/507 Test #235: fig_item_status_validation ...........................................   Passed    0.24 sec
+369/508 Test #235: fig_item_status_validation ...........................................   Passed    0.26 sec
         Start 239: fig_item_damage_validation
-370/507 Test #237: fig_item_monster_status_validation ...................................   Passed    0.26 sec
+370/508 Test #237: fig_item_monster_status_validation ...................................   Passed    0.34 sec
         Start 241: fig_item_composite_validation
-371/507 Test #241: fig_item_composite_validation ........................................   Passed    0.16 sec
+371/508 Test #241: fig_item_composite_validation ........................................   Passed    0.16 sec
         Start 243: fig_item_composite_media_validation
-372/507 Test #243: fig_item_composite_media_validation ..................................   Passed    0.13 sec
+372/508 Test #239: fig_item_damage_validation ...........................................   Passed    0.34 sec
         Start 245: fig_player_medium_validation
-373/507 Test #239: fig_item_damage_validation ...........................................   Passed    0.32 sec
+373/508 Test #243: fig_item_composite_media_validation ..................................   Passed    0.16 sec
         Start 247: fig_learned_medium_validation
-374/507 Test #245: fig_player_medium_validation .........................................   Passed    0.22 sec
+374/508 Test #245: fig_player_medium_validation .........................................   Passed    0.21 sec
         Start 249: fig_player_empty_medium_validation
-375/507 Test #247: fig_learned_medium_validation ........................................   Passed    0.24 sec
+375/508 Test #247: fig_learned_medium_validation ........................................   Passed    0.22 sec
         Start 251: fig_learned_empty_medium_validation
-376/507 Test #249: fig_player_empty_medium_validation ...................................   Passed    0.18 sec
+376/508 Test #249: fig_player_empty_medium_validation ...................................   Passed    0.17 sec
         Start 253: fig_item_composite_support_validation
-377/507 Test #251: fig_learned_empty_medium_validation ..................................   Passed    0.22 sec
+377/508 Test #253: fig_item_composite_support_validation ................................   Passed    0.15 sec
         Start 255: fig_item_support_validation
-378/507 Test #253: fig_item_composite_support_validation ................................   Passed    0.14 sec
+378/508 Test #251: fig_learned_empty_medium_validation ..................................   Passed    0.22 sec
         Start 257: fig_item_support_class5_validation
-379/507 Test #255: fig_item_support_validation ..........................................   Passed    0.15 sec
+379/508 Test #255: fig_item_support_validation ..........................................   Passed    0.12 sec
         Start 259: fig_item_support_dispatch_validation
-380/507 Test #257: fig_item_support_class5_validation ...................................   Passed    0.12 sec
+380/508 Test #257: fig_item_support_class5_validation ...................................   Passed    0.12 sec
         Start 261: fig_item_support_class5_selector_validation
-381/507 Test #259: fig_item_support_dispatch_validation .................................   Passed    0.12 sec
+381/508 Test #259: fig_item_support_dispatch_validation .................................   Passed    0.13 sec
         Start 263: fig_item_barrier_validation
-382/507 Test #261: fig_item_support_class5_selector_validation ..........................   Passed    0.12 sec
+382/508 Test #261: fig_item_support_class5_selector_validation ..........................   Passed    0.13 sec
         Start 265: fig_flagged_medium_validation
-383/507 Test #265: fig_flagged_medium_validation ........................................   Passed    0.09 sec
+383/508 Test #265: fig_flagged_medium_validation ........................................   Passed    0.09 sec
         Start 267: fig_victory_validation
-384/507 Test #263: fig_item_barrier_validation ..........................................   Passed    0.21 sec
+384/508 Test #263: fig_item_barrier_validation ..........................................   Passed    0.23 sec
         Start 269: fig_player_critical_validation
-385/507 Test #267: fig_victory_validation ...............................................   Passed    0.28 sec
+385/508 Test #267: fig_victory_validation ...............................................   Passed    0.30 sec
         Start 271: fig_player_attack_evaded_validation
-386/507 Test #269: fig_player_critical_validation .......................................   Passed    0.25 sec
+386/508 Test #269: fig_player_critical_validation .......................................   Passed    0.30 sec
         Start 273: fig_player_attack_zero_validation
-387/507 Test #271: fig_player_attack_evaded_validation ..................................   Passed    0.48 sec
+387/508 Test #271: fig_player_attack_evaded_validation ..................................   Passed    0.49 sec
         Start 275: fig_player_attack_hit_validation
-388/507 Test #273: fig_player_attack_zero_validation ....................................   Passed    0.66 sec
+388/508 Test #273: fig_player_attack_zero_validation ....................................   Passed    0.66 sec
         Start 277: fig_player_critical_hit_validation
-389/507 Test #275: fig_player_attack_hit_validation .....................................   Passed    0.59 sec
+389/508 Test #275: fig_player_attack_hit_validation .....................................   Passed    0.72 sec
         Start 279: fig_player_attack_basic_validation
-390/507 Test #277: fig_player_critical_hit_validation ...................................   Passed    0.70 sec
+390/508 Test #277: fig_player_critical_hit_validation ...................................   Passed    0.60 sec
         Start 281: fig_player_attack_flee_validation
-391/507 Test #279: fig_player_attack_basic_validation ...................................   Passed    0.59 sec
+391/508 Test #279: fig_player_attack_basic_validation ...................................   Passed    0.62 sec
         Start 283: fig_player_attack_flee_failed_validation
-392/507 Test #281: fig_player_attack_flee_validation ....................................   Passed    1.61 sec
+392/508 Test #281: fig_player_attack_flee_validation ....................................   Passed    1.65 sec
         Start 285: fig_player_attack_special_silent_validation
-393/507 Test #283: fig_player_attack_flee_failed_validation .............................   Passed    1.70 sec
+393/508 Test #285: fig_player_attack_special_silent_validation ..........................   Passed    0.40 sec
         Start 287: fig_player_attack_special_resisted_validation
-394/507 Test #285: fig_player_attack_special_silent_validation ..........................   Passed    0.39 sec
+394/508 Test #283: fig_player_attack_flee_failed_validation .............................   Passed    1.78 sec
         Start 289: fig_player_attack_special_status_validation
-395/507 Test #287: fig_player_attack_special_resisted_validation ........................   Passed    0.43 sec
+395/508 Test #287: fig_player_attack_special_resisted_validation ........................   Passed    0.39 sec
         Start 291: fig_player_attack_special_buff_validation
-396/507 Test #289: fig_player_attack_special_status_validation ..........................   Passed    0.46 sec
+396/508 Test #289: fig_player_attack_special_status_validation ..........................   Passed    0.52 sec
         Start 293: fig_player_attack_medium_validation
-397/507 Test #291: fig_player_attack_special_buff_validation ............................   Passed    0.39 sec
+397/508 Test #291: fig_player_attack_special_buff_validation ............................   Passed    0.41 sec
         Start 295: fig_player_attack_b0_medium_validation
-398/507 Test #293: fig_player_attack_medium_validation ..................................   Passed    0.78 sec
+398/508 Test #295: fig_player_attack_b0_medium_validation ...............................   Passed    0.70 sec
         Start 297: fig_player_attack_af_medium_validation
-399/507 Test #295: fig_player_attack_b0_medium_validation ...............................   Passed    0.62 sec
+399/508 Test #293: fig_player_attack_medium_validation ..................................   Passed    0.83 sec
         Start 299: fig_monster_slot_medium_validation
-400/507 Test #297: fig_player_attack_af_medium_validation ...............................   Passed    0.71 sec
+400/508 Test #299: fig_monster_slot_medium_validation ...................................   Passed    0.59 sec
         Start 301: fig_monster_third_slot_medium_validation
-401/507 Test #299: fig_monster_slot_medium_validation ...................................   Passed    0.57 sec
+401/508 Test #297: fig_player_attack_af_medium_validation ...............................   Passed    0.72 sec
         Start 303: fig_monster_first_slot_medium_validation
-402/507 Test #301: fig_monster_third_slot_medium_validation .............................   Passed    0.45 sec
+402/508 Test #301: fig_monster_third_slot_medium_validation .............................   Passed    0.40 sec
         Start 305: fig_defeat_validation
-403/507 Test #305: fig_defeat_validation ................................................   Passed    0.05 sec
+403/508 Test #305: fig_defeat_validation ................................................   Passed    0.07 sec
         Start 307: fig_level_up_validation
-404/507 Test #307: fig_level_up_validation ..............................................   Passed    0.08 sec
+404/508 Test #307: fig_level_up_validation ..............................................   Passed    0.09 sec
         Start 309: fig_story_30_validation
-405/507 Test #303: fig_monster_first_slot_medium_validation .............................   Passed    0.66 sec
+405/508 Test #309: fig_story_30_validation ..............................................   Passed    0.11 sec
         Start 311: fig_story_42_validation
-406/507 Test #309: fig_story_30_validation ..............................................   Passed    0.11 sec
+406/508 Test #303: fig_monster_first_slot_medium_validation .............................   Passed    0.62 sec
         Start 313: fig_introduction_ny_validation
-407/507 Test #313: fig_introduction_ny_validation .......................................   Passed    0.16 sec
+407/508 Test #313: fig_introduction_ny_validation .......................................   Passed    0.15 sec
         Start 315: fig_introduction_ny_1e4_validation
-408/507 Test #311: fig_story_42_validation ..............................................   Passed    0.22 sec
+408/508 Test #311: fig_story_42_validation ..............................................   Passed    0.19 sec
         Start 317: fig_introduction_yn_validation
-409/507 Test #315: fig_introduction_ny_1e4_validation ...................................   Passed    0.14 sec
+409/508 Test #315: fig_introduction_ny_1e4_validation ...................................   Passed    0.14 sec
         Start 319: fig_introduction_yn_1e8_validation
-410/507 Test #317: fig_introduction_yn_validation .......................................   Passed    0.14 sec
+410/508 Test #317: fig_introduction_yn_validation .......................................   Passed    0.15 sec
         Start 321: fig_introduction_yn_34c_validation
-411/507 Test #319: fig_introduction_yn_1e8_validation ...................................   Passed    0.13 sec
+411/508 Test #319: fig_introduction_yn_1e8_validation ...................................   Passed    0.15 sec
         Start 323: fig_introduction_none_validation
-412/507 Test #321: fig_introduction_yn_34c_validation ...................................   Passed    0.15 sec
+412/508 Test #321: fig_introduction_yn_34c_validation ...................................   Passed    0.17 sec
         Start 325: fig_introduction_none_014_validation
-413/507 Test #323: fig_introduction_none_validation .....................................   Passed    0.15 sec
+413/508 Test #325: fig_introduction_none_014_validation .................................   Passed    0.12 sec
         Start 327: fig_introduction_none_2ce_validation
-414/507 Test #325: fig_introduction_none_014_validation .................................   Passed    0.13 sec
+414/508 Test #323: fig_introduction_none_validation .....................................   Passed    0.17 sec
         Start 329: fig_introduction_none_2d8_validation
-415/507 Test #327: fig_introduction_none_2ce_validation .................................   Passed    0.13 sec
+415/508 Test #327: fig_introduction_none_2ce_validation .................................   Passed    0.14 sec
         Start 331: fig_introduction_none_3e8_validation
-416/507 Test #329: fig_introduction_none_2d8_validation .................................   Passed    0.15 sec
+416/508 Test #329: fig_introduction_none_2d8_validation .................................   Passed    0.15 sec
         Start 333: fig_introduction_multipage_validation
-417/507 Test #331: fig_introduction_none_3e8_validation .................................   Passed    0.12 sec
+417/508 Test #331: fig_introduction_none_3e8_validation .................................   Passed    0.14 sec
         Start 335: fig_introduction_two_page_validation
-418/507 Test #335: fig_introduction_two_page_validation .................................   Passed    0.16 sec
+418/508 Test #335: fig_introduction_two_page_validation .................................   Passed    0.15 sec
         Start 337: fig_introduction_2e8_validation
-419/507 Test #333: fig_introduction_multipage_validation ................................   Passed    0.29 sec
+419/508 Test #333: fig_introduction_multipage_validation ................................   Passed    0.33 sec
         Start 339: fig_introduction_3e6_validation
-420/507 Test #337: fig_introduction_2e8_validation ......................................   Passed    0.17 sec
+420/508 Test #337: fig_introduction_2e8_validation ......................................   Passed    0.17 sec
         Start 340: fig_introduction_matrix_validation
-421/507 Test #339: fig_introduction_3e6_validation ......................................   Passed    0.18 sec
+421/508 Test #339: fig_introduction_3e6_validation ......................................   Passed    0.17 sec
         Start 342: fig_ordinary_attack_validation
-422/507 Test #342: fig_ordinary_attack_validation .......................................   Passed    0.05 sec
+422/508 Test #342: fig_ordinary_attack_validation .......................................   Passed    0.08 sec
         Start 344: fig_capture_reward_validation
-423/507 Test #344: fig_capture_reward_validation ........................................   Passed    0.08 sec
+423/508 Test #344: fig_capture_reward_validation ........................................   Passed    0.09 sec
         Start 346: fig_monster_status_validation
-424/507 Test #346: fig_monster_status_validation ........................................   Passed    0.41 sec
+424/508 Test #346: fig_monster_status_validation ........................................   Passed    0.37 sec
         Start 348: fig_monster_immunity_validation
-425/507 Test #348: fig_monster_immunity_validation ......................................   Passed    0.24 sec
+425/508 Test #348: fig_monster_immunity_validation ......................................   Passed    0.25 sec
         Start 350: fig_player_damage_validation
-426/507 Test #350: fig_player_damage_validation .........................................   Passed    0.22 sec
+426/508 Test #350: fig_player_damage_validation .........................................   Passed    0.21 sec
         Start 352: fig_implicit_damage_validation
-427/507 Test #352: fig_implicit_damage_validation .......................................   Passed    0.34 sec
+427/508 Test #352: fig_implicit_damage_validation .......................................   Passed    0.35 sec
         Start 354: fig_periodic_zero_validation
-428/507 Test #354: fig_periodic_zero_validation .........................................   Passed    0.22 sec
+428/508 Test #354: fig_periodic_zero_validation .........................................   Passed    0.23 sec
         Start 356: fig_ally_zero_validation
-429/507 Test #356: fig_ally_zero_validation .............................................   Passed    0.87 sec
+429/508 Test #356: fig_ally_zero_validation .............................................   Passed    0.84 sec
         Start 358: fig_ally_evasion_validation
-430/507 Test #358: fig_ally_evasion_validation ..........................................   Passed    0.12 sec
+430/508 Test #358: fig_ally_evasion_validation ..........................................   Passed    0.13 sec
         Start 360: fig_ally_hit_validation
-431/507 Test #360: fig_ally_hit_validation ..............................................   Passed    0.26 sec
+431/508 Test #360: fig_ally_hit_validation ..............................................   Passed    0.31 sec
         Start 362: fig_ally_hit_survives_validation
-432/507 Test #362: fig_ally_hit_survives_validation .....................................   Passed    0.31 sec
+432/508 Test #362: fig_ally_hit_survives_validation .....................................   Passed    0.33 sec
         Start 364: fig_ally_ability_validation
-433/507 Test #364: fig_ally_ability_validation ..........................................   Passed    0.49 sec
+433/508 Test #364: fig_ally_ability_validation ..........................................   Passed    0.64 sec
         Start 366: fig_ally_multitarget_validation
-434/507 Test #340: fig_introduction_matrix_validation ...................................   Passed    4.04 sec
+434/508 Test #340: fig_introduction_matrix_validation ...................................   Passed    4.27 sec
         Start 368: fig_ally_special_ability_validation
-435/507 Test #366: fig_ally_multitarget_validation ......................................   Passed    0.79 sec
+435/508 Test #366: fig_ally_multitarget_validation ......................................   Passed    0.69 sec
         Start 370: fig_ally_medium_dismiss_validation
-436/507 Test #370: fig_ally_medium_dismiss_validation ...................................   Passed    0.22 sec
+436/508 Test #370: fig_ally_medium_dismiss_validation ...................................   Passed    0.22 sec
         Start 372: fig_ally_empty_medium_dismiss_validation
-437/507 Test #368: fig_ally_special_ability_validation ..................................   Passed    0.71 sec
+437/508 Test #372: fig_ally_empty_medium_dismiss_validation .............................   Passed    0.10 sec
         Start 374: fig_ally_empty_ae_dismiss_validation
-438/507 Test #372: fig_ally_empty_medium_dismiss_validation .............................   Passed    0.12 sec
+438/508 Test #374: fig_ally_empty_ae_dismiss_validation .................................   Passed    0.10 sec
         Start 376: fig_ally_empty_b0_dismiss_validation
-439/507 Test #374: fig_ally_empty_ae_dismiss_validation .................................   Passed    0.11 sec
+439/508 Test #368: fig_ally_special_ability_validation ..................................   Passed    0.83 sec
         Start 378: fig_ally_ae_dismiss_validation
-440/507 Test #376: fig_ally_empty_b0_dismiss_validation .................................   Passed    0.12 sec
+440/508 Test #376: fig_ally_empty_b0_dismiss_validation .................................   Passed    0.10 sec
         Start 380: fig_ally_b0_dismiss_validation
-441/507 Test #378: fig_ally_ae_dismiss_validation .......................................   Passed    0.24 sec
+441/508 Test #380: fig_ally_b0_dismiss_validation .......................................   Passed    0.24 sec
         Start 382: fig_ally_flee_validation
-442/507 Test #380: fig_ally_b0_dismiss_validation .......................................   Passed    0.23 sec
+442/508 Test #378: fig_ally_ae_dismiss_validation .......................................   Passed    0.25 sec
         Start 384: fig_ally_medium_validation
-443/507 Test #382: fig_ally_flee_validation .............................................   Passed    0.15 sec
+443/508 Test #382: fig_ally_flee_validation .............................................   Passed    0.20 sec
         Start 386: fig_summon_replace_validation
-444/507 Test #386: fig_summon_replace_validation ........................................   Passed    0.12 sec
+444/508 Test #386: fig_summon_replace_validation ........................................   Passed    0.10 sec
         Start 388: fig_monster_flee_validation
-445/507 Test #388: fig_monster_flee_validation ..........................................   Passed    0.13 sec
+445/508 Test #388: fig_monster_flee_validation ..........................................   Passed    0.14 sec
         Start 390: fig_monster_escape_failed_validation
-446/507 Test #390: fig_monster_escape_failed_validation .................................   Passed    0.13 sec
+446/508 Test #384: fig_ally_medium_validation ...........................................   Passed    0.50 sec
         Start 392: fig_monster_heal_validation
-447/507 Test #384: fig_ally_medium_validation ...........................................   Passed    0.49 sec
+447/508 Test #390: fig_monster_escape_failed_validation .................................   Passed    0.14 sec
         Start 394: fig_monster_generic_validation
-448/507 Test #392: fig_monster_heal_validation ..........................................   Passed    0.14 sec
+448/508 Test #392: fig_monster_heal_validation ..........................................   Passed    0.13 sec
         Start 396: fig_monster_special_silent_validation
-449/507 Test #394: fig_monster_generic_validation .......................................   Passed    0.19 sec
+449/508 Test #394: fig_monster_generic_validation .......................................   Passed    0.17 sec
         Start 398: fig_monster_special_status_validation
-450/507 Test #396: fig_monster_special_silent_validation ................................   Passed    0.18 sec
+450/508 Test #396: fig_monster_special_silent_validation ................................   Passed    0.19 sec
         Start 400: fig_monster_special_resistance_validation
-451/507 Test #398: fig_monster_special_status_validation ................................   Passed    0.17 sec
+451/508 Test #398: fig_monster_special_status_validation ................................   Passed    0.22 sec
         Start 402: fig_monster_special_buff_validation
-452/507 Test #400: fig_monster_special_resistance_validation ............................   Passed    0.15 sec
+452/508 Test #400: fig_monster_special_resistance_validation ............................   Passed    0.19 sec
         Start 404: fig_monster_buff_expiry_validation
-453/507 Test #402: fig_monster_special_buff_validation ..................................   Passed    0.18 sec
+453/508 Test #402: fig_monster_special_buff_validation ..................................   Passed    0.19 sec
         Start 406: fig_player_buff_expiry_validation
-454/507 Test #404: fig_monster_buff_expiry_validation ...................................   Passed    0.19 sec
+454/508 Test #404: fig_monster_buff_expiry_validation ...................................   Passed    0.18 sec
         Start 408: fig_player_buff_expiry_ability_validation
-455/507 Test #408: fig_player_buff_expiry_ability_validation ............................   Passed    0.22 sec
+455/508 Test #408: fig_player_buff_expiry_ability_validation ............................   Passed    0.21 sec
         Start 410: fig_player_buff_expiry_ability_composite_damage_validation
-456/507 Test #406: fig_player_buff_expiry_validation ....................................   Passed    0.34 sec
+456/508 Test #406: fig_player_buff_expiry_validation ....................................   Passed    0.34 sec
         Start 412: fig_player_buff_expiry_ability_composite_status_damage_validation
-457/507 Test #412: fig_player_buff_expiry_ability_composite_status_damage_validation ....   Passed    1.01 sec
+457/508 Test #412: fig_player_buff_expiry_ability_composite_status_damage_validation ....   Passed    1.00 sec
         Start 414: fig_player_buff_expiry_ability_composite_missing_media_validation
-458/507 Test #410: fig_player_buff_expiry_ability_composite_damage_validation ...........   Passed    1.18 sec
+458/508 Test #410: fig_player_buff_expiry_ability_composite_damage_validation ...........   Passed    1.21 sec
         Start 416: fig_player_buff_expiry_ability_medium_validation
-459/507 Test #414: fig_player_buff_expiry_ability_composite_missing_media_validation ....   Passed    0.70 sec
+459/508 Test #414: fig_player_buff_expiry_ability_composite_missing_media_validation ....   Passed    0.77 sec
         Start 418: fig_player_buff_expiry_ability_af_validation
-460/507 Test #416: fig_player_buff_expiry_ability_medium_validation .....................   Passed    0.84 sec
+460/508 Test #416: fig_player_buff_expiry_ability_medium_validation .....................   Passed    0.85 sec
         Start 420: fig_player_buff_expiry_ability_b0_validation
-461/507 Test #418: fig_player_buff_expiry_ability_af_validation .........................   Passed    0.90 sec
+461/508 Test #418: fig_player_buff_expiry_ability_af_validation .........................   Passed    0.99 sec
         Start 422: fig_player_buff_expiry_ability_resisted_validation
-462/507 Test #420: fig_player_buff_expiry_ability_b0_validation .........................   Passed    0.93 sec
+462/508 Test #420: fig_player_buff_expiry_ability_b0_validation .........................   Passed    0.91 sec
         Start 424: fig_player_buff_expiry_ability_dismiss_medium_validation
-463/507 Test #422: fig_player_buff_expiry_ability_resisted_validation ...................   Passed    0.42 sec
+463/508 Test #422: fig_player_buff_expiry_ability_resisted_validation ...................   Passed    0.56 sec
         Start 426: fig_player_buff_expiry_ability_dismiss_af_validation
-464/507 Test #424: fig_player_buff_expiry_ability_dismiss_medium_validation .............   Passed    0.63 sec
+464/508 Test #424: fig_player_buff_expiry_ability_dismiss_medium_validation .............   Passed    0.70 sec
         Start 428: fig_player_buff_expiry_ability_dismiss_b0_validation
-465/507 Test #426: fig_player_buff_expiry_ability_dismiss_af_validation .................   Passed    0.84 sec
+465/508 Test #426: fig_player_buff_expiry_ability_dismiss_af_validation .................   Passed    0.90 sec
         Start 430: fig_player_buff_expiry_ability_empty_medium_validation
-466/507 Test #428: fig_player_buff_expiry_ability_dismiss_b0_validation .................   Passed    0.64 sec
+466/508 Test #428: fig_player_buff_expiry_ability_dismiss_b0_validation .................   Passed    0.66 sec
         Start 432: fig_player_buff_expiry_ability_empty_af_validation
-467/507 Test #430: fig_player_buff_expiry_ability_empty_medium_validation ...............   Passed    0.54 sec
+467/508 Test #430: fig_player_buff_expiry_ability_empty_medium_validation ...............   Passed    0.63 sec
         Start 434: fig_player_buff_expiry_ability_empty_b0_validation
-468/507 Test #432: fig_player_buff_expiry_ability_empty_af_validation ...................   Passed    0.56 sec
+468/508 Test #432: fig_player_buff_expiry_ability_empty_af_validation ...................   Passed    0.62 sec
         Start 436: fig_player_buff_expiry_missing_medium_validation
-469/507 Test #436: fig_player_buff_expiry_missing_medium_validation .....................   Passed    0.19 sec
+469/508 Test #436: fig_player_buff_expiry_missing_medium_validation .....................   Passed    0.24 sec
         Start 438: fig_player_buff_expiry_item_validation
-470/507 Test #434: fig_player_buff_expiry_ability_empty_b0_validation ...................   Passed    0.56 sec
+470/508 Test #438: fig_player_buff_expiry_item_validation ...............................   Passed    0.18 sec
         Start 440: fig_player_buff_expiry_item_missing_medium_validation
-471/507 Test #438: fig_player_buff_expiry_item_validation ...............................   Passed    0.20 sec
+471/508 Test #434: fig_player_buff_expiry_ability_empty_b0_validation ...................   Passed    0.61 sec
         Start 442: fig_player_buff_expiry_item_status_validation
-472/507 Test #440: fig_player_buff_expiry_item_missing_medium_validation ................   Passed    0.23 sec
+472/508 Test #440: fig_player_buff_expiry_item_missing_medium_validation ................   Passed    0.21 sec
         Start 444: fig_player_buff_expiry_item_support_validation
-473/507 Test #442: fig_player_buff_expiry_item_status_validation ........................   Passed    0.25 sec
+473/508 Test #444: fig_player_buff_expiry_item_support_validation .......................   Passed    0.23 sec
         Start 446: fig_player_buff_expiry_item_composite_support_validation
-474/507 Test #444: fig_player_buff_expiry_item_support_validation .......................   Passed    0.19 sec
+474/508 Test #442: fig_player_buff_expiry_item_status_validation ........................   Passed    0.33 sec
         Start 448: fig_player_buff_expiry_item_dispel_validation
-475/507 Test #448: fig_player_buff_expiry_item_dispel_validation ........................   Passed    0.39 sec
+475/508 Test #448: fig_player_buff_expiry_item_dispel_validation ........................   Passed    0.36 sec
         Start 450: fig_player_buff_expiry_item_barrier_validation
-476/507 Test #446: fig_player_buff_expiry_item_composite_support_validation .............   Passed    0.71 sec
+476/508 Test #446: fig_player_buff_expiry_item_composite_support_validation .............   Passed    0.69 sec
         Start 452: fig_player_buff_expiry_item_medium_validation
-477/507 Test #450: fig_player_buff_expiry_item_barrier_validation .......................   Passed    0.38 sec
+477/508 Test #450: fig_player_buff_expiry_item_barrier_validation .......................   Passed    0.30 sec
         Start 454: fig_player_buff_expiry_item_composite_media_validation
-478/507 Test #452: fig_player_buff_expiry_item_medium_validation ........................   Passed    0.83 sec
+478/508 Test #452: fig_player_buff_expiry_item_medium_validation ........................   Passed    0.89 sec
         Start 456: fig_player_buff_expiry_item_composite_reversed_media_validation
-479/507 Test #454: fig_player_buff_expiry_item_composite_media_validation ...............   Passed    1.13 sec
+479/508 Test #454: fig_player_buff_expiry_item_composite_media_validation ...............   Passed    1.20 sec
         Start 458: fig_player_buff_expiry_item_composite_af_b0_media_validation
-480/507 Test #456: fig_player_buff_expiry_item_composite_reversed_media_validation ......   Passed    1.19 sec
+480/508 Test #456: fig_player_buff_expiry_item_composite_reversed_media_validation ......   Passed    1.19 sec
         Start 460: fig_player_buff_expiry_item_composite_damage_validation
-481/507 Test #458: fig_player_buff_expiry_item_composite_af_b0_media_validation .........   Passed    1.19 sec
+481/508 Test #458: fig_player_buff_expiry_item_composite_af_b0_media_validation .........   Passed    1.27 sec
         Start 462: fig_player_buff_expiry_item_composite_status_damage_validation
-482/507 Test #460: fig_player_buff_expiry_item_composite_damage_validation ..............   Passed    1.05 sec
+482/508 Test #460: fig_player_buff_expiry_item_composite_damage_validation ..............   Passed    1.09 sec
         Start 464: fig_player_buff_expiry_item_composite_targetless_damage_validation
-483/507 Test #462: fig_player_buff_expiry_item_composite_status_damage_validation .......   Passed    0.93 sec
+483/508 Test #462: fig_player_buff_expiry_item_composite_status_damage_validation .......   Passed    1.01 sec
         Start 466: fig_player_buff_expiry_item_composite_targetless_status_validation
-484/507 Test #464: fig_player_buff_expiry_item_composite_targetless_damage_validation ...   Passed    1.15 sec
+484/508 Test #466: fig_player_buff_expiry_item_composite_targetless_status_validation ...   Passed    1.05 sec
         Start 468: fig_player_buff_expiry_item_composite_damage_missing_af_validation
-485/507 Test #466: fig_player_buff_expiry_item_composite_targetless_status_validation ...   Passed    1.25 sec
+485/508 Test #464: fig_player_buff_expiry_item_composite_targetless_damage_validation ...   Passed    1.51 sec
         Start 470: fig_player_buff_expiry_item_composite_missing_af_b0_validation
-486/507 Test #468: fig_player_buff_expiry_item_composite_damage_missing_af_validation ...   Passed    0.82 sec
+486/508 Test #470: fig_player_buff_expiry_item_composite_missing_af_b0_validation .......   Passed    0.60 sec
         Start 472: fig_player_buff_expiry_item_composite_missing_media_validation
-487/507 Test #470: fig_player_buff_expiry_item_composite_missing_af_b0_validation .......   Passed    0.56 sec
+487/508 Test #468: fig_player_buff_expiry_item_composite_damage_missing_af_validation ...   Passed    0.88 sec
         Start 474: fig_player_buff_expiry_item_af_validation
-488/507 Test #472: fig_player_buff_expiry_item_composite_missing_media_validation .......   Passed    0.58 sec
+488/508 Test #472: fig_player_buff_expiry_item_composite_missing_media_validation .......   Passed    0.75 sec
         Start 476: fig_player_buff_expiry_item_b0_validation
-489/507 Test #474: fig_player_buff_expiry_item_af_validation ............................   Passed    0.87 sec
+489/508 Test #474: fig_player_buff_expiry_item_af_validation ............................   Passed    0.93 sec
         Start 478: fig_player_buff_expiry_item_empty_medium_validation
-490/507 Test #476: fig_player_buff_expiry_item_b0_validation ............................   Passed    0.83 sec
+490/508 Test #478: fig_player_buff_expiry_item_empty_medium_validation ..................   Passed    0.58 sec
         Start 480: fig_player_buff_expiry_item_empty_af_validation
-491/507 Test #478: fig_player_buff_expiry_item_empty_medium_validation ..................   Passed    0.54 sec
+491/508 Test #476: fig_player_buff_expiry_item_b0_validation ............................   Passed    0.92 sec
         Start 482: fig_player_buff_expiry_item_empty_b0_validation
-492/507 Test #480: fig_player_buff_expiry_item_empty_af_validation ......................   Passed    0.54 sec
+492/508 Test #482: fig_player_buff_expiry_item_empty_b0_validation ......................   Passed    0.63 sec
         Start 484: fig_player_buff_expiry_item_dismiss_medium_validation
-493/507 Test #482: fig_player_buff_expiry_item_empty_b0_validation ......................   Passed    0.52 sec
+493/508 Test #480: fig_player_buff_expiry_item_empty_af_validation ......................   Passed    0.65 sec
         Start 486: fig_player_buff_expiry_item_dismiss_af_validation
-494/507 Test #484: fig_player_buff_expiry_item_dismiss_medium_validation ................   Passed    0.64 sec
+494/508 Test #484: fig_player_buff_expiry_item_dismiss_medium_validation ................   Passed    0.75 sec
         Start 488: fig_player_buff_expiry_item_dismiss_b0_validation
-495/507 Test #486: fig_player_buff_expiry_item_dismiss_af_validation ....................   Passed    0.71 sec
+495/508 Test #486: fig_player_buff_expiry_item_dismiss_af_validation ....................   Passed    0.77 sec
         Start 490: fig_player_buff_expiry_escape_validation
-496/507 Test #490: fig_player_buff_expiry_escape_validation .............................   Passed    0.21 sec
+496/508 Test #490: fig_player_buff_expiry_escape_validation .............................   Passed    0.24 sec
         Start 492: fig_player_buff_expiry_capture_validation
-497/507 Test #492: fig_player_buff_expiry_capture_validation ............................   Passed    0.18 sec
+497/508 Test #492: fig_player_buff_expiry_capture_validation ............................   Passed    0.19 sec
         Start 494: fig_player_buff_expiry_capture_success_validation
-498/507 Test #488: fig_player_buff_expiry_item_dismiss_b0_validation ....................   Passed    0.63 sec
+498/508 Test #494: fig_player_buff_expiry_capture_success_validation ....................   Passed    0.14 sec
         Start 496: fig_capture_success_validation
-499/507 Test #494: fig_player_buff_expiry_capture_success_validation ....................   Passed    0.14 sec
+499/508 Test #488: fig_player_buff_expiry_item_dismiss_b0_validation ....................   Passed    0.72 sec
         Start 498: fig_capture_failure_validation
-500/507 Test #496: fig_capture_success_validation .......................................   Passed    0.17 sec
+500/508 Test #496: fig_capture_success_validation .......................................   Passed    0.15 sec
         Start 500: fig_player_escape_success_validation
-501/507 Test #500: fig_player_escape_success_validation .................................   Passed    0.13 sec
+501/508 Test #500: fig_player_escape_success_validation .................................   Passed    0.12 sec
         Start 502: fig_player_escape_failure_validation
-502/507 Test #498: fig_capture_failure_validation .......................................   Passed    0.46 sec
+502/508 Test #498: fig_capture_failure_validation .......................................   Passed    0.40 sec
         Start 504: fig_medium_dismiss_validation
-503/507 Test #504: fig_medium_dismiss_validation ........................................   Passed    0.17 sec
+503/508 Test #504: fig_medium_dismiss_validation ........................................   Passed    0.19 sec
         Start 505: long_run_checkpoint_validation
-504/507 Test #505: long_run_checkpoint_validation .......................................   Passed    0.02 sec
+504/508 Test #502: fig_player_escape_failure_validation .................................   Passed    0.44 sec
         Start 506: linux_arm64_checkpoint_validation
-505/507 Test #506: linux_arm64_checkpoint_validation ....................................   Passed    0.02 sec
+505/508 Test #505: long_run_checkpoint_validation .......................................   Passed    0.02 sec
         Start 507: windows_x86_64_checkpoint_validation
-506/507 Test #502: fig_player_escape_failure_validation .................................   Passed    0.45 sec
-507/507 Test #507: windows_x86_64_checkpoint_validation .................................   Passed    0.02 sec
+506/508 Test #506: linux_arm64_checkpoint_validation ....................................   Passed    0.02 sec
+        Start 508: windows_wine_checkpoint_validation
+507/508 Test #507: windows_x86_64_checkpoint_validation .................................   Passed    0.03 sec
+508/508 Test #508: windows_wine_checkpoint_validation ...................................   Passed    0.06 sec
 
-100% tests passed, 0 tests failed out of 507
+100% tests passed, 0 tests failed out of 508
 
-Total Test time (real) = 119.22 sec
+Total Test time (real) = 125.26 sec

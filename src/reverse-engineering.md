@@ -2309,7 +2309,7 @@ Linux 交叉平台现不再只靠“应当能编译”的推断。固定到 Debi
 用 GCC 14.2、Release 和实际 SDL2 头/库从空 build 目录构建统一程序，再以 dummy SDL
 视频/音频后端运行全部 507 项 CTest；首轮 GCC 还暴露 `optional` 三元表达式的三条
 `-Wmaybe-uninitialized` 诊断，改为显式分支后重新从零构建；2026-08-12 在补入完整
-FIG 开场矩阵、场景动作域和 Windows 检查点后再次从零运行，最终 507/507 且编译警告为零。
+FIG 开场矩阵、场景动作域和 Windows 检查点后再次从零运行，最终 508/508 且编译警告为零。
 runner 锁定源提交、容器镜像 ID、ELF 摘要和完整 CTest 日志 SHA-256；独立 verifier 会
 拒绝测试数下降、日志警告、哈希漂移或把检查点误标为最终完成。它证明 Linux/aarch64
 容器后端，不冒充物理 Linux 桌面的图形/声音/手柄长跑；Windows、物理设备与多小时活动

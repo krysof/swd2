@@ -47,7 +47,7 @@ def main() -> int:
                 native.get("warning_count") != 0 or \
                 native.get("tests_failed") != 0 or \
                 not isinstance(native.get("tests_passed"), int) or \
-                native["tests_passed"] < 507:
+                native["tests_passed"] < 508:
             raise ValueError("Linux native checkpoint boundary differs")
         if not isinstance(native.get("source_commit"), str) or \
                 re.fullmatch(r"[0-9a-f]{40}", native["source_commit"]) is None or \

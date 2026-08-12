@@ -2131,7 +2131,7 @@
         "verification/long_run/checkpoint-2026-08-12-windows-x86_64/wine-windows-run.log"
       ],
       "remaining": [
-        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点、品牌 Safari 26.5.2 与 Firefox 153.0.4 各 3 次两文档 IDBFS 往返、43 首 RIX 共 3,096 虚拟曲目小时/765,546 循环边界、固定 Debian 13 Linux/aarch64 Release 的 507/507 CTest 零警告检查点，以及静态 MinGW-w64 Windows x86-64 PE 在 Wine 10 中与 macOS 原生逐字段 trace、113 张索引帧逐字节等值的仿真执行；继续真实墙钟的多小时活动游戏/音频长跑",
+        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点、品牌 Safari 26.5.2 与 Firefox 153.0.4 各 3 次两文档 IDBFS 往返、43 首 RIX 共 3,096 虚拟曲目小时/765,546 循环边界、固定 Debian 13 Linux/aarch64 Release 的 508/508 CTest 零警告检查点，以及静态 MinGW-w64 Windows x86-64 PE 在 Wine 10 中与 macOS 原生逐字段 trace、113 张索引帧逐字节等值的仿真执行；继续真实墙钟的多小时活动游戏/音频长跑",
         "Wine 检查点不是 Windows 宿主；仍需物理 Windows 的 SDL2 显示/输入/音频、物理 Linux、物理 iOS/Android 与手柄矩阵后生成 verified long_run manifest"
       ]
     }
