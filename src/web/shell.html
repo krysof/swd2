@@ -155,9 +155,11 @@
     const errorText = document.getElementById('error');
     const startGate = document.getElementById('start-gate');
     const startButton = document.getElementById('start-button');
-    const idbfsSelfTestToken = new URLSearchParams(location.search).get('idbfs-self-test');
+    const selfTestParameters = new URLSearchParams(location.search);
+    const idbfsSelfTestToken = selfTestParameters.get('idbfs-self-test');
+    const idbfsSelfTestReport = selfTestParameters.get('idbfs-report');
     const inputSelfTestEnabled =
-      new URLSearchParams(location.search).get('input-self-test') === '1';
+      selfTestParameters.get('input-self-test') === '1';
     const idbfsSelfTestSessionKey = 'swd2-idbfs-self-test-token';
     const idbfsSelfTestPath = '/saves/.swd2-idbfs-restart-probe';
     let startRequested = Boolean(idbfsSelfTestToken);
@@ -247,6 +249,24 @@
       statusText.textContent = message;
       progress.hidden = true;
       errorText.textContent = passed ? '' : message;
+      // A same-origin local runner can receive the result from branded
+      // browsers that intentionally disallow WebDriver/Apple Events. The
+      // callback exists only for an explicit nonce-bearing self-test URL and
+      // carries no save bytes or browsing data.
+      if (idbfsSelfTestReport) {
+        fetch('/__swd2_idbfs_result', {
+          method: 'POST',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nonce: idbfsSelfTestReport,
+            passed,
+            message,
+            userAgent: navigator.userAgent,
+            platform: navigator.platform || ''
+          })
+        }).catch(() => {});
+      }
     }
 
     function runIdbfsSelfTest() {
