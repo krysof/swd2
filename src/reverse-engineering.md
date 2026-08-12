@@ -3869,3 +3869,27 @@ RGB pixels.  The two-poll, two-page, 58 ms trace, unchanged serialized MAPZ
 hash and stationary final state are failure-closed.  Together with SBOUT this
 directly covers both collision branches described above: behavior-six removal
 before flags, and non-six `8000h` automatic event dispatch.
+
+### RPG MA-DE autonomous behavior-zero entity
+
+The nonblocking world loop's autonomous path now also has direct original
+evidence rather than only a synthetic unit oracle.  MAPZ directory byte offset
+10 selects released MA-DE entity two without changing any of its eleven words:
+`sprite=0c00h, direction=0, cell=36136, behavior=0, delay=10, offsets=0/-16,
+animation=15, flags=000ah, event=56, frame=0`.  All other fixture entities use
+hidden behavior three solely to isolate the subject.  The party stays at world
+`(54,100)` and the replay supplies 60 idle field polls—no direction or Confirm
+input can account for the actor's motion.
+
+Starting from world `(64,100)`, the released `RPG CS:4f1c` word stream and
+per-entity delay produce five captured states: south to `(64,101)` with
+direction/frame `0/1`, east to `(65,101)` with `9/2`, east to `(66,101)` with
+`9/3`, west to `(65,101)` with `6/0`, then south to `(65,102)` with `0/1`.
+The modern pages at polls `1/15/27/38/49` match original DOSBox-X observations
+`413/521/613/698/783` over `x=192..319,y=32..159`.  Each 128×128 crop contains
+the complete moving sprite and fixed terrain around its entire five-state
+path; all 16,384 RGB pixels match at every checkpoint.  Lower MA-DE foliage
+outside the crop continues to have an unrelated palette phase, so this evidence
+does not promote the comparisons to whole-page equality.  CTest also locks the
+untouched target record, isolated behavior vector, 61-poll/61-page trace,
+unchanged player state and serialized MAPZ digest.
