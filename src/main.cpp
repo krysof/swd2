@@ -1944,20 +1944,58 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                 archive_name + ":" + std::to_string(target) +
                 " failed deterministic entity-context execution");
         }
-        return result.commands_executed;
+        return std::tuple{
+            result.commands_executed,
+            fnv1a(execution_state.bytes()),
+            fnv1a(execution_world.serialized_bytes())};
     };
 
     std::array<std::size_t, 2> context_commands{};
+    std::array<std::uint64_t, 2> context_state_digests{
+        14695981039346656037ULL, 14695981039346656037ULL};
+    std::array<std::uint64_t, 2> context_map_digests{
+        14695981039346656037ULL, 14695981039346656037ULL};
+    const auto mix_context_value = [](std::uint64_t& digest,
+                                      std::uint64_t value) {
+        for (unsigned shift = 0; shift < 64U; shift += 8U) {
+            digest ^= static_cast<std::uint8_t>(value >> shift);
+            digest *= 1099511628211ULL;
+        }
+    };
+    const auto mix_context_name = [](std::uint64_t& digest,
+                                     const std::string& value) {
+        for (const auto character : value) {
+            digest ^= static_cast<std::uint8_t>(character);
+            digest *= 1099511628211ULL;
+        }
+        digest ^= std::uint8_t{};
+        digest *= 1099511628211ULL;
+    };
     for (std::size_t scenario = 0; scenario < context_commands.size(); ++scenario) {
         for (const auto& [archive_name, target, location_offset, entity] :
              visited_states) {
-            context_commands[scenario] += execute_context(
+            const auto [commands, state_digest, map_digest] = execute_context(
                 archive_name, target, location_offset, entity, scenario != 0);
+            context_commands[scenario] += commands;
+            for (auto* digest : {&context_state_digests[scenario],
+                                 &context_map_digests[scenario]}) {
+                mix_context_name(*digest, archive_name);
+                mix_context_value(*digest, target);
+                mix_context_value(*digest, location_offset);
+                mix_context_value(*digest, entity);
+                mix_context_value(*digest, commands);
+            }
+            mix_context_value(context_state_digests[scenario], state_digest);
+            mix_context_value(context_map_digests[scenario], map_digest);
         }
     }
     if (visited_states.size() != 6862U ||
         dynamic_entity_contexts.size() != 80U ||
-        context_commands != std::array<std::size_t, 2>{30811U, 31321U}) {
+        context_commands != std::array<std::size_t, 2>{30811U, 31321U} ||
+        context_state_digests != std::array<std::uint64_t, 2>{
+            0xf24db76385bbe8ceULL, 0xf5a352b9d6818d9aULL} ||
+        context_map_digests != std::array<std::uint64_t, 2>{
+            0xa6442adb4ff266bfULL, 0x42c8b3a7963f403eULL}) {
         throw std::runtime_error(
             "deterministic RPG entity-context execution differs from the audit");
     }
@@ -1980,7 +2018,12 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << visited_states.size() * 2U
               << " entity-context executions, "
               << context_commands[0] + context_commands[1]
-              << " VM commands completed\n";
+              << " VM commands completed; state checkpoints "
+              << hex_digest(context_state_digests[0]) << '/'
+              << hex_digest(context_state_digests[1])
+              << ", MAPZ checkpoints "
+              << hex_digest(context_map_digests[0]) << '/'
+              << hex_digest(context_map_digests[1]) << '\n';
 }
 
 void usage(const char* program) {
