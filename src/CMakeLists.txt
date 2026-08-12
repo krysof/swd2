@@ -779,6 +779,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_screen_north_validation PROPERTIES
         DEPENDS rpg_world_screen_north_prepare)
     add_test(
+        NAME rpg_world_auto_event_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-auto-event-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-auto-event-save"
+    )
+    add_test(
+        NAME rpg_world_auto_event_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-auto-event.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-auto-event-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-auto-event"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-auto-event-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_auto_event_validation PROPERTIES
+        DEPENDS rpg_world_auto_event_prepare)
+    add_test(
         NAME rpg_magic_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

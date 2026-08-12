@@ -3823,3 +3823,28 @@ move `(126,17)` / `(106,5)` back to `(126,13)` / `(106,1)` through
 full-page RGB equalities sampled from the original capture.  All four viewport
 scroll directions and all four on-screen movement directions now have direct
 original evidence.
+
+### RPG SBOUT automatic collision event
+
+The collision-only `5298` branch now has an independent original capture.
+MAPZ directory byte offset 12 selects SBOUT; entity five has cell pointer
+25008, behavior zero, flags `800ah` and CHNA1 directory offset 220.  The
+fixture centres the leader at world `(79,69)`, immediately west of the
+entity's three-word footprint.  Its rewrite input contains one idle field poll,
+one Right poll and Quit—there is no Confirm input.  Right changes facing but
+cannot move the leader, and the `8000h` entity flag dispatches the dialogue
+record directly.  The final world coordinate therefore remains `(79,69)`.
+
+The untouched `RPG.EXE` is entered through `RPGOC.COM` with the identical
+SAVE/MAPZ/NAME Q triplet.  Eight physical Right pulses at 230 ms cadence avoid
+losing a lone pulse between field polls.  One stable 320×200 SBOUT page after
+the initial idle poll matches the rewrite byte for byte.  The original's
+AUTOTYPE cadence lets unrelated autonomous entities advance before its event
+page, so no whole-page equality is claimed for that later background.  The
+complete `x=16..303,y=115..194` dialogue surface is independent of those
+actors: its nine direct text updates plus retained final page all match the
+rewrite exactly, for ten zero-difference 288×80 RGB crops.  CTest locks the
+release entity record, the absence of Confirm, the blocked final state, the
+13-frame/193 ms rewrite timeline, the full page and every dialogue stage.
+This proves one shipped automatic collision route; it is not a claim that all
+world entities or a full playthrough are complete.
