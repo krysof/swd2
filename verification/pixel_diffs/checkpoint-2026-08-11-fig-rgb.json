@@ -3,12 +3,12 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG reference containing registered rewrite/original RGB page or crop digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 191,
-  "registered_rgb_pair_count": 4827,
-  "exact_rgb_page_count": 4754,
+  "source_count": 192,
+  "registered_rgb_pair_count": 4834,
+  "exact_rgb_page_count": 4761,
   "exact_rgb_crop_count": 73,
   "nonmatching_rgb_pair_count": 0,
-  "unique_exact_rgb_page_count": 2531,
+  "unique_exact_rgb_page_count": 2538,
   "unique_exact_rgb_crop_count": 57,
   "sources": [
     {
@@ -85,7 +85,7 @@
     },
     {
       "path": "scripts/fig-ally-flee-rgb-reference.json",
-      "sha256": "1d866ed0f124bbd7026603e7c968cdd7b95984e61b620f987214995982521d90",
+      "sha256": "c28c14926da5ffe7b2c721eaa903ec9336961d2af8d81def6314a83251b9e890",
       "kind": "original_fig_captured_ally_departure",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -148,7 +148,7 @@
     },
     {
       "path": "scripts/fig-ally-zero-rgb-reference.json",
-      "sha256": "8aed9039315110e660be9a0615a70bb652a13385b5427924caa9d923ea27036b",
+      "sha256": "b33362099ae491dc766fad48c3b92d80b466e0fa13cdf8ee1ce7626cca5c2d21",
       "kind": "original_fig_captured_ally_zero_physical",
       "registered_rgb_pairs": 57,
       "exact_rgb_pages": 57,
@@ -157,7 +157,7 @@
     },
     {
       "path": "scripts/fig-capture-reward-rgb-reference.json",
-      "sha256": "109e3a12ac1a442bf089ba5eee076ab0ddb085c0aaac425faefcbc7b8888afb6",
+      "sha256": "8964280b28058858ad170b27a9be5c0da6c8ec824fa4db9a33bf04bbc49445ea",
       "kind": "original_fig_encounter_capture_reward",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
@@ -197,6 +197,15 @@
       "kind": "original_fig_implicit_monster_damage_dispatcher",
       "registered_rgb_pairs": 22,
       "exact_rgb_pages": 22,
+      "exact_rgb_crops": 0,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-introduction-ny-rgb-reference.json",
+      "sha256": "19c28cb55fafe27a7523234d8a66a779b8710e96c545bbd02566dfbad9b9c800",
+      "kind": "original_fig_introduction_ny_prompt",
+      "registered_rgb_pairs": 7,
+      "exact_rgb_pages": 7,
       "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
@@ -382,7 +391,7 @@
     },
     {
       "path": "scripts/fig-monster-escape-failed-rgb-reference.json",
-      "sha256": "9bc25a6aea2460a9a59608eeee790a4fd87349b4a9b69b4f13297f51363914e6",
+      "sha256": "253cc57040348f5f88b944fce2b1ffa436c4ceff90a0981f783db651956afa78",
       "kind": "original_fig_monster_escape_failed_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -400,7 +409,7 @@
     },
     {
       "path": "scripts/fig-monster-flee-rgb-reference.json",
-      "sha256": "45aa536596db47262819e2bfefdc1cb47d3465f3f55a49739734c6fde742b2cf",
+      "sha256": "ebeb811c93690d7bfd773fa42353021158bb78715661f49407b6fa3ea4755155",
       "kind": "original_fig_monster_flee_sequence",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -508,7 +517,7 @@
     },
     {
       "path": "scripts/fig-ordinary-attack-rgb-reference.json",
-      "sha256": "f30f0696b69a036633916e029522e1bb2a1d11d8b7618558bf364c9459aa3e83",
+      "sha256": "fb8742afb7b67f3854ede93a4cf80c350ec28d5db35b8bf08119349267ba45b3",
       "kind": "original_fig_ordinary_attack_actor_advance",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
@@ -1714,7 +1723,7 @@
     },
     {
       "path": "scripts/fig-story-42-rgb-reference.json",
-      "sha256": "84bf77124832f4ffac8d9326ae45b3afe74b85822ae9f538821ea8d0306bf7d1",
+      "sha256": "26e5208931ca1b7a19748deeaf9cba05d33acc10972b7d46df60ceae7cce4466",
       "kind": "original_fig_story_42_hit_reaction",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,

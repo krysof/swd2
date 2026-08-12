@@ -993,11 +993,16 @@
         "scripts/verify-fig-player-buff-expiry-item-composite-missing-af-b0.py",
         "scripts/audit-fig-type10-composites.py",
         "scripts/audit-fig-learned-composites.py",
-        "scripts/audit-fig-story-visual-branches.py"
+        "scripts/audit-fig-story-visual-branches.py",
+        "scripts/original-fig-introduction-ny-autotype.txt",
+        "scripts/prepare-fig-introduction-ny-fixture.py",
+        "scripts/replay-fig-introduction-ny.txt",
+        "scripts/fig-introduction-ny-rgb-reference.json",
+        "scripts/verify-fig-introduction-ny.py"
       ],
       "remaining": [
-        "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 191 份 reference、4,754 张精确 RGB 完整页、73 个精确 crop 和 2,531 张唯一完整页，注册的非等值摘要为 0",
-        "全部 51 个非空 ORC 开场（13 YN、7 NY、31 无问答）已以 71 次真实 BattleModule 执行覆盖普通及 Yes/No 分支、60 个分页和完整输入消费；继续扩展到全部可达战斗组合、原版逐页基准及完整剧情战串联",
+        "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 192 份 reference、4,761 张精确 RGB 完整页、73 个精确 crop 和 2,538 张唯一完整页，注册的非等值摘要为 0",
+        "全部 51 个非空 ORC 开场（13 YN、7 NY、31 无问答）已以 71 次真实 BattleModule 执行覆盖普通及 Yes/No 分支、60 个分页和完整输入消费；目录 0386h 另有机器码闭包及裸敌人页、空框、四帧光标和保留光标的 NY 问答共 7 张原版零差异 RGB 页。继续扩展到其余开场、全部可达战斗组合及完整剧情战串联",
         "以完整通关战斗轨迹验证帧顺序、PIT timer 停留、调色板、语音提交点和最终状态均无分歧"
       ]
     },
@@ -1883,10 +1888,15 @@
         "scripts/fig-player-buff-expiry-item-composite-missing-af-b0-rgb-reference.json",
         "scripts/verify-fig-player-buff-expiry-item-composite-missing-af-b0.py",
         "scripts/audit-fig-type10-composites.py",
-        "scripts/audit-fig-learned-composites.py"
+        "scripts/audit-fig-learned-composites.py",
+        "scripts/original-fig-introduction-ny-autotype.txt",
+        "scripts/prepare-fig-introduction-ny-fixture.py",
+        "scripts/replay-fig-introduction-ny.txt",
+        "scripts/fig-introduction-ny-rgb-reference.json",
+        "scripts/verify-fig-introduction-ny.py"
       ],
       "remaining": [
-        "FIG 非最终 schema-2 聚合检查点已哈希锁定 191 个 reference、4,754 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
+        "FIG 非最终 schema-2 聚合检查点已哈希锁定 192 个 reference、4,761 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
         "生成通过实时精确比较及哈希校验的最终 pixel_diffs manifest"
       ]
     },

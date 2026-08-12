@@ -3046,6 +3046,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_story_42_validation PROPERTIES
         DEPENDS fig_story_42_prepare)
     add_test(
+        NAME fig_introduction_ny_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-introduction-ny-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-introduction-ny-save"
+    )
+    add_test(
+        NAME fig_introduction_ny_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-introduction-ny.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-introduction-ny-save"
+                "${CMAKE_BINARY_DIR}/fig-introduction-ny"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-introduction-ny-rgb-reference.json"
+    )
+    set_tests_properties(fig_introduction_ny_validation PROPERTIES
+        DEPENDS fig_introduction_ny_prepare)
+    add_test(
         NAME fig_ordinary_attack_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ordinary-attack-fixture.py"

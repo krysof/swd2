@@ -15,7 +15,7 @@
   "original_png_sha256": "ffdb8c810a65121392c986e6d5180aeebff56691e163e9e664d21decb455e2c8",
   "original_rgb_sha256": "47161c953f9b4f3723f844e1787af5fd4c9aa0ff2cad2daa6231e867a31be39d",
   "rewrite_frame": 41,
-  "rewrite_video_fnv1a64": "f6d490fd9482f486",
+  "rewrite_video_fnv1a64": "03b86ed9c3da67fa",
   "rewrite_delay_milliseconds": 1977,
   "rewrite_final_fnv1a64": "77bbe0516eaf6378",
   "rewrite_state_fnv1a64": "53455b31ebec6969",

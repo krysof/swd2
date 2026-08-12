@@ -10780,6 +10780,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 platform.actions.push_back(swd2::InputAction::confirm);
                 platform.actions.push_back(swd2::InputAction::quit);
             } else {
+                platform.actions.push_back(swd2::InputAction::confirm);
                 const auto default_yes = encounter.prompt_order ==
                     swd2::BattlePromptOrder::yes_no;
                 if (choose_yes != default_yes) {
@@ -10815,9 +10816,9 @@ void test_battle_module(const std::filesystem::path& game_root) {
     }
     require(introduction_records == 51U && prompt_records == 20U &&
                 introduction_runs == 71U && introduction_pages == 60U &&
-                introduction_presents == 222U &&
+                introduction_presents == 262U &&
                 introduction_direct_updates == 160U &&
-                introduction_digest == 10387570364441764367ULL,
+                introduction_digest == 6349028746801448483ULL,
             "FIG exhaustive ORC introduction/prompt checkpoint changed");
 
     ScriptedPlatform immediate_battle_platform;
@@ -11286,7 +11287,8 @@ void test_battle_module(const std::filesystem::path& game_root) {
             "FIG effect 4e did not stream the original SP078.VOC payload");
 
     ScriptedPlatform prompt_platform;
-    prompt_platform.actions = {swd2::InputAction::confirm};
+    prompt_platform.actions = {
+        swd2::InputAction::confirm, swd2::InputAction::confirm};
     prompt_platform.text_actions = {swd2::InputAction::confirm};
     auto prompt_state = swd2::SharedState::load(game_root / "SAVE.DA1");
     prompt_state.set_u8(0x3f4, 1U);
@@ -11297,9 +11299,9 @@ void test_battle_module(const std::filesystem::path& game_root) {
     const auto prompt_result = swd2::BattleModule().run(
         prompt_context, swd2::Marker::open_figure);
     require(prompt_result == swd2::Marker::continue_rpg &&
-                prompt_platform.presented == 2 &&
-                prompt_platform.frame_hashes.size() == 2 &&
-                prompt_platform.frame_hashes[1] == 16443477943331878383ULL &&
+                prompt_platform.presented == 3 &&
+                prompt_platform.frame_hashes.size() == 3 &&
+                prompt_platform.frame_hashes[2] == 9726789636887383523ULL &&
                 prompt_platform.text_cursor == 1U &&
                 prompt_platform.text_poll_calls == 1U &&
                 prompt_platform.direct_updates == 2U &&
