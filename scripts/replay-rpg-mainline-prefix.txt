@@ -1,15 +1,12 @@
-# Deterministic main-story prefix reconstructed from the released MAPZ, MAP0
-# and CHNA1 data.  It performs the real single-process startup, completes the
-# DAQ opening, walks through AREA1 into the first village, visits the inn,
-# acknowledges all three innkeeper pages, returns to the village, completes
-# both seven-page blocking-villager dialogues, enters the chief's house and
-# completes the chief's twenty-one-page first-story event, enters Wild Bear
-# Stronghold, wins the first deterministic random encounter, then collides
-# with and defeats the first one-shot bandit guard.
+# Deterministic main-story prefix reconstructed from the released MAPZ, MAP0,
+# CHNA1, ORC, ITEM and FIG data. It performs the real single-process startup,
+# completes the DAQ opening and first-village story, enters Wild Bear
+# Stronghold, defeats four ordinary encounters and then wins the Fire-Eyed
+# Suanni chief battle with explicit per-actor commands over nine rounds.
 #
-# The final ordinary world poll is in SBOUT after CHNA1 entry 224 has changed
-# the guard to hidden behavior three and FIG has returned OC a second time.
-# This is evidence for the beginning of the main route, not a claim of a
+# The final ordinary world poll is in SB-IN after CHNA1 entry 200 has set story
+# flag seven, MAPZ has persisted all one-shot enemies, and FIG has returned OC
+# five times. This is evidence for the first major boss, not a claim of a
 # complete playthrough.
 WAIT:CONFIRM*4
 WAIT:CANCEL
@@ -101,5 +98,108 @@ POLL:CONFIRM
 WAIT:CONFIRM
 WAIT:RIGHT
 WAIT:CONFIRM
+WAIT:CONFIRM
+
+# Continue to SBOUT cave entrance.
+POLL:UP*42
+POLL:RIGHT*2
+POLL:UP*3
+POLL:RIGHT*3
+POLL:UP*4
+POLL:RIGHT*5
+POLL:UP*7
+POLL:RIGHT*6
+POLL:UP*5
+# Navigate toward first boss.
+POLL:UP*13
+POLL:LEFT
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:CONFIRM
+POLL:LEFT*6
+POLL:UP*8
+POLL:LEFT*4
+POLL:UP*20
+POLL:LEFT*2
+POLL:UP*2
+POLL:LEFT*8
+POLL:UP*30
+POLL:RIGHT*4
+POLL:UP*3
+POLL:RIGHT*6
+POLL:UP*3
+POLL:RIGHT*3
+POLL:UP*27
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:CONFIRM
+POLL:UP*9
+POLL:RIGHT*3
+POLL:UP*11
+# Continue toward Wild Bear chief.
+POLL:RIGHT*3
+POLL:UP*8
+POLL:LEFT*2
+POLL:UP*35
+POLL:RIGHT*5
+# Face and challenge Fire-Eyed Suanni.
+POLL:UP
+POLL:CONFIRM
+POLL:CONFIRM*5
+
+# Boss round 1: 伏虎符, 氣聚符 on actor 2, 伏魔功.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+
+# Boss round 2: 伏虎符, 氣聚符 on actor 2, 五行拳.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM*2
+
+# Boss rounds 3-5: 伏虎符, 氣聚符 on actor 0, basic attack.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+
+# Boss rounds 6-7: 伏虎符 plus two basic attacks.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:CONFIRM*4
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:CONFIRM*4
+
+# Boss rounds 8-9: actor 2 is dead; two basic attacks finish the chief.
+WAIT:CONFIRM*4
+WAIT:CONFIRM*4
+
+# Victory summary.
 WAIT:CONFIRM
 POLL:QUIT
