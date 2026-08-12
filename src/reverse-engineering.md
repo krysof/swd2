@@ -3798,3 +3798,11 @@ the `1b06` screen-motion path: viewport `(140,0)` stays fixed, actor screen X
 changes from `26h` to `28h`, and the world position becomes `(161,12)`.  Both
 the initial and post-step pages match the untouched original in every RGB
 pixel, and CTest locks the two-poll state/timeline and both render pages.
+
+The vertical screen-motion counterpart stages viewport Y at its `180-25=155`
+limit.  The three-cell footprint below AREA1 world `(20,167)` is clear.  One
+Down poll therefore takes `1d06`, retaining viewport `(0,155)`, moving actor
+screen Y from `50h` to `58h`, and ending at world `(20,168)`.  Entry and
+post-step pages again match the original across the complete 320x200 RGB
+surface.  Successful viewport scrolling and successful on-screen movement are
+now covered independently on both coordinate axes.

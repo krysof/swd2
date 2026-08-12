@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_area1_screen_south_sequence",
+  "status": "exact_rgb_checkpoint",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_harness_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "area_layout_sha256": "773bb3778f48048b3d432bff5ea096e455faf5b02e656a454335dd0c05c1a32f",
+  "area_graphics_metadata_sha256": "873375a04558e9d125e6396d81e536eea56d576baed5a13889179b5eb9cb6e90",
+  "area_overlay_sha256": "8cbe592483fdc6946a14efa1dceecaa478ae65f4ab549d90d4990ec4f6bf7548",
+  "fixture_save_sha256": "d48cf6420f67d4655ecd80fa67f00741beec4f7c86c90f0726505baf58f23bd4",
+  "capture_autotype": "original-rpg-world-screen-south-autotype.txt",
+  "capture_autotype_sha256": "f7332c41f0b3aecf3dbd6c196184a56b8c14ed465993f29b36de911aa2275455",
+  "replay_input": "replay-rpg-world-screen-south.txt",
+  "replay_input_sha256": "922ed33951e3fa8471e56c670a4bbbd87fbf0b97827cb49f3aa04bb405694a7d",
+  "capture_wait_seconds": 5.0,
+  "capture_pace_seconds": 1.0,
+  "capture_time_limit_seconds": 12,
+  "capture_review_fps": 70.0,
+  "capture_video_frames": 840,
+  "capture_review_frames": 839,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "81a6a79ab8ed56436cf19756b2ee4cfe8100f53c995909186469c24780cefe62",
+  "capture_manifest_sha256": "8bbceaa346a497c3c75667052dc6c27ea1bf57c22a2e6c43ba8ddf6d7f072bc3",
+  "initial_world_position": [
+    20,
+    167
+  ],
+  "requested_direction": "DOWN",
+  "direction_polls": 1,
+  "final_world_position": [
+    20,
+    168
+  ],
+  "initial_viewport_position": [
+    0,
+    155
+  ],
+  "final_viewport_position": [
+    0,
+    155
+  ],
+  "initial_actor_screen_position": [
+    38,
+    80
+  ],
+  "final_actor_screen_position": [
+    38,
+    88
+  ],
+  "rewrite_input": {
+    "total": 2,
+    "consumed": 2,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 0,
+    "poll": 2,
+    "text": 0,
+    "frontend": 0
+  },
+  "rewrite_video": {
+    "frames": 2,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "a008935766763b95"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 0,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "076d0e29ae5643c6"
+  },
+  "rewrite_delay_milliseconds": 58,
+  "rewrite_state_fnv1a64": "822f92e056e3850c",
+  "rewrite_mapz_fnv1a64": "827f0f1b725a0958",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "matched_frames": [
+    {
+      "kind": "initial_area1_south_edge_world_page",
+      "rewrite_frame": 0,
+      "original_review_frame": 299,
+      "original_png_sha256": "17e867150b560b2b474983789b1f4d65991c81cd43d6ae90c05c777b856c6357",
+      "rewrite_indexed_sha256": "380297daed88bac30d29587120cc13de727fdcdc9be5031fdb61a1d08cf3fe49",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "rewrite_rgb_sha256": "fd73816397a252220b6b5d5b7944f285dd3a1631fddea760ca40d840bd114f9a",
+      "original_rgb_sha256": "fd73816397a252220b6b5d5b7944f285dd3a1631fddea760ca40d840bd114f9a"
+    },
+    {
+      "kind": "south_screen_step_page",
+      "rewrite_frame": 1,
+      "original_review_frame": 542,
+      "original_png_sha256": "e751bb7fe0739c9c23ee30f16cbf1cc4a092b1b5edb430b22479c54958f5204e",
+      "rewrite_indexed_sha256": "9535b9319c10aa01810fdcebb2ea7084971bff4dc915f5e7a58b4b42252c01f2",
+      "rewrite_palette_sha256": "e4e7dc52900bdebf2c12f85849ef86d7bd06ebd1efc705f7bfc4173caa9f4176",
+      "rewrite_rgb_sha256": "56e982598bbe39ba5a8648650ca9b6f7f8c749be2649cc37c3aa1599966a9876",
+      "original_rgb_sha256": "56e982598bbe39ba5a8648650ca9b6f7f8c749be2649cc37c3aa1599966a9876"
+    }
+  ]
+}

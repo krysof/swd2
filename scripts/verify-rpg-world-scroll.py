@@ -71,6 +71,25 @@ ROUTES = {
         "capture_video_frames": 840,
         "capture_review_frames": 839,
     },
+    "original_rpg_area1_screen_south_sequence": {
+        "direction": "DOWN",
+        "initial_world": [20, 167],
+        "final_world": [20, 168],
+        "initial_viewport": [0, 155],
+        "final_viewport": [0, 155],
+        "initial_screen": [38, 80],
+        "final_screen": [38, 88],
+        "kinds": ("initial_area1_south_edge_world_page",
+                  "south_screen_step_page"),
+        "rewrite_frames": (0, 1),
+        "review_frames": (299, 542),
+        "matched_count": 2,
+        "polls": 1,
+        "rewrite_frame_count": 2,
+        "capture_time_limit": 12,
+        "capture_video_frames": 840,
+        "capture_review_frames": 839,
+    },
 }
 
 
