@@ -3725,3 +3725,23 @@ With both new references the schema-2 aggregate advances to 218 references,
 5,620 exact full pages, 73 exact crops and 3,162 unique exact full-page RGB
 digests, with zero registered unequal pairs.  It remains a non-final
 checkpoint.
+
+### RPG AREA1 blocked-east corner slide
+
+The first reproducible world-movement RGB route now enters the untouched
+`RPG.EXE` through `RPGOC.COM`'s `OC` load boundary instead of passing through
+the menu.  A release `SAVE.DA1` is staged at AREA1 world `(130,13)`, with the
+screen anchor still at `26h`; one physical Right press is the entire original
+input.  The requested east footprint reaches RAP cell `(132,13)`, whose word
+is `8029h`, so `1a70..1a8f` rejects the east step and the south-first corner
+path moves the actor to `(130,14)`.
+
+The rewrite uses the same one-poll Right input followed only by a replay Quit.
+Its page before input and its post-slide page both equal stable original
+320x200 RGB observations byte for byte, including the AREA1 animated DAC
+phase, party formation, viewport and entity layer.  The fixture also emits the
+Q-suffix save triplet needed to reproduce the original harness boundary.
+CTest fails on any change to the release inputs, staged save, capture hashes,
+two modern indexed pages, palettes, exact RGB equalities, final save triple,
+audio calls or two-poll boundary.  This is a world-runtime checkpoint, not a
+complete-map or full-playthrough claim.

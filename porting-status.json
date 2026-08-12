@@ -78,11 +78,16 @@
         "src/tests/test_main.cpp",
         "scripts/replay-smoke.txt",
         "scripts/replay-new-game-startup.txt",
-        "scripts/verify-new-game-startup.py"
+        "scripts/verify-new-game-startup.py",
+        "scripts/original-rpg-world-corner-slide-autotype.txt",
+        "scripts/prepare-rpg-world-corner-slide-fixture.py",
+        "scripts/replay-rpg-world-corner-slide.txt",
+        "scripts/rpg-world-corner-slide-rgb-reference.json",
+        "scripts/verify-rpg-world-corner-slide.py"
       ],
       "remaining": [
         "RPG DATA:37a0 的 42 项场景动作表、3407..3938 原版处理器、全部 00h..29h 状态摘要、75 个可达玩家能力及 49 项场景 ITEM 域已由 src/tests/test_main.cpp 穷举锁定；物品 248/6bh 是唯一发行数据越表故障并在现代运行时安全拒绝",
-        "现有 6,862 个唯一地点/实体图状态已在否/是两套输入下完成 13,724 次执行并锁定最终 SharedState/MAPZ 汇总检查点；继续把它们逐一与原版场景帧和状态基准对照",
+        "现有 6,862 个唯一地点/实体图状态已在否/是两套输入下完成 13,724 次执行并锁定最终 SharedState/MAPZ 汇总检查点；AREA1 世界坐标 (130,13) 向东碰撞 8029h 单元后沿 1a8f 南滑至 (130,14) 的原版 OC 路线已登记移动前后两张完整 RGB 零差异页；继续把其余状态逐一与原版场景帧和状态基准对照",
         "以完整新游戏通关回放验证 DAQ 开场事件后的全部状态无分歧"
       ]
     },
@@ -1103,7 +1108,12 @@
         "scripts/replay-fig-monster-special-effect65.txt",
         "scripts/fig-monster-special-effect65-rgb-reference.json",
         "scripts/verify-fig-monster-special-effect65.py",
-        "scripts/audit-fig-monster-special-domain.py"
+        "scripts/audit-fig-monster-special-domain.py",
+        "scripts/original-rpg-world-corner-slide-autotype.txt",
+        "scripts/prepare-rpg-world-corner-slide-fixture.py",
+        "scripts/replay-rpg-world-corner-slide.txt",
+        "scripts/rpg-world-corner-slide-rgb-reference.json",
+        "scripts/verify-rpg-world-corner-slide.py"
       ],
       "remaining": [
         "FIG 的 550 个 ORC 编队所选 174 个怪物定义，其 41 个可支付 generic 能力现已失败封闭为 8dh/81h/5ch 三种 25ee 闪屏类；三种颜色、四人全体及 0/2 存活槽路径由五条未修改原版路线登记 112 张精确 RGB 页并验证八次一 tick 交替；全体路径的 262f 名称页及 2485 存活卡所有权均已修正",
@@ -2102,7 +2112,7 @@
         "scripts/audit-fig-monster-special-domain.py"
       ],
       "remaining": [
-        "FIG 非最终 schema-2 聚合检查点已哈希锁定 218 个 reference、5,620 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
+        "FIG 非最终 schema-2 聚合检查点已哈希锁定 218 个 reference、5,620 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；RPG AREA1 东向阻挡后的南向拐角滑动另登记两张完整 RGB 零差异页；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
         "生成通过实时精确比较及哈希校验的最终 pixel_diffs manifest"
       ]
     },
