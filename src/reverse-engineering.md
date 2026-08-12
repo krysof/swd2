@@ -3684,3 +3684,44 @@ mislabelled as original matches.  The schema-2 aggregate therefore advances to
 216 references, 5,479 exact full pages, 73 exact crops and 3,075 unique exact
 full-page RGB digests, with zero registered unequal pairs.  This remains a
 non-final checkpoint.
+
+### FIG remaining shipped monster-special status selectors
+
+Two more unmodified routes close the successful status-selector family.
+Directory `22ah` contains one definition-394 monster; cursor `1010h` selects
+special-A ability 58 (`a403h/65h`).  Its status action and three following
+rounds contribute 91 chronologically ordered full-page RGB matches.  Twelve
+pages are deliberately not counted: entry/replay-only and zero-hold pages,
+plus eight pages where the original and rewrite passive monster animation is
+out of phase at exactly two pixels.  The reference records those two
+coordinates and both page hashes without claiming equality.
+
+Directory `10h` similarly contains one definition-512 monster and selects
+special-A ability 65 (`a403h/5eh`).  This capture exposed a real weapon-anchor
+error.  Original `3229` halves the already converted Mode-X sprite width into
+`31cb`; `3266` adds the encounter's Mode-X left coordinate and stores the
+result in the monster's runtime `+321d` target anchor.  The rewrite had instead
+halved the unpacked pixel width.  For CD512's 116-pixel width, original
+conversion is `ceil(116/4)=29`, then `29>>1=14`, so formation column 23 targets
+pixel `(23+14)*4=148`; direct pixel halving incorrectly targeted 150.
+`fig_monster_center_x` now preserves the two integer truncations.  Widths 64
+and 32 remain at their already verified centres, while the odd 29-column case
+moves the SW weapon two pixels left.  Fifty chronologically ordered pages now
+match the original capture exactly; only entry, zero-hold, replay-exit and five
+unsampled one-tick page-wipe submissions are excluded.
+
+`audit-fig-monster-special-domain.py` derives the complete domain from all 550
+encounters and their 174 selected definitions.  The two special slots contain
+19 unique ability descriptors: 17 are affordable in at least one shipped
+definition, while ability 37/effect `69h` and ability 134/effect `5eh` cannot
+be paid by their owning definitions.  The affordable set has nine selector
+codes, collapsing through `26af` to six presentation classes: the shared
+silent return (`3dh/3eh/49h/4ch`), four status handlers (`5eh/5fh/64h/65h`),
+and self-buff `67h`.  All six classes now have original evidence totalling 219
+exact RGB pages; a changed ORC/ITEM/FIG join, affordability result, selector
+count or reference page count fails CTest.
+
+With both new references the schema-2 aggregate advances to 218 references,
+5,620 exact full pages, 73 exact crops and 3,162 unique exact full-page RGB
+digests, with zero registered unequal pairs.  It remains a non-final
+checkpoint.

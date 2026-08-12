@@ -137,4 +137,10 @@ struct FigWeaponPlacement {
 [[nodiscard]] FigWeaponPlacement fig_weapon_placement(
     int target_x, int target_y) noexcept;
 
+// FIG converts an unpacked sprite width to Mode-X byte columns before 3229
+// halves it into the runtime +321d target anchor.  Halving the pixel width
+// directly differs by two pixels whenever the padded column width is odd.
+[[nodiscard]] int fig_monster_center_x(
+    int mode_x_left, int sprite_width_pixels) noexcept;
+
 }  // namespace swd2

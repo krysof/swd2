@@ -151,4 +151,10 @@ FigWeaponPlacement fig_weapon_placement(int target_x, int target_y) noexcept {
     return {target_x - 16, target_y - 50};
 }
 
+int fig_monster_center_x(int mode_x_left, int sprite_width_pixels) noexcept {
+    if (sprite_width_pixels < 0) sprite_width_pixels = 0;
+    const auto mode_x_width = (sprite_width_pixels + 3) / 4;
+    return (mode_x_left + mode_x_width / 2) * 4;
+}
+
 }  // namespace swd2

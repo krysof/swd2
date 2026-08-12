@@ -3978,6 +3978,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_monster_special_status_validation PROPERTIES
         DEPENDS fig_monster_special_status_prepare)
     add_test(
+        NAME fig_monster_special_effect5e_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-special-effect5e-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect5e-save"
+    )
+    add_test(
+        NAME fig_monster_special_effect5e_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-special-effect5e.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect5e-save"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect5e"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-special-effect5e-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_special_effect5e_validation PROPERTIES
+        DEPENDS fig_monster_special_effect5e_prepare)
+    add_test(
         NAME fig_monster_special_effect5f_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-special-effect5f-fixture.py"
@@ -3996,6 +4015,25 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_monster_special_effect5f_validation PROPERTIES
         DEPENDS fig_monster_special_effect5f_prepare)
+    add_test(
+        NAME fig_monster_special_effect65_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-special-effect65-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect65-save"
+    )
+    add_test(
+        NAME fig_monster_special_effect65_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-special-effect65.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect65-save"
+                "${CMAKE_BINARY_DIR}/fig-monster-special-effect65"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-monster-special-effect65-rgb-reference.json"
+    )
+    set_tests_properties(fig_monster_special_effect65_validation PROPERTIES
+        DEPENDS fig_monster_special_effect65_prepare)
     add_test(
         NAME fig_monster_special_resistance_prepare
         COMMAND "${Python3_EXECUTABLE}"
@@ -4034,6 +4072,15 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_monster_special_buff_validation PROPERTIES
         DEPENDS fig_monster_special_buff_prepare)
+    add_test(
+        NAME fig_monster_special_domain_audit
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/audit-fig-monster-special-domain.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${PROJECT_SOURCE_DIR}/scripts"
+    )
+    set_tests_properties(fig_monster_special_domain_audit PROPERTIES
+        DEPENDS "fig_monster_special_silent_validation;fig_monster_special_status_validation;fig_monster_special_resistance_validation;fig_monster_special_buff_validation;fig_monster_special_effect5e_validation;fig_monster_special_effect5f_validation;fig_monster_special_effect65_validation")
     add_test(
         NAME fig_monster_buff_expiry_prepare
         COMMAND "${Python3_EXECUTABLE}"

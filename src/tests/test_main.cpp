@@ -3198,7 +3198,10 @@ void test_battle_party(const std::filesystem::path& game_root) {
     require(swd2::fig_weapon_animations(member) ==
                     std::vector<swd2::FigWeaponAnimation>{{122, false}} &&
                 swd2::fig_weapon_placement(160, 80) ==
-                    swd2::FigWeaponPlacement{144, 30},
+                    swd2::FigWeaponPlacement{144, 30} &&
+                swd2::fig_monster_center_x(33, 64) == 164 &&
+                swd2::fig_monster_center_x(23, 116) == 148 &&
+                swd2::fig_monster_center_x(35, 32) == 156,
             "FIG +2c single-weapon 14b1 path/anchor differs");
     require(swd2::fig_page_wipe_scanline_ends() ==
                 std::array<int, 4>{50, 100, 150, 200},

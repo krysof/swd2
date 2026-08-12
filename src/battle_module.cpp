@@ -1393,8 +1393,9 @@ std::pair<int, int> monster_visual_center(
     const auto archive = load_sprites(monster_path(game_root, monster.sprite_number));
     const auto& sprite = archive.sprites().front();
     return {
-        static_cast<int>(encounter.horizontal_positions[index]) * 4 +
-            static_cast<int>(sprite.width) / 2,
+        fig_monster_center_x(
+            static_cast<int>(encounter.horizontal_positions[index]),
+            static_cast<int>(sprite.width)),
         static_cast<int>(monster.vertical_position) +
             static_cast<int>(sprite.height) / 2,
     };
