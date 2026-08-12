@@ -53,11 +53,11 @@ def main() -> int:
     try:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
         pages = expected.get("frames")
-        rewrite_frames = [0, 1, 3, 4, 5, 6, 7]
+        rewrite_frames = [0, 1, 3, 4, 5, 6, 7, 8]
         if expected.get("schema_version") != 1 or \
                 expected.get("kind") != "original_fig_introduction_ny_prompt" or \
                 expected.get("formation_directory_offset") != 0x386 or \
-                not isinstance(pages, list) or len(pages) != 7 or \
+                not isinstance(pages, list) or len(pages) != 8 or \
                 [page.get("rewrite_frame") for page in pages] != rewrite_frames:
             raise ValueError("unsupported FIG NY-introduction reference")
 
@@ -105,12 +105,12 @@ def main() -> int:
         ], check=True, stdout=subprocess.DEVNULL)
         trace = json.loads(trace_path.read_text(encoding="utf-8"))
         if trace.get("input") != {
-                "total": 6, "consumed": 6, "remaining": 0,
+                "total": 8, "consumed": 8, "remaining": 0,
                 "implicit_quit_calls": 0} or trace.get("boundaries") != {
-                    "wait": 1, "poll": 4, "text": 1, "frontend": 0}:
+                    "wait": 3, "poll": 4, "text": 1, "frontend": 0}:
             raise ValueError("FIG introduction input boundaries differ")
         if trace.get("video") != {
-                "frames": 8, "direct_updates": 2,
+                "frames": 10, "direct_updates": 2,
                 "last_width": 320, "last_height": 200,
                 "fnv1a64": expected["rewrite_video_fnv1a64"]}:
             raise ValueError("FIG introduction video differs")
@@ -131,7 +131,7 @@ def main() -> int:
             raise ValueError("FIG introduction return boundary differs")
 
         frames = load_indexed_frames(frame_path)
-        if len(frames) != 8:
+        if len(frames) != 10:
             raise ValueError("FIG introduction frame count differs")
         for page in pages:
             pixels, palette = frames[page["rewrite_frame"]]
@@ -151,7 +151,7 @@ def main() -> int:
                 raise ValueError(f"malformed introduction evidence digest {name}")
         print(
             "FIG NY introduction: bare enemy page, panel, all four animated "
-            "cursor frames, retained prompt cursor, and seven exact original "
+            "cursor frames, both prompt selections, and eight exact original "
             "RGB pages")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
