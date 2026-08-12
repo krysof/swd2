@@ -155,11 +155,22 @@ def main() -> int:
                 raise ValueError(
                     f"generic flash exact RGB pages changed: {filename}")
             total_pairs += len(pairs)
+        all_target = json.loads((
+            args.evidence / "fig-monster-generic-all-target-rgb-reference.json"
+        ).read_text(encoding="utf-8"))
+        all_target_pairs = list(exact_pairs(all_target))
+        if tuple(all_target.get(name) for name in (
+                "monster_definition_id", "ability_id", "effect_code",
+                "target_flags", "solid_palette_index")) != (
+                    334, 74, 0x42, 0x8401, 0x5C) or \
+                len(all_target_pairs) != 57:
+            raise ValueError("generic four-party all-target evidence changed")
+        total_pairs += len(all_target_pairs)
         print(
             "FIG generic-monster flash audit: 550 encounters / 174 monster "
             "definitions expose 41 affordable generic abilities in exactly "
-            f"three 25ee colour classes; all {total_pairs} archetype RGB "
-            "pages match the original")
+            f"three 25ee colour classes; all {total_pairs} archetype and "
+            "four-party all-target RGB pages match the original")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError) as error:

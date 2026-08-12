@@ -9,7 +9,7 @@
   "fixture_save_sha256": "bce3144449abee216c3ff01e3aaf0af34431c591b7e6537ad4c53d4558f39275",
   "capture_video_sha256": "9ac57dac4379fc2ce3d9c590acaeb86c7926f4444e6095aff326cdee659552cd",
   "capture_manifest_sha256": "de184020896ee684acf927ae4746e8c341825fabceadbb1a75d0470ad1c5f700",
-  "rewrite_video_fnv1a64": "9ff781030a5edc0c",
+  "rewrite_video_fnv1a64": "88271ca3ea7331cd",
   "rewrite_state_fnv1a64": "0d52826268ae781c",
   "rewrite_final_fnv1a64": "293ddd78aac3723f",
   "frames": [

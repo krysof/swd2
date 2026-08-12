@@ -3498,6 +3498,7 @@ bool present_round_events(
                     font, fallback, visual, event, abilities,
                     encounter_directory_offset,
                     event.kind != BattleEventKind::monster_heal &&
+                        !event.monster_generic_path &&
                         !monster_generic_single_target &&
                         !monster_special_self_buff);
             }

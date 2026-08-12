@@ -3625,6 +3625,18 @@ final clean page to `384,384,439,494,549,604,659,714,769ms`.
 
 `audit-fig-monster-generic-flash-domain.py` derives the ORC/ITEM/FIG join and
 fails if the 550/174/41 domain, its descriptor digest, its three class sizes or
-any of the 18 registered archetype RGB pages changes.  The schema-2 aggregate
-therefore advances to 213 references, 5,333 exact full pages, 73 exact crops
-and 2,966 unique exact full-page digests, still as a non-final checkpoint.
+any of the 18 registered class-archetype RGB pages changes.
+
+A four-party capture of definition 334's all-target ability 74 then exposed a
+separate `2485` ownership error.  The original `262f` name page is bare for
+both generic modes; only after its seven-tick hold does `2485` compose the
+party cards used by the clean half of `25ee`.  The rewrite had passed
+`include_party_cards=true` only for the all-target name, placing all four cards
+under `三昧真火符`.  The name-card call now excludes every generic action while
+leaving the following clean/solid pages and sequential target results intact.
+The corrected replay has 57 chronologically ordered full-page RGB matches from
+entry through all four target-number runs; the sole unsampled eighth solid page
+remains locked by its indexed `5ch` fill and timer sequence instead of being
+misrepresented as a DOSBox video match.  The aggregate consequently advances
+to 214 references, 5,390 exact full pages, 73 exact crops and 3,016 unique
+exact full-page digests, still as a non-final checkpoint.
