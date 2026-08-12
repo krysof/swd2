@@ -2020,11 +2020,18 @@ void present_missing_medium_card(
                    : 12 + static_cast<int>(event.target) * 18)
             : 12 + static_cast<int>(event.source) * 18;
     }
-    draw_fig_party_cards(
-        frame, menu_sprites,
-        std::span<const BattlePartyMember>(visual.party).first(
-            visual.party_count),
-        action_actor, action_mode_x_anchor);
+    // Captured allies enter 58fa through 1048 without ever calling 2bb5.
+    // Just like their successful effect pages, the missing-medium card keeps
+    // the bare ally-action bottom strip.  Drawing the ordinary party cards
+    // here incorrectly added actor zero's exact 48x50 card when ally slot zero
+    // selected the one shipped unflagged B0-dependent ability (116/48h).
+    if (!event.source_is_summoned_ally) {
+        draw_fig_party_cards(
+            frame, menu_sprites,
+            std::span<const BattlePartyMember>(visual.party).first(
+                visual.party_count),
+            action_actor, action_mode_x_anchor);
+    }
     if (action_actor) {
         // Learned abilities reach 58fa after 4338 has left pose4 visible.
         // Direct items can instead enter it from 1138 with pose0 retained.

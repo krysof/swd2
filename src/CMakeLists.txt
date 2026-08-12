@@ -3594,6 +3594,34 @@ if(BUILD_TESTING)
     set_tests_properties(fig_ally_player_ward_validation PROPERTIES
         DEPENDS fig_ally_player_ward_prepare)
     add_test(
+        NAME fig_ally_missing_medium_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-missing-medium-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-missing-medium-game"
+    )
+    add_test(
+        NAME fig_ally_missing_medium_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ally-missing-medium.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-missing-medium-game"
+                "${CMAKE_BINARY_DIR}/fig-ally-missing-medium"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ally-missing-medium-rgb-reference.json"
+    )
+    set_tests_properties(fig_ally_missing_medium_validation PROPERTIES
+        DEPENDS fig_ally_missing_medium_prepare)
+    add_test(
+        NAME fig_summonable_visual_domain_audit
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/audit-fig-summonable-visual-domain.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${PROJECT_SOURCE_DIR}/scripts"
+    )
+    set_tests_properties(fig_summonable_visual_domain_audit PROPERTIES
+        DEPENDS fig_ally_missing_medium_validation)
+    add_test(
         NAME fig_ally_medium_dismiss_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-medium-dismiss-fixture.py"

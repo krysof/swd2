@@ -3566,3 +3566,37 @@ the fixture-altered item preview, all 54 remaining submitted pages match the
 unmodified `FIG.EXE` capture at full 320x200 RGB.  The aggregate is therefore
 210 references, 5,277 exact full pages, 73 exact crops and 2,933 unique exact
 full-page RGB digests, still without changing the in-progress completion gate.
+
+### FIG captured-ally unflagged missing-B0 route
+
+The complete captured-ally ITEM domain is now derived instead of sampled by
+hand.  `audit-fig-summonable-visual-domain.py` reads the 190 shipped
+definitions 314..503 whose unaligned `+5` flags contain bit 1, follows their
+generic/heal/special-A/special-B ability slots into the FIG table, and fails if
+the resulting 68 referenced abilities, 57 visual abilities or 34 visual
+selectors change.  Every required-medium selector in that domain carries its
+matching low-byte installation flag except one deliberate shipped exception:
+item 402's generic ability 116 is effect `48h` with flags `a100h`, so it
+requires B0 but cannot install B0 through the `20h` target bit.
+
+That exception exposed two independent `1048 -> 58fa` errors.  The missing
+card compositor called `2bb5` on behalf of ally slot zero and invented actor
+zero's 48x50 party card, although the original keeps the same bare ally-action
+bottom strip on both the modal and its clean return.  The captured-ally AI also
+rolled and discarded the normal monster-style power word before the required
+medium guard.  Original `58fa` rejection pays the ability AP but consumes no
+such random-code word; the extra draw changed the following enemy from the
+original physical action into a different ability.  Captured-ally selection
+now defers that unused power draw until after the guard.  Successful effects
+and target-flag medium installations still draw it at the old point, preserving
+their already locked traces.
+
+A fresh unmodified-FIG IF capture fixes item 402, ability 116, cursor `1026h`
+and the exact missing-B0 route.  Apart from the IF entry, fixture-altered item
+preview and ten transient rising-number submissions, all other 44 modern pages
+through the missing card, bare `1048` return, following physical attack, clean
+tail and next command match full 320x200 original RGB byte for byte.  The
+schema-2 non-final aggregate now contains 211 references, 5,321 exact full
+pages, 73 exact crops and 2,956 unique exact full-page digests, with zero
+registered unequal pairs; neither FIG pixel parity nor project completion is
+therefore marked complete.

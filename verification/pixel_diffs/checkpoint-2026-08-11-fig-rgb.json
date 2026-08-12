@@ -3,13 +3,13 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG RGB reference; every reference must contain registered rewrite/original RGB page or crop digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
-  "reference_file_count": 210,
-  "source_count": 210,
-  "registered_rgb_pair_count": 5350,
-  "exact_rgb_page_count": 5277,
+  "reference_file_count": 211,
+  "source_count": 211,
+  "registered_rgb_pair_count": 5394,
+  "exact_rgb_page_count": 5321,
   "exact_rgb_crop_count": 73,
   "nonmatching_rgb_pair_count": 0,
-  "unique_exact_rgb_page_count": 2933,
+  "unique_exact_rgb_page_count": 2956,
   "unique_exact_rgb_crop_count": 57,
   "sources": [
     {
@@ -126,6 +126,15 @@
       "kind": "original_fig_captured_ally_medium_install",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
+      "exact_rgb_crops": 0,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-ally-missing-medium-rgb-reference.json",
+      "sha256": "1ea93f6a87e4f0717effd1da659f700e52ce37eeee6c6fc23d2683e37666a665",
+      "kind": "original_fig_captured_ally_missing_medium",
+      "registered_rgb_pairs": 44,
+      "exact_rgb_pages": 44,
       "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },

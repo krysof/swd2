@@ -16,12 +16,14 @@ std::uint16_t draw(const BattleRandom& random, std::uint16_t modulus) {
 
 std::optional<std::uint16_t> try_ability(
     std::uint16_t id, MonsterAiState& monster,
-    const BattleAbilityDatabase& abilities, const BattleRandom& random) {
+    const BattleAbilityDatabase& abilities, const BattleRandom& random,
+    bool defer_power_roll = false) {
     if (id == 0 || id >= abilities.abilities().size()) return std::nullopt;
     const auto& ability = abilities.ability(id);
     if (monster.ability_points < ability.cost) return std::nullopt;
     monster.ability_points =
         static_cast<std::uint16_t>(monster.ability_points - ability.cost);
+    if (defer_power_roll) return ability.base_power;
     return static_cast<std::uint16_t>(
         ability.base_power + draw(
             random, static_cast<std::uint16_t>((monster.level >> 1U) + 2U)));
@@ -127,7 +129,7 @@ MonsterAiDecision choose_monster_action(
 MonsterAiDecision choose_summoned_ally_action(
     MonsterAiState& ally, std::span<const bool> living_enemies,
     const BattleAbilityDatabase& abilities, const BattleRandom& random,
-    bool may_leave, bool never_leaves) {
+    bool may_leave, bool never_leaves, bool defer_power_roll) {
     MonsterAiDecision result;
 
     // FIG rolls this even for the protected definition 316 and for a first
@@ -146,7 +148,8 @@ MonsterAiDecision choose_summoned_ally_action(
     if (draw(random, 10) <= ally.secondary_chance) {
         if ((draw(random, 10) & 1U) != 0) {
             if (const auto power = try_ability(
-                    ally.special_ability_a, ally, abilities, random)) {
+                    ally.special_ability_a, ally, abilities, random,
+                    defer_power_roll)) {
                 result.action = MonsterAiAction::special_ability;
                 result.ability_id = ally.special_ability_a;
                 result.power = *power;
@@ -154,7 +157,8 @@ MonsterAiDecision choose_summoned_ally_action(
             }
         }
         if (const auto power = try_ability(
-                ally.special_ability_b, ally, abilities, random)) {
+                ally.special_ability_b, ally, abilities, random,
+                defer_power_roll)) {
             result.action = MonsterAiAction::special_ability;
             result.ability_id = ally.special_ability_b;
             result.power = *power;
@@ -162,7 +166,8 @@ MonsterAiDecision choose_summoned_ally_action(
         }
     }
     if (const auto power = try_ability(
-            ally.generic_ability, ally, abilities, random)) {
+            ally.generic_ability, ally, abilities, random,
+            defer_power_roll)) {
         result.action = MonsterAiAction::generic_ability;
         result.ability_id = ally.generic_ability;
         result.power = *power;

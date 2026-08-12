@@ -1071,10 +1071,14 @@
         "scripts/fig-ally-player-buff-rgb-reference.json",
         "scripts/verify-fig-ally-player-buff.py",
         "scripts/prepare-fig-ally-player-ward-fixture.py",
-        "scripts/fig-ally-player-ward-rgb-reference.json"
+        "scripts/fig-ally-player-ward-rgb-reference.json",
+        "scripts/prepare-fig-ally-missing-medium-fixture.py",
+        "scripts/fig-ally-missing-medium-rgb-reference.json",
+        "scripts/verify-fig-ally-missing-medium.py",
+        "scripts/audit-fig-summonable-visual-domain.py"
       ],
       "remaining": [
-        "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 210 份 reference、5,277 张精确 RGB 完整页、73 个精确 crop 和 2,933 张唯一完整页，注册的非等值摘要为 0",
+        "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 211 份 reference、5,321 张精确 RGB 完整页、73 个精确 crop 和 2,956 张唯一完整页，注册的非等值摘要为 0",
         "全部 51 个非空 ORC 开场（13 YN、7 NY、31 无问答）已由全目录矩阵失败封闭：14 个既有专用 reference 与其余 37 个逐记录原版捕获的目录并集必须精确等于 ORC 唯一开场集合；后 37 个逐一重放并登记 268 张完整 RGB 零差异页，每条均覆盖裸敌人、首个正文更新、95h..98h 四相最终标记及默认问答或命令页；全部 YN/NY 记录还精确登记右选问答页。继续覆盖全部可达战斗组合及完整剧情战串联",
         "以完整通关战斗轨迹验证帧顺序、PIT timer 停留、调色板、语音提交点和最终状态均无分歧"
       ]
@@ -2034,10 +2038,14 @@
         "scripts/original-fig-introduction-phase-select-autotype.txt",
         "scripts/original-fig-introduction-cycle-select-autotype.txt",
         "scripts/fig-introduction-matrix-rgb-reference.json",
-        "scripts/verify-fig-introduction-matrix.py"
+        "scripts/verify-fig-introduction-matrix.py",
+        "scripts/prepare-fig-ally-missing-medium-fixture.py",
+        "scripts/fig-ally-missing-medium-rgb-reference.json",
+        "scripts/verify-fig-ally-missing-medium.py",
+        "scripts/audit-fig-summonable-visual-domain.py"
       ],
       "remaining": [
-        "FIG 非最终 schema-2 聚合检查点已哈希锁定 210 个 reference、5,277 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
+        "FIG 非最终 schema-2 聚合检查点已哈希锁定 211 个 reference、5,321 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
         "生成通过实时精确比较及哈希校验的最终 pixel_diffs manifest"
       ]
     },

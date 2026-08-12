@@ -1249,7 +1249,8 @@ BattleRoundResult BattleSession::play_round(
                 ally.ai,
                 std::span<const bool>(living_enemies).first(monsters_.size()),
                 abilities, random, may_leave,
-                ally.item_id == steadfast_summon_item_id);
+                ally.item_id == steadfast_summon_item_id,
+                true);
             if (decision.action == MonsterAiAction::flee) {
                 const auto item_id = ally.item_id;
                 result.events.push_back({
@@ -1301,6 +1302,15 @@ BattleRoundResult BattleSession::play_round(
             }
             const auto& selected_ability = abilities.ability(decision.ability_id);
             const auto effect_code = selected_ability.effect_code;
+            const auto roll_selected_ability_power = [&] {
+                // 22f3 has already paid the ability cost. 1048 rolls the
+                // otherwise unused monster-style power only after 58fa's
+                // required-medium guard; a rejected unflagged prerequisite
+                // therefore consumes no random-code word. Successful and
+                // target-flag medium-install paths retain their old draw.
+                static_cast<void>(random(static_cast<std::uint16_t>(
+                    (ally.ai.level >> 1U) + 2U)));
+            };
             // Captured allies enter FIG 1048, not the enemy-only 26af path.
             // Before 1048 jumps through the ordinary player effect table it
             // repeats 23b1's 80h/40h/20h mediator test.  An absent requested
@@ -1310,6 +1320,7 @@ BattleRoundResult BattleSession::play_round(
             if (const auto medium =
                     fig_medium_from_target_flags(selected_ability.target_flags);
                 medium && !battle_media_[*medium]) {
+                roll_selected_ability_power();
                 battle_media_[*medium] = true;
                 BattleSessionEvent event;
                 event.kind = BattleEventKind::medium_summoned;
@@ -1334,6 +1345,7 @@ BattleRoundResult BattleSession::play_round(
                 result.events.push_back(event);
                 continue;
             }
+            roll_selected_ability_power();
             // 1048 jumps through the same player-side mediator selectors as
             // a learned ability after the captured ally has paid its AP.
             // The target-flag prerequisite above owns only missing-media

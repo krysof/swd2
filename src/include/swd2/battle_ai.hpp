@@ -58,9 +58,13 @@ MonsterAiDecision choose_monster_action(
 // back to their special-B/generic ability before making a physical attack.
 // `may_leave` encodes FIG's packed-runtime constraint: the first ally may only
 // leave when no second ally exists, while the second ally may always leave.
+// BattleSession sets `defer_power_roll` because 1048 first checks the
+// unflagged required-medium guard; a 58fa rejection spends AP but does not
+// consume the otherwise unused monster-power random word.
 MonsterAiDecision choose_summoned_ally_action(
     MonsterAiState& ally, std::span<const bool> living_enemies,
     const BattleAbilityDatabase& abilities, const BattleRandom& random,
-    bool may_leave, bool never_leaves = false);
+    bool may_leave, bool never_leaves = false,
+    bool defer_power_roll = false);
 
 }  // namespace swd2
