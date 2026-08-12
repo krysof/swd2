@@ -3,12 +3,12 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG reference containing registered rewrite/original RGB page or crop digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 200,
-  "registered_rgb_pair_count": 4912,
-  "exact_rgb_page_count": 4839,
+  "source_count": 201,
+  "registered_rgb_pair_count": 4919,
+  "exact_rgb_page_count": 4846,
   "exact_rgb_crop_count": 73,
   "nonmatching_rgb_pair_count": 0,
-  "unique_exact_rgb_page_count": 2613,
+  "unique_exact_rgb_page_count": 2620,
   "unique_exact_rgb_crop_count": 57,
   "sources": [
     {
@@ -231,6 +231,15 @@
       "path": "scripts/fig-introduction-none-rgb-reference.json",
       "sha256": "325b9af6fa2f2862e3131646f488cdbe51d0af5a6ddafcce7c093e4d438767ac",
       "kind": "original_fig_introduction_without_prompt",
+      "registered_rgb_pairs": 7,
+      "exact_rgb_pages": 7,
+      "exact_rgb_crops": 0,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-introduction-ny-1e4-rgb-reference.json",
+      "sha256": "307a5e61f2acb5a24833b168f071eb44d65cd01ce2b7b846605deb90cddea4d5",
+      "kind": "original_fig_introduction_ny_prompt_1e4",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
       "exact_rgb_crops": 0,
