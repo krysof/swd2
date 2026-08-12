@@ -3892,6 +3892,25 @@ input, stationary final state, unchanged serialized MAPZ and the two-page
 58 ms trace.  This is the twentieth original OC world route and proves that
 behavior seven is invisible and motionless without becoming passable.
 
+AREA1's stationary visible class is now observed separately.  Entity one is
+kept at its released eleven-word record:
+`sprite=4400h, direction=0, cell=40246, behavior=4, delay=10, offsets=-2/-8,
+animation=4, flags=000ah, event=300, frame=0`; the other four records were
+already shipped as behavior three, so MAPZ requires no fixture mutation.  The
+gate occupies world cells `(139..141,111)`.  With the leader at `(137,111)`,
+one Right pulse changes the party's facing and walking frame while the new
+leading edge at x=139 remains blocked.  Behavior four does not animate or add
+direction to its sprite index, remains visible, and its non-`8000h` flags do
+not dispatch CHNA directory 300 on collision.
+
+The AREA1 scene is stable in its entirety: modern pages zero and one match
+original review frames 493 and 763 across all 64,000 RGB pixels.  The latter
+is sampled after the original palette animation reaches the same phase; the
+world coordinate is unchanged and there are no Confirm or text boundaries.
+The strict two-poll trace locks all SAVE/MAPZ/NAME summaries and both pages.
+This is the twenty-first original OC world route and directly proves the
+released behavior-four render, occupancy and nonautomatic-event semantics.
+
 ### RPG MA-DE autonomous behavior-zero entity
 
 The nonblocking world loop's autonomous path now also has direct original

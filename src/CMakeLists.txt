@@ -836,6 +836,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_behavior7_validation PROPERTIES
         DEPENDS rpg_world_behavior7_prepare)
     add_test(
+        NAME rpg_world_behavior4_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-behavior4-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-behavior4-save"
+    )
+    add_test(
+        NAME rpg_world_behavior4_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-behavior4.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-behavior4-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-behavior4"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-behavior4-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_behavior4_validation PROPERTIES
+        DEPENDS rpg_world_behavior4_prepare)
+    add_test(
         NAME rpg_world_entity_roam_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-entity-roam-fixture.py"

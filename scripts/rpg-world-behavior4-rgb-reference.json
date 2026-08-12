@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_area1_behavior4_collision_sequence",
+  "status": "exact_rgb_checkpoint",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_harness_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "release_mapz_sha256": "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917",
+  "fixture_mapz_sha256": "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917",
+  "name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+  "area_layout_sha256": "773bb3778f48048b3d432bff5ea096e455faf5b02e656a454335dd0c05c1a32f",
+  "area_graphics_metadata_sha256": "873375a04558e9d125e6396d81e536eea56d576baed5a13889179b5eb9cb6e90",
+  "area_overlay_sha256": "8cbe592483fdc6946a14efa1dceecaa478ae65f4ab549d90d4990ec4f6bf7548",
+  "entity_sprite_archive_sha256": "a0b906d4ea0a6df5260295c15f06da71bbeb5184fb5c0234fab8dbaaf20f7608",
+  "music_sha256": "2c8b8ae2533656b78dac9f2d3dad3f5b10f7a2622dec1798485b7d04a3a22791",
+  "fixture_save_sha256": "ac97a2d797121e6f617a00b87439735e8faeaddbaf3fbefea6d52308b55380db",
+  "map_location_directory_offset": 8,
+  "entity_index": 1,
+  "release_entity_fields": [
+    17408,
+    0,
+    40246,
+    4,
+    10,
+    65534,
+    65528,
+    4,
+    10,
+    300,
+    0
+  ],
+  "fixture_behaviors": [
+    3,
+    4,
+    3,
+    3,
+    3
+  ],
+  "initial_world_position": [
+    137,
+    111
+  ],
+  "requested_direction": "RIGHT",
+  "confirm_inputs": 0,
+  "text_boundaries": 0,
+  "final_world_position": [
+    137,
+    111
+  ],
+  "capture_autotype": "original-rpg-world-behavior4-autotype.txt",
+  "capture_autotype_sha256": "55c97802b397ef4da0d8e2ecf4a8fa33c1f4755da0eacec54c62cacbbcfd9713",
+  "capture_direction_pulses": 1,
+  "replay_input": "replay-rpg-world-behavior4.txt",
+  "replay_input_sha256": "6c7964e15968a1ce20c85cbf929201131524d1ce221471f5a1e1f6a312bbbf9d",
+  "capture_wait_seconds": 8.5,
+  "capture_pace_seconds": 0.5,
+  "capture_time_limit_seconds": 12,
+  "capture_review_fps": 70,
+  "capture_video_frames": 840,
+  "capture_review_frames": 839,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "39eaa8e9d04efa0f14a5f20ba197c632154959b23c0d3a02fb51496b906b91f2",
+  "capture_manifest_sha256": "0ccc844090f79ced949099bf003113b11dc294404607675b6fde7fafd156c842",
+  "rewrite_input": {
+    "total": 2,
+    "consumed": 2,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 0,
+    "poll": 2,
+    "text": 0,
+    "frontend": 0
+  },
+  "rewrite_video": {
+    "frames": 2,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "bed6a10c05461c32"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 0,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "076d0e29ae5643c6"
+  },
+  "rewrite_delay_milliseconds": 58,
+  "rewrite_state_fnv1a64": "051d519d494faad6",
+  "rewrite_mapz_fnv1a64": "827f0f1b725a0958",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "matched_frames": [
+    {
+      "kind": "behavior4_gate_visible",
+      "rewrite_frame": 0,
+      "original_review_frame": 493,
+      "original_png_sha256": "020ed6ff357eb112e30db16a43ec1554a4c7ee554b5cf12e525a3998860851cf",
+      "crop": [
+        0,
+        0,
+        320,
+        200
+      ],
+      "rewrite_indexed_sha256": "2cfbddcc0d1b33d27b25a05fd827bff3cdef3a9e92028292c7f7f7df1b514970",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "rewrite_rgb_sha256": "63f79dea5e959276b05d2e41b00f9c9acea2e04f549cb10f648fb9fe0e7db831",
+      "original_rgb_sha256": "63f79dea5e959276b05d2e41b00f9c9acea2e04f549cb10f648fb9fe0e7db831"
+    },
+    {
+      "kind": "behavior4_collision_blocked",
+      "rewrite_frame": 1,
+      "original_review_frame": 763,
+      "original_png_sha256": "e1fc1c7648eb002245341dda7806d8ba0fc6c3d41f829c8bc0a20faf6bae66b2",
+      "crop": [
+        0,
+        0,
+        320,
+        200
+      ],
+      "rewrite_indexed_sha256": "7e629581f010293d737c77a8ac5c0177607947c0cbbc53929b65bfb60285430e",
+      "rewrite_palette_sha256": "e4e7dc52900bdebf2c12f85849ef86d7bd06ebd1efc705f7bfc4173caa9f4176",
+      "rewrite_rgb_sha256": "b9f9bc897844919931d44df8947611f77b5a24266621b5d89c0abffb029a41ec",
+      "original_rgb_sha256": "b9f9bc897844919931d44df8947611f77b5a24266621b5d89c0abffb029a41ec"
+    }
+  ]
+}
