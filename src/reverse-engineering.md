@@ -3600,3 +3600,31 @@ schema-2 non-final aggregate now contains 211 references, 5,321 exact full
 pages, 73 exact crops and 2,956 unique exact full-page digests, with zero
 registered unequal pairs; neither FIG pixel parity nor project completion is
 therefore marked complete.
+
+### FIG generic-monster flash-colour domain
+
+The enemy generic branch does not use the player SP/ST dispatcher.  After its
+name card, `25ee` derives one VGA index from the ability record's low three
+target-flag bits, alternates that solid page with the clean target page eight
+times at one timer tick per flip, and finishes clean.  Auditing every one of
+the 550 ORC encounter records yields 174 actually selected monster definitions.
+Their affordable `ITEM +32` generic routes collapse to 41 unique ability
+descriptors and exactly three shipped flash classes: 31 descriptors use index
+`8dh`, six use `81h`, and four use `5ch`.  No reachable affordable generic
+route selects the otherwise implemented `aah` or `7ch` branches.
+
+Ability 10 already locked the default `8dh` class.  Two fresh unmodified-FIG
+IF captures now lock the remaining classes without patching ITEM: directory
+`24h`, definition 362, ability 4 (`a205h/5fh`) produces `81h`; directory
+`224h`, definition 386, ability 70 (`a401h/41h`) produces `5ch`.  For each
+route the bare preparation, name, clean/solid alternation endpoints and next
+player pose are full 320x200 RGB byte matches.  The verifier additionally
+requires all 64,000 indexed pixels of the first solid page to equal the stated
+VGA index and locks the nine submissions from the first clean page through the
+final clean page to `384,384,439,494,549,604,659,714,769ms`.
+
+`audit-fig-monster-generic-flash-domain.py` derives the ORC/ITEM/FIG join and
+fails if the 550/174/41 domain, its descriptor digest, its three class sizes or
+any of the 18 registered archetype RGB pages changes.  The schema-2 aggregate
+therefore advances to 213 references, 5,333 exact full pages, 73 exact crops
+and 2,966 unique exact full-page digests, still as a non-final checkpoint.

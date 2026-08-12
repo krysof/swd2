@@ -3868,6 +3868,39 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_monster_generic_validation PROPERTIES
         DEPENDS fig_monster_generic_prepare)
+    foreach(generic_flash_variant IN ITEMS color81 color5c)
+        add_test(
+            NAME fig_monster_generic_${generic_flash_variant}_prepare
+            COMMAND "${Python3_EXECUTABLE}"
+                    "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-monster-generic-flash-fixture.py"
+                    "${PROJECT_SOURCE_DIR}/game"
+                    "${CMAKE_BINARY_DIR}/fig-monster-generic-${generic_flash_variant}-save"
+                    "${generic_flash_variant}"
+        )
+        add_test(
+            NAME fig_monster_generic_${generic_flash_variant}_validation
+            COMMAND "${Python3_EXECUTABLE}"
+                    "${PROJECT_SOURCE_DIR}/scripts/verify-fig-monster-generic-flash.py"
+                    "$<TARGET_FILE:swd2_rewrite>"
+                    "${PROJECT_SOURCE_DIR}/game"
+                    "${CMAKE_BINARY_DIR}/fig-monster-generic-${generic_flash_variant}-save"
+                    "${CMAKE_BINARY_DIR}/fig-monster-generic-${generic_flash_variant}"
+                    "${PROJECT_SOURCE_DIR}/scripts/fig-monster-generic-${generic_flash_variant}-rgb-reference.json"
+        )
+        set_tests_properties(
+            fig_monster_generic_${generic_flash_variant}_validation
+            PROPERTIES
+            DEPENDS fig_monster_generic_${generic_flash_variant}_prepare)
+    endforeach()
+    add_test(
+        NAME fig_monster_generic_flash_domain_audit
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/audit-fig-monster-generic-flash-domain.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${PROJECT_SOURCE_DIR}/scripts"
+    )
+    set_tests_properties(fig_monster_generic_flash_domain_audit PROPERTIES
+        DEPENDS "fig_monster_generic_validation;fig_monster_generic_color81_validation;fig_monster_generic_color5c_validation")
     add_test(
         NAME fig_monster_special_silent_prepare
         COMMAND "${Python3_EXECUTABLE}"

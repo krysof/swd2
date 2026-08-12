@@ -3,13 +3,13 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG RGB reference; every reference must contain registered rewrite/original RGB page or crop digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
-  "reference_file_count": 211,
-  "source_count": 211,
-  "registered_rgb_pair_count": 5394,
-  "exact_rgb_page_count": 5321,
+  "reference_file_count": 213,
+  "source_count": 213,
+  "registered_rgb_pair_count": 5406,
+  "exact_rgb_page_count": 5333,
   "exact_rgb_crop_count": 73,
   "nonmatching_rgb_pair_count": 0,
-  "unique_exact_rgb_page_count": 2956,
+  "unique_exact_rgb_page_count": 2966,
   "unique_exact_rgb_crop_count": 57,
   "sources": [
     {
@@ -576,6 +576,24 @@
       "kind": "original_fig_monster_flee_sequence",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
+      "exact_rgb_crops": 0,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-generic-color5c-rgb-reference.json",
+      "sha256": "39f063628e140d044b28a42a552fd0af06407408fbcfa9af546b47f23fcd46a5",
+      "kind": "original_fig_monster_generic_flash_class",
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
+      "exact_rgb_crops": 0,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-monster-generic-color81-rgb-reference.json",
+      "sha256": "19f908e13944c082e8ea979079f49a37e4482a75b8b78222302cfd4d63363417",
+      "kind": "original_fig_monster_generic_flash_class",
+      "registered_rgb_pairs": 6,
+      "exact_rgb_pages": 6,
       "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },

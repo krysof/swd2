@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "original_fig_monster_generic_flash_class",
+  "status": "exact_rgb_checkpoint",
+  "variant": "color81",
+  "formation_directory_offset": 36,
+  "monster_definition_id": 362,
+  "ability_id": 4,
+  "effect_code": 95,
+  "target_flags": 41477,
+  "solid_palette_index": 129,
+  "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
+  "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
+  "fixture_save_sha256": "4aad9a8910ca21ee0931e29fd43c1968f041302311add0b876cf352a565dbf19",
+  "capture_autotype": "original-fig-monster-generic-autotype.txt",
+  "capture_autotype_sha256": "2df2c21a639d298945d194b650978dfa150887c0dc626e0df1de81ec9a9c2df0",
+  "replay_input": "replay-fig-monster-generic.txt",
+  "replay_input_sha256": "fe1b92a58e94ad763288edb29b325b82f5b1218d751913647fc0195e74a1cfae",
+  "capture_wait_seconds": 5,
+  "capture_pace_seconds": 1,
+  "capture_time_limit_seconds": 30,
+  "capture_video_sha256": "4b128c42e8fa4a3a5abf8cd2ca154c8eb3e9a08ac4e3f6575b743e1a93305cdf",
+  "capture_manifest_sha256": "1bd82c5974be28cfdbc501a58e1a707f25dd781525a5c4013dcf40b400c9e387",
+  "rewrite_video": {
+    "frames": 119,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "06189fa837e9f14f"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 9,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "2d6c51467d547565"
+  },
+  "rewrite_delay_milliseconds": 8074,
+  "rewrite_state_fnv1a64": "1c0cc6d468510225",
+  "pages": [
+    {
+      "label": "enemy-turn bare preparation page",
+      "rewrite_frame": 3,
+      "original_review_frame": 442,
+      "original_png_sha256": "e2e86e1bcd1dabbdb32f14ed0a7634d1ee9d90ef5820adacdc0c5367e3e9b0da",
+      "rewrite_indexed_sha256": "908c3ac5bb9d3981b37c20d1a56db5a497a3b77ec6aa67c8f8a969d1d790dc52",
+      "rewrite_palette_sha256": "467dd8ca79fdb33aff90686234aec4c8d8dc06c5ff9223e6b9b5a1ac910d7e18",
+      "rewrite_rgb_sha256": "f3e7ade442627120334266d43a9fcdf1da5149f2215e5fa2bdbac9ffabdcba1f",
+      "original_rgb_sha256": "f3e7ade442627120334266d43a9fcdf1da5149f2215e5fa2bdbac9ffabdcba1f"
+    },
+    {
+      "label": "generic ability name on the bare battlefield",
+      "rewrite_frame": 4,
+      "original_review_frame": 455,
+      "original_png_sha256": "16a0088759ae832efbaa1e080df93e92f8d657ca7e1f4a5969c7e0bea1de75f2",
+      "rewrite_indexed_sha256": "c4a00d1318e302de6f1f0ddd8791340424f7cbe2c3594bebbcdbc67697177e48",
+      "rewrite_palette_sha256": "467dd8ca79fdb33aff90686234aec4c8d8dc06c5ff9223e6b9b5a1ac910d7e18",
+      "rewrite_rgb_sha256": "59cecd19659d28315504d5a2d36a3da064422615ee9208242187e373cc5e491a",
+      "original_rgb_sha256": "59cecd19659d28315504d5a2d36a3da064422615ee9208242187e373cc5e491a"
+    },
+    {
+      "label": "25ee clean party page",
+      "rewrite_frame": 6,
+      "original_review_frame": 478,
+      "original_png_sha256": "42918308135c737e492f4c1571e8c0baca862d09bcf00bab240ed16d74730973",
+      "rewrite_indexed_sha256": "c8085de8cc51faade782f0613765d2c2e7ec8d0bbc1fef7f9c98ef8bf17b6832",
+      "rewrite_palette_sha256": "467dd8ca79fdb33aff90686234aec4c8d8dc06c5ff9223e6b9b5a1ac910d7e18",
+      "rewrite_rgb_sha256": "28f4c870add6947eef1ce02edfa5728396638b8329a6a6ceb0edf571da6e5498",
+      "original_rgb_sha256": "28f4c870add6947eef1ce02edfa5728396638b8329a6a6ceb0edf571da6e5498"
+    },
+    {
+      "label": "25ee first solid-colour page",
+      "rewrite_frame": 7,
+      "original_review_frame": 480,
+      "original_png_sha256": "054d86d2b0aa2da61fbb32cf6dcad3ecc33335b167f6efbdd0c6809ea2fb5736",
+      "rewrite_indexed_sha256": "ff4076609a59a0ff0c593d90cb2ac6e1d8c899a5a4f56ba555b2d65af69ccb5d",
+      "rewrite_palette_sha256": "467dd8ca79fdb33aff90686234aec4c8d8dc06c5ff9223e6b9b5a1ac910d7e18",
+      "rewrite_rgb_sha256": "50c7c7c51380e10ec0cd66b43f36b123b4d0650dd318ec294269e1103ac22e86",
+      "original_rgb_sha256": "50c7c7c51380e10ec0cd66b43f36b123b4d0650dd318ec294269e1103ac22e86"
+    },
+    {
+      "label": "25ee final clean party page",
+      "rewrite_frame": 14,
+      "original_review_frame": 490,
+      "original_png_sha256": "42918308135c737e492f4c1571e8c0baca862d09bcf00bab240ed16d74730973",
+      "rewrite_indexed_sha256": "c8085de8cc51faade782f0613765d2c2e7ec8d0bbc1fef7f9c98ef8bf17b6832",
+      "rewrite_palette_sha256": "467dd8ca79fdb33aff90686234aec4c8d8dc06c5ff9223e6b9b5a1ac910d7e18",
+      "rewrite_rgb_sha256": "28f4c870add6947eef1ce02edfa5728396638b8329a6a6ceb0edf571da6e5498",
+      "original_rgb_sha256": "28f4c870add6947eef1ce02edfa5728396638b8329a6a6ceb0edf571da6e5498"
+    },
+    {
+      "label": "following player first pose",
+      "rewrite_frame": 15,
+      "original_review_frame": 494,
+      "original_png_sha256": "778b4dadfa126631f06ae4e8db561e295723e036abbe1d44cd5308edf6d4cabb",
+      "rewrite_indexed_sha256": "fa9e5bf818bb01cea3f946b32709b7eb66103acf529b27c3cb41b3728ec67626",
+      "rewrite_palette_sha256": "467dd8ca79fdb33aff90686234aec4c8d8dc06c5ff9223e6b9b5a1ac910d7e18",
+      "rewrite_rgb_sha256": "9334b4bfda36e038b8b4eacf2a9332df1ce8d16f0843182f86b0056cd7dd460a",
+      "original_rgb_sha256": "9334b4bfda36e038b8b4eacf2a9332df1ce8d16f0843182f86b0056cd7dd460a"
+    }
+  ],
+  "capture_limitation": "DOSBox-X AVI/PNG is a post-DAC RGB observation. The six registered stable pages cover the bare preparation, ability name, clean/solid 25ee alternation and following action; transient result pages are not claimed."
+}
