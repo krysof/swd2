@@ -8727,6 +8727,48 @@ void test_rpg_inventory_item_actions(const std::filesystem::path& game_root) {
                 use_context.shared_state.u16(0x106 + 0x35) == 50U,
             "RPG item Use action did not target/apply/consume from 2d0f");
 
+    // ITEM 248 advertises field use but stores composite battle effect 6bh.
+    // The unbounded original dispatch reads DATA:3876's Big5 word a5b5h as
+    // a near-call target. The portable boundary reports DATA:3620 instead:
+    // no invented healing, no consumption, and the same action page remains
+    // available after dismissing the message.
+    ScriptedPlatform out_of_table_platform;
+    out_of_table_platform.actions = {
+        swd2::InputAction::cancel,
+        swd2::InputAction::right,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,  // item 248
+        swd2::InputAction::confirm,  // Use / invalid 6bh
+        swd2::InputAction::confirm,  // dismiss DATA:3620
+        swd2::InputAction::cancel,   // action page -> inventory
+        swd2::InputAction::cancel,   // inventory -> diamond
+        swd2::InputAction::cancel,   // diamond -> map
+        swd2::InputAction::quit,
+    };
+    auto out_of_table_state = swd2::SharedState::load(
+        game_root / "SAVE.DA1");
+    out_of_table_state.set_u16(0x382U, 248U);
+    out_of_table_state.set_u16(0x106U + 8U, 0U);
+    out_of_table_state.set_u16(0x106U + 0x2dU, 67U);
+    out_of_table_state.set_u16(0x106U + 0x2fU, 100U);
+    out_of_table_state.set_u16(0x106U + 0x35U, 59U);
+    out_of_table_state.set_u16(0x106U + 0x37U, 100U);
+    out_of_table_state.set_u16(0x106U + 0x55U, 53U);
+    out_of_table_state.set_u16(0x106U + 0x57U, 100U);
+    const auto out_of_table_before = out_of_table_state.bytes();
+    swd2::GameContext out_of_table_context{
+        game_root, out_of_table_state, out_of_table_platform};
+    const auto out_of_table_result = swd2::RpgModule().run(
+        out_of_table_context, swd2::Marker::continue_rpg);
+    require(out_of_table_result == swd2::Marker::none &&
+                out_of_table_platform.cursor ==
+                    out_of_table_platform.actions.size() &&
+                out_of_table_context.shared_state.bytes() == out_of_table_before &&
+                out_of_table_platform.bottom_hashes.size() > 5U &&
+                out_of_table_platform.bottom_hashes[5] !=
+                    out_of_table_platform.bottom_hashes[4],
+            "RPG ITEM 248/6bh safe rejection mutated or consumed field state");
+
     // Type-10 field talismans are ability_id+8ch. RPG:3857 charges the
     // selected target's +55 resource from the original ability record before
     // dispatch, even though the ITEM itself is also consumed by +05 bit 04h.
