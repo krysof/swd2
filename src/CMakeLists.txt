@@ -3575,6 +3575,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_ally_player_buff_validation PROPERTIES
         DEPENDS fig_ally_player_buff_prepare)
     add_test(
+        NAME fig_ally_player_ward_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-player-ward-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-player-ward-game"
+    )
+    add_test(
+        NAME fig_ally_player_ward_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-ally-player-buff.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-ally-player-ward-game"
+                "${CMAKE_BINARY_DIR}/fig-ally-player-ward"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-ally-player-ward-rgb-reference.json"
+    )
+    set_tests_properties(fig_ally_player_ward_validation PROPERTIES
+        DEPENDS fig_ally_player_ward_prepare)
+    add_test(
         NAME fig_ally_medium_dismiss_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ally-medium-dismiss-fixture.py"

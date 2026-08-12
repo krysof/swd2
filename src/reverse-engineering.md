@@ -3555,3 +3555,14 @@ full 320x200 RGB byte match, including the corrected status page and its
 following clean/monster-result tail.  The aggregate checkpoint consequently
 contains 209 references, 5,223 exact full pages, 73 exact crops and 2,900
 unique exact full-page RGB digests; it remains a non-final checkpoint.
+
+The same ownership rule is now independently locked for the other shipped
+captured-ally self-buff family.  Item 399's original record already names
+special-A ability 37/effect `69h`; the capture fixture changes only its AI
+chances, initiative and AP so that `1048` reaches the selector before the
+following monster.  Its `護魔心法` page retains player zero's ordinary card,
+not a pose borrowed from ally slot zero.  Excluding only the IF entry page and
+the fixture-altered item preview, all 54 remaining submitted pages match the
+unmodified `FIG.EXE` capture at full 320x200 RGB.  The aggregate is therefore
+210 references, 5,277 exact full pages, 73 exact crops and 2,933 unique exact
+full-page RGB digests, still without changing the in-progress completion gate.

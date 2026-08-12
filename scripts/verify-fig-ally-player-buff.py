@@ -18,6 +18,20 @@ REFERENCE_PROGRAM_SHA256 = (
 CAPTURE_HARNESS_SHA256 = (
     "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba"
 )
+CASES = {
+    "original_fig_captured_ally_player_buff": {
+        "item": 390, "ability": 38, "effect": 0x67,
+        "page_indices": list(range(1, 56)),
+        "status_kind": "captured ally attack-buff status card",
+        "fixture_item": False,
+    },
+    "original_fig_captured_ally_player_ward": {
+        "item": 399, "ability": 37, "effect": 0x69,
+        "page_indices": [1, 2, *range(4, 56)],
+        "status_kind": "captured ally ward status card",
+        "fixture_item": True,
+    },
+}
 
 
 def sha256(data: bytes) -> str:
@@ -73,22 +87,23 @@ def main() -> int:
     try:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
         pages = expected.get("matched_frames")
+        case = CASES.get(expected.get("kind"))
         if expected.get("schema_version") != 1 or \
-                expected.get("kind") != \
-                    "original_fig_captured_ally_player_buff" or \
+                case is None or \
                 expected.get("status") != "exact_rgb_checkpoint" or \
                 expected.get("formation_directory_offset") != 392 or \
-                expected.get("captured_item_id") != 390 or \
-                expected.get("captured_ally_ability_id") != 38 or \
+                expected.get("captured_item_id") != case["item"] or \
+                expected.get("captured_ally_ability_id") != case["ability"] or \
                 expected.get("captured_ally_ability_slot") != "special_a" or \
-                expected.get("effect_code") != 0x67 or \
+                expected.get("effect_code") != case["effect"] or \
                 expected.get("target_flags") != 0x8300 or \
                 expected.get("random_cursor") != 0x1002 or \
-                not isinstance(pages, list) or len(pages) != 55 or \
+                not isinstance(pages, list) or \
                 [page.get("rewrite_frame") for page in pages] != \
-                    list(range(1, 56)) or \
-                pages[30].get("kind") != \
-                    "captured ally attack-buff status card":
+                    case["page_indices"] or \
+                next((page.get("kind") for page in pages
+                      if page.get("rewrite_frame") == 31), None) != \
+                    case["status_kind"]:
             raise ValueError("unsupported FIG captured-ally buff reference")
 
         fig_path = args.game / "FIG.EXE"
@@ -100,12 +115,28 @@ def main() -> int:
             raise ValueError("FIG captured-ally buff program boundary differs")
         fig = mz_image(fig_path)
         table = word(fig, 1) * 16 + 0x1DCC
-        ability = fig[table + 38 * 20:table + 39 * 20]
-        item = archive_record(mz_image(args.game / "ITEM.EXE"), 390 + 2)
+        ability_id = int(case["ability"])
+        item_id = int(case["item"])
+        ability = fig[table + ability_id * 20:table + (ability_id + 1) * 20]
+        source_item_path = args.game / "ITEM.EXE"
+        source_item = archive_record(mz_image(source_item_path), item_id + 2)
         if len(ability) != 20 or word(ability, 12) != 0x8300 or \
-                word(ability, 14) != 0x67 or len(item) < 0x50 or \
-                (item[5] & 2) == 0 or word(item, 0x42) != 38:
+                word(ability, 14) != case["effect"] or \
+                len(source_item) < 0x50 or (source_item[5] & 2) == 0 or \
+                word(source_item, 0x42) != ability_id:
             raise ValueError("shipped captured-ally buff descriptor differs")
+
+        runtime_game = args.game
+        if case["fixture_item"]:
+            fixture_item_path = args.save_root / "ITEM.EXE"
+            if sha256(source_item_path.read_bytes()) != \
+                    expected.get("source_item_sha256") or \
+                    sha256(fixture_item_path.read_bytes()) != \
+                    expected.get("fixture_item_sha256"):
+                raise ValueError("captured-ally ward ITEM fixture differs")
+            runtime_game = args.save_root
+        elif "fixture_item_sha256" in expected:
+            raise ValueError("unexpected captured-ally buff ITEM fixture")
 
         if sha256((args.save_root / "SAVE.DA1").read_bytes()) != \
                 expected["fixture_save_sha256"]:
@@ -131,7 +162,7 @@ def main() -> int:
         trace_path = args.output / "trace.json"
         frame_path = args.output / "frames.bin"
         subprocess.run([
-            str(args.executable), "--game", str(args.game),
+            str(args.executable), "--game", str(runtime_game),
             "--save-dir", str(args.save_root), "--slot", "1", "--no-save",
             "--start-marker", "IF", "--run-replay", str(replay),
             "--trace-output", str(trace_path),
@@ -176,8 +207,9 @@ def main() -> int:
 
         print(
             "FIG captured-ally player-buff checkpoint: 1048 leaves the "
-            "target player's ordinary pose-zero card under effect 67h; all "
-            "55 stable submitted pages exactly match original 320x200 RGB")
+            "target player's ordinary pose-zero card under effect "
+            f"{int(case['effect']):02x}h; all {len(pages)} stable submitted "
+            "pages exactly match original 320x200 RGB")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:
