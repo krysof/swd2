@@ -2074,6 +2074,7 @@
         "scripts/audit-runtime-sources.py"
       ],
       "remaining": [
+        "生产源码静态门已失败封闭全部可移植翻译单元，并拒绝 TODO/FIXME/XXX、stub、placeholder、not-implemented、全部 approximate 词形、#if 0、DOS 模拟器和子进程/exec 逃逸；该项只证明没有显式标记的占位，不能代替行为差分",
         "由逐场景差分和完整回放证明所有可达路径没有未标记的近似行为"
       ]
     },

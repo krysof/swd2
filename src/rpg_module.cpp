@@ -2504,8 +2504,8 @@ public:
     // to selector values 0/1/2/3 in exactly that spatial order.
     // Each branch connects to its reconstructed state machine.  The Magic
     // branch uses RPG's embedded 20-byte records and actor ability slots;
-    // uncommon special handlers still remain explicit instead of being
-    // silently approximated by a native UI.
+    // uncommon special handlers remain explicit and retain their original
+    // failure boundary instead of being replaced by a generic native UI.
     [[nodiscard]] bool run_field_menu() {
         std::size_t selected = 2;  // 2e63 initializes DATA:35e2 to System.
         while (true) {

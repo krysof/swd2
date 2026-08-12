@@ -57,7 +57,8 @@ def main() -> int:
 
     production_paths = sorted(SRC.glob("*.cpp")) + sorted((SRC / "include").rglob("*.hpp"))
     placeholder = re.compile(
-        r"\b(?:TODO|FIXME|XXX|STUB|PLACEHOLDER|NOT[ _-]IMPLEMENTED)\b",
+        r"\b(?:TODO|FIXME|XXX|STUB|PLACEHOLDER|NOT[ _-]IMPLEMENTED|"
+        r"APPROXIMAT(?:E|ED|ES|ING|ION|IONS))\b",
         re.IGNORECASE,
     )
     disabled_code = re.compile(r"(?m)^\s*#\s*if\s+0(?:\s|$)")

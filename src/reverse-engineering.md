@@ -3495,3 +3495,12 @@ contribute 127 exact full RGB pages.  Ability 85's `43h/36h` learned capture is
 kept as a 32-page synthetic dispatcher regression, but the audit explicitly
 forbids counting it as a shipped learnable route.  The other eight descriptors
 are reachable only through their `ability_id+140` type-10 ITEM wrappers.
+
+### 生产源码占位标记门
+
+`audit-runtime-sources.py` 不把“当前没有 TODO”当作一次性人工检查。它先要求 `src/`
+下每个可移植 `.cpp` 恰好属于 `swd2_core`（平台壳除外），再逐文件拒绝
+TODO/FIXME/XXX、stub、placeholder、not-implemented 和所有 `approximate` 词形，连同
+`#if 0`、DOS 模拟器名及子进程/exec 逃逸 API。这样任何后来明确标作近似实现的生产代码
+都会直接使 CTest 失败，而不能藏在一次绿色构建中。该静态门只排除已标记占位；所有可达
+行为是否忠实仍必须由逐场景原版差分和完整通关门证明，所以占位清除门继续保持进行中。
