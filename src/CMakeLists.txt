@@ -3164,7 +3164,7 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_introduction_none_validation PROPERTIES
         DEPENDS fig_introduction_none_prepare)
-    foreach(fig_intro_none_suffix IN ITEMS 014 3e8)
+    foreach(fig_intro_none_suffix IN ITEMS 014 2ce 2d8 3e8)
         add_test(
             NAME fig_introduction_none_${fig_intro_none_suffix}_prepare
             COMMAND "${Python3_EXECUTABLE}"
