@@ -587,7 +587,8 @@ ORC 目录 12 的双怪目标页也已锁定：底层攻击页、两个怪物名
 `力量恢復` 页、立即重施、清洁和下一命令共五张稳定 RGB 页与原版完全一致。
 
 仓库内的短启动检查点会实际走过 `MEO -> RPG(MT/ED) -> DEMO -> RPG(OM)`，装入
-`SAVE.DAQ/MAPZ.DAQ` 并执行开场实体后才从世界页退出：
+`SAVE.DAQ/MAPZ.DAQ`，以一次 Confirm 跳过 DEMO、十八次显式场景 Confirm 完成整个
+开场实体，再经过一次不带动作的普通世界 poll 后才退出：
 
 ```sh
 ./build/src/swd2_rewrite --game game --no-save \
@@ -596,7 +597,8 @@ ORC 目录 12 的双怪目标页也已锁定：底层攻击页、两个怪物名
 ./scripts/verify-new-game-startup.py new-game-startup.json
 ```
 
-它只证明新游戏启动边界，不是完整通关证据。
+它锁定从标题到事件结束后首张自由世界页的输入、状态、818 张提交页、音频和 70-Hz
+累计时间线；仍只证明新游戏启动边界，不是完整通关证据。
 
 原版流程可先用隔离的 DOSBox-X 驱动生成可复查的 RGB 录像和抽帧：
 
