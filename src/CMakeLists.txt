@@ -196,6 +196,13 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/scripts/wasm-firefox-idbfs-reference.json"
     )
     add_test(
+        NAME rix_audio_clock_soak_checkpoint
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rix-audio-clock-soak.py"
+                "${PROJECT_SOURCE_DIR}/scripts/rix-audio-clock-soak-reference.json"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    add_test(
         NAME legacy_program_data_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
                 --verify-legacy-program-data

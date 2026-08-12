@@ -1037,6 +1037,8 @@
         "scripts/verify-fig-monster-buff-expiry.py",
         "src/include/swd2/fig_timing.hpp",
         "src/battle_module.cpp",
+        "scripts/verify-rix-audio-clock-soak.py",
+        "scripts/rix-audio-clock-soak-reference.json",
         "scripts/verify-fig-rgb-checkpoint.py",
         "verification/pixel_diffs/checkpoint-2026-08-11-fig-rgb.json",
         "scripts/fig-player-buff-expiry-rgb-reference.json",
@@ -1226,7 +1228,7 @@
       "remaining": [
         "用原版墙钟捕获独立核对 FIG 的 65,536 PIT-clock 周期及完整场景累计时长；现代单战斗共享分数相位已通过 100,000 tick（5,492,540ms）及任意分块等价测试，不再逐段取整漂移",
         "用统一音画/输入时间线完成完整流程同步差分",
-        "在真实平台长期验证循环、语音叠加和切换无漂移"
+        "43 首 RIX 已在 8,000/44,100/48,000Hz 各完成至少 24 虚拟小时、共 3,096 曲目小时及 765,546 个精确循环边界；继续在真实平台长期验证音频设备、语音叠加和切换无漂移"
       ]
     },
     {
@@ -1954,10 +1956,14 @@
         "scripts/wasm-safari-idbfs-reference.json",
         "scripts/verify-wasm-firefox-idbfs.py",
         "scripts/verify-wasm-firefox-idbfs-reference.py",
-        "scripts/wasm-firefox-idbfs-reference.json"
+        "scripts/wasm-firefox-idbfs-reference.json",
+        "src/audio_loop_clock.cpp",
+        "src/tests/test_main.cpp",
+        "scripts/verify-rix-audio-clock-soak.py",
+        "scripts/rix-audio-clock-soak-reference.json"
       ],
       "remaining": [
-        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点、品牌 Safari 26.5.2 与 Firefox 153.0.4 各 3 次两文档 IDBFS 往返，以及固定 Debian 13 Linux/aarch64 Release 从零构建的 348/348 CTest 零警告检查点；继续多小时活动游戏/音频长跑",
+        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点、品牌 Safari 26.5.2 与 Firefox 153.0.4 各 3 次两文档 IDBFS 往返、43 首 RIX 共 3,096 虚拟曲目小时/765,546 循环边界，以及固定 Debian 13 Linux/aarch64 Release 从零构建的 348/348 CTest 零警告检查点；继续真实墙钟的多小时活动游戏/音频长跑",
         "补齐 Windows、物理 Linux、物理 iOS/Android 与手柄矩阵后生成 verified long_run manifest"
       ]
     }

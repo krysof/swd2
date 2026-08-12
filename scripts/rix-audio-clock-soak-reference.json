@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "kind": "swd2_rix_virtual_clock_soak",
+  "status": "verified",
+  "track_count": 43,
+  "device_sample_rates": [
+    8000,
+    44100,
+    48000
+  ],
+  "minimum_virtual_hours_per_track_rate": 24,
+  "minimum_virtual_track_hours": 3096,
+  "loop_boundaries": 765546,
+  "emitted_samples": 371932516654,
+  "checkpoint_fnv1a64": "ae6ff348967c0217",
+  "rix_asset_set_sha256": "38cbb644c5040bde2f54f466d1a408ae0f1dc7b26385e960a7a420b5926b23a6",
+  "limitation": "Accelerated rational-clock verification is not a wall-clock audio-device, leak, or audible-quality soak."
+}

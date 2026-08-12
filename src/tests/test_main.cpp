@@ -1095,6 +1095,7 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
     std::size_t commands = 0;
     std::size_t timer_ticks = 0;
     std::size_t opl_writes = 0;
+    std::vector<std::size_t> track_timer_ticks;
     for (const auto& entry :
          std::filesystem::recursive_directory_iterator(game_root)) {
         if (!entry.is_regular_file() || entry.path().extension() != ".RIX") continue;
@@ -1114,6 +1115,7 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
         ++files;
         frames += sequence.frames.size();
         timer_ticks += sequence.total_timer_ticks;
+        track_timer_ticks.push_back(sequence.total_timer_ticks);
         opl_writes += opl.writes.size();
         for (const auto& frame : sequence.frames) commands += frame.commands.size();
     }
@@ -1223,6 +1225,41 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
                     "RIX loop clock accumulated long-run sample drift");
         }
     }
+
+    // Exercise every shipped loop clock for at least 24 hours of virtual
+    // playback at each supported device-rate family.  This crosses the real
+    // callback boundary millions of times without making the regression suite
+    // sleep for wall-clock days, and proves that no track-specific duration
+    // loses a fractional sample on any loop partition.
+    constexpr auto soak_timer_ticks = std::uint64_t{24U * 60U * 60U * 70U};
+    std::uint64_t soak_boundaries = 0;
+    std::uint64_t soak_samples = 0;
+    std::uint64_t soak_hash = 1'469'598'103'934'665'603ULL;
+    for (const auto rate : {8'000U, 44'100U, 48'000U}) {
+        for (const auto ticks : track_timer_ticks) {
+            swd2::AudioLoopClock loop(ticks, rate);
+            const auto boundaries =
+                (soak_timer_ticks + ticks - 1U) / ticks;
+            std::uint64_t emitted = 0;
+            for (std::uint64_t completed = 0; completed < boundaries;
+                 ++completed) {
+                emitted += loop.samples_per_loop();
+                if (loop.advance_loop_boundary()) ++emitted;
+            }
+            require(emitted == boundaries * ticks * rate / 70U,
+                    "shipped RIX loop accumulated 24-hour sample drift");
+            soak_boundaries += boundaries;
+            soak_samples += emitted;
+            soak_hash ^= boundaries;
+            soak_hash *= 1'099'511'628'211ULL;
+            soak_hash ^= emitted;
+            soak_hash *= 1'099'511'628'211ULL;
+        }
+    }
+    require(soak_boundaries == 765'546U &&
+                soak_samples == 371'932'516'654U &&
+                soak_hash == 0xae6ff348967c0217ULL,
+            "shipped RIX 3,096-track-hour soak checkpoint differs");
 }
 
 void test_shared_state(const std::filesystem::path& game_root) {
