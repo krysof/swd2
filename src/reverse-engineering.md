@@ -4028,6 +4028,23 @@ for centre, west and east vertical ray starts; combined with the three
 west-facing routes, both orientation-dependent `DATA:3cbf` offset families are
 now captured rather than inferred.
 
+The forward-loop distance bound is also proven directly.  In a separate
+BUIN1 fixture the leader starts at `(11,169)` facing east.  The four forward
+probes are `(12,169)`, `(13,169)`, `(14,169)` and `(15,169)`; the first three
+are empty and only the fourth reaches the released entity's leftmost
+footprint word.  No walking or automatic-event input is present, so CHNA2
+directory 40 can only have been dispatched by this explicit fourth Confirm
+probe.
+
+The entity's initial direction is west (six), which is also the direction
+opposite an east-facing leader.  Its short event-world page therefore looks
+the same as the initial page even though the normal temporary-facing path was
+executed; the following dialogue pages prove the dispatch independently.
+Modern initial, first text update, complete dialogue, marker and restored
+world pages match original review frames `238/463/501/505/644` over every
+320×200 RGB pixel.  This twenty-sixth original OC route locks the inclusive
+four-cell upper bound of `523d/52fd` rather than inferring it from code alone.
+
 ### RPG SWRO7 behavior-five animated decoration
 
 The second nonwalking animation class now has its own released-data capture

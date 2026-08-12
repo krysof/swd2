@@ -1007,6 +1007,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_vertical_third_ray_validation PROPERTIES
         DEPENDS rpg_world_vertical_third_ray_prepare)
     add_test(
+        NAME rpg_world_fourth_probe_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-fourth-probe-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-fourth-probe-save"
+    )
+    add_test(
+        NAME rpg_world_fourth_probe_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-fourth-probe.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-fourth-probe-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-fourth-probe"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-fourth-probe-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_fourth_probe_validation PROPERTIES
+        DEPENDS rpg_world_fourth_probe_prepare)
+    add_test(
         NAME rpg_world_side_ray_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-side-ray-fixture.py"
