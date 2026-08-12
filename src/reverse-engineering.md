@@ -4018,6 +4018,16 @@ route except for the leader coordinate and resulting state digest.  This is
 the twenty-fourth original OC world route and directly proves the vertical
 centre-ray exhaustion plus west-offset second ray.
 
+Finally, moving the leader to `(14,170)` leaves both four-cell rays at x=14
+and x=13 empty.  The third/east-offset ray begins at `(15,169)`, the leftmost
+word of the same released footprint.  The resulting event takes the identical
+south-facing and restoration path, while original review frames
+`238/463/501/505/575` again match all five modern checkpoints across the full
+320×200 page.  This twenty-fifth original OC route completes direct evidence
+for centre, west and east vertical ray starts; combined with the three
+west-facing routes, both orientation-dependent `DATA:3cbf` offset families are
+now captured rather than inferred.
+
 ### RPG SWRO7 behavior-five animated decoration
 
 The second nonwalking animation class now has its own released-data capture
