@@ -827,6 +827,60 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
             "RPG 3b30/3b93 field-item unavailable feedback path changed");
 }
 
+void test_rpg_post_battle_continuation_domain(
+    const std::filesystem::path& game_root) {
+    using Record = std::tuple<std::uint8_t, std::uint16_t, std::uint16_t,
+                              std::uint16_t, std::uint16_t>;
+    std::vector<Record> actual;
+    for (std::uint8_t archive_number = 0; archive_number <= 6;
+         ++archive_number) {
+        const auto archive = swd2::ScriptArchive::load(
+            game_root /
+            ("CHNA" + std::to_string(archive_number) + ".EXE"));
+        for (std::size_t entry = 0; entry < archive.entry_count(); ++entry) {
+            std::optional<swd2::EventRecord> decoded;
+            try {
+                decoded = swd2::decode_event_record(
+                    archive.event_stream(entry));
+            } catch (const std::runtime_error&) {
+                // A minority of CHNA directory entries point at embedded
+                // tables rather than event bytecode. The reachable-event
+                // audit classifies those targets separately; they cannot
+                // contain an executable opcode 48/59/60 dispatch.
+                continue;
+            }
+            for (const auto& command : decoded->commands) {
+                if (command.opcode != 48U && command.opcode != 59U &&
+                    command.opcode != 60U) {
+                    continue;
+                }
+                require(command.arguments.size() == 2U &&
+                            command.arguments[0] >= 2U &&
+                            (command.arguments[0] & 1U) == 0U,
+                        "released post-battle continuation is not an aligned "
+                        "entity-byte-offset plus two");
+                actual.emplace_back(
+                    archive_number,
+                    static_cast<std::uint16_t>(entry * 2U),
+                    command.opcode, command.arguments[0],
+                    command.arguments[1]);
+            }
+        }
+    }
+    const std::vector<Record> expected{
+        {1, 284, 59, 42, 32786}, {1, 322, 48, 2, 14},
+        {1, 448, 59, 2, 32822},  {1, 452, 60, 2, 32826},
+        {1, 454, 60, 2, 16450},  {2, 52, 59, 4, 32790},
+        {2, 54, 59, 4, 32792},   {2, 56, 59, 2, 32794},
+        {2, 62, 59, 2, 32796},   {2, 78, 59, 4, 32816},
+        {4, 22, 59, 2, 32798},   {5, 22, 59, 4, 32802},
+        {5, 28, 59, 2, 32804},   {5, 30, 48, 2, 64},
+        {5, 378, 48, 36, 68},
+    };
+    require(actual == expected,
+            "released opcode 48/59/60 post-battle continuation domain changed");
+}
+
 void test_resource_decoder(const std::filesystem::path& game_root) {
     auto compressed = swd2::decode_rsk_block(read_file(game_root / "MEO.RSK"));
     require(compressed.compressed, "MEO.RSK should use compressed storage");
@@ -11709,6 +11763,7 @@ int main(int argc, char** argv) {
         test_rpg_mode_x_event_offset();
         test_rpg_opcode55_monochrome(argv[1]);
         test_rpg_save_slot_selector(argv[1]);
+        test_rpg_post_battle_continuation_domain(argv[1]);
         test_original_launcher(argv[1]);
         test_resource_decoder(argv[1]);
         test_voc_decoder(argv[1]);
