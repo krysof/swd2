@@ -855,6 +855,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_entity_animation_validation PROPERTIES
         DEPENDS rpg_world_entity_animation_prepare)
     add_test(
+        NAME rpg_world_entity_decoration_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-entity-decoration-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-entity-decoration-save"
+    )
+    add_test(
+        NAME rpg_world_entity_decoration_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-entity-decoration.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-entity-decoration-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-entity-decoration"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-entity-decoration-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_entity_decoration_validation PROPERTIES
+        DEPENDS rpg_world_entity_decoration_prepare)
+    add_test(
         NAME rpg_world_interaction_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-interaction-fixture.py"

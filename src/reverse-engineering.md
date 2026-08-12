@@ -3926,3 +3926,25 @@ locks one initial field Confirm, one text-acceleration Confirm, one closing
 field Confirm, Quit, all six submitted pages, the two direct updates and final
 SAVE/MAPZ/NAME summaries.  This is the sixteenth original OC world route and
 does not stand in for the still-incomplete full playthrough.
+
+### RPG SWRO7 behavior-five animated decoration
+
+The second nonwalking animation class now has its own released-data capture
+rather than being inferred from MA-DE behavior two.  MAPZ directory byte offset
+46 selects SWRO7; entity zero remains byte-for-byte identical to the release:
+`sprite=0d00h, direction=0, cell=1510, behavior=5, delay=10, offsets=-1/-7,
+animation=4, flags=000ah, event=58, frame=0`.  Only the other two autonomous
+entities are hidden in the evidence fixture.  The leader remains at world
+`(30,22)` and 45 idle polls provide no direction or Confirm input that could
+drive the decoration at `(47,11)`.
+
+The first idle poll advances the stored frame to one; the ten-count delay then
+places frames two, three and zero on rewrite pages 12, 23 and 34.  As in the
+original `4f1c` drawing path, stored odd frame three renders through frame one.
+Complete `x=160..255,y=32..143` crops around the decoration match the untouched
+RPG.EXE at DOSBox-X review frames 248, 329, 413 and 498 in every RGB pixel.
+The fixture also locks SWRO7's released 64x38 dimensions and original runtime
+path suffixes (`RS4`/`RRO`), avoiding a stale-width observation that would
+interpret this map through AREA1's 180-column state.  This is the seventeenth
+original OC world route; it proves the shipped behavior-five animation cycle,
+not the outstanding complete-playthrough requirement.
