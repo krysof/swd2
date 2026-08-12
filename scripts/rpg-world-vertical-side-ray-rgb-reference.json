@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_buin1_vertical_side_ray_sequence",
+  "status": "exact_rgb_checkpoint",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_harness_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "release_mapz_sha256": "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917",
+  "fixture_mapz_sha256": "c8b35df562edaa1929ba3e79b324e885b5b0893f5fa53447488d18f7cabdf433",
+  "name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+  "area_layout_sha256": "beb80f72b096bad87e9a5f3817bf50038db2238812a233815e12496de15b6752",
+  "area_graphics_metadata_sha256": "c3a09c63d0634bd2fabcd8dbc836c42600067a5d2a1431badaf8a0d9016963a7",
+  "area_overlay_sha256": "77e1387d4e14cb7e2eb42ea264b049fb190bbc1b2f9105589b4ecba554ca0e08",
+  "entity_sprite_archive_sha256": "6a6aaa018645ad3a241d54938622416a4b45c197b7e8f551855f5bb1c797e581",
+  "music_sha256": "036fcf18cf8cd57e00dba304d7865f04917f2f9062021afb884b80331a178f0f",
+  "event_archive_sha256": "6940c589ae9d2ea3a4f960bd3b8b4d8621ca598da747e11da76463464c63072b",
+  "event_font_sha256": "8403126e430decc5a37a6256b3a785b278f93c34634754f9ec347c84dc9eb348",
+  "fixture_save_sha256": "3366d3faff55319e1df743516ebb659f8829b96dc94927678dafcd1c43c65ac9",
+  "map_location_directory_offset": 268,
+  "entity_index": 0,
+  "release_entity_fields": [
+    5120,
+    6,
+    60878,
+    1,
+    10,
+    0,
+    65520,
+    4,
+    10,
+    40,
+    1
+  ],
+  "fixture_behaviors": [
+    1,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "player_world_position": [
+    18,
+    170
+  ],
+  "player_direction": 3,
+  "entity_world_footprint": [
+    [
+      15,
+      169
+    ],
+    [
+      16,
+      169
+    ],
+    [
+      17,
+      169
+    ]
+  ],
+  "entity_initial_direction": 6,
+  "entity_faced_direction": 0,
+  "entity_restored_direction": 6,
+  "event_directory_offset": 40,
+  "automatic_event_flag": false,
+  "capture_autotype": "original-rpg-world-vertical-interaction-autotype.txt",
+  "capture_autotype_sha256": "321daabadd4a10c59d84b771f9deb995a984d622cfbb543355f5b7cfa22dc83a",
+  "replay_input": "replay-rpg-world-interaction.txt",
+  "replay_input_sha256": "0ee7e7c683587163f1e244bf237620b906a957c658ffa491f05601b58dda705b",
+  "capture_wait_seconds": 6.5,
+  "capture_pace_seconds": 1.5,
+  "capture_time_limit_seconds": 18,
+  "capture_review_fps": 70,
+  "capture_video_frames": 1261,
+  "capture_review_frames": 1259,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "55f178708a0b8ef3c4d4c922dad1ad5fea80a3feeebb9f735c44fcffd00ffd67",
+  "capture_manifest_sha256": "6403012e7ed69f3993c342f7528a173ca782bcea535c739193105372fc347f04",
+  "rewrite_input": {
+    "total": 4,
+    "consumed": 4,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 0,
+    "poll": 3,
+    "text": 1,
+    "frontend": 0
+  },
+  "rewrite_video": {
+    "frames": 6,
+    "direct_updates": 2,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "3f49bbca16278eb7"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 0,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "dfcf0c93a81299a9"
+  },
+  "rewrite_delay_milliseconds": 73,
+  "rewrite_state_fnv1a64": "6cd38e670cb715cf",
+  "rewrite_mapz_fnv1a64": "21d25caefe119ae0",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "matched_frames": [
+    {
+      "kind": "initial_buin1_vertical_side_world",
+      "rewrite_frame": 0,
+      "original_review_frame": 238,
+      "original_png_sha256": "fb5cd31848a500812a0fe3a7c1bb48097c2912020dcc929e32b6a2a13a969dde",
+      "rewrite_indexed_sha256": "f14552905d5c4401bdc9909c1b9a6f710075e93d0a8716a3318d3c5f6c5e0170",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "332c9e55f43ca82963997f3c680eaf69cb4c901624020e778881f1c69a0a626f",
+      "original_rgb_sha256": "332c9e55f43ca82963997f3c680eaf69cb4c901624020e778881f1c69a0a626f"
+    },
+    {
+      "kind": "faced_vertical_side_entity_first_text_update",
+      "rewrite_frame": 2,
+      "original_review_frame": 463,
+      "original_png_sha256": "e75e80e78ad46401f346d97e40b632b024c39391e11cebbcfd5f902f97a38a70",
+      "rewrite_indexed_sha256": "59e5e004f4a818d882ff9e414067d8fad43e96a0c5fa4d1628b7cc8151747825",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "a5a8b30a5b5f26a26bdc3f9f8f613a972abf8c025e8abc3a996b00d9d99bdf7b",
+      "original_rgb_sha256": "a5a8b30a5b5f26a26bdc3f9f8f613a972abf8c025e8abc3a996b00d9d99bdf7b"
+    },
+    {
+      "kind": "faced_vertical_side_entity_complete_dialogue",
+      "rewrite_frame": 3,
+      "original_review_frame": 501,
+      "original_png_sha256": "6e7a92bbb957f6b1c8a1ebffa266073392182b18829277eb10ef5d3da3ce5277",
+      "rewrite_indexed_sha256": "5663918504b41d3df2133a51217212b8b1d6ad0e20c5ff72ba81bb59d81ef9de",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "18a1bd28fb29d7e3c766540cc8bba4dc220c11720c5938b16145ede3ede478ab",
+      "original_rgb_sha256": "18a1bd28fb29d7e3c766540cc8bba4dc220c11720c5938b16145ede3ede478ab"
+    },
+    {
+      "kind": "faced_vertical_side_entity_dialogue_marker",
+      "rewrite_frame": 4,
+      "original_review_frame": 505,
+      "original_png_sha256": "e195c024704c9528c460a290ad074888e415e55b4e638ee909609e07110cce46",
+      "rewrite_indexed_sha256": "5b76d06d5084abb58e821bbc77f2be37079a7e8853c668e8ae14f869ab3a3bed",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "8eedf9bbe545bc58a10af429fa3495492783b734178aef2ac28323458c405bdf",
+      "original_rgb_sha256": "8eedf9bbe545bc58a10af429fa3495492783b734178aef2ac28323458c405bdf"
+    },
+    {
+      "kind": "restored_vertical_side_entity_world",
+      "rewrite_frame": 5,
+      "original_review_frame": 575,
+      "original_png_sha256": "fb5cd31848a500812a0fe3a7c1bb48097c2912020dcc929e32b6a2a13a969dde",
+      "rewrite_indexed_sha256": "f14552905d5c4401bdc9909c1b9a6f710075e93d0a8716a3318d3c5f6c5e0170",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "332c9e55f43ca82963997f3c680eaf69cb4c901624020e778881f1c69a0a626f",
+      "original_rgb_sha256": "332c9e55f43ca82963997f3c680eaf69cb4c901624020e778881f1c69a0a626f"
+    }
+  ],
+  "capture_confirm_pulses": 4,
+  "center_ray_cells": [
+    [
+      18,
+      169
+    ],
+    [
+      18,
+      168
+    ],
+    [
+      18,
+      167
+    ],
+    [
+      18,
+      166
+    ]
+  ],
+  "second_ray_first_cell": [
+    17,
+    169
+  ]
+}

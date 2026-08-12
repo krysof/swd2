@@ -4003,6 +4003,21 @@ twenty-third original OC route locks a vertical centre ray, opposite-facing
 calculation and normal restoration without inferring them from the horizontal
 capture.
 
+The vertical second ray is also captured rather than assumed.  With the same
+released BUIN1 entity, the leader instead starts at `(18,170)` facing north.
+All four centre probes `(18,169)..(18,166)` are empty.  The next `DATA:3cbf`
+offset moves one column west, and its first probe `(17,169)` reaches the
+entity's rightmost footprint word.  The event again turns the entity south and
+restores west on return.
+
+Modern initial, first text update, complete dialogue, marker and restored
+world pages match original review frames `238/463/501/505/575` over all
+320×200 RGB pixels.  Input boundaries, six submitted frames, two direct text
+updates and final SAVE/MAPZ/NAME summaries are identical to the centre-ray
+route except for the leader coordinate and resulting state digest.  This is
+the twenty-fourth original OC world route and directly proves the vertical
+centre-ray exhaustion plus west-offset second ray.
+
 ### RPG SWRO7 behavior-five animated decoration
 
 The second nonwalking animation class now has its own released-data capture
