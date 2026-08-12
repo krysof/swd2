@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_buin1_vertical_interaction_sequence",
+  "status": "exact_rgb_checkpoint",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_harness_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "release_mapz_sha256": "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917",
+  "fixture_mapz_sha256": "c8b35df562edaa1929ba3e79b324e885b5b0893f5fa53447488d18f7cabdf433",
+  "name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+  "area_layout_sha256": "beb80f72b096bad87e9a5f3817bf50038db2238812a233815e12496de15b6752",
+  "area_graphics_metadata_sha256": "c3a09c63d0634bd2fabcd8dbc836c42600067a5d2a1431badaf8a0d9016963a7",
+  "area_overlay_sha256": "77e1387d4e14cb7e2eb42ea264b049fb190bbc1b2f9105589b4ecba554ca0e08",
+  "entity_sprite_archive_sha256": "6a6aaa018645ad3a241d54938622416a4b45c197b7e8f551855f5bb1c797e581",
+  "music_sha256": "036fcf18cf8cd57e00dba304d7865f04917f2f9062021afb884b80331a178f0f",
+  "event_archive_sha256": "6940c589ae9d2ea3a4f960bd3b8b4d8621ca598da747e11da76463464c63072b",
+  "event_font_sha256": "8403126e430decc5a37a6256b3a785b278f93c34634754f9ec347c84dc9eb348",
+  "fixture_save_sha256": "5e3b74eb31b9cf9eaf395f6b8b5b9542737b29a3048adb6ef0b068b65b48adaa",
+  "map_location_directory_offset": 268,
+  "entity_index": 0,
+  "release_entity_fields": [
+    5120,
+    6,
+    60878,
+    1,
+    10,
+    0,
+    65520,
+    4,
+    10,
+    40,
+    1
+  ],
+  "fixture_behaviors": [
+    1,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "player_world_position": [
+    16,
+    170
+  ],
+  "player_direction": 3,
+  "entity_world_footprint": [
+    [
+      15,
+      169
+    ],
+    [
+      16,
+      169
+    ],
+    [
+      17,
+      169
+    ]
+  ],
+  "entity_initial_direction": 6,
+  "entity_faced_direction": 0,
+  "entity_restored_direction": 6,
+  "event_directory_offset": 40,
+  "automatic_event_flag": false,
+  "capture_autotype": "original-rpg-world-vertical-interaction-autotype.txt",
+  "capture_autotype_sha256": "321daabadd4a10c59d84b771f9deb995a984d622cfbb543355f5b7cfa22dc83a",
+  "replay_input": "replay-rpg-world-interaction.txt",
+  "replay_input_sha256": "0ee7e7c683587163f1e244bf237620b906a957c658ffa491f05601b58dda705b",
+  "capture_wait_seconds": 6.5,
+  "capture_pace_seconds": 1.5,
+  "capture_time_limit_seconds": 18,
+  "capture_review_fps": 70,
+  "capture_video_frames": 1261,
+  "capture_review_frames": 1259,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "5545644ed7d70f060d15fcda4f8cd787c73f681f094377f70c872bb6a3a94a36",
+  "capture_manifest_sha256": "f0d7cdf59782912c7cf53faa0bc88f5cf21c29ef12bb5ad8f566f18a4893a360",
+  "rewrite_input": {
+    "total": 4,
+    "consumed": 4,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 0,
+    "poll": 3,
+    "text": 1,
+    "frontend": 0
+  },
+  "rewrite_video": {
+    "frames": 6,
+    "direct_updates": 2,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "c0399b03db2eaaec"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 0,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "dfcf0c93a81299a9"
+  },
+  "rewrite_delay_milliseconds": 73,
+  "rewrite_state_fnv1a64": "d9c5dfc5c18201db",
+  "rewrite_mapz_fnv1a64": "21d25caefe119ae0",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "matched_frames": [
+    {
+      "kind": "initial_buin1_vertical_world",
+      "rewrite_frame": 0,
+      "original_review_frame": 238,
+      "original_png_sha256": "cfeef3edb287b4df6cc227eb302ca40b912742635bd61d5707f37632e358287f",
+      "rewrite_indexed_sha256": "ee29bbff3f0e814cfb7d7a7ea3b2d22e7032d46f828d54fa451dcb4d12430930",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "9d2abcaef81bb098c059cf831e960c6e306241ad526d75f4faf3f1b29b821f3c",
+      "original_rgb_sha256": "9d2abcaef81bb098c059cf831e960c6e306241ad526d75f4faf3f1b29b821f3c"
+    },
+    {
+      "kind": "faced_vertical_entity_first_text_update",
+      "rewrite_frame": 2,
+      "original_review_frame": 463,
+      "original_png_sha256": "89e1b580760f6acb3f3c7a0537f87fec7c03599b53d86cdb153132c943e60ac4",
+      "rewrite_indexed_sha256": "aad2d8b4d64b6066f5e8325c383f980a3f1fedabf63af7047d6b58df3b2481df",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "437c0a959940b83c66d6549f759eed818d1e3e2bb1f56c56db01b9778187dcc4",
+      "original_rgb_sha256": "437c0a959940b83c66d6549f759eed818d1e3e2bb1f56c56db01b9778187dcc4"
+    },
+    {
+      "kind": "faced_vertical_entity_complete_dialogue",
+      "rewrite_frame": 3,
+      "original_review_frame": 501,
+      "original_png_sha256": "adda174dd446dee1620585bf4cbd5c51a19bd7a2958cf82acb5f8bfbfc0ce5c4",
+      "rewrite_indexed_sha256": "33d18c0ad2274dae1f9127258bd5ceed0542bce245f3d1d40803ab4f0832b8ba",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "00ba381e25d243109ee7750ddf9af97c08b9275e418639cd31ef3b40730fc333",
+      "original_rgb_sha256": "00ba381e25d243109ee7750ddf9af97c08b9275e418639cd31ef3b40730fc333"
+    },
+    {
+      "kind": "faced_vertical_entity_dialogue_marker",
+      "rewrite_frame": 4,
+      "original_review_frame": 505,
+      "original_png_sha256": "087ed00b84ae72893dd5ca6cfdbefafa9c90778aa975c84cde1885b5ea6c3ba1",
+      "rewrite_indexed_sha256": "caf0b8e1a04c5ca0866ad5e7466bd3f1c6ad620f9f5ffcc7fa3f3f829825d853",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "9a176f5350cc5e2d9c4b13d63b8983f2059a98c41b207600144217e438e0005c",
+      "original_rgb_sha256": "9a176f5350cc5e2d9c4b13d63b8983f2059a98c41b207600144217e438e0005c"
+    },
+    {
+      "kind": "restored_vertical_entity_world",
+      "rewrite_frame": 5,
+      "original_review_frame": 575,
+      "original_png_sha256": "cfeef3edb287b4df6cc227eb302ca40b912742635bd61d5707f37632e358287f",
+      "rewrite_indexed_sha256": "ee29bbff3f0e814cfb7d7a7ea3b2d22e7032d46f828d54fa451dcb4d12430930",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "9d2abcaef81bb098c059cf831e960c6e306241ad526d75f4faf3f1b29b821f3c",
+      "original_rgb_sha256": "9d2abcaef81bb098c059cf831e960c6e306241ad526d75f4faf3f1b29b821f3c"
+    }
+  ],
+  "capture_confirm_pulses": 4
+}

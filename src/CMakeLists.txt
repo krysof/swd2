@@ -950,6 +950,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_interaction_validation PROPERTIES
         DEPENDS rpg_world_interaction_prepare)
     add_test(
+        NAME rpg_world_vertical_interaction_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-vertical-interaction-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-vertical-interaction-save"
+    )
+    add_test(
+        NAME rpg_world_vertical_interaction_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-vertical-interaction.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-vertical-interaction-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-vertical-interaction"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-vertical-interaction-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_vertical_interaction_validation PROPERTIES
+        DEPENDS rpg_world_vertical_interaction_prepare)
+    add_test(
         NAME rpg_world_side_ray_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-side-ray-fixture.py"

@@ -3986,6 +3986,23 @@ field Confirm, Quit, all six submitted pages, the two direct updates and final
 SAVE/MAPZ/NAME summaries.  This is the sixteenth original OC world route and
 does not stand in for the still-incomplete full playthrough.
 
+The vertical half of the direction table now has an independent original
+route rather than relying only on `DATA:3cbf` and synthetic symmetry.  The same
+released BUIN1 entity and isolated MAPZ vector are used, while the leader moves
+to world `(16,170)` and faces north.  The first centre-ray probe `(16,169)`
+hits the middle word of the actor's `(15..17,169)` footprint.  `52b4` turns the
+entity from west (six) to south (zero) during CHNA2 directory 40, then restores
+west after the dialogue closes.
+
+Original review frames `238/463/501/505/575` match modern initial, first text
+update, complete dialogue, animated marker and restored world pages over every
+320×200 RGB pixel.  Four physical Space pulses at 1.5-second cadence ensure
+the original receives initial, acceleration and closing inputs; the strict
+rewrite consumes the minimal three Confirm boundaries plus Quit.  This
+twenty-third original OC route locks a vertical centre ray, opposite-facing
+calculation and normal restoration without inferring them from the horizontal
+capture.
+
 ### RPG SWRO7 behavior-five animated decoration
 
 The second nonwalking animation class now has its own released-data capture
