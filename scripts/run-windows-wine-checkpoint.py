@@ -56,9 +56,25 @@ def main() -> int:
     try:
         if shutil.which("docker") is None:
             raise ValueError("docker is required")
-        if checked(["git", "status", "--porcelain"], "git status",
-                   cwd=root).stdout.strip():
-            raise ValueError("Windows Wine checkpoint requires a clean worktree")
+        try:
+            output_relative = args.output.resolve().relative_to(root.resolve())
+        except ValueError as error:
+            raise ValueError(
+                "Windows Wine checkpoint output must be inside the repository"
+            ) from error
+        # The cross-build runner has just replaced this checkpoint directory,
+        # so those evidence files are expected to be dirty.  Refuse any source
+        # or unrelated evidence edits rather than forcing an intermediate
+        # commit whose revision no longer equals native-log.json.
+        outside_status = checked([
+            "git", "status", "--porcelain", "--", ".",
+            f":(exclude){output_relative.as_posix()}",
+            f":(exclude){output_relative.as_posix()}/**",
+        ], "git status", cwd=root).stdout.strip()
+        if outside_status:
+            raise ValueError(
+                "Windows Wine checkpoint has changes outside its output: "
+                + outside_status)
         source_commit = checked(
             ["git", "rev-parse", "HEAD"], "git revision", cwd=root
         ).stdout.strip()
