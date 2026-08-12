@@ -210,6 +210,12 @@ if(BUILD_TESTING)
                 --verify
     )
     add_test(
+        NAME fig_timer_machine_code_audit
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-timer-machine-code.py"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    add_test(
         NAME legacy_program_data_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
                 --verify-legacy-program-data
