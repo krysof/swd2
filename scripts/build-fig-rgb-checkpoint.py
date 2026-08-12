@@ -49,12 +49,16 @@ def main() -> int:
         exact_crop_digests: set[str] = set()
         registered_pairs = 0
         nonmatching_pairs = 0
-        for path in sorted((root / "scripts").glob("fig-*-rgb-reference.json")):
+        reference_paths = sorted(
+            (root / "scripts").glob("fig-*-rgb-reference.json"))
+        for path in reference_paths:
             raw = path.read_bytes()
             data = json.loads(raw)
             pairs = list(rgb_pairs(data))
             if not pairs:
-                continue
+                raise ValueError(
+                    "FIG RGB reference has no explicit original/rewrite "
+                    f"pair: {path.name}")
             exact_pages = 0
             exact_crops = 0
             for region, rewrite, original in pairs:
@@ -83,11 +87,13 @@ def main() -> int:
             "kind": "fig_rgb_checkpoint",
             "status": "checkpoint_not_complete",
             "scope": (
-                "Aggregate index of every committed FIG reference containing "
-                "registered rewrite/original RGB page or crop digest pairs; "
+                "Aggregate index of every committed FIG RGB reference; every "
+                "reference must contain registered rewrite/original RGB page "
+                "or crop digest pairs; "
                 "this is not the final all-scene pixel_diffs "
                 "completion manifest."
             ),
+            "reference_file_count": len(reference_paths),
             "source_count": len(sources),
             "registered_rgb_pair_count": registered_pairs,
             "exact_rgb_page_count": sum(

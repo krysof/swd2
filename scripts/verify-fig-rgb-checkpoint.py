@@ -64,10 +64,16 @@ def main() -> int:
             raise ValueError("unsupported FIG RGB checkpoint")
 
         discovered = sorted((root / "scripts").glob("fig-*-rgb-reference.json"))
-        discovered = [
-            path for path in discovered
-            if list(rgb_pairs(json.loads(path.read_text(encoding="utf-8"))))
+        if expected.get("reference_file_count") != len(discovered):
+            raise ValueError("FIG RGB reference-file count differs")
+        unpaired = [
+            path.name for path in discovered
+            if not list(rgb_pairs(json.loads(path.read_text(encoding="utf-8"))))
         ]
+        if unpaired:
+            raise ValueError(
+                "FIG RGB references lack explicit original/rewrite pairs: "
+                + ", ".join(unpaired))
         listed = [source.get("path") for source in sources]
         wanted = [path.relative_to(root).as_posix() for path in discovered]
         if listed != wanted:
