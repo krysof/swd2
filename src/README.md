@@ -709,9 +709,10 @@ Safari 26.5.2 检查点连续通过三轮，两轮页面生命周期均由实际
 
 2026-08-12 的登记检查点为 250 次原生 MEO→RPG 确定性重放、100 次 Edge IDBFS 重启、
 1000 次 WebKit IDBFS 重启；Edge 每次运行前还用一次不间断可信触摸产生至少 69 个
-WASM 世界方向和已呈现位置，并验证角色坐标实际改变。仍缺多小时活动游戏/音频、
-Windows/Linux、物理手机和手柄，
-所以长期门只是从 `pending` 进入 `in_progress`。
+WASM 世界方向和已呈现位置，并验证角色坐标实际改变。Debian 13/aarch64 已从空目录
+通过 507/507 CTest；静态 MinGW x86-64 PE 也在固定 Wine 10 容器中完成 113 帧回放，
+其 trace 和 `SWD2FRM2` 与 macOS 原生输出逐字节等值。Wine 仍是仿真边界，不能替代
+物理 Windows/Linux SDL、手机、手柄和多小时活动音频，所以长期门保持 `in_progress`。
 
 该测试使用移动视口模拟，不能替代物理 iOS/Android 设备验收；报告会保留这个限制。
 

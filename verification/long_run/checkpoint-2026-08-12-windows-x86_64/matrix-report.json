@@ -6,14 +6,21 @@
     "platform": "windows",
     "architecture": "x86_64",
     "native_release_cross_builds": 1,
-    "pe_cli_outputs": 1
+    "pe_cli_outputs": 1,
+    "wine_pe_replays": 1,
+    "native_equivalence_replays": 1,
+    "exact_indexed_frame_matches": 113
   },
   "artifacts": {
-    "native_log_sha256": "e58b9c96577dc91e6edd52bb50a5de579922f74a8ae8cf85b7cb334d39e3736b",
-    "build_log_sha256": "698fa75dc9148d0f784ee8b93efcf97be6783819286983915e2cf1ede12c6035"
+    "native_log_sha256": "c5e3b7406a98cde8b21cf1790ae71463348a1e14c0db78372bd670985b4c2ae3",
+    "build_log_sha256": "8d042e91aa144f3a9d46544179645dd4bf8b89a102dd392f3966105e194337fb",
+    "wine_execution_log_sha256": "c528c04ff87dd11221e6d300c60b9d4a1a2ee738933193648c8bf3f348b418ba",
+    "wine_native_trace_sha256": "27b47e8fd635161fb67e8d4db11d32cfa091c81f5118d7211709f2f92748c51e",
+    "wine_windows_trace_sha256": "c0781066eb857cd255f25bfe82673cd615beb1a21a7f50acd3442bc2c23660b5",
+    "wine_comparison_sha256": "17fe93b5e2ca6c01fc4841d977e868d4985047316829ed65e54fa277bbaaf297"
   },
   "remaining": [
-    "Windows-hosted execution and deterministic replay",
+    "physical Windows-hosted execution and deterministic replay",
     "Windows SDL2 display/input/audio frontend build and run",
     "multi-hour active Windows gameplay/audio soak",
     "physical gamepad matrix"

@@ -2315,16 +2315,23 @@ runner 锁定源提交、容器镜像 ID、ELF 摘要和完整 CTest 日志 SHA-
 容器后端，不冒充物理 Linux 桌面的图形/声音/手柄长跑；Windows、物理设备与多小时活动
 音频仍列在 matrix 的 remaining 中，所以长期平台门继续保持 `in_progress`。
 
-Windows 目标也已有可重复的第一道真实编译边界。macOS arm64 主机上的 MinGW-w64
+Windows 目标也已有可重复的编译和受限执行边界。macOS arm64 主机上的 MinGW-w64
 GCC 15.2 以 `CMAKE_SYSTEM_NAME=Windows`、Release 从空目录构建完整 `swd2_core` 和
-统一 `swd2_rewrite.exe`；这次交叉配置先发现 CMake 会误拾取宿主 SDL2 target，现由
-`SWD2_NATIVE_SDL2=OFF` 明确只关闭前端而不裁掉任何核心/CLI 代码。产物是 1,683,711
-byte、18 sections 的 AMD64 PE32+，SHA-256 为
-`72b1183384dbc2a71b46d190dca0f85febe41e532a7de46b54df00087a8a46e3`，编译警告为零。
-runner 锁定源提交、编译器 target、PE machine/characteristics、产物和完整 build log；
-独立 verifier 同时要求 matrix 保持 `in_progress`。这证明 Windows ABI 的核心/命令行
-可生成，不代表已经在 Windows 主机执行，也不代表 SDL2 显示、输入、音频或手柄通过，
-因此长期平台门仍不能关闭。
+统一 `swd2_rewrite.exe`；交叉配置不会再误拾取宿主 SDL2 target，
+`SWD2_NATIVE_SDL2=OFF` 只关闭前端而不裁掉任何核心/CLI 代码。MinGW 默认依赖相邻的
+`libgcc_s_seh-1.dll`/`libstdc++-6.dll`，现在 `SWD2_STATIC_MINGW_RUNTIME=ON` 把编译器
+runtime 链进同一个 PE；import audit 只留下 KERNEL32/UCRT 系统边界。产物是
+18,257,836 byte、18 sections 的 AMD64 PE32+，SHA-256 为
+`a4b77c3dcf79df7d6e293768d52b3af0a6ee12ca0eb9a6d2c50be3af48c540ff`，编译警告为零。
+
+该 PE 还在固定 Debian 13 AMD64 镜像的 Wine 10.0 中实际运行了 smoke 回放。Windows
+进程消费 8 个输入、提交 113 张 320x200 索引页并完成 MEO→RPG 两次模块切换；其标准化
+trace 与同源 macOS 原生进程在输入检查点、状态、逐页摘要、音频和统一时间线的全部字段
+相等，完整 `SWD2FRM2` 输出也逐字节相等，7,320,636 byte 的共同 SHA-256 为
+`d2703c591e4a0e1d6ded813b5a413b62a704277a772b022ac6c2c88f2ff6c2cd`。runner 和两个独立
+verifier 锁定源提交、PE imports、Wine/容器身份、两份 trace、比较报告及进程日志。
+这证明的是 Docker/x86_64 仿真中的 PE/CRT 确定性执行，明确不是物理 Windows 宿主，
+也没有覆盖 Windows SDL2 显示、输入、音频或手柄；matrix 因而仍为 `in_progress`。
 
 五个便携槽实际是 SAVE/MAPZ/NAME 三件套，而不是两件套：原版 `4ce6..4d29` 写
 `SAVE.DAn`、`MAPZ.DAn` 和 `NAME<n>.DSK`，`4c16..4c73` 读三者并把槽位 NAME

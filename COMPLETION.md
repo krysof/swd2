@@ -51,7 +51,8 @@ comparison 报告完全一致。
 `verification/long_run/checkpoint-2026-08-10-macos/`；这类目录可证明已有循环并把 gate 从
 `pending` 推进到 `in_progress`，但 `verify-long-run.sh` 仍只接受最终的
 `verification/long_run/manifest.json`、`status=verified` 和完整平台角色，不能拿检查点
-替代 Windows/Linux、品牌浏览器、物理手机/手柄及多小时活动游戏验收。
+替代物理 Windows/Linux、品牌浏览器、物理手机/手柄及多小时活动游戏验收；Wine 中
+执行 Windows PE 只能登记为仿真检查点，不能冒充 Windows 宿主或 Windows SDL 验收。
 `scripts/capture-original-dosbox.py` 可以在固定 DOS 日期/时间和隔离的 `C:\\SWD2` 下生成
 带哈希 manifest 的原版 RGB 录像/抽帧，用于定位场景和复核时序；但 DOSBox-X 录像已通过
 VGA DAC 转色，只是 `reference_only`，不能代替上述索引像素及逐帧调色板证据。

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "replay_comparison",
+  "status": "verified",
+  "original_sha256": "27b47e8fd635161fb67e8d4db11d32cfa091c81f5118d7211709f2f92748c51e",
+  "rewrite_sha256": "c0781066eb857cd255f25bfe82673cd615beb1a21a7f50acd3442bc2c23660b5",
+  "checks": {
+    "input": true,
+    "boundaries": true,
+    "input_checkpoints": true,
+    "video": true,
+    "frames": true,
+    "timeline": true,
+    "audio": true,
+    "delay": true,
+    "final_state": true,
+    "final_mapz": true,
+    "final_name": true,
+    "stop": true,
+    "transitions": true
+  }
+}
