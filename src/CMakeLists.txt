@@ -3103,6 +3103,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_introduction_yn_1e8_validation PROPERTIES
         DEPENDS fig_introduction_yn_1e8_prepare)
     add_test(
+        NAME fig_introduction_yn_34c_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-introduction-yn-34c-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-introduction-yn-34c-save"
+    )
+    add_test(
+        NAME fig_introduction_yn_34c_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-introduction-yn-34c.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-introduction-yn-34c-save"
+                "${CMAKE_BINARY_DIR}/fig-introduction-yn-34c"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-introduction-yn-34c-rgb-reference.json"
+    )
+    set_tests_properties(fig_introduction_yn_34c_validation PROPERTIES
+        DEPENDS fig_introduction_yn_34c_prepare)
+    add_test(
         NAME fig_introduction_none_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-introduction-none-fixture.py"
