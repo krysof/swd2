@@ -2,11 +2,13 @@
 # CHNA1, ORC, ITEM and FIG data. It performs the real single-process startup,
 # completes the DAQ opening and first-village story, wins the Fire-Eyed Suanni
 # chief battle, opens the Wild Bear Mountain secret passage, obtains the T2
-# mayor's boat permission, restores the party at the released inn, and crosses
-# ONE2A through three deterministic random encounters.
+# mayor's boat permission, restores the party at the released inn, crosses
+# ONE2A, solves the ONE3A stone-lion event, then wins the released two-beast
+# encounter on the return route.
 #
-# The final ordinary world poll is at ONE3A directory 120 after story flags
-# 8/18/22/44, travel flag three and every Stronghold one-shot MAPZ mutation
+# The final ordinary world poll is at ONE2A directory 122, immediately before
+# interacting with the newly revealed river demon. Story flags 8/18/22/44/48,
+# travel flag three, the Stronghold one-shots and the stone-lion MAPZ redirects
 # have persisted. This is a mainline checkpoint, not a claim of a complete
 # playthrough.
 WAIT:CONFIRM*4
@@ -453,4 +455,41 @@ POLL:UP*4
 POLL:RIGHT*5
 POLL:UP*25
 POLL:NONE
+POLL:UP
+POLL:LEFT*2
+POLL:CONFIRM
+POLL:CONFIRM*19
+POLL:DOWN*3
+POLL:NONE
+POLL:DOWN*19
+POLL:LEFT*30
+# Defeat the two beasts without over-confirming the auto-selected sole survivor.
+WAIT:CONFIRM*3
+WAIT:CONFIRM*3
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM*2
+# Dismiss the victory summary, then expose the following runtime boundary.
+WAIT:CONFIRM
+# Dismiss actor zero and actor one's level-up cards.
+WAIT:CONFIRM*2
+# Resume the exact route toward the newly revealed river demon.
+POLL:LEFT
+POLL:UP*2
+POLL:LEFT*6
+POLL:UP*6
+POLL:LEFT*3
+POLL:UP*7
+POLL:LEFT*4
+POLL:UP*3
+POLL:LEFT
+POLL:UP*2
+POLL:LEFT*7
+POLL:UP*6
+POLL:LEFT*6
+POLL:UP*17
+POLL:LEFT*18
 POLL:QUIT

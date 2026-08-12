@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the released main story through T2 and the ONE3A temple approach."""
+"""Lock the released main story through the revealed ONE2A river demon."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ def main() -> int:
             ("RPG.EXE", "MT", "ED", True),
             ("DEMO.EXE", "ED", "--", True),
         ]
-        for _ in range(9):
+        for _ in range(10):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if len(expected_transitions) == 3 else "OC",
                  "IF", True),
@@ -74,40 +74,40 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 2768,
-            ("input", "consumed"): 2768,
+            ("input", "total"): 2953,
+            ("input", "consumed"): 2953,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 154,
-            ("boundaries", "poll"): 2617,
+            ("boundaries", "wait"): 174,
+            ("boundaries", "poll"): 2782,
             ("boundaries", "text"): 496,
-            ("video", "frames"): 8165,
-            ("video", "direct_updates"): 3004,
-            ("video", "fnv1a64"): "e114d6bcb66daab1",
-            ("audio", "music_calls"): 51,
-            ("audio", "voice_calls"): 69,
-            ("audio", "stop_audio_calls"): 22,
-            ("audio", "fnv1a64"): "51514c296f9fdd0a",
+            ("video", "frames"): 9146,
+            ("video", "direct_updates"): 3554,
+            ("video", "fnv1a64"): "87ac8c7ab95ff198",
+            ("audio", "music_calls"): 59,
+            ("audio", "voice_calls"): 78,
+            ("audio", "stop_audio_calls"): 24,
+            ("audio", "fnv1a64"): "e74fb3ed17d2bf4b",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 284936:
+        if trace.get("delay_milliseconds") != 319233:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "885e3e074de72341",
-            "mapz_fnv1a64": "ae6c1bca924a54ac",
+            "state_fnv1a64": "c4ed7a3a21a5a252",
+            "mapz_fnv1a64": "3820efe1b0be688b",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 8165 or frames[-1] != "3a4d52483706445e":
-            raise ValueError("mainline final ONE3A world frame differs")
+        if len(frames) != 9146 or frames[-1] != "e0f1e7df0bb850cc":
+            raise ValueError("mainline final ONE2A river-demon approach frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -154,9 +154,15 @@ def main() -> int:
             2711: ("POLL", "CANCEL", "acf8feee8c44df81", "ae6c1bca924a54ac"),
             2730: ("POLL", "RIGHT", "76249f8b988cdb49", "ae6c1bca924a54ac"),
             2766: ("POLL", "NONE", "885e3e074de72341", "ae6c1bca924a54ac"),
-            2767: ("POLL", "QUIT", "885e3e074de72341", "ae6c1bca924a54ac"),
+            2767: ("POLL", "UP", "885e3e074de72341", "ae6c1bca924a54ac"),
+            2790: ("POLL", "DOWN", "a81e2e62f4515ba1", "3820efe1b0be688b"),
+            2793: ("POLL", "NONE", "238fb42fcddb25ff", "3820efe1b0be688b"),
+            2843: ("WAIT", "CONFIRM", "5d110e5fe05dd980", "3820efe1b0be688b"),
+            2860: ("WAIT", "CONFIRM", "ea4801003d3d4408", "3820efe1b0be688b"),
+            2862: ("WAIT", "CONFIRM", "fc38e6d6d4797db7", "3820efe1b0be688b"),
+            2952: ("POLL", "QUIT", "c4ed7a3a21a5a252", "3820efe1b0be688b"),
         }
-        if len(checkpoints) != 2768:
+        if len(checkpoints) != 2953:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -189,6 +195,11 @@ def main() -> int:
             2703: (110, 149, 126, 9),
             2766: (120, 61, 37, 3),
             2767: (120, 61, 37, 3),
+            2790: (120, 60, 36, 6),
+            2793: (122, 165, 108, 0),
+            2843: (122, 135, 127, 6),
+            2862: (122, 135, 127, 6),
+            2952: (122, 75, 98, 6),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -217,23 +228,25 @@ def main() -> int:
             raise ValueError("village/Stronghold/boss story flags are not exact")
         if u16(save, 0x4A4) != 0x2200 or u16(save, 0x4A6) != 0x0008:
             raise ValueError("freed-father/mayor/boat story flags are not exact")
+        if u16(save, 0x4A8) != 0x8000:
+            raise ValueError("ONE3A stone-lion story flag 48 was not set")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 120:
-            raise ValueError("mainline did not finish in ONE3A directory 120")
+        if u16(save, 0x424) != 122:
+            raise ValueError("mainline did not finish in ONE2A directory 122")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (61, 37):
+        if (world_x, world_y) != (75, 98):
             raise ValueError(
-                f"mainline final ONE3A position is {(world_x, world_y)!r}")
-        if u16(save, 0x10) != 3 or u16(save, 0x104) != 96:
-            raise ValueError("T2 inn party count or money charge differs")
-        if u16(save, 0x49C) != 0x1100:
+                f"mainline final ONE2A position is {(world_x, world_y)!r}")
+        if u16(save, 0x10) != 3 or u16(save, 0x104) != 156:
+            raise ValueError("post-encounter party count or money differs")
+        if u16(save, 0x49C) != 0x1168:
             raise ValueError("ONE2A encounter random cursor differs")
         expected_party = [
-            (0x0000, 48, 59, 52, 52, 36, 36),
-            (0x0000, 59, 59, 18, 18, 2, 37),
-            (0x0000, 65, 65, 56, 56, 18, 18),
+            (0x0000, 69, 69, 60, 60, 42, 42),
+            (0x0000, 67, 67, 20, 20, 44, 44),
+            (0x0000, 38, 65, 6, 56, 18, 18),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -243,7 +256,10 @@ def main() -> int:
                       u16(save, base + 0x57))
             if actual != expected:
                 raise ValueError(
-                    f"ONE3A actor {actor} state is {actual!r}, expected {expected!r}")
+                    f"ONE2A actor {actor} state is {actual!r}, expected {expected!r}")
+        if [u16(save, 0x106 + actor * 0x9F + 0x31)
+                for actor in range(3)] != [10, 10, 9]:
+            raise ValueError("ONE2A victory level-up results differ")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -262,6 +278,16 @@ def main() -> int:
             raise ValueError("Stronghold secret mechanism/wall mutation differs")
         if any(map_field(image, 12, 3, entity) != 3 for entity in range(10)):
             raise ValueError("SBOUT one-shot residents/guards were not all hidden")
+        if any(map_field(image, 120, 9, entity) != 342
+               for entity in (0, 1)):
+            raise ValueError("ONE3A stone lions did not redirect to event 342")
+        for location in (110, 122):
+            if map_field(image, location, 3, 19) != 4 or \
+                    map_field(image, location, 9, 19) != 284 or \
+                    map_field(image, location, 3, 20) != 4 or \
+                    map_field(image, location, 9, 20) != 282:
+                raise ValueError(
+                    "stone-lion event did not reveal the aliased ONE2A entities")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--":
             raise ValueError("mainline prefix did not stop at explicit world quit")
@@ -270,7 +296,7 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(village -> Fire-Eyed Suanni -> T2 -> inn -> ONE3A approach)"
+        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> river demon)"
     )
     return 0
 

@@ -352,6 +352,17 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 std::equal(oc_q_slot.begin(), oc_q_slot.end(),
                            image.begin() + 0x00b7U),
             "RPG OC entry no longer reloads the Q checkpoint through 4c16");
+    const std::array<std::uint8_t, 23> oc_entity_continuation{
+        0x83, 0x3e, 0x1c, 0x05, 0x00, 0x74, 0x16,
+        0x8b, 0x1e, 0x1c, 0x05, 0x83, 0xeb, 0x02,
+        0xc7, 0x06, 0x1c, 0x05, 0x00, 0x00,
+        0xe8, 0x09, 0x52};
+    require(image.size() >= 0x0129U + oc_entity_continuation.size() &&
+                std::equal(oc_entity_continuation.begin(),
+                           oc_entity_continuation.end(),
+                           image.begin() + 0x0129U),
+            "RPG OC entry no longer clears SAVE+51c and dispatches its "
+            "entity-byte-offset continuation through 5349");
     const std::array<std::uint8_t, 12> record_exit{
         0x81, 0x06, 0xe1, 0x60, 0x00, 0x50,
         0xc6, 0x06, 0x01, 0x38, 0x03, 0xc3};
@@ -10310,6 +10321,56 @@ void test_rpg_event_voice(const std::filesystem::path& game_root) {
             "RPG opcode 57 did not route the original VOC through PlatformBackend");
 }
 
+void test_rpg_post_battle_entity_continuation(
+    const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(state, *database, 122U);
+
+    // CHNA1 event 284 stores 42 before launching fixed battle 8012h.  The
+    // value is not a battle annotation: RPG's OC entry subtracts two and
+    // treats the result as the byte offset of entity 20.  Event 284 has just
+    // redirected that entity's field 9 to event 338, the released post-turtle
+    // cutscene.  Recreate that exact persisted state without making this unit
+    // test play through FIG.
+    auto& area = database->location_at_directory_offset(122U).area;
+    require(area.entity_count() > 20U,
+            "ONE2A post-battle continuation entity disappeared");
+    area.entity_fields[3][20] = 3U;
+    area.entity_fields[9][20] = 338U;
+    state.set_u16(0x51cU, 42U);
+    state.set_u16(0x4a2U,
+                  static_cast<std::uint16_t>(state.u16(0x4a2U) & ~0x4000U));
+
+    ScriptedPlatform platform;
+    platform.actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::quit,
+    };
+    platform.text_actions = {
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+        swd2::InputAction::confirm,
+    };
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+
+    require(swd2::RpgModule().run(
+                context, swd2::Marker::continue_rpg) == swd2::Marker::none,
+            "RPG post-battle continuation did not return to the world loop");
+    require(context.shared_state.battle_auxiliary() == 0U &&
+                context.shared_state.map_location_directory_offset() == 588U &&
+                (context.shared_state.u16(0x4a2U) & 0x4000U) != 0U,
+            "RPG OC did not clear +51c, execute entity 20 event 338, relocate, "
+            "and set story flag one");
+    require(platform.cursor == platform.actions.size() &&
+                platform.voice_calls == 1U && platform.stop_calls == 1U,
+            "RPG OC continuation lost event 338 dialogue/voice/world boundaries");
+}
+
 void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
     auto database = std::make_shared<swd2::MapDatabase>(
         swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
@@ -11723,6 +11784,7 @@ int main(int argc, char** argv) {
         test_rpg_random_encounter(argv[1]);
         test_rpg_automatic_entity_event(argv[1]);
         test_rpg_event_voice(argv[1]);
+        test_rpg_post_battle_entity_continuation(argv[1]);
         test_rpg_compact_money_overlay(argv[1]);
         test_rpg_dialogue_then_money_overlay(argv[1]);
         test_rpg_shop_confirmation(argv[1]);

@@ -4743,6 +4743,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         rpg_load_image, rpg_entry_offset, 0x3a60, 40U);
 
     std::optional<std::size_t> startup_event_entity;
+    std::optional<std::size_t> post_battle_event_entity;
     if (input_marker == Marker::menu_ready) {
         auto opening_data = decode_rsk_block(
             read_file(context.game_root / "OP01.RSK")).data;
@@ -4985,7 +4986,26 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         context.map_database = std::make_shared<MapDatabase>(
             MapDatabase::load(context.game_root / "MAPZ.DAQ"));
         startup_event_entity = 2U;
-    } else if (input_marker != Marker::continue_rpg) {
+    } else if (input_marker == Marker::continue_rpg) {
+        // RPG 1000:0129 is the OC-only continuation that the DOS launcher
+        // reaches after FIG.  Opcodes 48/59/60 leave an entity byte offset
+        // plus two in SAVE+51c; RPG subtracts two, clears the word before
+        // dispatch, then executes that entity's *current* field-9 record.
+        // The current lookup matters: released battle events commonly hide
+        // one entity and redirect a second one immediately before returning
+        // IF, so treating +51c as an unused battle annotation loses the
+        // entire post-battle cutscene (including CHNA1 event 338).
+        const auto continuation = context.shared_state.battle_auxiliary();
+        if (continuation != 0U) {
+            if (continuation < 2U || (continuation & 1U) != 0U) {
+                throw std::runtime_error(
+                    "RPG post-battle entity byte offset is malformed");
+            }
+            post_battle_event_entity =
+                static_cast<std::size_t>((continuation - 2U) / 2U);
+            context.shared_state.set_u16(0x51c, 0U);
+        }
+    } else {
         throw std::runtime_error(
             "RPG module received an unsupported launcher marker");
     }
@@ -5176,6 +5196,27 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                                   result.requested_map_reload,
                                   std::move(result.relocated_area)};
     };
+    const auto run_post_battle_event = [&](std::size_t entity_index) {
+        // RPG 538d enters the CHNA interpreter directly.  Unlike the normal
+        // 52b4 interaction path it neither turns the entity toward the leader
+        // nor submits a faced world page first.  Preserve that distinction so
+        // the first observable page remains the event's own opcode 56/29/etc.
+        if (entity_index >= location.area.entity_count()) {
+            throw std::runtime_error(
+                "RPG post-battle entity is outside the current MAPZ area");
+        }
+        auto host = make_event_host(event_font);
+        const auto entity = map_entity(location.area, entity_index);
+        auto result = execute_event(
+            event_archive, entity.event_directory_offset,
+            context.shared_state, &location.area, entity_index, host,
+            10'000, &map_database);
+        return EntityEventOutcome{result.requested_marker,
+                                  host.quit_requested(),
+                                  result.requested_program_exit,
+                                  result.requested_map_reload,
+                                  std::move(result.relocated_area)};
+    };
     struct MapTriggerOutcome {
         Marker marker{Marker::none};
         bool quit{};
@@ -5255,6 +5296,25 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                 outcome.quit || outcome.program_exit,
                 outcome.map_reload};
     };
+
+    if (post_battle_event_entity) {
+        const auto entity_index = *post_battle_event_entity;
+        post_battle_event_entity.reset();
+        auto outcome = run_post_battle_event(entity_index);
+        if (outcome.quit || outcome.program_exit) {
+            context.platform.stop_audio();
+            return Marker::none;
+        }
+        if (outcome.marker != Marker::none) {
+            context.platform.stop_audio();
+            return outcome.marker;
+        }
+        if (outcome.map_reload) {
+            relocated_transient_area = std::move(outcome.relocated_area);
+            pending_map_reload_ = true;
+            continue;
+        }
+    }
 
     if (startup_event_entity) {
         const auto entity_index = *startup_event_entity;
