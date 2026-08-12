@@ -3806,3 +3806,11 @@ screen Y from `50h` to `58h`, and ending at world `(20,168)`.  Entry and
 post-step pages again match the original across the complete 320x200 RGB
 surface.  Successful viewport scrolling and successful on-screen movement are
 now covered independently on both coordinate axes.
+
+The reverse on-screen handlers are locked separately rather than inferred by
+symmetry.  At east-limit viewport `(140,0)`, world `(161,12)` and actor screen
+X `28h`, one Left poll follows `1bff..1c2d` back to world `(160,12)` and screen
+X `26h`.  At south-limit viewport `(0,155)`, world `(20,168)` and screen Y
+`58h`, one Up poll follows `1e03..1e2e` back to world `(20,167)` and screen Y
+`50h`.  Each route has exact full-page entry and result RGB matches, so all
+four successful directional screen-motion handlers have original evidence.

@@ -703,6 +703,44 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_screen_south_validation PROPERTIES
         DEPENDS rpg_world_screen_south_prepare)
     add_test(
+        NAME rpg_world_screen_west_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-screen-west-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-west-save"
+    )
+    add_test(
+        NAME rpg_world_screen_west_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-scroll.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-west-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-west"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-screen-west-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_screen_west_validation PROPERTIES
+        DEPENDS rpg_world_screen_west_prepare)
+    add_test(
+        NAME rpg_world_screen_north_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-screen-north-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-north-save"
+    )
+    add_test(
+        NAME rpg_world_screen_north_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-scroll.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-north-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-north"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-screen-north-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_screen_north_validation PROPERTIES
+        DEPENDS rpg_world_screen_north_prepare)
+    add_test(
         NAME rpg_magic_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"
