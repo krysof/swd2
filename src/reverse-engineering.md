@@ -2201,9 +2201,11 @@ WASM 的阻塞输入循环还必须在每次 `emscripten_sleep(10)` 恢复后重
 新增无第三方依赖的真实浏览器边界 runner 会启动已安装的 Chromium/Edge，模拟
 390×844 竖屏、用可信 CDP 鼠标手势越过声音启动页并走到 RPG 世界，然后只发送一次
 `touchStart`，保持到至少 69 次真实 WASM 世界轮询，再只发送一次 `touchEnd`。
-`?input-self-test=1` 才启用的有限诊断数组由 WASM 内部采样点写入；2026-08-11 的
-Edge 151 记录在约 2.55 秒的一次不间断保持中跨过 DOM、ASYNCIFY 与 SDL 进入 71 个
-世界帧，松开栅栏前后均为零追加输入。它证明桌面 Edge 的真实浏览器
+`?input-self-test=1` 才启用的有限诊断数组由 WASM 内部采样点写入；2026-08-12 的
+Edge 151 记录在约 2.56 秒的一次不间断保持中跨过 DOM、ASYNCIFY 与 SDL 进入 71 个
+世界帧。RPG 自己的已呈现帧采样另外记录 70 个世界位置，角色从 `(127,13)` 移至
+`(138,15)`，证明输入不只到达队列而是实际驱动地图移动；松开栅栏前后均为零追加输入。
+它证明桌面 Edge 的真实浏览器
 链路，不冒充物理 iOS/Android 触摸验收，portable-input 门仍保持 `in_progress`。
 同一 runner 随后切到 `?idbfs-self-test=TOKEN`：第一页把探针写入 `/saves` 并
 `syncfs(false)` 后重载，第二页 `syncfs(true)`、逐字节比较、删除并再次提交；只有完整

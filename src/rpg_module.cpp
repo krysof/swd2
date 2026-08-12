@@ -32,6 +32,10 @@
 #include <stdexcept>
 #include <vector>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace swd2 {
 
 namespace {
@@ -40,6 +44,33 @@ struct Viewport {
     std::vector<std::uint8_t> pixels;
     std::array<std::uint8_t, 768> palette{};
 };
+
+void record_browser_world_sample(const SharedState& state) {
+#ifdef __EMSCRIPTEN__
+    // Test-only diagnostics for the real-browser trusted-touch checkpoint.
+    // The DOM callback never enters WASM; this records the world coordinates
+    // observed by the ordinary RPG frame loop while the touch level is held.
+    EM_ASM({
+        if (Module.swd2InputSelfTestEnabled &&
+                Module.swd2HeldDirection && Module.swd2WorldSamples &&
+                Module.swd2WorldSamples.length < 512) {
+            Module.swd2WorldSamples.push({
+                direction: Module.swd2HeldDirection | 0,
+                worldX: $0,
+                worldY: $1,
+                screenX: $2,
+                screenY: $3,
+                viewportX: $4,
+                viewportY: $5,
+                milliseconds: performance.now()
+            });
+        }
+    }, state.world_x(), state.world_y(), state.actor_screen_x(),
+       state.actor_screen_y(), state.viewport_x(), state.viewport_y());
+#else
+    static_cast<void>(state);
+#endif
+}
 
 Viewport advance_battle_wipe(Viewport source) {
     // RPG:20a8..2112 performs the same two-byte move in every Mode-X plane.
@@ -5269,6 +5300,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         auto viewport = compose_scene();
         context.platform.present({320, 200, viewport.pixels,
                                   std::span<const std::uint8_t, 768>(viewport.palette)});
+        record_browser_world_sample(context.shared_state);
 
         const auto frame_ticks = context.shared_state.u16(0x406);
         if (frame_ticks != 0) {

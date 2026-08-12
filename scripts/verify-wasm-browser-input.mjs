@@ -306,6 +306,7 @@ try {
 
   await cdp.evaluate(
     `Module.swd2InputDeliveries.length = 0;
+     Module.swd2WorldSamples.length = 0;
      Module.swd2DirectionQueue.length = 0;
      Module.swd2HeldDirection = 0`);
   const directionRect = await cdp.evaluate(
@@ -323,10 +324,16 @@ try {
       `Module.swd2InputDeliveries.length >= ${requestedWorldFrames}`),
     `${requestedWorldFrames} consecutive WASM world polls from one touchStart`,
     8_000);
+  await waitUntil(
+    () => cdp.evaluate(
+      `Module.swd2WorldSamples.length >= ${requestedWorldFrames}`),
+    `${requestedWorldFrames} presented world positions during the touch hold`,
+    2_000);
   const held = await cdp.evaluate(`({
     held: Module.swd2HeldDirection,
     queue: Module.swd2DirectionQueue.slice(),
     deliveries: Module.swd2InputDeliveries.slice(),
+    worldSamples: Module.swd2WorldSamples.slice(),
     now: performance.now()
   })`);
   await cdp.send('Input.dispatchTouchEvent', {
@@ -359,6 +366,16 @@ try {
   if (held.deliveries.length < requestedWorldFrames ||
       held.deliveries.some(entry => entry.direction !== 4 || !entry.everyFrame)) {
     fail(`69-world-frame hold produced ${held.deliveries.length} valid deliveries`);
+  }
+  if (held.worldSamples.length < requestedWorldFrames ||
+      held.worldSamples.some(entry => entry.direction !== 4)) {
+    fail(`69-world-frame hold produced ${held.worldSamples.length} valid world positions`);
+  }
+  const worldStart = held.worldSamples[0];
+  const worldFinish = held.worldSamples.at(-1);
+  if (worldStart.worldX === worldFinish.worldX &&
+      worldStart.worldY === worldFinish.worldY) {
+    fail('trusted touch hold reached the RPG world loop but did not move the actor');
   }
   const deliverySpan = held.deliveries.at(-1).milliseconds -
     held.deliveries[0].milliseconds;
@@ -423,6 +440,17 @@ try {
       deliveries_before_release_fence:
         releaseFence.deliveries.length - held.deliveries.length,
       deliveries_after_release_fence: 0,
+      presented_world_samples: held.worldSamples.length,
+      world_start: {
+        x: worldStart.worldX, y: worldStart.worldY,
+        screen_x: worldStart.screenX, screen_y: worldStart.screenY,
+        viewport_x: worldStart.viewportX, viewport_y: worldStart.viewportY,
+      },
+      world_finish: {
+        x: worldFinish.worldX, y: worldFinish.worldY,
+        screen_x: worldFinish.screenX, screen_y: worldFinish.screenY,
+        viewport_x: worldFinish.viewportX, viewport_y: worldFinish.viewportY,
+      },
     },
     idbfs: {
       cycles: options.idbfsCycles,
@@ -443,7 +471,8 @@ try {
   }
   console.log(
     `WASM browser input: OK (${held.deliveries.length} world-frame ` +
-    `deliveries from one uninterrupted trusted touch hold; release stopped at once; ` +
+    `deliveries and ${held.worldSamples.length} presented world positions from ` +
+    `one uninterrupted trusted touch hold; release stopped at once; ` +
     `${options.idbfsCycles} IDBFS restart cycles passed)`);
 } catch (error) {
   if (browserOutput) console.error(browserOutput.slice(-4_000));
