@@ -203,6 +203,13 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/game"
     )
     add_test(
+        NAME fig_wall_clock_checkpoint
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/build-fig-wall-clock-checkpoint.py"
+                "${PROJECT_SOURCE_DIR}/verification/audio/checkpoint-2026-08-12-fig-wall-clock.json"
+                --verify
+    )
+    add_test(
         NAME legacy_program_data_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
                 --verify-legacy-program-data
