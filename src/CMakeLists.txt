@@ -3122,6 +3122,25 @@ if(BUILD_TESTING)
     set_tests_properties(fig_introduction_multipage_validation PROPERTIES
         DEPENDS fig_introduction_multipage_prepare)
     add_test(
+        NAME fig_introduction_two_page_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-introduction-two-page-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-introduction-two-page-save"
+    )
+    add_test(
+        NAME fig_introduction_two_page_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-introduction-two-page.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-introduction-two-page-save"
+                "${CMAKE_BINARY_DIR}/fig-introduction-two-page"
+                "${PROJECT_SOURCE_DIR}/scripts/fig-introduction-two-page-rgb-reference.json"
+    )
+    set_tests_properties(fig_introduction_two_page_validation PROPERTIES
+        DEPENDS fig_introduction_two_page_prepare)
+    add_test(
         NAME fig_ordinary_attack_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-ordinary-attack-fixture.py"
