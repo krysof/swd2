@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "wasm_branded_firefox_idbfs_restart",
+  "status": "verified",
+  "limitation": "Installed macOS Firefox is not physical Android/Firefox and this self-reporting same-origin probe does not test touch input.",
+  "captured_at": "2026-08-12T18:19:15+09:00",
+  "source_commit": "41f43ca339c68893a3a872d6caf479aa49f80e12",
+  "browser": {
+    "bundle_id": "org.mozilla.firefox",
+    "version": "153.0.4",
+    "build": "15326.8.10"
+  },
+  "cycles": [
+    {
+      "cycle": 0,
+      "status": "verified",
+      "two_document_reload": true,
+      "exact_probe_bytes_restored": true,
+      "cleanup_sync": true,
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:153.0) Gecko/20100101 Firefox/153.0",
+      "navigator_platform": "MacIntel"
+    },
+    {
+      "cycle": 1,
+      "status": "verified",
+      "two_document_reload": true,
+      "exact_probe_bytes_restored": true,
+      "cleanup_sync": true,
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:153.0) Gecko/20100101 Firefox/153.0",
+      "navigator_platform": "MacIntel"
+    },
+    {
+      "cycle": 2,
+      "status": "verified",
+      "two_document_reload": true,
+      "exact_probe_bytes_restored": true,
+      "cleanup_sync": true,
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:153.0) Gecko/20100101 Firefox/153.0",
+      "navigator_platform": "MacIntel"
+    }
+  ],
+  "assets": {
+    "index.html": "8b21620a7073c9a25140c462c8f435385d553629c526b199d71c4c3eb534d2df",
+    "index.js": "09edb5949777a7529689e76ab2f50160c70a6eba4060012ad49dc72a4705d157",
+    "index.wasm": "7af4eef29d13864de7a0117cf8fd464992e011096c6e3916e5b8218ce59e3a6d",
+    "index.data": "cc57db3e8963aaabed56cd2cf9a774da1575175c4182046bebfe828687760321"
+  }
+}

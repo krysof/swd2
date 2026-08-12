@@ -190,6 +190,12 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/scripts/wasm-safari-idbfs-reference.json"
     )
     add_test(
+        NAME wasm_firefox_idbfs_checkpoint
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-wasm-firefox-idbfs-reference.py"
+                "${PROJECT_SOURCE_DIR}/scripts/wasm-firefox-idbfs-reference.json"
+    )
+    add_test(
         NAME legacy_program_data_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
                 --verify-legacy-program-data

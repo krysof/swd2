@@ -637,6 +637,17 @@ Safari 26.5.2 检查点连续通过三轮，两轮页面生命周期均由实际
 
 这仍是 macOS 品牌 Safari，不冒充物理 iPhone/iPad，也不覆盖触摸输入。
 
+品牌 Firefox 使用同一个仅回传结果、不回传存档内容的两文档探针。runner 会先核对
+`Firefox.app` 的 `org.mozilla.firefox` bundle 身份，再要求实际 Firefox 写入、提交、
+重载、逐字节恢复、删除和再次提交；登记的 Firefox 153.0.4 同样连续通过三轮：
+
+```sh
+./scripts/verify-wasm-firefox-idbfs.py build-wasm/site --cycles 3 \
+  --output scripts/wasm-firefox-idbfs-reference.json
+```
+
+这证明的是 macOS 品牌 Firefox 的存储重启边界，不替代物理 Android/Firefox 或触摸验收。
+
 长期矩阵的本机检查点可重复执行原生进程边界和两种浏览器存储重启。它生成的
 `matrix-report.json` 固定为 `status=in_progress`，不会因本机循环通过而伪造最终
 `verification/long_run/manifest.json`：
