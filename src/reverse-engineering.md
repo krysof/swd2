@@ -3894,6 +3894,16 @@ does not promote the comparisons to whole-page equality.  CTest also locks the
 untouched target record, isolated behavior vector, 61-poll/61-page trace,
 unchanged player state and serialized MAPZ digest.
 
+The other autonomous class is locked separately.  MA-DE entity four keeps its
+released behavior two record (`sprite=2c00h`, cell 31894, delay 15, animation
+length four) while every unrelated entity is hidden.  With the party stationary
+at `(90,90)`, sixty idle polls advance the entity's stored animation field at
+modern frames `1/17/33/49` through `1/2/3/0`.  Original review frames
+`413/536/659/783` match complete 64×80 crops around the actor.  The third
+stored value deliberately renders like frame one because `4f1c` normalizes
+odd animation values to one; the equality proves that quirk as well as the
+delay and four-frame wrap.  No movement or Confirm input participates.
+
 ### RPG BUIN1 explicit interaction and facing restoration
 
 The Confirm-only `523d/52fd` search is now exercised independently of walking
@@ -3914,5 +3924,5 @@ Confirm, `52b4` restores direction six; both the initial and restored world
 pages also match exactly at original frames `238/544`.  The strict replay
 locks one initial field Confirm, one text-acceleration Confirm, one closing
 field Confirm, Quit, all six submitted pages, the two direct updates and final
-SAVE/MAPZ/NAME summaries.  This is the fifteenth original OC world route and
+SAVE/MAPZ/NAME summaries.  This is the sixteenth original OC world route and
 does not stand in for the still-incomplete full playthrough.

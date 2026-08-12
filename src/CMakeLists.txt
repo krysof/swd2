@@ -836,6 +836,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_entity_roam_validation PROPERTIES
         DEPENDS rpg_world_entity_roam_prepare)
     add_test(
+        NAME rpg_world_entity_animation_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-entity-animation-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-entity-animation-save"
+    )
+    add_test(
+        NAME rpg_world_entity_animation_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-entity-animation.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-entity-animation-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-entity-animation"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-entity-animation-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_entity_animation_validation PROPERTIES
+        DEPENDS rpg_world_entity_animation_prepare)
+    add_test(
         NAME rpg_world_interaction_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-interaction-fixture.py"
