@@ -4889,4 +4889,12 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/scripts/verify-linux-arm64-checkpoint.py"
                 "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-11-linux-arm64"
     )
+    if(EXISTS "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-12-windows-x86_64/matrix-report.json")
+        add_test(
+            NAME windows_x86_64_checkpoint_validation
+            COMMAND "${Python3_EXECUTABLE}"
+                    "${PROJECT_SOURCE_DIR}/scripts/verify-windows-x86_64-checkpoint.py"
+                    "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-12-windows-x86_64"
+        )
+    endif()
 endif()
