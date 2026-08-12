@@ -1020,11 +1020,16 @@
         "scripts/prepare-fig-introduction-two-page-fixture.py",
         "scripts/replay-fig-introduction-two-page.txt",
         "scripts/fig-introduction-two-page-rgb-reference.json",
-        "scripts/verify-fig-introduction-two-page.py"
+        "scripts/verify-fig-introduction-two-page.py",
+        "scripts/original-fig-introduction-2e8-autotype.txt",
+        "scripts/prepare-fig-introduction-2e8-fixture.py",
+        "scripts/replay-fig-introduction-2e8.txt",
+        "scripts/fig-introduction-2e8-rgb-reference.json",
+        "scripts/verify-fig-introduction-2e8.py"
       ],
       "remaining": [
-        "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 196 份 reference、4,804 张精确 RGB 完整页、73 个精确 crop 和 2,578 张唯一完整页，注册的非等值摘要为 0",
-        "全部 51 个非空 ORC 开场（13 YN、7 NY、31 无问答）已以 71 次真实 BattleModule 执行覆盖普通及 Yes/No 分支、60 个分页和完整输入消费；目录 0386h 的 NY、00b2h 的 YN、0094h 的无问答路径、003ah 七页长开场及 0042h 双页开场又分别以 8、8、7、18、9 张原版零差异 RGB 页锁定；003ah 最后一页和尚未跨入命令页的转换不冒充原版等值证据。继续扩展到其余开场、全部可达战斗组合及完整剧情战串联",
+        "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 197 份 reference、4,814 张精确 RGB 完整页、73 个精确 crop 和 2,588 张唯一完整页，注册的非等值摘要为 0",
+        "全部 51 个非空 ORC 开场（13 YN、7 NY、31 无问答）已以 71 次真实 BattleModule 执行覆盖普通及 Yes/No 分支、60 个分页和完整输入消费；目录 0386h 的 NY、00b2h 的 YN、0094h 的无问答路径、003ah 七页长开场、0042h 与 02e8h 双页开场又分别以 8、8、7、18、9、10 张原版零差异 RGB 页锁定；02e8h 已跨入人物命令页，003ah 最后一页及 0042h 尚未观察到的命令转换仍不冒充原版等值证据。继续扩展到其余开场、全部可达战斗组合及完整剧情战串联",
         "以完整通关战斗轨迹验证帧顺序、PIT timer 停留、调色板、语音提交点和最终状态均无分歧"
       ]
     },
@@ -1937,10 +1942,15 @@
         "scripts/prepare-fig-introduction-two-page-fixture.py",
         "scripts/replay-fig-introduction-two-page.txt",
         "scripts/fig-introduction-two-page-rgb-reference.json",
-        "scripts/verify-fig-introduction-two-page.py"
+        "scripts/verify-fig-introduction-two-page.py",
+        "scripts/original-fig-introduction-2e8-autotype.txt",
+        "scripts/prepare-fig-introduction-2e8-fixture.py",
+        "scripts/replay-fig-introduction-2e8.txt",
+        "scripts/fig-introduction-2e8-rgb-reference.json",
+        "scripts/verify-fig-introduction-2e8.py"
       ],
       "remaining": [
-        "FIG 非最终 schema-2 聚合检查点已哈希锁定 196 个 reference、4,804 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
+        "FIG 非最终 schema-2 聚合检查点已哈希锁定 197 个 reference、4,814 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
         "生成通过实时精确比较及哈希校验的最终 pixel_diffs manifest"
       ]
     },
