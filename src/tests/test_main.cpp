@@ -6638,6 +6638,22 @@ void test_legacy_event_resources(const std::filesystem::path& game_root) {
         &name_font);
     require(std::count(named_page.pixels.begin(), named_page.pixels.end(), 15) > 100,
             "NAME.DSK substitution glyphs were not used by dialogue rendering");
+    // The sixteen editable name codes overlap the main DSK table. They are
+    // replacements, not missing-glyph fallbacks: FIG directory 03ah uses
+    // A374..A377 for the protagonist name while FIG.DSK also contains those
+    // codes, and the original renders NAMEQ.DSK at that point.
+    const auto fig_font = swd2::LegacyFont::load(game_root / "FIG.DSK");
+    const auto fig_name_font = swd2::LegacyFont::load(game_root / "NAMEQ.DSK");
+    const std::array<std::uint8_t, 2> overlapping_name_code{{0xa3, 0x74}};
+    const auto overlapping_name_page = swd2::render_dialogue_page(
+        fig_font, overlapping_name_code, 0, 16, 15, 1, &fig_name_font);
+    const auto expected_name_glyph = fig_name_font.rasterize(0xa374U);
+    require(fig_font.contains(0xa374U) && fig_name_font.contains(0xa374U) &&
+                fig_font.rasterize(0xa374U) != expected_name_glyph &&
+                std::equal(overlapping_name_page.pixels.begin(),
+                           overlapping_name_page.pixels.end(),
+                           expected_name_glyph.begin()),
+            "overlapping NAMEQ.DSK substitution did not override FIG.DSK");
     // CHNA1 has one shipped B6F2 reference absent from both its main table
     // and NAME.DSK. 70a6 falls back to glyph index zero (A140, blank) while
     // still advancing the cursor; it does not throw or collapse the spacing.
@@ -10818,7 +10834,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 introduction_runs == 71U && introduction_pages == 60U &&
                 introduction_presents == 262U &&
                 introduction_direct_updates == 160U &&
-                introduction_digest == 6349028746801448483ULL,
+                introduction_digest == 4047822715533438466ULL,
             "FIG exhaustive ORC introduction/prompt checkpoint changed");
 
     ScriptedPlatform immediate_battle_platform;

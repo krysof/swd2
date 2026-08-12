@@ -39,8 +39,11 @@ DialoguePage render_dialogue_page(const LegacyFont& font, std::span<const std::u
         }
         if (cursor + 1 >= text.size()) throw std::runtime_error("truncated Big5 dialogue code");
         const auto code = static_cast<std::uint16_t>(text[cursor]) << 8U | text[cursor + 1];
-        const auto glyph = !font.contains(code) && name_font &&
-                                   name_font->contains(code)
+        // NAME*.DSK deliberately reuses codes A374..A3A6 that also exist in
+        // the scene font.  The DOS renderer checks the active name table
+        // first, so those sixteen slots are substitutions rather than a
+        // fallback used only when the main DSK lacks a code.
+        const auto glyph = name_font && name_font->contains(code)
                                ? name_font->rasterize(code)
                                : font.rasterize_or_first(code);
         for (std::size_t row = 0; row < LegacyFont::glyph_height; ++row) {

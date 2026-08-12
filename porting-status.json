@@ -1008,7 +1008,9 @@
         "scripts/prepare-fig-introduction-none-fixture.py",
         "scripts/replay-fig-introduction-none.txt",
         "scripts/fig-introduction-none-rgb-reference.json",
-        "scripts/verify-fig-introduction-none.py"
+        "scripts/verify-fig-introduction-none.py",
+        "src/dialogue.cpp",
+        "src/tests/test_main.cpp"
       ],
       "remaining": [
         "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 194 份 reference、4,777 张精确 RGB 完整页、73 个精确 crop 和 2,554 张唯一完整页，注册的非等值摘要为 0",
@@ -1913,7 +1915,9 @@
         "scripts/prepare-fig-introduction-none-fixture.py",
         "scripts/replay-fig-introduction-none.txt",
         "scripts/fig-introduction-none-rgb-reference.json",
-        "scripts/verify-fig-introduction-none.py"
+        "scripts/verify-fig-introduction-none.py",
+        "src/dialogue.cpp",
+        "src/tests/test_main.cpp"
       ],
       "remaining": [
         "FIG 非最终 schema-2 聚合检查点已哈希锁定 194 个 reference、4,777 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
