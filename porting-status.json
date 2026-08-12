@@ -2121,7 +2121,7 @@
         "verification/long_run/checkpoint-2026-08-12-windows-x86_64/matrix-report.json"
       ],
       "remaining": [
-        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点、品牌 Safari 26.5.2 与 Firefox 153.0.4 各 3 次两文档 IDBFS 往返、43 首 RIX 共 3,096 虚拟曲目小时/765,546 循环边界、固定 Debian 13 Linux/aarch64 Release 的 348/348 CTest 零警告检查点，以及 MinGW-w64 GCC 15.2 生成的零警告 Windows x86-64 PE 核心/CLI；继续真实墙钟的多小时活动游戏/音频长跑",
+        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点、品牌 Safari 26.5.2 与 Firefox 153.0.4 各 3 次两文档 IDBFS 往返、43 首 RIX 共 3,096 虚拟曲目小时/765,546 循环边界、固定 Debian 13 Linux/aarch64 Release 的 507/507 CTest 零警告检查点，以及 MinGW-w64 GCC 15.2 生成的零警告 Windows x86-64 PE 核心/CLI；继续真实墙钟的多小时活动游戏/音频长跑",
         "Windows 仍需宿主执行及 SDL2 显示/输入/音频验证；并补齐物理 Linux、物理 iOS/Android 与手柄矩阵后生成 verified long_run manifest"
       ]
     }

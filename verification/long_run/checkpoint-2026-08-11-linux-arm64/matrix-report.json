@@ -6,11 +6,11 @@
     "platform": "linux",
     "architecture": "aarch64",
     "native_release_builds": 1,
-    "native_ctest_passes": 348
+    "native_ctest_passes": 507
   },
   "artifacts": {
-    "native_log_sha256": "586849bff7edbddf0817bf258cb22389540fb1b3b0955175adc0bc08d68c9974",
-    "ctest_log_sha256": "9fa2e4606d93334419548515c4e571a02c2fc5f64545b6df7df0929559aa7f09"
+    "native_log_sha256": "cc01dd1c49776157cc03ee9819176dcfabf60ceba55ea23733db067280919c5e",
+    "ctest_log_sha256": "1982f2476d2f51e86a8765860830d1e79b193243a850b9850027b29f3273ffff"
   },
   "remaining": [
     "multi-hour active Linux gameplay/audio soak",
