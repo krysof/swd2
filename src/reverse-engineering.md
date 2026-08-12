@@ -3745,3 +3745,12 @@ CTest fails on any change to the release inputs, staged save, capture hashes,
 two modern indexed pages, palettes, exact RGB equalities, final save triple,
 audio calls or two-poll boundary.  This is a world-runtime checkpoint, not a
 complete-map or full-playthrough claim.
+
+A second independent `OC` capture covers the other corner family.  At AREA1
+world `(140,12)`, Down proposes the three-word footprint `(139..141,13)`;
+its words are `802ah,802bh,0009h`.  `1f0c` reports the blocked footprint and
+`1c8b` prefers the complete east footprint, yielding `(141,12)` without a
+south step.  The initial and post-slide world pages again match the untouched
+original in all 64,000 RGB pixels, including the next AREA1 DAC-animation
+phase.  Together the four registered pages cover horizontal-to-vertical and
+vertical-to-horizontal corner dispatch, but do not yet prove every map cell.

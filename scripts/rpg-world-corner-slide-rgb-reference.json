@@ -24,8 +24,8 @@
   "initial_world_position": [130, 13],
   "requested_direction": "RIGHT",
   "final_world_position": [130, 14],
-  "blocking_cell": [132, 13],
-  "blocking_cell_word": 32809,
+  "blocking_cells": [[132, 13]],
+  "blocking_cell_words": [32809],
   "rewrite_input": {
     "total": 2,
     "consumed": 2,

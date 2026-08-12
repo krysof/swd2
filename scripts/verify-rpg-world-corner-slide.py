@@ -12,10 +12,32 @@ from pathlib import Path
 from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
-KINDS = (
-    "initial_area1_world_page",
-    "east_blocked_south_corner_slide_page",
-)
+ROUTES = {
+    "original_rpg_area1_corner_slide_sequence": {
+        "initial": [130, 13],
+        "direction": "RIGHT",
+        "final": [130, 14],
+        "blocking_cells": [[132, 13]],
+        "blocking_words": [0x8029],
+        "kinds": (
+            "initial_area1_world_page",
+            "east_blocked_south_corner_slide_page",
+        ),
+        "review_frames": (299, 527),
+    },
+    "original_rpg_area1_vertical_corner_slide_sequence": {
+        "initial": [140, 12],
+        "direction": "DOWN",
+        "final": [141, 12],
+        "blocking_cells": [[139, 13], [140, 13], [141, 13]],
+        "blocking_words": [0x802A, 0x802B, 0x0009],
+        "kinds": (
+            "initial_area1_vertical_world_page",
+            "south_blocked_east_corner_slide_page",
+        ),
+        "review_frames": (299, 527),
+    },
+}
 
 
 def sha256(data: bytes) -> str:
@@ -39,20 +61,21 @@ def main() -> int:
     try:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
         pages = expected.get("matched_frames")
+        route = ROUTES.get(expected.get("kind"))
         if expected.get("schema_version") != 1 or \
-                expected.get("kind") != \
-                    "original_rpg_area1_corner_slide_sequence" or \
+                route is None or \
                 expected.get("status") != "exact_rgb_checkpoint" or \
-                expected.get("initial_world_position") != [130, 13] or \
-                expected.get("requested_direction") != "RIGHT" or \
-                expected.get("final_world_position") != [130, 14] or \
-                expected.get("blocking_cell") != [132, 13] or \
-                expected.get("blocking_cell_word") != 0x8029 or \
+                expected.get("initial_world_position") != route["initial"] or \
+                expected.get("requested_direction") != route["direction"] or \
+                expected.get("final_world_position") != route["final"] or \
+                expected.get("blocking_cells") != route["blocking_cells"] or \
+                expected.get("blocking_cell_words") != \
+                    route["blocking_words"] or \
                 not isinstance(pages, list) or \
-                tuple(page.get("kind") for page in pages) != KINDS or \
+                tuple(page.get("kind") for page in pages) != route["kinds"] or \
                 tuple(page.get("rewrite_frame") for page in pages) != (0, 1) or \
                 tuple(page.get("original_review_frame") for page in pages) != \
-                    (299, 527):
+                    route["review_frames"]:
             raise ValueError("unsupported RPG AREA1 corner-slide reference")
         if sha256((args.game / "RPG.EXE").read_bytes()) != \
                 expected["reference_program_sha256"]:
