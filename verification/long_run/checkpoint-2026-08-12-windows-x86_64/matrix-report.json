@@ -9,8 +9,8 @@
     "pe_cli_outputs": 1
   },
   "artifacts": {
-    "native_log_sha256": "6a8af00723fb1714105834adf2effebf610f17d7af3b4ac3d8f7c2c801fe7d3b",
-    "build_log_sha256": "7ae895496aaaeeb9052fe2ac41d569d47f19a66867e309581c3a9286c5355b13"
+    "native_log_sha256": "e58b9c96577dc91e6edd52bb50a5de579922f74a8ae8cf85b7cb334d39e3736b",
+    "build_log_sha256": "698fa75dc9148d0f784ee8b93efcf97be6783819286983915e2cf1ede12c6035"
   },
   "remaining": [
     "Windows-hosted execution and deterministic replay",

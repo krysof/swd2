@@ -4,7 +4,7 @@
 -- Check for working CXX compiler: /opt/homebrew/bin/x86_64-w64-mingw32-c++ - skipped
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
--- Configuring done (0.1s)
+-- Configuring done (0.2s)
 -- Generating done (0.0s)
 -- Build files have been written to: /tmp/swd2-windows-x86_64-build
 [1/54] Building CXX object src/CMakeFiles/ymfm_core.dir/third_party/ymfm/ymfm_adpcm.cpp.obj
@@ -25,8 +25,8 @@
 [16/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_random.cpp.obj
 [17/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_rules.cpp.obj
 [18/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_module.cpp.obj
-[19/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_session.cpp.obj
-[20/54] Building CXX object src/CMakeFiles/swd2_core.dir/dialogue.cpp.obj
+[19/54] Building CXX object src/CMakeFiles/swd2_core.dir/dialogue.cpp.obj
+[20/54] Building CXX object src/CMakeFiles/swd2_core.dir/battle_session.cpp.obj
 [21/54] Building CXX object src/CMakeFiles/swd2_core.dir/demo_timeline.cpp.obj
 [22/54] Building CXX object src/CMakeFiles/swd2_core.dir/demo_module.cpp.obj
 [23/54] Building CXX object src/CMakeFiles/swd2_core.dir/event_program.cpp.obj
