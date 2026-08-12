@@ -29,6 +29,11 @@ ROUTES = {
         "rewrite_frames": (0, 2, 3),
         "review_frames": (299, 535, 768),
         "matched_count": 3,
+        "polls": 4,
+        "rewrite_frame_count": 5,
+        "capture_time_limit": 15,
+        "capture_video_frames": 1051,
+        "capture_review_frames": 1050,
     },
     "original_rpg_area1_south_scroll_sequence": {
         "direction": "DOWN",
@@ -41,6 +46,30 @@ ROUTES = {
         "rewrite_frames": (0, 2),
         "review_frames": (299, 768),
         "matched_count": 2,
+        "polls": 4,
+        "rewrite_frame_count": 5,
+        "capture_time_limit": 15,
+        "capture_video_frames": 1051,
+        "capture_review_frames": 1050,
+    },
+    "original_rpg_area1_screen_east_sequence": {
+        "direction": "RIGHT",
+        "initial_world": [160, 12],
+        "final_world": [161, 12],
+        "initial_viewport": [140, 0],
+        "final_viewport": [140, 0],
+        "initial_screen": [38, 80],
+        "final_screen": [40, 80],
+        "kinds": ("initial_area1_east_edge_world_page",
+                  "east_screen_step_page"),
+        "rewrite_frames": (0, 1),
+        "review_frames": (299, 542),
+        "matched_count": 2,
+        "polls": 1,
+        "rewrite_frame_count": 2,
+        "capture_time_limit": 12,
+        "capture_video_frames": 840,
+        "capture_review_frames": 839,
     },
 }
 
@@ -71,12 +100,16 @@ def main() -> int:
                 expected.get("status") != "exact_rgb_checkpoint" or \
                 expected.get("initial_world_position") != route["initial_world"] or \
                 expected.get("requested_direction") != route["direction"] or \
-                expected.get("direction_polls") != 4 or \
+                expected.get("direction_polls") != route["polls"] or \
                 expected.get("final_world_position") != route["final_world"] or \
                 expected.get("initial_viewport_position") != \
                     route["initial_viewport"] or \
                 expected.get("final_viewport_position") != \
                     route["final_viewport"] or \
+                expected.get("initial_actor_screen_position") != \
+                    route.get("initial_screen") or \
+                expected.get("final_actor_screen_position") != \
+                    route.get("final_screen") or \
                 not isinstance(pages, list) or \
                 len(pages) != route["matched_count"] or \
                 tuple(page.get("kind") for page in pages) != route["kinds"] or \
@@ -115,10 +148,13 @@ def main() -> int:
             raise ValueError("RPG AREA1 scroll input evidence differs")
         if expected.get("capture_wait_seconds") != 5 or \
                 expected.get("capture_pace_seconds") != 1 or \
-                expected.get("capture_time_limit_seconds") != 15 or \
+                expected.get("capture_time_limit_seconds") != \
+                    route["capture_time_limit"] or \
                 expected.get("capture_review_fps") != 70 or \
-                expected.get("capture_video_frames") != 1051 or \
-                expected.get("capture_review_frames") != 1050 or \
+                expected.get("capture_video_frames") != \
+                    route["capture_video_frames"] or \
+                expected.get("capture_review_frames") != \
+                    route["capture_review_frames"] or \
                 expected.get("capture_dosbox_exit_code") != 0 or \
                 expected.get("capture_harness_sha256") != HARNESS_SHA256:
             raise ValueError("RPG AREA1 scroll capture boundary differs")
@@ -157,7 +193,7 @@ def main() -> int:
             raise ValueError("RPG AREA1 scroll replay missed OC entry")
 
         frames = load_indexed_frames(frame_path)
-        if len(frames) != 5:
+        if len(frames) != route["rewrite_frame_count"]:
             raise ValueError("RPG AREA1 scroll frame count differs")
         for page in pages:
             pixels, palette = frames[page["rewrite_frame"]]
@@ -172,8 +208,9 @@ def main() -> int:
             digest(page.get("original_png_sha256"),
                    page["kind"] + "/original_png_sha256")
         print(
-            "RPG AREA1 scroll: released world (126,13), four "
-            f"{route['direction'].lower()} viewport steps to "
+            f"RPG AREA1 scroll: world ({route['initial_world'][0]},"
+            f"{route['initial_world'][1]}), {route['polls']} "
+            f"{route['direction'].lower()} step(s) to "
             f"({route['final_world'][0]},{route['final_world'][1]}), "
             f"{route['matched_count']} full RGB checkpoints match the "
             "untouched original")

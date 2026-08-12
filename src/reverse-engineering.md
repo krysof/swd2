@@ -3789,3 +3789,12 @@ one-second original input cadence observes different passive animation/DAC
 phases, not because the comparator permits a difference.  Together these two
 routes cover successful horizontal and vertical viewport movement through the
 original `OC` entry contract.
+
+A third successful-movement route reaches the viewport boundary rather than
+scrolling it.  AREA1 is 180 columns wide and the save viewport is 40 columns,
+so staged viewport X 140 is the exact east limit checked by `1a57..1a64`.
+At world `(160,12)` the next leading-edge cell is clear.  One Right poll takes
+the `1b06` screen-motion path: viewport `(140,0)` stays fixed, actor screen X
+changes from `26h` to `28h`, and the world position becomes `(161,12)`.  Both
+the initial and post-step pages match the untouched original in every RGB
+pixel, and CTest locks the two-poll state/timeline and both render pages.

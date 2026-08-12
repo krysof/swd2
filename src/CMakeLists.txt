@@ -665,6 +665,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_south_scroll_validation PROPERTIES
         DEPENDS rpg_world_east_scroll_prepare)
     add_test(
+        NAME rpg_world_screen_east_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-screen-east-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-east-save"
+    )
+    add_test(
+        NAME rpg_world_screen_east_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-scroll.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-east-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-screen-east"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-screen-east-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_screen_east_validation PROPERTIES
+        DEPENDS rpg_world_screen_east_prepare)
+    add_test(
         NAME rpg_magic_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"
