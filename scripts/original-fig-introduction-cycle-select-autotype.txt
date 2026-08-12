@@ -1,0 +1,2 @@
+# Select the alternate prompt after one complete four-phase marker cycle.
+enter , , , , , , , , , , enter right

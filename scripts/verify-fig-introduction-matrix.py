@@ -217,6 +217,8 @@ def main() -> int:
                 "original-fig-introduction-very-late-confirm-autotype.txt",
                 "original-fig-introduction-confirm-sweep-autotype.txt",
                 "original-fig-introduction-phase-confirm-autotype.txt",
+                "original-fig-introduction-phase-select-autotype.txt",
+                "original-fig-introduction-cycle-select-autotype.txt",
             }
             if autotype.name not in prompt_autotypes or \
                     row["capture_harness_sha256"] != CAPTURE_HARNESS_SHA256:
@@ -305,7 +307,8 @@ def main() -> int:
         print(
             f"FIG introduction matrix: all 51 nonempty ORC records closed; "
             f"{len(records)} remaining records replayed with {total_pages} exact "
-            "original RGB pages, including six mandatory stable pages per record")
+            "original RGB pages, including every stable default/alternate prompt "
+            "and command page")
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
             json.JSONDecodeError, subprocess.SubprocessError) as error:

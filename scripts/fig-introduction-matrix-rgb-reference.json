@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "kind": "original_fig_introduction_remaining_record_matrix",
-  "scope": "Exact original/rewrite RGB evidence for every nonempty one-page FIG introduction record not already covered by a dedicated introduction reference. Every matrix record registers the bare enemy page, first introduction update, and all four final-marker phases. Frame 2 is the transient direct update which a 70 Hz AVI observation is not required to sample. Final prompt/command pages are registered only when the retained marker phase also matches exactly; unobserved frames remain explicit rather than weakening full-page equality. The NY replay-only LEFT restoration at modern frame 9 is not counted as a second original sequence observation of default frame 7.",
+  "scope": "Exact original/rewrite RGB evidence for every nonempty one-page FIG introduction record not already covered by a dedicated introduction reference. All 37 matrix records register the bare enemy page, first introduction update, all four final-marker phases, and their default prompt or command page; every YN/NY record also registers the alternate prompt page. Frame 2 is the transient direct update which a 70 Hz AVI observation is not required to sample. The NY replay-only LEFT restoration at modern frame 9 is not counted as a second original sequence observation of default frame 7.",
   "reference_program_sha256": "c4e0f0d04d25b70f80ab3d3490a81ef78c375193ccac70dad5b09c186c758876",
   "specialized_reference_files": [
     "fig-introduction-none-014-rgb-reference.json",
@@ -728,10 +728,10 @@
       "introduction_page_count": 1,
       "fixture_save_sha256": "fd1cb57b3c0df6f8c70069567d64afbb2d804ade1131701e384adf90092f1027",
       "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
-      "capture_autotype": "original-fig-introduction-phase-confirm-autotype.txt",
-      "capture_autotype_sha256": "179df22fb36e458c6d8954462c893aedb21219ef81e85118765d6b28fdaa88ed",
-      "capture_video_sha256": "f24a32b68eb470b4ab25d495a7f2e06ef10a7d97a2e3bb481251be6938dafa86",
-      "capture_manifest_sha256": "64fe778809686b16016860d8f4208028c2e3360cd9b8d0aaed4bb4184506ea9b",
+      "capture_autotype": "original-fig-introduction-phase-select-autotype.txt",
+      "capture_autotype_sha256": "075809eb0170cf03657f05cd3261b6d8f1b30631be8beda172a2787dbe0f6801",
+      "capture_video_sha256": "b82d541a4378a5797690d96f0a7c187320fa698d734fa139a335e97a6a87cfac",
+      "capture_manifest_sha256": "66c6a2fcad33cc55fbf9b5956aa00109abe64da27eb4be25bb1101bf1639e89e",
       "rewrite_video_fnv1a64": "f2280ba8eaaf7f5c",
       "rewrite_state_fnv1a64": "3a1c18cf373aa638",
       "frames": [
@@ -804,11 +804,19 @@
           "rewrite_indexed_sha256": "50e9ba8a7ef8e8835d00a2e1fdb35cfc1f95013f244d8e59c24a643e7d8cd615",
           "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
           "rewrite_rgb_sha256": "e1d098da21193a006314437aabc107680c737c1625c208f08a5d05b8b76f8d42"
+        },
+        {
+          "kind": "alternate_prompt",
+          "original_review_frame": 1071,
+          "original_png_sha256": "e0ad8a3756354bae8bd08a6aca0ab24e1e2df31841f68230caf555a9e03f2b30",
+          "original_rgb_sha256": "5a92efd602abb88d39ef016e9b8d91472db21122545df27371cdcbc386c1d4bd",
+          "rewrite_frame": 8,
+          "rewrite_indexed_sha256": "e16390c49b5edd7a700b1276b7eef12eb118bf1ad4a0494941f737b37288468d",
+          "rewrite_palette_sha256": "08535da4647d785a653b3f5f28c2fab7394c950ad409de88349d6f7b8526eb0a",
+          "rewrite_rgb_sha256": "5a92efd602abb88d39ef016e9b8d91472db21122545df27371cdcbc386c1d4bd"
         }
       ],
-      "unobserved_rewrite_frames": [
-        8
-      ]
+      "unobserved_rewrite_frames": []
     },
     {
       "formation_directory_offset": 818,
@@ -2304,10 +2312,10 @@
       "introduction_page_count": 1,
       "fixture_save_sha256": "de550511d0987dfc213cf3ef6cf4ee8b959d91491330bbe9f10066d0f8ad2d25",
       "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
-      "capture_autotype": "original-fig-introduction-phase-confirm-autotype.txt",
-      "capture_autotype_sha256": "179df22fb36e458c6d8954462c893aedb21219ef81e85118765d6b28fdaa88ed",
-      "capture_video_sha256": "a563b95f7a7a8e856df64f33259c0252da180298d4bacd81311784db3434b1ba",
-      "capture_manifest_sha256": "0e72e64d7a0eded508ee29a1e50b3c439acd4e77b8734edde7ff8e4f7bd50f77",
+      "capture_autotype": "original-fig-introduction-phase-select-autotype.txt",
+      "capture_autotype_sha256": "075809eb0170cf03657f05cd3261b6d8f1b30631be8beda172a2787dbe0f6801",
+      "capture_video_sha256": "d2bb9a7da31a2fd285382be8dda7af82a3987a7d11620e06c44b59e7ab8db011",
+      "capture_manifest_sha256": "c6b719a787495e6109beab11191226a4d07cd3c850ba29a98e0a89517b272ce6",
       "rewrite_video_fnv1a64": "84c88ca021d818e2",
       "rewrite_state_fnv1a64": "3a1c18cf373aa638",
       "frames": [
@@ -2380,11 +2388,19 @@
           "rewrite_indexed_sha256": "fb6c9592385e398f782e00fec6f73bb121bc27e25dbbb07de3a729fec1394a88",
           "rewrite_palette_sha256": "738d2c5e775f421a17aeadc4f917d1f4debc34454274b88254b12f12f7fb2bda",
           "rewrite_rgb_sha256": "92812bccb615bd144538d0bd18e4ec2724e445b2762779e9c2b5778ca9ab4362"
+        },
+        {
+          "kind": "alternate_prompt",
+          "original_review_frame": 1071,
+          "original_png_sha256": "e0bf8032694e8d8ab5d1a65226000a50983e0295e0d1fa3a7fde7d00ce7ff83d",
+          "original_rgb_sha256": "4b034c62e7bb97585a3e6f48141528af53079aa193c367173d9f1b2be54473cc",
+          "rewrite_frame": 8,
+          "rewrite_indexed_sha256": "5e7de493b0724315f7fd692bf9d5632459c522ec12dbf404ceb44465c66623c1",
+          "rewrite_palette_sha256": "738d2c5e775f421a17aeadc4f917d1f4debc34454274b88254b12f12f7fb2bda",
+          "rewrite_rgb_sha256": "4b034c62e7bb97585a3e6f48141528af53079aa193c367173d9f1b2be54473cc"
         }
       ],
-      "unobserved_rewrite_frames": [
-        8
-      ]
+      "unobserved_rewrite_frames": []
     },
     {
       "formation_directory_offset": 508,
@@ -2392,10 +2408,10 @@
       "introduction_page_count": 1,
       "fixture_save_sha256": "a371ebcd1cd7edf9796aff509901b4449f2c0bc25de15f8bf4e60e6be96b4177",
       "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
-      "capture_autotype": "original-fig-introduction-phase-confirm-autotype.txt",
-      "capture_autotype_sha256": "179df22fb36e458c6d8954462c893aedb21219ef81e85118765d6b28fdaa88ed",
-      "capture_video_sha256": "1cc5d7bb6ce6a8a5dcffa3442a899b40459e94ab2b0cf9ad89c336df40072d76",
-      "capture_manifest_sha256": "53ec29ebe5ba7355b29b4a579978c176c905b6c28e10520f04ac2f5cf17b7c1e",
+      "capture_autotype": "original-fig-introduction-cycle-select-autotype.txt",
+      "capture_autotype_sha256": "8f563edb46e96435ff39997a293d9db2d435bac4dacf30be8c34012f1d7c94cf",
+      "capture_video_sha256": "44ded07b59552689e0beab4104df9bb66829290b84a808514f7a13d460248af3",
+      "capture_manifest_sha256": "7df0cfe52dbee47e83d9f9d11223cd57d6814bebd27ea4d4cfd1c78d727fbb57",
       "rewrite_video_fnv1a64": "b79f4c9d508bba61",
       "rewrite_state_fnv1a64": "3a1c18cf373aa638",
       "frames": [
@@ -2461,18 +2477,26 @@
         },
         {
           "kind": "default_prompt",
-          "original_review_frame": 368,
+          "original_review_frame": 1044,
           "original_png_sha256": "6712b51f47dc0492221fddbaca37d4fe1d50f2c1dac31f4c432fcbfda99010a1",
           "original_rgb_sha256": "2535300f11af1174e741eaaca7a1ade25152e234d4550ad66ac63c14bcac1e81",
           "rewrite_frame": 7,
           "rewrite_indexed_sha256": "2bfa9a849d92aaef00ecd2192ac7b557925cd4c054007875f318be52ed7d4574",
           "rewrite_palette_sha256": "738d2c5e775f421a17aeadc4f917d1f4debc34454274b88254b12f12f7fb2bda",
           "rewrite_rgb_sha256": "2535300f11af1174e741eaaca7a1ade25152e234d4550ad66ac63c14bcac1e81"
+        },
+        {
+          "kind": "alternate_prompt",
+          "original_review_frame": 1079,
+          "original_png_sha256": "ee8df52e227e41de7a147ef02fb60beac62496606ae2edcd3459a5997f66bd99",
+          "original_rgb_sha256": "d3c9a898253491ce6cde35c8ee500762f712bd4f46fef9f168c515e40b8007c0",
+          "rewrite_frame": 8,
+          "rewrite_indexed_sha256": "f1dfa8353ca7e96ca82d2aed8ba947427081c5a610f5872e1a8c33fbe1808886",
+          "rewrite_palette_sha256": "738d2c5e775f421a17aeadc4f917d1f4debc34454274b88254b12f12f7fb2bda",
+          "rewrite_rgb_sha256": "d3c9a898253491ce6cde35c8ee500762f712bd4f46fef9f168c515e40b8007c0"
         }
       ],
-      "unobserved_rewrite_frames": [
-        8
-      ]
+      "unobserved_rewrite_frames": []
     },
     {
       "formation_directory_offset": 512,
@@ -2652,10 +2676,10 @@
       "introduction_page_count": 1,
       "fixture_save_sha256": "7f2c1dec8323f54ddab91a5896ed725e112f3a6f318b1760930f2a1f2f7a37f3",
       "capture_harness_sha256": "f6834ff65c61c2f647343f6f1e03b106a9625b729c5e39025aac86c81aaa0bba",
-      "capture_autotype": "original-fig-introduction-phase-confirm-autotype.txt",
-      "capture_autotype_sha256": "179df22fb36e458c6d8954462c893aedb21219ef81e85118765d6b28fdaa88ed",
-      "capture_video_sha256": "3a38e97bd98ac7d5e236c82c685beedc1d1e1b7be050046cb33e828d2849c733",
-      "capture_manifest_sha256": "7d9cc66846cd403640cda73f0c96d277fb31628c193598cf643e618e397caa3e",
+      "capture_autotype": "original-fig-introduction-cycle-select-autotype.txt",
+      "capture_autotype_sha256": "8f563edb46e96435ff39997a293d9db2d435bac4dacf30be8c34012f1d7c94cf",
+      "capture_video_sha256": "f87fa3360c20ca4c34e1e5d4a0cdc844026217170fe9cf933733e1c8ac61133f",
+      "capture_manifest_sha256": "b833c0d0e04ba0f1dbbe68ef5dc9485096c1d692d7f4b204cfc3ed3215d8704b",
       "rewrite_video_fnv1a64": "b79f4c9d508bba61",
       "rewrite_state_fnv1a64": "3a1c18cf373aa638",
       "frames": [
@@ -2721,18 +2745,26 @@
         },
         {
           "kind": "default_prompt",
-          "original_review_frame": 368,
+          "original_review_frame": 1044,
           "original_png_sha256": "6712b51f47dc0492221fddbaca37d4fe1d50f2c1dac31f4c432fcbfda99010a1",
           "original_rgb_sha256": "2535300f11af1174e741eaaca7a1ade25152e234d4550ad66ac63c14bcac1e81",
           "rewrite_frame": 7,
           "rewrite_indexed_sha256": "2bfa9a849d92aaef00ecd2192ac7b557925cd4c054007875f318be52ed7d4574",
           "rewrite_palette_sha256": "738d2c5e775f421a17aeadc4f917d1f4debc34454274b88254b12f12f7fb2bda",
           "rewrite_rgb_sha256": "2535300f11af1174e741eaaca7a1ade25152e234d4550ad66ac63c14bcac1e81"
+        },
+        {
+          "kind": "alternate_prompt",
+          "original_review_frame": 1075,
+          "original_png_sha256": "ee8df52e227e41de7a147ef02fb60beac62496606ae2edcd3459a5997f66bd99",
+          "original_rgb_sha256": "d3c9a898253491ce6cde35c8ee500762f712bd4f46fef9f168c515e40b8007c0",
+          "rewrite_frame": 8,
+          "rewrite_indexed_sha256": "f1dfa8353ca7e96ca82d2aed8ba947427081c5a610f5872e1a8c33fbe1808886",
+          "rewrite_palette_sha256": "738d2c5e775f421a17aeadc4f917d1f4debc34454274b88254b12f12f7fb2bda",
+          "rewrite_rgb_sha256": "d3c9a898253491ce6cde35c8ee500762f712bd4f46fef9f168c515e40b8007c0"
         }
       ],
-      "unobserved_rewrite_frames": [
-        8
-      ]
+      "unobserved_rewrite_frames": []
     },
     {
       "formation_directory_offset": 428,

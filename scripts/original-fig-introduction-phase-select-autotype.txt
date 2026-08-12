@@ -1,0 +1,2 @@
+# Phase-adjusted final acknowledgement followed by one alternate-option move.
+enter , , , , enter right
