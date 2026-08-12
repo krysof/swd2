@@ -452,7 +452,8 @@ private:
         }
         if (blocking) {
             throw std::runtime_error(
-                "replay boundary mismatch: runtime requested " +
+                "replay boundary mismatch at input " +
+                std::to_string(cursor_) + ": runtime requested " +
                 std::string(swd2::replay_boundary_name(boundary)) +
                 " but next input requires " +
                 std::string(swd2::replay_boundary_name(step.boundary)));
