@@ -643,7 +643,7 @@ if(BUILD_TESTING)
     add_test(
         NAME rpg_world_east_scroll_validation
         COMMAND "${Python3_EXECUTABLE}"
-                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-east-scroll.py"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-scroll.py"
                 "$<TARGET_FILE:swd2_rewrite>"
                 "${PROJECT_SOURCE_DIR}/game"
                 "${CMAKE_BINARY_DIR}/rpg-world-east-scroll-save"
@@ -651,6 +651,18 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/scripts/rpg-world-east-scroll-rgb-reference.json"
     )
     set_tests_properties(rpg_world_east_scroll_validation PROPERTIES
+        DEPENDS rpg_world_east_scroll_prepare)
+    add_test(
+        NAME rpg_world_south_scroll_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-scroll.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-east-scroll-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-south-scroll"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-south-scroll-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_south_scroll_validation PROPERTIES
         DEPENDS rpg_world_east_scroll_prepare)
     add_test(
         NAME rpg_magic_replay

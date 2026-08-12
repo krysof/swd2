@@ -3779,3 +3779,13 @@ submitted rewrite pages are not registered as equal because the one-second
 original AUTOTYPE cadence samples different passive-entity/DAC phases there;
 their absence is not treated as a tolerance or claimed match.  The five-frame
 timeline, final state and the three exact pages are failure-closed in CTest.
+
+The matching vertical route starts from the same released state and submits
+four Down polls.  Because the actor also begins at the vertical centre anchor
+`50h`, `1c4f..1c6d` advances viewport Y from 1 to 5 while world Y advances
+from 13 to 17.  Its entry and second-step pages are exact full-page RGB
+matches.  As above, the remaining submissions are not registered because the
+one-second original input cadence observes different passive animation/DAC
+phases, not because the comparator permits a difference.  Together these two
+routes cover successful horizontal and vertical viewport movement through the
+original `OC` entry contract.
