@@ -347,6 +347,49 @@ if(BUILD_TESTING)
     set_tests_properties(new_game_startup_checkpoint PROPERTIES
         DEPENDS new_game_startup_validation)
     add_test(
+        NAME rpg_mainline_prefix_prepare
+        COMMAND "${CMAKE_COMMAND}" -E remove_directory
+                "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-saves"
+    )
+    add_test(
+        NAME rpg_mainline_prefix_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-saves"
+                --slot 3
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-mainline-prefix.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-frames.bin"
+    )
+    set_tests_properties(rpg_mainline_prefix_replay PROPERTIES
+        DEPENDS rpg_mainline_prefix_prepare)
+    add_test(
+        NAME rpg_mainline_prefix_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-replay-trace.py"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-trace.json"
+                --require-module MEO.EXE
+                --require-module RPG.EXE
+                --require-module DEMO.EXE
+                --min-frames 2100
+    )
+    set_tests_properties(rpg_mainline_prefix_validation PROPERTIES
+        DEPENDS rpg_mainline_prefix_replay)
+    add_test(
+        NAME rpg_mainline_prefix_checkpoint
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-mainline-prefix.py"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-saves/SAVE.DA3"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-saves/MAPZ.DA3"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-saves/NAME3.DSK"
+    )
+    set_tests_properties(rpg_mainline_prefix_checkpoint PROPERTIES
+        DEPENDS rpg_mainline_prefix_validation)
+    add_test(
         NAME rpg_name_bitmap_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

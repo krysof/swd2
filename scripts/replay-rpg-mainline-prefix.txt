@@ -1,0 +1,63 @@
+# Deterministic main-story prefix reconstructed from the released MAPZ, MAP0
+# and CHNA1 data.  It performs the real single-process startup, completes the
+# DAQ opening, walks through AREA1 into the first village, visits the inn,
+# acknowledges all three innkeeper pages, returns to the village, completes
+# both seven-page blocking-villager dialogues, enters the chief's house and
+# completes the chief's twenty-one-page first-story event.
+#
+# The final ordinary world poll is in SWRO4 after CHNA1 entry 64 has set story
+# flag 4 and persistently redirected the chief to entry 66.  This is evidence
+# for the beginning of the main route, not a claim of a complete playthrough.
+WAIT:CONFIRM*4
+WAIT:CANCEL
+POLL:CONFIRM*19
+POLL:NONE
+
+# AREA1 -> first village (MAP0 action 200ah).
+POLL:DOWN*14
+POLL:RIGHT*11
+POLL:UP*3
+POLL:NONE
+
+# First village -> inn (MAP0 action 3ah), then face and talk to the innkeeper.
+POLL:UP*7
+POLL:LEFT*21
+POLL:UP*4
+POLL:LEFT*10
+POLL:UP*5
+POLL:NONE
+POLL:UP*15
+POLL:LEFT*5
+POLL:UP
+POLL:CONFIRM
+POLL:CONFIRM*3
+
+# Leave the inn and cross the exterior to the villager blocking the chief.
+POLL:DOWN*17
+POLL:RIGHT
+POLL:DOWN*3
+POLL:DOWN*2
+POLL:RIGHT*15
+POLL:UP*31
+POLL:RIGHT*10
+POLL:UP*43
+POLL:LEFT*2
+POLL:UP*14
+POLL:LEFT*19
+
+# Face the blocker, complete entry 72's two plus five dialogue pages, walk
+# through the now-persistently-relocated actor and remove the behavior-6 door
+# guard on collision.  The sixth step enters MAP0 action 32h / SWRO4.
+POLL:UP
+POLL:CONFIRM
+POLL:CONFIRM*7
+POLL:UP*6
+
+# Reach the village chief and complete CHNA1 entry 64 (5 + 16 pages).
+POLL:UP*16
+POLL:RIGHT*5
+POLL:UP*3
+POLL:CONFIRM
+POLL:CONFIRM*21
+POLL:NONE
+POLL:QUIT
