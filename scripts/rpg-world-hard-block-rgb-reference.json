@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_area1_hard_block_sequence",
+  "status": "exact_rgb_checkpoint",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_harness_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "area_layout_sha256": "773bb3778f48048b3d432bff5ea096e455faf5b02e656a454335dd0c05c1a32f",
+  "area_graphics_metadata_sha256": "873375a04558e9d125e6396d81e536eea56d576baed5a13889179b5eb9cb6e90",
+  "area_overlay_sha256": "8cbe592483fdc6946a14efa1dceecaa478ae65f4ab549d90d4990ec4f6bf7548",
+  "fixture_save_sha256": "2cc5f73a8f119c2814ad31b4bbffcb6b856ad44681174a1dd8d67aea4269f510",
+  "capture_autotype": "original-rpg-world-hard-block-autotype.txt",
+  "capture_autotype_sha256": "eeac5cdf375fc0ceadf4150a1400f136b536a64bfaa99e63150a8ca57e0614b5",
+  "replay_input": "replay-rpg-world-hard-block.txt",
+  "replay_input_sha256": "81103048aef3bb2a91dd474101311db9474060e9d1255a34ef628b867445e5e4",
+  "capture_wait_seconds": 4.7,
+  "capture_pace_seconds": 0.23,
+  "capture_time_limit_seconds": 9,
+  "capture_review_fps": 70.0,
+  "capture_video_frames": 630,
+  "capture_review_frames": 629,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "2ab07670c871c034021ea20bd45e624f3a091720c00abf4b6fcc3c3c16dfaba5",
+  "capture_manifest_sha256": "3ac65194c8d2a9e70a0305ce92eb3a51221cdc25840431885e0fe90bb9e50379",
+  "initial_world_position": [
+    120,
+    12
+  ],
+  "requested_direction": "RIGHT",
+  "repeated_direction_polls": 8,
+  "final_world_position": [
+    120,
+    12
+  ],
+  "blocking_cells": [
+    [
+      122,
+      12
+    ],
+    [
+      121,
+      13
+    ],
+    [
+      121,
+      11
+    ]
+  ],
+  "blocking_cell_words": [
+    32787,
+    33667,
+    32910
+  ],
+  "rewrite_input": {
+    "total": 9,
+    "consumed": 9,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 0,
+    "poll": 9,
+    "text": 0,
+    "frontend": 0
+  },
+  "rewrite_video": {
+    "frames": 9,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "b1c06ac1f90e8b05"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 0,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "076d0e29ae5643c6"
+  },
+  "rewrite_delay_milliseconds": 261,
+  "rewrite_state_fnv1a64": "f826f64ae548585d",
+  "rewrite_mapz_fnv1a64": "827f0f1b725a0958",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "matched_frames": [
+    {
+      "kind": "initial_area1_hard_block_world_page",
+      "rewrite_frame": 0,
+      "original_review_frame": 299,
+      "original_png_sha256": "bd72b638c00a6575ca624cc53a54b066929456a61b3ecdf5527d4d470721b11c",
+      "rewrite_indexed_sha256": "222f666e881aefe9d2c47aa57069503b03eb569fa54023fa30a7d93b34197377",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "rewrite_rgb_sha256": "fe5c10a786f5436730ec586e9a66c82d960fa839f7263b50cd92101b62948a29",
+      "original_rgb_sha256": "fe5c10a786f5436730ec586e9a66c82d960fa839f7263b50cd92101b62948a29"
+    },
+    {
+      "kind": "fourth_blocked_east_poll_page",
+      "rewrite_frame": 4,
+      "original_review_frame": 531,
+      "original_png_sha256": "def4044b3e31476a06a27c79691b2ca419076a9983d9a13618b65bee9301fdb6",
+      "rewrite_indexed_sha256": "b53bb5d9b3b4da7d628deb415dec2aaa74f0d7b35654a35970fd0bd9c1d8cf38",
+      "rewrite_palette_sha256": "9468c502e721e0cca8e769c80f0123c9e1711e0de5115fbca00592af7c893e46",
+      "rewrite_rgb_sha256": "697775cf8046870d86b83f4d83014045e4ea8f1e104367de2f0701f61bdd6751",
+      "original_rgb_sha256": "697775cf8046870d86b83f4d83014045e4ea8f1e104367de2f0701f61bdd6751"
+    },
+    {
+      "kind": "eighth_blocked_east_poll_page",
+      "rewrite_frame": 8,
+      "original_review_frame": 569,
+      "original_png_sha256": "2697cdbb4e550696168bb53801c739ebccc4fc3a03bfd860680b7464026d4f93",
+      "rewrite_indexed_sha256": "b53bb5d9b3b4da7d628deb415dec2aaa74f0d7b35654a35970fd0bd9c1d8cf38",
+      "rewrite_palette_sha256": "a1f5b23ffdc7380e7d32416227b2f67cefbe0860a06844c4e02a199e129a2f81",
+      "rewrite_rgb_sha256": "6cebdefdef8bac7cdabaf547754237f92b69fa558a0da7097a698fd90f6f6fd7",
+      "original_rgb_sha256": "6cebdefdef8bac7cdabaf547754237f92b69fa558a0da7097a698fd90f6f6fd7"
+    }
+  ]
+}

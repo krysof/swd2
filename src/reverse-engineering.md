@@ -3754,3 +3754,16 @@ south step.  The initial and post-slide world pages again match the untouched
 original in all 64,000 RGB pixels, including the next AREA1 DAC-animation
 phase.  Together the four registered pages cover horizontal-to-vertical and
 vertical-to-horizontal corner dispatch, but do not yet prove every map cell.
+
+The adjacent AREA1 world position `(120,12)` closes the no-slide branch.  An
+east request probes `(122,12)=8013h`; the south and north inner corner probes
+are `(121,13)=8383h` and `(121,11)=808eh`, so both `1a8f` alternatives fail
+and `1acf/1aee` reaches `1e63` without changing the world coordinates.  A
+single DOSBox-X AUTOTYPE pulse can fall entirely between RPG's field-input
+polls at this viewport, so it is not valid evidence that the collision kept
+the old facing.  The registered original capture deliberately schedules eight
+Right pulses at a non-integral 230 ms cadence.  It exposes the right-facing
+animation while the party stays fixed, and its initial, fourth-phase and
+eighth-phase pages match the rewrite in all 64,000 RGB pixels.  CTest locks
+the nine-poll rewrite timeline, all three exact pages, the stationary final
+state and the untouched `RPG.EXE`/AREA1/capture identities.
