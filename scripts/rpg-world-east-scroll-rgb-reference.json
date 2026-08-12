@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_area1_east_scroll_sequence",
+  "status": "exact_rgb_checkpoint",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_harness_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "area_layout_sha256": "773bb3778f48048b3d432bff5ea096e455faf5b02e656a454335dd0c05c1a32f",
+  "area_graphics_metadata_sha256": "873375a04558e9d125e6396d81e536eea56d576baed5a13889179b5eb9cb6e90",
+  "area_overlay_sha256": "8cbe592483fdc6946a14efa1dceecaa478ae65f4ab549d90d4990ec4f6bf7548",
+  "fixture_save_sha256": "9ca3a8029f4d9d67dffff728d3f8e8902409f94954f10d7a9a3e0c90d053007e",
+  "capture_autotype": "original-rpg-world-east-scroll-autotype.txt",
+  "capture_autotype_sha256": "4f463d76a9b551df91dd5caa860f3dcec199d8113e40188ac10faeaca96b00e7",
+  "replay_input": "replay-rpg-world-east-scroll.txt",
+  "replay_input_sha256": "ab6d9755abd0bcc1a90d49e2a4334b0614f6fb62c9233c7795fd65c87decc410",
+  "capture_wait_seconds": 5.0,
+  "capture_pace_seconds": 1.0,
+  "capture_time_limit_seconds": 15,
+  "capture_review_fps": 70.0,
+  "capture_video_frames": 1051,
+  "capture_review_frames": 1050,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "6852de83efc716b568503a49694536d3fccba370b03cdd5c0796a2af84b2a59e",
+  "capture_manifest_sha256": "16cbb026daf503a4a2084c001c428fa94cff3966288dde466f41092bd38c10a5",
+  "initial_world_position": [
+    126,
+    13
+  ],
+  "requested_direction": "RIGHT",
+  "direction_polls": 4,
+  "final_world_position": [
+    130,
+    13
+  ],
+  "initial_viewport_position": [
+    106,
+    1
+  ],
+  "final_viewport_position": [
+    110,
+    1
+  ],
+  "rewrite_input": {
+    "total": 5,
+    "consumed": 5,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 0,
+    "poll": 5,
+    "text": 0,
+    "frontend": 0
+  },
+  "rewrite_video": {
+    "frames": 5,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "426c923d7cfb2a3f"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 0,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "076d0e29ae5643c6"
+  },
+  "rewrite_delay_milliseconds": 145,
+  "rewrite_state_fnv1a64": "fe5585cf1e662fc5",
+  "rewrite_mapz_fnv1a64": "827f0f1b725a0958",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "matched_frames": [
+    {
+      "kind": "initial_release_area1_world_page",
+      "rewrite_frame": 0,
+      "original_review_frame": 299,
+      "original_png_sha256": "558bd6594a4d5768583785d638d1fec83d61083b022f914dcc1763ccd78b42f3",
+      "rewrite_indexed_sha256": "37b0bdf857ed52af157432b07f43001be655accdef6bd2e24356cf80bdf11df0",
+      "rewrite_palette_sha256": "1b620870840c937d4f0739fc9706df59594a348a143139cf6934d30c962c0960",
+      "rewrite_rgb_sha256": "d8230560337d6713e8bb90031497ff0752cbc50e160e0b9b348e0ec9dd815067",
+      "original_rgb_sha256": "d8230560337d6713e8bb90031497ff0752cbc50e160e0b9b348e0ec9dd815067"
+    },
+    {
+      "kind": "second_east_scroll_page",
+      "rewrite_frame": 2,
+      "original_review_frame": 535,
+      "original_png_sha256": "be5d0205546e6bffb45086bf10725150201a6db60b441cb3d1911187c6eeb173",
+      "rewrite_indexed_sha256": "0ed4b83f6052bbc7bd7acdc8be69644655131dc3087c1389b8c9c0c07140954d",
+      "rewrite_palette_sha256": "797a5eb1cb4359d734f2fe94b5a62a7c81756046db818f234e780ff1eb42e998",
+      "rewrite_rgb_sha256": "bbd27eba02bc9eabe2b39a03eebeb2b3c674e11e3be8eab3b643da0c23549fe7",
+      "original_rgb_sha256": "bbd27eba02bc9eabe2b39a03eebeb2b3c674e11e3be8eab3b643da0c23549fe7"
+    },
+    {
+      "kind": "third_east_scroll_page",
+      "rewrite_frame": 3,
+      "original_review_frame": 768,
+      "original_png_sha256": "2687b025567f0cb14e214a4b5d70a20aac187a72e292a2a7d920b837813e83d5",
+      "rewrite_indexed_sha256": "d76428711a5f27e7c9aed82e9e04861b2a4e46236dbc643c762294576e0c05f3",
+      "rewrite_palette_sha256": "67582d72c348072977a920034f62014403ad3b0d8896cdf235a73b04cad2f110",
+      "rewrite_rgb_sha256": "721dc36664f99c4fff089f678c394d689c34ead71af20fd3024faca95e033293",
+      "original_rgb_sha256": "721dc36664f99c4fff089f678c394d689c34ead71af20fd3024faca95e033293"
+    }
+  ]
+}

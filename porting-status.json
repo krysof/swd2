@@ -92,11 +92,16 @@
         "scripts/prepare-rpg-world-hard-block-fixture.py",
         "scripts/replay-rpg-world-hard-block.txt",
         "scripts/rpg-world-hard-block-rgb-reference.json",
-        "scripts/verify-rpg-world-hard-block.py"
+        "scripts/verify-rpg-world-hard-block.py",
+        "scripts/original-rpg-world-east-scroll-autotype.txt",
+        "scripts/prepare-rpg-world-east-scroll-fixture.py",
+        "scripts/replay-rpg-world-east-scroll.txt",
+        "scripts/rpg-world-east-scroll-rgb-reference.json",
+        "scripts/verify-rpg-world-east-scroll.py"
       ],
       "remaining": [
         "RPG DATA:37a0 的 42 项场景动作表、3407..3938 原版处理器、全部 00h..29h 状态摘要、75 个可达玩家能力及 49 项场景 ITEM 域已由 src/tests/test_main.cpp 穷举锁定；物品 248/6bh 是唯一发行数据越表故障并在现代运行时安全拒绝",
-        "现有 6,862 个唯一地点/实体图状态已在否/是两套输入下完成 13,724 次执行并锁定最终 SharedState/MAPZ 汇总检查点；AREA1 的 (130,13) 东向阻挡后沿 1a8f 南滑至 (130,14)、(140,12) 南向三格阻挡后沿 1c8b 东滑至 (141,12)，以及 (120,12) 东向硬阻挡且南北角均不可滑动的三条原版 OC 路线已登记七张完整 RGB 零差异页；继续把其余状态逐一与原版场景帧和状态基准对照",
+        "现有 6,862 个唯一地点/实体图状态已在否/是两套输入下完成 13,724 次执行并锁定最终 SharedState/MAPZ 汇总检查点；AREA1 的 (126,13) 至 (130,13) 连续东向视口滚动、(130,13) 东向阻挡后沿 1a8f 南滑至 (130,14)、(140,12) 南向三格阻挡后沿 1c8b 东滑至 (141,12)，以及 (120,12) 东向硬阻挡且南北角均不可滑动的四条原版 OC 路线已登记十张完整 RGB 零差异页；继续把其余状态逐一与原版场景帧和状态基准对照",
         "以完整新游戏通关回放验证 DAQ 开场事件后的全部状态无分歧"
       ]
     },
@@ -2127,10 +2132,15 @@
         "scripts/prepare-rpg-world-hard-block-fixture.py",
         "scripts/replay-rpg-world-hard-block.txt",
         "scripts/rpg-world-hard-block-rgb-reference.json",
-        "scripts/verify-rpg-world-hard-block.py"
+        "scripts/verify-rpg-world-hard-block.py",
+        "scripts/original-rpg-world-east-scroll-autotype.txt",
+        "scripts/prepare-rpg-world-east-scroll-fixture.py",
+        "scripts/replay-rpg-world-east-scroll.txt",
+        "scripts/rpg-world-east-scroll-rgb-reference.json",
+        "scripts/verify-rpg-world-east-scroll.py"
       ],
       "remaining": [
-        "FIG 非最终 schema-2 聚合检查点已哈希锁定 218 个 reference、5,620 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；RPG AREA1 的水平转垂直、垂直转水平和不可滑动硬阻挡三类碰撞另登记七张完整 RGB 零差异页；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
+        "FIG 非最终 schema-2 聚合检查点已哈希锁定 218 个 reference、5,620 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；RPG AREA1 的正常视口滚动及水平转垂直、垂直转水平、不可滑动硬阻挡三类碰撞另登记十张完整 RGB 零差异页；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
         "生成通过实时精确比较及哈希校验的最终 pixel_diffs manifest"
       ]
     },

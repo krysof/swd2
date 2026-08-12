@@ -3767,3 +3767,15 @@ animation while the party stays fixed, and its initial, fourth-phase and
 eighth-phase pages match the rewrite in all 64,000 RGB pixels.  CTest locks
 the nine-poll rewrite timeline, all three exact pages, the stationary final
 state and the untouched `RPG.EXE`/AREA1/capture identities.
+
+The release slot itself supplies a successful viewport-scroll route.  Its
+party starts at AREA1 world `(126,13)`, screen anchor `(26h,50h)` and viewport
+`(106,1)`.  Four Right polls keep the actor at its centre screen anchor while
+`1a57..1a70` advances the viewport to `(110,1)` and the world position to
+`(130,13)`.  The original capture uses the released `SAVE.DA1` byte for byte;
+the rewrite uses the same four polls followed by Quit.  The entry page and the
+second/third scrolling pages are full 320x200 RGB equalities.  The other two
+submitted rewrite pages are not registered as equal because the one-second
+original AUTOTYPE cadence samples different passive-entity/DAC phases there;
+their absence is not treated as a tolerance or claimed match.  The five-frame
+timeline, final state and the three exact pages are failure-closed in CTest.
