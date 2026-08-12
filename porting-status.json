@@ -1278,10 +1278,13 @@
         "scripts/verify-wasm-browser-input.mjs",
         "scripts/wasm-browser-input-reference.json",
         "scripts/verify-wasm-webkit-idbfs.mjs",
-        "scripts/wasm-webkit-idbfs-reference.json"
+        "scripts/wasm-webkit-idbfs-reference.json",
+        "scripts/verify-wasm-safari-idbfs.py",
+        "scripts/verify-wasm-safari-idbfs-reference.py",
+        "scripts/wasm-safari-idbfs-reference.json"
       ],
       "remaining": [
-        "已通过 Edge 151 与独立 WebKit 26.5；继续补品牌 Firefox/Safari 等主流浏览器矩阵",
+        "已通过 Edge 151、独立 Playwright WebKit 26.5 与品牌 Safari 26.5.2；继续补品牌 Firefox 等主流浏览器矩阵",
         "在物理移动浏览器重启后复核三件套存档往返"
       ]
     },
@@ -1942,10 +1945,13 @@
         "verification/platform/linux-arm64/Dockerfile",
         "verification/long_run/checkpoint-2026-08-11-linux-arm64/native-log.json",
         "verification/long_run/checkpoint-2026-08-11-linux-arm64/ctest.log",
-        "verification/long_run/checkpoint-2026-08-11-linux-arm64/matrix-report.json"
+        "verification/long_run/checkpoint-2026-08-11-linux-arm64/matrix-report.json",
+        "scripts/verify-wasm-safari-idbfs.py",
+        "scripts/verify-wasm-safari-idbfs-reference.py",
+        "scripts/wasm-safari-idbfs-reference.json"
       ],
       "remaining": [
-        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点，以及固定 Debian 13 Linux/aarch64 Release 从零构建的 348/348 CTest 零警告检查点；继续多小时活动游戏/音频长跑",
+        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点、3 次品牌 Safari 两文档 IDBFS 往返，以及固定 Debian 13 Linux/aarch64 Release 从零构建的 348/348 CTest 零警告检查点；继续多小时活动游戏/音频长跑",
         "补齐 Windows、物理 Linux、品牌浏览器、物理 iOS/Android 与手柄矩阵后生成 verified long_run manifest"
       ]
     }

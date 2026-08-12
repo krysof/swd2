@@ -623,6 +623,18 @@ ASYNCIFY 与 SDL 得到 71 次世界帧输入和 70 个已呈现世界位置；�
   --output build-wasm/wasm-webkit-idbfs-report.json
 ```
 
+品牌 Safari 不必打开“允许远程自动化”也能执行同一边界。显式
+`idbfs-report=NONCE` 测试页只向本机同源 runner 回报成败、浏览器身份和平台，不发送
+存档字节；Safari 自己完成写入、提交、页面重载、精确读取、删除和第二次提交。登记的
+Safari 26.5.2 检查点连续通过三轮，两轮页面生命周期均由实际 Safari 执行：
+
+```sh
+./scripts/verify-wasm-safari-idbfs.py build-wasm/site --cycles 3 \
+  --output scripts/wasm-safari-idbfs-reference.json
+```
+
+这仍是 macOS 品牌 Safari，不冒充物理 iPhone/iPad，也不覆盖触摸输入。
+
 长期矩阵的本机检查点可重复执行原生进程边界和两种浏览器存储重启。它生成的
 `matrix-report.json` 固定为 `status=in_progress`，不会因本机循环通过而伪造最终
 `verification/long_run/manifest.json`：

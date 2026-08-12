@@ -184,6 +184,12 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/verification/pixel_diffs/checkpoint-2026-08-11-fig-rgb.json"
     )
     add_test(
+        NAME wasm_safari_idbfs_checkpoint
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-wasm-safari-idbfs-reference.py"
+                "${PROJECT_SOURCE_DIR}/scripts/wasm-safari-idbfs-reference.json"
+    )
+    add_test(
         NAME legacy_program_data_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game"
                 --verify-legacy-program-data

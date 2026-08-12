@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "wasm_branded_safari_idbfs_restart",
+  "status": "verified",
+  "limitation": "Installed macOS Safari is not physical iOS/iPadOS and this self-reporting same-origin probe does not test touch input.",
+  "captured_at": "2026-08-12T17:23:49+09:00",
+  "source_commit": "658b32d289dd6194622e9d162fbc5b4c244715eb",
+  "browser": {
+    "bundle_id": "com.apple.Safari",
+    "version": "26.5.2",
+    "build": "21624.2.5.11.8"
+  },
+  "cycles": [
+    {
+      "cycle": 0,
+      "status": "verified",
+      "two_document_reload": true,
+      "exact_probe_bytes_restored": true,
+      "cleanup_sync": true,
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5.2 Safari/605.1.15",
+      "navigator_platform": "MacIntel"
+    },
+    {
+      "cycle": 1,
+      "status": "verified",
+      "two_document_reload": true,
+      "exact_probe_bytes_restored": true,
+      "cleanup_sync": true,
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5.2 Safari/605.1.15",
+      "navigator_platform": "MacIntel"
+    },
+    {
+      "cycle": 2,
+      "status": "verified",
+      "two_document_reload": true,
+      "exact_probe_bytes_restored": true,
+      "cleanup_sync": true,
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5.2 Safari/605.1.15",
+      "navigator_platform": "MacIntel"
+    }
+  ],
+  "assets": {
+    "index.html": "8b21620a7073c9a25140c462c8f435385d553629c526b199d71c4c3eb534d2df",
+    "index.js": "8995977e50ac783ae63b7512ee4d0ecb9aee8a0463f7389b1d896376ae953278",
+    "index.wasm": "760f846c371dde6aee759d834ae2f35ae0f521802a39312122d5182a1878dfd9",
+    "index.data": "cc57db3e8963aaabed56cd2cf9a774da1575175c4182046bebfe828687760321"
+  }
+}

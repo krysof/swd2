@@ -2216,6 +2216,13 @@ Edge 151 记录在约 2.56 秒的一次不间断保持中跨过 DOM、ASYNCIFY �
 `pass`。WebKit 会在主动重载第一文档时报告一次预期的 `TypeError: Load failed`（被中止的
 WASM/data loader），runner 只允许这一条且拒绝额外页面错误。该证据独立于 Chromium，
 但仍明确不是品牌 Safari 或物理 iOS，不能据此关闭移动浏览器验收项。
+品牌 Safari 现另有不依赖 WebDriver 的同源回报入口。runner 用系统
+`com.apple.Safari` 打开 nonce URL，页面仅在显式 `idbfs-report` 参数存在时把结果、UA
+和平台 POST 回本机服务器；探针内容从不离开 Safari 的 IDBFS。Safari 26.5.2 连续三轮
+都完成写入、`syncfs(false)`、整页重载、`syncfs(true)` 精确读回、删除与再次提交，
+并由独立 verifier 锁定浏览器 bundle/version、三轮结果及四个 WASM 资产摘要。这补齐了
+品牌桌面 Safari 存档边界，但不是物理 iOS/iPadOS，也没有测试触摸，相关门继续保持
+`in_progress`。
 浏览器检查现支持一次进程内重复 IDBFS 周期，用于暴露只在多次 IndexedDB 重启后出现的
 清理/恢复错误。首次短跑还发现 CDP 的 `Input.dispatchTouchEvent(touchEnd)` promise 会在
 renderer 接受任务、但 DOM 回调尚未执行时返回；旧测试偶发把此时已经开始的一帧诊断算成
