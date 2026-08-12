@@ -2464,6 +2464,11 @@ reference 的哈希。schema 2 会区分完整 320x200 页面与明确标框的 
 观察仍保存在各 reference 中，但其等值声明只登记已验证的 top-197 crop。它的状态明确是
 `checkpoint_not_complete`，不代替最终必须覆盖
 全部 RPG/FIG 场景的四角色 `verification/pixel_diffs/manifest.json`，因此不会抬高完成门。
+原版捕获本身也必须失败封闭：DOSBox-X 可能在已经写出 AVI 后才报告
+`MAPPER: Couldn't find a button ... stopping`，这代表计划的 AUTOTYPE 序列没有完整送达，
+不能仅凭进程返回零和录像存在就生成 manifest。`capture-original-dosbox.py` 现会扫描完整
+日志并在移动录像、抽帧和写 manifest 前拒绝该错误；独立单元检查同时证明普通 Mapper
+布局日志不会被误判。
 
 怪物低血量自疗路径也不能复用玩家治疗演出。`21a9..21ca` 先由 `22f3` 扣除 AP 并计算
 能力 50 的恢复量，再封顶写回 HP、调用 `262f` 的能力名称卡，随后直接跳到 `2938/22e0`

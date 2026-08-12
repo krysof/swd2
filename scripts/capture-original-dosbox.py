@@ -19,6 +19,11 @@ from pathlib import Path
 
 
 TOKEN = re.compile(r"^[A-Za-z0-9_.,-]+$")
+FATAL_AUTOTYPE_LOG_MARKERS = (
+    "MAPPER: Couldn't find a button named ",
+    "AUTOTYPE: invalid",
+    "AUTOTYPE: stopping",
+)
 
 
 def sha256(path: Path) -> str:
@@ -40,6 +45,17 @@ def read_autotype(path: Path | None) -> list[str]:
         if not TOKEN.fullmatch(token):
             raise ValueError(f"invalid AUTOTYPE token: {token!r}")
     return tokens
+
+
+def validate_autotype_log(output: str) -> None:
+    """Reject captures whose scheduled key stream did not finish cleanly."""
+    for marker in FATAL_AUTOTYPE_LOG_MARKERS:
+        if marker.lower() in output.lower():
+            offending = next(
+                (line.strip() for line in output.splitlines()
+                 if marker.lower() in line.lower()), marker)
+            raise RuntimeError(
+                "DOSBox-X rejected part of the AUTOTYPE stream: " + offending)
 
 
 def command_version(command: str) -> str:
@@ -214,6 +230,7 @@ def main() -> int:
                     f"DOSBox-X exited with status {result.returncode}; "
                     f"see {log_path}"
                 )
+            validate_autotype_log(result.stdout)
             videos = sorted(captures.glob("*.avi"))
             if len(videos) != 1:
                 raise RuntimeError(

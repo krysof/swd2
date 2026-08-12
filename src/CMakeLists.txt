@@ -291,6 +291,11 @@ if(BUILD_TESTING)
     set_tests_properties(frame_capture_report_validation PROPERTIES
         DEPENDS frame_capture_comparison)
     add_test(
+        NAME original_capture_autotype_log_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/test-capture-original-dosbox-log.py"
+    )
+    add_test(
         NAME new_game_startup_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

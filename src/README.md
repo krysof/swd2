@@ -608,6 +608,8 @@ EOF
 程序/录像/抽帧 SHA-256 和媒体参数。该录像经过 DOSBox-X VGA DAC 转成 RGB，只能作为
 逆向和场景定位参考；manifest 会明确标记 `status=reference_only`，不能冒充像素门要求的
 原始索引像素、逐帧 VGA 调色板和完整 `SWD2FRM2` 基准。
+若 DOSBox-X 报告某个 AUTOTYPE/MAPPER 键无法投递，捕获现在会在写 manifest 前失败；
+不能再把“录像文件存在、但计划输入中途停止”的观察误登记为可重复原版证据。
 
 需要绕过原版标题而直接复现 `OC` 覆盖入口时，用仓库内的 138-byte harness；只在临时
 游戏副本生成它，不改 `game/RPG.EXE`：

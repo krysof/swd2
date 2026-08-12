@@ -1373,6 +1373,7 @@
         "src/tests/test_main.cpp",
         "src/reverse-engineering.md",
         "scripts/capture-original-dosbox.py",
+        "scripts/test-capture-original-dosbox-log.py",
         "scripts/compare-dosbox-rgb-frame.py",
         "scripts/rpg-opening-rgb-reference.json",
         "scripts/rpg-equipment-rgb-reference.json",
