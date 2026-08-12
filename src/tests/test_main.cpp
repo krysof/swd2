@@ -10715,6 +10715,111 @@ void test_battle_module(const std::filesystem::path& game_root) {
                     introduction_cursor_platform.frame_hashes[1],
             "FIG 3ed3 did not animate the final 95h..98h text cursor");
 
+    // Every non-empty ORC introduction is fed through the real FIG module.
+    // Question records are run twice so both Yes and No choices cross the
+    // trailing YN/NY ordering, rather than treating the two text bytes as
+    // dialogue glyphs.  The aggregate is filled from every stable present
+    // hash plus the final direct-update page of each run.
+    const auto battle_database = swd2::BattleDatabase::load(
+        game_root / "ORC.EXE");
+    const auto introduction_font = swd2::LegacyFont::load(
+        game_root / "FIG.DSK");
+    const auto introduction_name_font = swd2::LegacyFont::load(
+        game_root / "NAMEQ.DSK");
+    std::size_t introduction_records = 0;
+    std::size_t prompt_records = 0;
+    std::size_t introduction_runs = 0;
+    std::size_t introduction_pages = 0;
+    std::size_t introduction_presents = 0;
+    std::size_t introduction_direct_updates = 0;
+    std::uint64_t introduction_digest = 1469598103934665603ULL;
+    const auto absorb = [&](const ScriptedPlatform& platform) {
+        for (const auto hash : platform.frame_hashes) {
+            for (unsigned shift = 0; shift < 64; shift += 8) {
+                introduction_digest ^= static_cast<std::uint8_t>(hash >> shift);
+                introduction_digest *= 1099511628211ULL;
+            }
+        }
+        for (const auto pixel : platform.direct_update_pixels) {
+            introduction_digest ^= pixel;
+            introduction_digest *= 1099511628211ULL;
+        }
+        introduction_presents += platform.presented;
+        introduction_direct_updates += platform.direct_updates;
+        ++introduction_runs;
+    };
+    for (const auto& encounter : battle_database.encounters()) {
+        if (encounter.introduction_text.empty()) continue;
+        const auto directory = std::find(
+            battle_database.directory_offsets().begin(),
+            battle_database.directory_offsets().end(), encounter.data_offset);
+        require(directory != battle_database.directory_offsets().end(),
+                "FIG introduction encounter has no directory alias");
+        const auto directory_offset = static_cast<std::uint16_t>(
+            std::distance(battle_database.directory_offsets().begin(), directory) * 2U);
+        std::size_t pages = 0;
+        std::size_t text_offset = 0;
+        while (true) {
+            const auto page = swd2::render_dialogue_page(
+                introduction_font, encounter.introduction_text, text_offset,
+                280, 64, 1, &introduction_name_font);
+            ++pages;
+            if (!page.has_more) break;
+            text_offset = page.next_offset;
+        }
+        introduction_pages += pages;
+        ++introduction_records;
+
+        const auto run_introduction = [&](bool choose_yes) {
+            ScriptedPlatform platform;
+            platform.text_actions.assign(
+                pages, swd2::InputAction::confirm);
+            platform.actions.assign(
+                pages - 1U, swd2::InputAction::confirm);
+            if (encounter.prompt_order == swd2::BattlePromptOrder::none) {
+                platform.actions.push_back(swd2::InputAction::confirm);
+                platform.actions.push_back(swd2::InputAction::quit);
+            } else {
+                const auto default_yes = encounter.prompt_order ==
+                    swd2::BattlePromptOrder::yes_no;
+                if (choose_yes != default_yes) {
+                    platform.actions.push_back(swd2::InputAction::right);
+                }
+                platform.actions.push_back(swd2::InputAction::confirm);
+                if (choose_yes) {
+                    platform.actions.push_back(swd2::InputAction::quit);
+                }
+            }
+            auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+            state.set_u16(0x4a0, directory_offset);
+            swd2::GameContext context{game_root, state, platform};
+            const auto result = swd2::BattleModule().run(
+                context, swd2::Marker::open_figure);
+            require(result == (choose_yes || encounter.prompt_order ==
+                                      swd2::BattlePromptOrder::none
+                                  ? swd2::Marker::none
+                                  : swd2::Marker::continue_rpg) &&
+                        platform.cursor == platform.actions.size() &&
+                        platform.text_cursor == pages &&
+                        context.shared_state.u16(0x4a0) == 0U,
+                    "FIG exhaustive ORC introduction run diverged");
+            absorb(platform);
+        };
+        if (encounter.prompt_order == swd2::BattlePromptOrder::none) {
+            run_introduction(true);
+        } else {
+            ++prompt_records;
+            run_introduction(false);
+            run_introduction(true);
+        }
+    }
+    require(introduction_records == 51U && prompt_records == 20U &&
+                introduction_runs == 71U && introduction_pages == 60U &&
+                introduction_presents == 222U &&
+                introduction_direct_updates == 160U &&
+                introduction_digest == 10387570364441764367ULL,
+            "FIG exhaustive ORC introduction/prompt checkpoint changed");
+
     ScriptedPlatform immediate_battle_platform;
     immediate_battle_platform.actions = {swd2::InputAction::quit};
     auto immediate_state = swd2::SharedState::load(game_root / "SAVE.DA1");
