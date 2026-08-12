@@ -77,7 +77,7 @@ def main() -> int:
                 "music_calls": 1, "voice_calls": 3,
                 "stop_music_calls": 0, "stop_audio_calls": 1,
                 "fnv1a64": "d8270c80754cd6a1"} or \
-                trace.get("delay_milliseconds") != 3739:
+                trace.get("delay_milliseconds") != 3735:
             raise ValueError("FIG story-42 audio or timing differs")
         if (trace.get("state_fnv1a64"), trace.get("mapz_fnv1a64"),
                 trace.get("name_fnv1a64")) != (

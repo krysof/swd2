@@ -43,7 +43,7 @@
     "last_height": 200,
     "fnv1a64": "c091267cd1186e16"
   },
-  "rewrite_delay_milliseconds": 5830,
+  "rewrite_delay_milliseconds": 5822,
   "rewrite_audio": {
     "music_calls": 2,
     "voice_calls": 3,

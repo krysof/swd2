@@ -212,19 +212,19 @@ def main() -> int:
         )
         if any(frame_times[index] != expected[key]
                for index, key in timed_frames) or \
-                frame_times[132] - frame_times[131] != 275 or \
-                expected.get("barrier_last_hold_milliseconds") != 275 or \
+                frame_times[132] - frame_times[131] != 274 or \
+                expected.get("barrier_last_hold_milliseconds") != 274 or \
                 frame_times[137] - frame_times[136] != 55 or \
                 frame_times[138] - frame_times[137] != 989 or \
                 expected.get("expiry_hold_milliseconds") != 989 or \
-                frame_times[139] - frame_times[138] != 275 or \
+                frame_times[139] - frame_times[138] != 274 or \
                 frame_times[161] - frame_times[160] != 110:
             raise ValueError("FIG item-barrier-expiry event timing differs")
         voices = [item for item in trace.get("timeline", [])
                   if item.get("kind") == "voice"]
-        if voices[7].get("at_milliseconds") != 10118 or \
+        if voices[7].get("at_milliseconds") != 10106 or \
                 voices[7].get("payload_fnv1a64") != "c20417b30bf8d63e" or \
-                voices[8].get("at_milliseconds") != 12592 or \
+                voices[8].get("at_milliseconds") != 12578 or \
                 voices[8].get("payload_fnv1a64") != "ce3659387971554b":
             raise ValueError("FIG item-barrier-expiry voices differ")
 

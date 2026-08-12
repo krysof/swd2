@@ -36,7 +36,7 @@
         "last_height": 200,
         "fnv1a64": "7022514a9ae6f759"
       },
-      "rewrite_delay_milliseconds": 3904,
+      "rewrite_delay_milliseconds": 3900,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,
@@ -134,7 +134,7 @@
         "last_height": 200,
         "fnv1a64": "d995a4d3d81dad02"
       },
-      "rewrite_delay_milliseconds": 3904,
+      "rewrite_delay_milliseconds": 3900,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,
@@ -202,7 +202,7 @@
         "last_height": 200,
         "fnv1a64": "43d95ebb1100c923"
       },
-      "rewrite_delay_milliseconds": 3353,
+      "rewrite_delay_milliseconds": 3350,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 1,
@@ -270,7 +270,7 @@
         "last_height": 200,
         "fnv1a64": "6d3a1c9931961db8"
       },
-      "rewrite_delay_milliseconds": 3904,
+      "rewrite_delay_milliseconds": 3900,
       "rewrite_audio": {
         "music_calls": 1,
         "voice_calls": 2,

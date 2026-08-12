@@ -70,6 +70,7 @@ void require(bool condition, const char* message) {
 }
 
 void test_fig_timer_ticks() {
+    using swd2::FigTimerClock;
     using swd2::fig_timer_ticks;
     require(fig_timer_ticks(0).count() == 0 &&
                 fig_timer_ticks(1).count() == 55 &&
@@ -84,6 +85,36 @@ void test_fig_timer_ticks() {
                 fig_timer_ticks(18).count() == 989 &&
                 fig_timer_ticks(54).count() == 2966,
             "FIG INT-08h PIT timer conversion differs");
+
+    FigTimerClock clock;
+    std::uint64_t cumulative = 0;
+    for (std::uint32_t tick = 0; tick < 100'000U; ++tick) {
+        cumulative += static_cast<std::uint64_t>(clock.advance(1).count());
+        const auto exact_rounded =
+            (static_cast<std::uint64_t>(tick) + 1U) *
+                swd2::fig_timer_pit_clocks * 1000U +
+                swd2::fig_pit_input_hz / 2U;
+        const auto expected = exact_rounded /
+            swd2::fig_pit_input_hz;
+        require(cumulative == expected,
+                "FIG cumulative PIT timer clock drifted");
+    }
+    require(cumulative == 5'492'540U && clock.remainder() == 734'311U,
+            "FIG long-run PIT timer checkpoint differs");
+
+    FigTimerClock partitioned;
+    std::uint64_t partitioned_total = 0;
+    for (const auto ticks : {3U, 1U, 18U, 5U, 54U, 9U, 10U, 2U}) {
+        partitioned_total += static_cast<std::uint64_t>(
+            partitioned.advance(ticks).count());
+    }
+    const auto partitioned_ticks = 102U;
+    require(partitioned_total ==
+                (static_cast<std::uint64_t>(partitioned_ticks) *
+                     swd2::fig_timer_pit_clocks * 1000U +
+                 swd2::fig_pit_input_hz / 2U) /
+                    swd2::fig_pit_input_hz,
+            "FIG partitioned waits differ from one cumulative PIT clock");
 }
 
 void test_launcher() {
@@ -10943,7 +10974,7 @@ void test_battle_module(const std::filesystem::path& game_root) {
                 status_card_quit_platform.frame_hashes.back() ==
                     2224825471123321483ULL &&
                 status_card_quit_platform.delay_calls == 34U &&
-                status_card_quit_platform.delayed_milliseconds == 625U &&
+                status_card_quit_platform.delayed_milliseconds == 624U &&
                 status_card_quit_platform.stop_calls == 1U &&
                 status_card_quit_context.shared_state.u16(0x4a0) == 0U,
             "FIG 57d6 fixed status-card hold ignored frontend quit");

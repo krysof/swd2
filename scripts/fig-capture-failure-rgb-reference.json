@@ -32,7 +32,36 @@
     "stop_audio_calls": 1,
     "fnv1a64": "db11eed4558220d4"
   },
-  "rewrite_delay_milliseconds": 3299,
+  "rewrite_delay_milliseconds": 3296,
+  "sequence_at_milliseconds": [
+    0,
+    0,
+    989,
+    1263,
+    1538,
+    1758,
+    1758,
+    1813,
+    1867,
+    1922,
+    1977,
+    2032,
+    2087,
+    2142,
+    2197,
+    2252,
+    2307,
+    2362,
+    2417,
+    2472,
+    2527,
+    2581,
+    2636,
+    2691,
+    3021,
+    3186,
+    3296
+  ],
   "rewrite_state_fnv1a64": "94a0a1fb8cd48dc6",
   "voice_checkpoints": [
     {
@@ -43,7 +72,7 @@
     },
     {
       "call": 1,
-      "at_milliseconds": 1759,
+      "at_milliseconds": 1758,
       "payload_fnv1a64": "ce3659387971554b",
       "resource": "SP106.VOC"
     }

@@ -56,7 +56,7 @@
     "last_height": 200,
     "fnv1a64": "61747ee7ef966d16"
   },
-  "rewrite_delay_milliseconds": 10883,
+  "rewrite_delay_milliseconds": 10875,
   "rewrite_audio": {
     "music_calls": 2,
     "voice_calls": 6,
@@ -70,16 +70,16 @@
   "rewrite_final_fnv1a64": "3c9179e4bf2184ec",
   "capture_pose_rewrite_frame": 91,
   "capture_card_rewrite_frame": 92,
-  "capture_card_at_milliseconds": 8026,
+  "capture_card_at_milliseconds": 8019,
   "captured_pose_rewrite_frame": 93,
-  "captured_pose_at_milliseconds": 9015,
+  "captured_pose_at_milliseconds": 9008,
   "expiry_rewrite_frame": 94,
-  "expiry_at_milliseconds": 9509,
+  "expiry_at_milliseconds": 9502,
   "clean_rewrite_frame": 95,
-  "clean_at_milliseconds": 10498,
+  "clean_at_milliseconds": 10491,
   "expiry_hold_milliseconds": 989,
   "victory_rewrite_frame": 97,
-  "victory_at_milliseconds": 10883,
+  "victory_at_milliseconds": 10875,
   "matched_frames": [
     {
       "kind": "capture_pose_zero",

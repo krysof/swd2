@@ -193,7 +193,7 @@ def main() -> int:
                 frame_times[expiry] - frame_times[failure] != 275 or \
                 frame_times[clean] - frame_times[expiry] != \
                     expected["expiry_hold_milliseconds"] or \
-                expected["expiry_hold_milliseconds"] != 989:
+                expected["expiry_hold_milliseconds"] != 988:
             raise ValueError("FIG capture-expiry event timing differs")
 
         frames = load_indexed_frames(frame_path)

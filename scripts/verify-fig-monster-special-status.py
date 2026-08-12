@@ -133,8 +133,8 @@ def main() -> int:
                 (0, 0, 0, 384, 659, 824):
             raise ValueError("26af selected-player status flip timing differs")
         if tuple(frame_times.get(index) for index in (29, 30, 31, 32, 33)) != \
-                (2309, 2474, 3463, 3738, 3848) or \
-                frame_times[31] - frame_times[30] != 989 or \
+                (2307, 2472, 3460, 3735, 3845) or \
+                frame_times[31] - frame_times[30] != 988 or \
                 frame_times[32] - frame_times[31] != 275:
             raise ValueError("0694/0da7/0d98 recovery timing differs")
 

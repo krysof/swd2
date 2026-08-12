@@ -47,7 +47,7 @@
     "last_height": 200,
     "fnv1a64": "2986d4e987cf48ae"
   },
-  "rewrite_delay_milliseconds": 13197,
+  "rewrite_delay_milliseconds": 13182,
   "rewrite_audio": {
     "music_calls": 3,
     "voice_calls": 8,
@@ -61,12 +61,12 @@
   "rewrite_final_fnv1a64": "32bd86480f9ea492",
   "retained_pose_rewrite_frame": 153,
   "expiry_rewrite_frame": 154,
-  "expiry_at_milliseconds": 11823,
+  "expiry_at_milliseconds": 11809,
   "clean_rewrite_frame": 155,
-  "clean_at_milliseconds": 12812,
+  "clean_at_milliseconds": 12798,
   "expiry_hold_milliseconds": 989,
   "victory_rewrite_frame": 157,
-  "victory_at_milliseconds": 13197,
+  "victory_at_milliseconds": 13182,
   "matched_frames": [
     {
       "kind": "retained_ability_pose",

@@ -22,7 +22,7 @@
     },
     {
       "path": "scripts/fig-ally-ability-rgb-reference.json",
-      "sha256": "be11ed41b26cf7a48541d782663e177b9360b1b397137576d246089189ebeceb",
+      "sha256": "e5976159462047483635c5457d2653c37ee879fee49bd3bc1b3bbee7c75666f6",
       "kind": "original_fig_captured_ally_offensive_ability",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -31,7 +31,7 @@
     },
     {
       "path": "scripts/fig-ally-ae-dismiss-rgb-reference.json",
-      "sha256": "540bcc88c155e97703ecf65ec8526949836f768230997d306e6de1f4a2420da7",
+      "sha256": "bac37174ad22822dacc9a41a09a549d78da241c84b77baf67f7cc3d001199fbe",
       "kind": "original_fig_captured_ally_ae_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
@@ -40,7 +40,7 @@
     },
     {
       "path": "scripts/fig-ally-b0-dismiss-rgb-reference.json",
-      "sha256": "0a27b6e382d3b79c22b5a4157d6767326e213a038c9b819721ba5200c6ed8e54",
+      "sha256": "3229fb83efaf2e111994288ff0a14e82c91ccc87eeb7bcef232c099d5d9575c9",
       "kind": "original_fig_captured_ally_b0_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
@@ -49,7 +49,7 @@
     },
     {
       "path": "scripts/fig-ally-empty-ae-dismiss-rgb-reference.json",
-      "sha256": "2d838b9030be2c31b2e9d185cbededafd0bcdea19c9c21b4df5d5c43c1ee6bab",
+      "sha256": "a7c42d8f6aaaaa16add759a60fe86325d6b888ab516dae23ca5e3810ec8292eb",
       "kind": "original_fig_captured_ally_empty_ae_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -58,7 +58,7 @@
     },
     {
       "path": "scripts/fig-ally-empty-b0-dismiss-rgb-reference.json",
-      "sha256": "72458835b15b1588e639cc20c3f54bc09aae0bcc3c3eb783195d66ea1d772e20",
+      "sha256": "175568776fedf6fa78a247abd0998fd90a2e965023fb7893ec7cbeb3b277fb26",
       "kind": "original_fig_captured_ally_empty_b0_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -67,7 +67,7 @@
     },
     {
       "path": "scripts/fig-ally-empty-medium-dismiss-rgb-reference.json",
-      "sha256": "309618f39566c088b70568febfec3f1b6e6afd0d4bcab9a3d7ad7af56bd1a347",
+      "sha256": "347a9b2bb87422e4e67d88abee5c7bda9fb92dfd3235d51682bddae334e40c2c",
       "kind": "original_fig_captured_ally_empty_medium_dismissal",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -76,7 +76,7 @@
     },
     {
       "path": "scripts/fig-ally-evasion-rgb-reference.json",
-      "sha256": "fa2af3ac19e7c07f04649b7dec56472fc23c412b43731c9988e35505ed5936b4",
+      "sha256": "f0ec304a91792bfa1c8cd522d78f80d9a452c452c23f012a013d8521dc8ffae8",
       "kind": "original_fig_captured_ally_physical_evasion",
       "registered_rgb_pairs": 3,
       "exact_rgb_pages": 3,
@@ -85,7 +85,7 @@
     },
     {
       "path": "scripts/fig-ally-flee-rgb-reference.json",
-      "sha256": "d37342295f71266ee515a73448dcf1d5b95ce9b044f9013dd6426efa3ae23fb5",
+      "sha256": "1d866ed0f124bbd7026603e7c968cdd7b95984e61b620f987214995982521d90",
       "kind": "original_fig_captured_ally_departure",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -94,7 +94,7 @@
     },
     {
       "path": "scripts/fig-ally-hit-rgb-reference.json",
-      "sha256": "62cae256d58307819624f28dee7c41d587f911e94cd5fbade58b8dd24c81b640",
+      "sha256": "0ab07543004f11201ab2e70ce4dc72d942051cc19cb120a99f5083fb3a3120b2",
       "kind": "original_fig_captured_ally_lethal_physical_hit",
       "registered_rgb_pairs": 14,
       "exact_rgb_pages": 14,
@@ -103,7 +103,7 @@
     },
     {
       "path": "scripts/fig-ally-hit-survives-rgb-reference.json",
-      "sha256": "3af82e1c166a7f99b3ed766a3692862a09df89b3edbad72f1e00e68c996f9c19",
+      "sha256": "6fc3acb530b069ac67291d5599e56e2156782c22b421af3de1d9c9ee260d6a22",
       "kind": "original_fig_captured_ally_nonlethal_physical_hit",
       "registered_rgb_pairs": 17,
       "exact_rgb_pages": 17,
@@ -112,7 +112,7 @@
     },
     {
       "path": "scripts/fig-ally-medium-dismiss-rgb-reference.json",
-      "sha256": "9a1e73906c10a0348834cc3efa818a5295244dd920a82088efaee6dbb7531a58",
+      "sha256": "0b55442525f765c76d71ab18bc919ce563c17173ee58f2d46db7a298bd04370c",
       "kind": "original_fig_captured_ally_medium_dismissal",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
@@ -121,7 +121,7 @@
     },
     {
       "path": "scripts/fig-ally-medium-rgb-reference.json",
-      "sha256": "e76364b3c19ddcb1f2422cd7e7b9cef243add6a5756ac9a970472d001469e6cf",
+      "sha256": "5e9010fca1d5e9c9a33a2c2af35f4a9a065b207b677dc5f8952bb5f1e294e9c2",
       "kind": "original_fig_captured_ally_medium_install",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -130,7 +130,7 @@
     },
     {
       "path": "scripts/fig-ally-multitarget-rgb-reference.json",
-      "sha256": "4149ccf3c1dcb93e759b3c80c431d477bf095ab31af4f50cb30607e71c0003a4",
+      "sha256": "91696fe44ede45a63c2711148a382f97e0cef24b78d01e82f5b27d97e4c41cae",
       "kind": "original_fig_captured_ally_multitarget_ability",
       "registered_rgb_pairs": 37,
       "exact_rgb_pages": 37,
@@ -139,7 +139,7 @@
     },
     {
       "path": "scripts/fig-ally-special-ability-rgb-reference.json",
-      "sha256": "391dd2647cfa3954048d2122a2bcd245c9677f619b41164791acbb55a55f0871",
+      "sha256": "685ef34875bc417728460c4493b929fba61aaa0f0e99bb79450fea629021f4b8",
       "kind": "original_fig_captured_ally_special_ability",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
@@ -148,7 +148,7 @@
     },
     {
       "path": "scripts/fig-ally-zero-rgb-reference.json",
-      "sha256": "a785dc0040544c70554e55fcc569a4f33d4ab23670a14ea3da39b5db39eefc0c",
+      "sha256": "8aed9039315110e660be9a0615a70bb652a13385b5427924caa9d923ea27036b",
       "kind": "original_fig_captured_ally_zero_physical",
       "registered_rgb_pairs": 57,
       "exact_rgb_pages": 57,
@@ -157,7 +157,7 @@
     },
     {
       "path": "scripts/fig-capture-reward-rgb-reference.json",
-      "sha256": "09e044bd27d3d9dff784f96c79d2c86bd08b368140495194c0bb39497977c67b",
+      "sha256": "109e3a12ac1a442bf089ba5eee076ab0ddb085c0aaac425faefcbc7b8888afb6",
       "kind": "original_fig_encounter_capture_reward",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
@@ -184,7 +184,7 @@
     },
     {
       "path": "scripts/fig-flagged-medium-rgb-reference.json",
-      "sha256": "f993c2630491ec411349e9de5b274c48418f94bf4d0b363d40043c08a0a3372b",
+      "sha256": "276e472811bd5ef5fc90f57e51b765aa34aa8d5441dea43cdcf33e87d5d1db35",
       "kind": "original_fig_flagged_medium",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -202,7 +202,7 @@
     },
     {
       "path": "scripts/fig-item-barrier-rgb-reference.json",
-      "sha256": "ddbb28dbf933da8e4e4069eea41b9adad816262d0310e7d54dfce2ed81d7eab7",
+      "sha256": "b1495a37a1d4e810e8deacbcf31d81e5c1447b5e0153f145f3c69a776ae12a3d",
       "kind": "original_fig_direct_item_barrier",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -211,7 +211,7 @@
     },
     {
       "path": "scripts/fig-item-composite-media-rgb-reference.json",
-      "sha256": "49468d57c190cacfd8a6abec09eb2b56998c58f16bfa102c838a9cd131567ce2",
+      "sha256": "34ec6ca72419b1401641e0c420c60fa484600936fcd5c81f46085887447cb5d4",
       "kind": "original_fig_type10_composite_media_item",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -220,7 +220,7 @@
     },
     {
       "path": "scripts/fig-item-composite-rgb-reference.json",
-      "sha256": "2f794b650826e4fcd625c7a49e8eff329e9772b2e369fcf1f286d5082c64ea7e",
+      "sha256": "95a4539c4d504ccf91a2e41032c30ceebb3787212bb8fe03a8b47eda015a54ae",
       "kind": "original_fig_type10_composite_item",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 5,
@@ -229,7 +229,7 @@
     },
     {
       "path": "scripts/fig-item-composite-support-rgb-reference.json",
-      "sha256": "309f721733896538f70e5a99eb7e6922c11aa0a3f34915718dd4ddeae0753f33",
+      "sha256": "894bee3b534d9eae8a8665d74c904e8fff9967b5c0f4b0bae6c3c17216022807",
       "kind": "original_fig_type10_composite_support_item",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -238,7 +238,7 @@
     },
     {
       "path": "scripts/fig-item-damage-rgb-reference.json",
-      "sha256": "790c1bf5a20357f125941aac88f1428fac14db72f6f3148c6daffc3cb823e4c0",
+      "sha256": "e2e7916d5bc98ab204b15a4289ecbe6077f6976ed0c104df0ee2a938653ae106",
       "kind": "original_fig_direct_item_damage_dispatcher",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 10,
@@ -247,7 +247,7 @@
     },
     {
       "path": "scripts/fig-item-dispel-rgb-reference.json",
-      "sha256": "38acff3fa18286b50dd8f03b81e201a3de9e9db90cb242ba32c230454deaa3a0",
+      "sha256": "0d17ac993f27883f5044141e1951119c8a517e64dad20e1233f49e1ee0af88e3",
       "kind": "original_fig_item_dispel",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 13,
@@ -256,7 +256,7 @@
     },
     {
       "path": "scripts/fig-item-effect47-escape-rgb-reference.json",
-      "sha256": "0e46c23cc31ef2e21e89d0b40d15ab1c9cebeb98195d3aa68c31a5394529d628",
+      "sha256": "4fcbf6e6852d1dce54dd13f70a89f38b69a9e80a480d9d705ad8476f83948bb5",
       "kind": "original_fig_item_effect47_escape",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -265,7 +265,7 @@
     },
     {
       "path": "scripts/fig-item-effect47-fixed-rgb-reference.json",
-      "sha256": "04bbb635da77f1016086276c99cd3f67ff72d82859b481d490ce8a015ed8f43e",
+      "sha256": "168cacf29afc70a8fc5fd6934a50ad5dd58eb8dddb5c9871c25b4559a083086e",
       "kind": "original_fig_item_effect47_fixed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -274,7 +274,7 @@
     },
     {
       "path": "scripts/fig-item-monster-status-rgb-reference.json",
-      "sha256": "b3f161b17d40be2f3d3a859e940876816b7e513d71feeebf1000e88097846c14",
+      "sha256": "73ccd3b9a44d6ee6ea1dbc09995889f79f4a1fe6b47a6ad46dc736abbaf3ed00",
       "kind": "original_fig_direct_item_monster_status",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 11,
@@ -292,7 +292,7 @@
     },
     {
       "path": "scripts/fig-item-status-rgb-reference.json",
-      "sha256": "78641520c8c43fd458f3cdbd4efd475957d1e08cc1ade8e2d0a8a56e0ab5df42",
+      "sha256": "0f4a94efa176b9c788f1198c5a2f491129cf6c7932bbd77c0f591b453c2a14d7",
       "kind": "original_fig_direct_item_status_paths",
       "registered_rgb_pairs": 12,
       "exact_rgb_pages": 12,
@@ -301,7 +301,7 @@
     },
     {
       "path": "scripts/fig-item-support-class5-rgb-reference.json",
-      "sha256": "2ee902e6cec96c8f254c6cf4dc980903bf3adbd46bcbf355b2c9f88c29762be4",
+      "sha256": "cac6ba15a5bfe7014cbef5461fe6f7fae2fa98ee14e1ee14b588a6baf5441204",
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -310,7 +310,7 @@
     },
     {
       "path": "scripts/fig-item-support-class5-selector-rgb-reference.json",
-      "sha256": "807c816954253cb452ddc9ca989317ea8fe6c610e7a6bbbfd56950ace644e544",
+      "sha256": "62f0d67040e3c25d6b8c85f119381505116e47c333cc859e4d30ba1362685be8",
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -319,7 +319,7 @@
     },
     {
       "path": "scripts/fig-item-support-dispatch-rgb-reference.json",
-      "sha256": "1a65ce5900b79a8c456edc5e881b0c3964cf633c3bfed9ae201b3c5b2ddd1669",
+      "sha256": "afc8a6377bec36864730de7deff7dd5c663ff946886ec2bb257790b8921f9634",
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -328,7 +328,7 @@
     },
     {
       "path": "scripts/fig-item-support-rgb-reference.json",
-      "sha256": "770147563add410dfc1a1670b84281b4d0cd847ca7edd990bc1fcfcb4b63db13",
+      "sha256": "417150ec0c6e04f45feea50ee842c5ee0840845fd66eeec04263fa7387e5d14a",
       "kind": "original_fig_direct_item_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -337,7 +337,7 @@
     },
     {
       "path": "scripts/fig-learned-empty-medium-rgb-reference.json",
-      "sha256": "85954433c2b92e488bfd4b82e2b806755e97a955fa576d2a35e79c909d7487f0",
+      "sha256": "5511ec41a2e74f4cfb05495950c1f73d8ce3dafc343007f485a5f8c3dacca242",
       "kind": "original_fig_learned_empty_medium_dismissal",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -346,7 +346,7 @@
     },
     {
       "path": "scripts/fig-learned-medium-rgb-reference.json",
-      "sha256": "e9b3fdbcb52d39fcd308f75f80ca4bf10b82d0043c622d9ce0d8cd7da4d4f5b2",
+      "sha256": "348ae5ce24619763f938be6a71937e7b984ae24de3cc412009aa0e0b2d923eeb",
       "kind": "original_fig_learned_medium_install_dismiss",
       "registered_rgb_pairs": 12,
       "exact_rgb_pages": 12,
@@ -355,7 +355,7 @@
     },
     {
       "path": "scripts/fig-level-up-rgb-reference.json",
-      "sha256": "996b0b2735a959aad9f9f516d5a6c1da7786fd3d1beeed161d1380dfeece88b3",
+      "sha256": "92604502745e57dfa8e573e68bf9dcfd87c862d57ac6ddac639485775c22f875",
       "kind": "original_fig_level_up_pages",
       "registered_rgb_pairs": 2,
       "exact_rgb_pages": 2,
@@ -364,7 +364,7 @@
     },
     {
       "path": "scripts/fig-medium-dismiss-rgb-reference.json",
-      "sha256": "25ce4dd2271364a37b82c33d5553bb7b74f6fe4e3ffcf73706491c92eec931c1",
+      "sha256": "a950c5d53d609dc4640460aa9d17c05de606ebc8142c8707b48be7c6aedc5ead",
       "kind": "original_fig_medium_summon_dismiss_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -373,7 +373,7 @@
     },
     {
       "path": "scripts/fig-monster-buff-expiry-rgb-reference.json",
-      "sha256": "7cead8a78dd4e62b96201041c3c8d36435c14ece28ad423b13d2a393ab5340b9",
+      "sha256": "b3238fe2f0f951b9d9c7ba5194d10cc667f98f3f97ad5ece7c4037e183336061",
       "kind": "original_fig_monster_buff_expiry",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -382,7 +382,7 @@
     },
     {
       "path": "scripts/fig-monster-escape-failed-rgb-reference.json",
-      "sha256": "87a1d211eb0ea2af3880f1c5d4f498702bf6546698ccc6b027e407bf9d7ead38",
+      "sha256": "9bc25a6aea2460a9a59608eeee790a4fd87349b4a9b69b4f13297f51363914e6",
       "kind": "original_fig_monster_escape_failed_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -391,7 +391,7 @@
     },
     {
       "path": "scripts/fig-monster-first-slot-medium-rgb-reference.json",
-      "sha256": "6dce8b6f42d137c7c48d0f09eb1135e82975f5359876726e59884f8cacc7b84b",
+      "sha256": "199e39ce3dcb0e0dfb396655a04e3137f2090f30ef142549dd206c987e37a52e",
       "kind": "original_fig_first_monster_ae_medium_install",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
@@ -400,7 +400,7 @@
     },
     {
       "path": "scripts/fig-monster-flee-rgb-reference.json",
-      "sha256": "0b15f0e880de897a33fbd2bb757bf07c07f22affde6affc77192cb45b0bf4c2a",
+      "sha256": "45aa536596db47262819e2bfefdc1cb47d3465f3f55a49739734c6fde742b2cf",
       "kind": "original_fig_monster_flee_sequence",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -409,7 +409,7 @@
     },
     {
       "path": "scripts/fig-monster-generic-rgb-reference.json",
-      "sha256": "9b99cb4a1e043a0ccb0afb421b5f792524c310312ae4c3dbb01495e8bac5a042",
+      "sha256": "e6f138562e2e7bfa0197ead280e86d0303751d8860d1207dae0262400dc37d5a",
       "kind": "original_fig_monster_generic_ability_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -418,7 +418,7 @@
     },
     {
       "path": "scripts/fig-monster-heal-rgb-reference.json",
-      "sha256": "e65b553c7cc6606bffdf67a15afd63b5ab57049cc4b876505789957b67c23661",
+      "sha256": "3579250e605d415429362cfdb296a78ab8de96d3cbb7296de1d9e5c9f98907c1",
       "kind": "original_fig_monster_self_heal_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -427,7 +427,7 @@
     },
     {
       "path": "scripts/fig-monster-immunity-rgb-reference.json",
-      "sha256": "f9359a7f0b436ed54f2b712ccbb817a6744ef56125d6e5e35d7eaf7063605236",
+      "sha256": "92bc0962b8d16a519204806e6f9f7929e857b8114c3ef4d4417a4af6ae6ba3d4",
       "kind": "original_fig_monster_immunity",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 13,
@@ -436,7 +436,7 @@
     },
     {
       "path": "scripts/fig-monster-slot-medium-rgb-reference.json",
-      "sha256": "c4b3dd41fdc557c240839710e788ebac0e1b5663b010908795f3c5fd86d975f8",
+      "sha256": "0b57f0736c57ae11eada2f06181631fdec39fd16ca94e68bf915ba990e5d62c6",
       "kind": "original_fig_second_monster_af_medium_install",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
@@ -445,7 +445,7 @@
     },
     {
       "path": "scripts/fig-monster-special-buff-rgb-reference.json",
-      "sha256": "c6c1f46d17df923090db9cac7455bdf5e2578d4ab1c82c04af1e2b8729e4b7b2",
+      "sha256": "111de06a2b3a9735fb2baf7061dd6d145de89cffa12ea60bfc1f03acc103ac61",
       "kind": "original_fig_monster_special_buff_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -454,7 +454,7 @@
     },
     {
       "path": "scripts/fig-monster-special-resistance-rgb-reference.json",
-      "sha256": "4907a9d282e79aebc4dfb07e946495ebedface7b521dbe65286d95c55035faf1",
+      "sha256": "8a78c714f6d086854608f326861e04dbf37cffef4616d27986203b0e5daacae8",
       "kind": "original_fig_monster_special_resistance_sequence",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -463,7 +463,7 @@
     },
     {
       "path": "scripts/fig-monster-special-silent-rgb-reference.json",
-      "sha256": "aa7bc18fbee6d4a7d91f4e90b5565e2b51ad0c9e028a6705e9c293cf95b9a423",
+      "sha256": "c2775a30f63d336218fbc4fff0f5c61b7c67137260327f6280eb1f094ce73711",
       "kind": "original_fig_monster_special_silent_return_sequence",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -472,7 +472,7 @@
     },
     {
       "path": "scripts/fig-monster-special-status-rgb-reference.json",
-      "sha256": "f1d7485d62ec90417e1bec269153d45a4f77eb1f6c8e67d792191a67b981ba36",
+      "sha256": "3be78c4970b90fc9573194d7c34576716035c7ff4255ea1fc86642092074c768",
       "kind": "original_fig_monster_special_status_sequence",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -499,7 +499,7 @@
     },
     {
       "path": "scripts/fig-monster-third-slot-medium-rgb-reference.json",
-      "sha256": "82b35b5b113638191070edd7dba4f9d4ad09c19438217a2f01d3014155c2b041",
+      "sha256": "32b50f52e4d1eae5e5c064809a1232d418fa97f92b640c31653c5daec0c80164",
       "kind": "original_fig_third_monster_b0_medium_install",
       "registered_rgb_pairs": 20,
       "exact_rgb_pages": 20,
@@ -508,7 +508,7 @@
     },
     {
       "path": "scripts/fig-ordinary-attack-rgb-reference.json",
-      "sha256": "ed9f86edec01d5ee82d3015d09993511c29af8315bd6500651fc9b7256470204",
+      "sha256": "f30f0696b69a036633916e029522e1bb2a1d11d8b7618558bf364c9459aa3e83",
       "kind": "original_fig_ordinary_attack_actor_advance",
       "registered_rgb_pairs": 1,
       "exact_rgb_pages": 1,
@@ -526,7 +526,7 @@
     },
     {
       "path": "scripts/fig-player-attack-af-medium-rgb-reference.json",
-      "sha256": "9366c63b179e2863f13446e3d26ff005dbe834e73646b63f2fbe83e9be17257a",
+      "sha256": "231ae36e36ff1b9845bd267f3f1913505616409ed8bd0ac389f6674ca44c1d7f",
       "kind": "original_fig_player_attack_af_medium_install",
       "registered_rgb_pairs": 53,
       "exact_rgb_pages": 53,
@@ -535,7 +535,7 @@
     },
     {
       "path": "scripts/fig-player-attack-b0-medium-rgb-reference.json",
-      "sha256": "797bfbd5191eac796e914c4289cddfa43e463817e54802f8449f7ce23e176cc5",
+      "sha256": "04fd87fae5b25561acd876c900ec06f50f47846c829639c9e295121a16dddd60",
       "kind": "original_fig_player_attack_b0_medium_install",
       "registered_rgb_pairs": 47,
       "exact_rgb_pages": 47,
@@ -544,7 +544,7 @@
     },
     {
       "path": "scripts/fig-player-attack-basic-rgb-reference.json",
-      "sha256": "f4ad1b4f09b897c031d972ea7480d6abe7e5fe98d294aaeb64ec31959c0c81b4",
+      "sha256": "bb8551dace3a52fb978ed8702030421af6939182e7ba28e78bac9206d60f6ade",
       "kind": "original_fig_player_attack_basic",
       "registered_rgb_pairs": 45,
       "exact_rgb_pages": 45,
@@ -553,7 +553,7 @@
     },
     {
       "path": "scripts/fig-player-attack-evaded-rgb-reference.json",
-      "sha256": "ca95558227cb9bad2ab1c49e7e93c750c26f16a1228145d28397e1bb2beea927",
+      "sha256": "eb60a3582eab3a998263167abbd1f2905ebaad64fe6b1468e345581fce196af1",
       "kind": "original_fig_player_attack_evaded",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
@@ -562,7 +562,7 @@
     },
     {
       "path": "scripts/fig-player-attack-flee-failed-rgb-reference.json",
-      "sha256": "0feea18de26c0977de679355fc67016e738346de2e3ef3f81864abe0923445b7",
+      "sha256": "9c33c03dd9c6cbc7f67c50f9eff1235c1b1298e350181b7304d1144d3eb60920",
       "kind": "original_fig_player_attack_flee_failed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -571,7 +571,7 @@
     },
     {
       "path": "scripts/fig-player-attack-flee-rgb-reference.json",
-      "sha256": "f3ae36bd3c79ae5a8c67b8cd1f784f7c76270fab16296cf30f13483fdbc20aa0",
+      "sha256": "0d87d7f578f5b5d7bdf53bbdb5cf51d2f344df5669b7f584175e5f50812c4d06",
       "kind": "original_fig_player_attack_flee",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -580,7 +580,7 @@
     },
     {
       "path": "scripts/fig-player-attack-hit-rgb-reference.json",
-      "sha256": "da6d725ef6d1db825e20b9aa6ae26ce28f40e6737c63b8d939362b76bd86c362",
+      "sha256": "ac3afd4de487213391f549c614907d8f849c2eb32dfbb6e2f9bead488050e79e",
       "kind": "original_fig_player_attack_hit",
       "registered_rgb_pairs": 44,
       "exact_rgb_pages": 44,
@@ -589,7 +589,7 @@
     },
     {
       "path": "scripts/fig-player-attack-medium-rgb-reference.json",
-      "sha256": "00ac8d70d124890c7e38e24afd44c3d17ca64226973e0ce477adbd8e195d3560",
+      "sha256": "bad70257032301983ee4d49a360287dc698fc8ba64561b1615d50136120230a6",
       "kind": "original_fig_player_attack_medium_install",
       "registered_rgb_pairs": 59,
       "exact_rgb_pages": 59,
@@ -598,7 +598,7 @@
     },
     {
       "path": "scripts/fig-player-attack-special-buff-rgb-reference.json",
-      "sha256": "915a5155c468a63b0ba2fc95cdde76f8b9e8b7198658e0934e447c4479b2735d",
+      "sha256": "fa9f9fba0688c296e69f0c24e59dfb99edbabf62bfcd6e2642d022555f636856",
       "kind": "original_fig_player_attack_special_buff",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -607,7 +607,7 @@
     },
     {
       "path": "scripts/fig-player-attack-special-resisted-rgb-reference.json",
-      "sha256": "33eebfb1a13b3c61b2341f7fb9df1431bdf704f44a683d54c52ef8f0b0a8c6df",
+      "sha256": "2341800f82f01552a033e875045557eb1da55fc81972c39a2973e300c4b3dd21",
       "kind": "original_fig_player_attack_special_resisted",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -616,7 +616,7 @@
     },
     {
       "path": "scripts/fig-player-attack-special-silent-rgb-reference.json",
-      "sha256": "a1628a61ad1ff8ed45656dfeb826988eb8edb386c1c290f197045e17f0a5e910",
+      "sha256": "5be05ee8ce484096428dbab664c02a65f082f99895a3ec42086b8c7276b8d39d",
       "kind": "original_fig_player_attack_special_silent",
       "registered_rgb_pairs": 26,
       "exact_rgb_pages": 26,
@@ -625,7 +625,7 @@
     },
     {
       "path": "scripts/fig-player-attack-special-status-rgb-reference.json",
-      "sha256": "629249ec7175d2295a3e21e773f5bd2509d9585367c36587f7dc56ea3e680597",
+      "sha256": "e59fbf5bd03cc7da7c930914bc8da65e16c420076f539822ab9426be1298b8c0",
       "kind": "original_fig_player_attack_special_status",
       "registered_rgb_pairs": 30,
       "exact_rgb_pages": 30,
@@ -634,7 +634,7 @@
     },
     {
       "path": "scripts/fig-player-attack-zero-rgb-reference.json",
-      "sha256": "555fb16836c8368c43d050475f5ad9929b9c99f12a81dd67c9eae1b1a09a27dc",
+      "sha256": "b0944dc011b3bb97e9bf3e55f54bb8f68de8082c59f265687bbcd6b57bcce19f",
       "kind": "original_fig_player_attack_zero",
       "registered_rgb_pairs": 46,
       "exact_rgb_pages": 46,
@@ -643,7 +643,7 @@
     },
     {
       "path": "scripts/fig-player-barrier-rgb-reference.json",
-      "sha256": "18224a71f9c2858df54b21b4923b4da17d7ce3d213e7545bb00d3645a3bff40d",
+      "sha256": "2ceb88c26e88e0937b05e903591fdcf86f27b94c02a6117f7a053896320c0a26",
       "kind": "original_fig_player_barrier",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
@@ -652,7 +652,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-af-rgb-reference.json",
-      "sha256": "fac63344b8ca301112efde4249ac36bacf9d14cf5c1d684fcb36757bb344f2df",
+      "sha256": "5d7d3b0a379f0b938f8260f7612491c4841a39ee157a426dbb78573edde31a05",
       "kind": "original_fig_player_buff_expiry_after_learned_af_install",
       "registered_rgb_pairs": 56,
       "exact_rgb_pages": 56,
@@ -661,7 +661,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-b0-rgb-reference.json",
-      "sha256": "5151d043e829ec47f665e2ccec5791c938e090453533d34ecd285f68b08f0993",
+      "sha256": "fb6aa1f9b2621046ba5bacb53ae9bb743d90dfc8b8eb1f2a47fcca54ff642fba",
       "kind": "original_fig_player_buff_expiry_after_learned_b0_install",
       "registered_rgb_pairs": 53,
       "exact_rgb_pages": 53,
@@ -670,7 +670,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-composite-damage-rgb-reference.json",
-      "sha256": "fc578ec00b094351c8e7049ca4006327e27199fa719512e502fc107166f3b47e",
+      "sha256": "addc6bdcb9a3d94eadb9b3b295d3e0586c04261153ebd00239f110f392a4ca1d",
       "kind": "original_fig_player_buff_expiry_after_ability_composite_damage",
       "registered_rgb_pairs": 69,
       "exact_rgb_pages": 69,
@@ -679,7 +679,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-composite-missing-media-rgb-reference.json",
-      "sha256": "7d286e86336a314027b96409b0054ca50a37a2a39271977eea8f9a8162ff0575",
+      "sha256": "b5f4faa3797e6e77493148c21ddd0c5218a17b2f11c0d848c2c6545e2382af27",
       "kind": "original_fig_player_buff_expiry_after_ability_composite_missing_media",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -688,7 +688,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-composite-status-damage-rgb-reference.json",
-      "sha256": "c0b7035a428bd6fe32b47b693c30488bebd64f4614916f0ad8f3b3148d384d76",
+      "sha256": "acb44c3a6b5d9403fa42d2644840bdb2838b621458a43284e89b0cb514612f24",
       "kind": "original_fig_player_buff_expiry_after_ability_composite_status_damage",
       "registered_rgb_pairs": 58,
       "exact_rgb_pages": 58,
@@ -697,7 +697,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-dismiss-af-rgb-reference.json",
-      "sha256": "d03f6f5e43ae3d4776e8d5082b01fa8c7b16e87ec5775db213dc66c6365cb071",
+      "sha256": "438275f7560139400c772bcfb3aa776b9254b67934d16fb4f37242ca396de621",
       "kind": "original_fig_player_buff_expiry_after_learned_af_dismissal",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
@@ -706,7 +706,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-dismiss-b0-rgb-reference.json",
-      "sha256": "a853bd71a49f66886873d4175b057503c4047a6cb06646e0014f604e46b571aa",
+      "sha256": "6367cd55ed462c6fd8894f5279bea579623305e8931838600855ec0222e8206f",
       "kind": "original_fig_player_buff_expiry_after_learned_b0_dismissal",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
@@ -715,7 +715,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-dismiss-medium-rgb-reference.json",
-      "sha256": "c39ea97cbf015fb080592aa5a071672b21732c614dc85fc161c27c9c774722f2",
+      "sha256": "48632b89cdbc3f07f9a13a7e65d731441dc4339ad0041c6fe2adebce237a6926",
       "kind": "original_fig_player_buff_expiry_after_learned_medium_dismissal",
       "registered_rgb_pairs": 36,
       "exact_rgb_pages": 36,
@@ -724,7 +724,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-empty-af-rgb-reference.json",
-      "sha256": "5aad9658b48c78eec1254a32e7e03f6d01e148a8c6beca9f724a7b69a14e2cb1",
+      "sha256": "d1d1c6e11da6b1bc02a7b2da06ffeddb29bda5580ab90706728bfafaabd4e139",
       "kind": "original_fig_player_buff_expiry_after_empty_af_medium_dismissal",
       "registered_rgb_pairs": 29,
       "exact_rgb_pages": 29,
@@ -733,7 +733,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-empty-b0-rgb-reference.json",
-      "sha256": "0eb608e68b8bbb08518f729d9fa8120b2df75021385d9d2fd501062c117efc91",
+      "sha256": "54b43c3817ba7214d49755763e841b512aab2d15badcf759a2caf05d07e57242",
       "kind": "original_fig_player_buff_expiry_after_empty_b0_medium_dismissal",
       "registered_rgb_pairs": 29,
       "exact_rgb_pages": 29,
@@ -742,7 +742,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-empty-medium-rgb-reference.json",
-      "sha256": "50e804b7ec089224a89258a14e86e245dc24f77a7a2e82ca192d45f12712bb37",
+      "sha256": "42922faccd4e523ebfda0a77003e9d5e4a9be1b57c45d7f6db2fefd883d922bb",
       "kind": "original_fig_player_buff_expiry_after_empty_medium_dismissal",
       "registered_rgb_pairs": 29,
       "exact_rgb_pages": 29,
@@ -751,7 +751,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-medium-rgb-reference.json",
-      "sha256": "86ac6e3c39dbccf72dc66add8511fb1525b5f009416251260cf0daf5d28b8c96",
+      "sha256": "3398f8ae9eab64b094382529541c81eb97c80bae77f139c25e976d58037c8de6",
       "kind": "original_fig_player_buff_expiry_after_learned_medium_install",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
@@ -760,7 +760,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-resisted-rgb-reference.json",
-      "sha256": "2d28a43abea45343822f4e13b91ad091d8ac645e31bf474db5162d864247d0d8",
+      "sha256": "27296cbc7f8c621820a227f72bd32975ac34a785efd9a28ea661f445a30f1ff4",
       "kind": "original_fig_player_buff_expiry_after_resisted_ability",
       "registered_rgb_pairs": 24,
       "exact_rgb_pages": 24,
@@ -769,7 +769,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-ability-rgb-reference.json",
-      "sha256": "05642669e8243a8c6317ee1d401d33fd07fe878479c708e8aeb8b97f61ac1a0f",
+      "sha256": "2965d04a6d1b7bf67d7cc3596cb89f0728a944a631964625c4d73be68379f241",
       "kind": "original_fig_player_buff_expiry_after_ability",
       "registered_rgb_pairs": 4,
       "exact_rgb_pages": 4,
@@ -778,7 +778,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-capture-rgb-reference.json",
-      "sha256": "8a719ccf12743435324e8c0468470a6db34e9f82ced118efdef95a99e76a1ae4",
+      "sha256": "6c555d355e1f3310424c26c9e992b5f13cd270dcbdf4cacc9146ead12335527a",
       "kind": "original_fig_player_buff_expiry_after_capture_failure",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
@@ -787,7 +787,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-capture-success-rgb-reference.json",
-      "sha256": "de7a0faac194408dd04f1add8424c844838a2348849391234a428ad8b6c1accc",
+      "sha256": "64bc87f3a0e13dc38998c13f418db1004f0c3ab146079ac1278af373253f52ab",
       "kind": "original_fig_player_buff_expiry_after_capture_success",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -796,7 +796,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-escape-rgb-reference.json",
-      "sha256": "748e6b019f4afdd8b7df2fcfe5d3087e57aa145d23fe09fd81e895480af46d22",
+      "sha256": "8a63c4c38c3546a54385145aff2556e06fef9013333fc7b34ddb1c1d8c9e5e46",
       "kind": "original_fig_player_buff_expiry_after_escape_failure",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
@@ -805,7 +805,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-af-rgb-reference.json",
-      "sha256": "a942a2ac68ea472f745d420a902a813622b716a85b644fda7180cc280cedca3c",
+      "sha256": "e8b6e5f2f46626f02fb659586e152f695bb293cdd9b15f3b1277db22699b388d",
       "kind": "original_fig_player_buff_expiry_after_item_af_install",
       "registered_rgb_pairs": 54,
       "exact_rgb_pages": 54,
@@ -814,7 +814,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-b0-rgb-reference.json",
-      "sha256": "b276e12582a2f2c34b9a797993ebed545cdbd28f157f0cc0a96efac3f3f75fc3",
+      "sha256": "49db3618a35af21f4308671947191f2fa403d2acbc99c2df6bf5226062d79f90",
       "kind": "original_fig_player_buff_expiry_after_item_b0_install",
       "registered_rgb_pairs": 47,
       "exact_rgb_pages": 47,
@@ -823,7 +823,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-barrier-rgb-reference.json",
-      "sha256": "f4170bd3305d5d218a3f17c5e0ffd399ef9e09af45ede7c303c49c8d08b8da24",
+      "sha256": "c5038a8ed283c511e52c151b05ae89297d3dcbe40e5dacc8ff009542af841a0f",
       "kind": "original_fig_player_buff_expiry_after_item_barrier",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -832,7 +832,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-af-b0-media-rgb-reference.json",
-      "sha256": "37c9b1b3f6c6e5cbb937914bf73b38c99ae58d3e085d5b33734891190c0ee552",
+      "sha256": "ade261b4e507a9903830202d8996d0b4a9e6329d3c3e8068f8be4d9f2075dbd4",
       "kind": "original_fig_player_buff_expiry_after_item_composite_af_b0_media",
       "registered_rgb_pairs": 84,
       "exact_rgb_pages": 79,
@@ -841,7 +841,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-damage-missing-af-rgb-reference.json",
-      "sha256": "8d5b63f4a6a40f5c2ea825c7fe623f6ded6709b67ca679ff7bc775d1a85bac66",
+      "sha256": "c8471b28c8c917ed5f6866db0b164fe404ae9702ec649a55593501f2e2246665",
       "kind": "original_fig_player_buff_expiry_after_item_composite_damage_missing_af",
       "registered_rgb_pairs": 56,
       "exact_rgb_pages": 56,
@@ -850,7 +850,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-damage-rgb-reference.json",
-      "sha256": "fe6cd54e2acd8bf0c5789011720efe2d046bc3e214dae1b0d0fcbea13d46a8a2",
+      "sha256": "a9c2c24b812b859a3176181d0ddc4819bb61a58a87c4f35712e3c123e1a916ca",
       "kind": "original_fig_player_buff_expiry_after_item_composite_damage",
       "registered_rgb_pairs": 67,
       "exact_rgb_pages": 48,
@@ -859,7 +859,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-media-rgb-reference.json",
-      "sha256": "11ea8b64bfb6b46019b742e814d39f67671f4e2deea7db6ffe3422011f66c705",
+      "sha256": "9d105624bc676fefec71ea092142dde38577802f6d20084ff1e735d956dcf0a1",
       "kind": "original_fig_player_buff_expiry_after_item_composite_media",
       "registered_rgb_pairs": 71,
       "exact_rgb_pages": 71,
@@ -868,7 +868,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-missing-af-b0-rgb-reference.json",
-      "sha256": "aef5d5509182f69d89f7240fd67f3c02542f35cf261d0facad3dda8be02eb80f",
+      "sha256": "37abd99918dc3ed22c88eae8112ab7a1b320fe16ae242a6b44643980d1790b78",
       "kind": "original_fig_player_buff_expiry_after_item_composite_missing_af_b0",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
@@ -877,7 +877,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-missing-media-rgb-reference.json",
-      "sha256": "f65515a3bca7c366d943ad794789e9afcbcef653e501f9ff89c89cc02bb52a62",
+      "sha256": "7a8cb969c943cddd049c687a014e9572cdfb163799b2867203e1baab0694ef27",
       "kind": "original_fig_player_buff_expiry_after_item_composite_missing_media",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 10,
@@ -886,7 +886,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-reversed-media-rgb-reference.json",
-      "sha256": "67a2219566c96e3039a146de6f57bb18adc93cc0617a6da532dd2e343e3ef000",
+      "sha256": "966b8de4842024f234daaf15cf86c86e70c0132c10e9d9185721608796908f04",
       "kind": "original_fig_player_buff_expiry_after_item_composite_reversed_media",
       "registered_rgb_pairs": 80,
       "exact_rgb_pages": 75,
@@ -895,7 +895,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-status-damage-rgb-reference.json",
-      "sha256": "06da65a56af4fad33695fbea7fb38b8f719a527d465b6e6a3800f34bd0107810",
+      "sha256": "7e1e9bee0bf50f886ab50d334edb452c5e6144f9fe5f1aa97041d76a714d583b",
       "kind": "original_fig_player_buff_expiry_after_item_composite_status_damage",
       "registered_rgb_pairs": 57,
       "exact_rgb_pages": 52,
@@ -904,7 +904,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-support-rgb-reference.json",
-      "sha256": "5aa4b03b315793d26c8f231043bed1d4a9adacdf3a8a0d748717803171651427",
+      "sha256": "842f8d77e4a15d77c860d60bd0db088eaeaad6494b5802fe4032d2a1dc0f71ae",
       "kind": "original_fig_player_buff_expiry_after_item_composite_support",
       "registered_rgb_pairs": 29,
       "exact_rgb_pages": 29,
@@ -913,7 +913,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-targetless-damage-rgb-reference.json",
-      "sha256": "c4dd54f2781f150a95a37c876fe4602c22d2d27a34f16d7717686d4e3ce70c31",
+      "sha256": "b1d629f9819037967c07a88542928c6a9412a620e44b663ca7a6d10d764a6cd4",
       "kind": "original_fig_player_buff_expiry_after_item_composite_targetless_damage",
       "registered_rgb_pairs": 74,
       "exact_rgb_pages": 74,
@@ -922,7 +922,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-composite-targetless-status-rgb-reference.json",
-      "sha256": "685637ceb08c84c51c42f299c3e22ef3206e810cebe744793811e17c9bf32ffa",
+      "sha256": "a93662b7b678f5f1a9d54e507100a41120d2be81a42bf4edca55163eaa863c20",
       "kind": "original_fig_player_buff_expiry_after_item_composite_targetless_status",
       "registered_rgb_pairs": 65,
       "exact_rgb_pages": 65,
@@ -931,7 +931,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-dismiss-af-rgb-reference.json",
-      "sha256": "75c53e17f30dd3ee997122cadd8878ed85740d4bdb18b39ede0d73baf1c1edec",
+      "sha256": "4b81dac6774609a33a7875820d1969cdb058168264be1e1fcd71d65aab1da482",
       "kind": "original_fig_player_buff_expiry_after_item_af_dismissal",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
@@ -940,7 +940,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-dismiss-b0-rgb-reference.json",
-      "sha256": "3856988ead209550584c9cba3f6b7689258f6e6fabc94cb1c944611fcfd5f978",
+      "sha256": "f89ff4ba1e42c5e496c0f47226084f0c1c94f72838bc62a2678aa435bf2c1ddf",
       "kind": "original_fig_player_buff_expiry_after_item_b0_dismissal",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
@@ -949,7 +949,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-dismiss-medium-rgb-reference.json",
-      "sha256": "feae3fa09f991b5058f20e203fe1142b9cbde2b861ab51bc3f49218a95e19276",
+      "sha256": "32d469e3f796d848bf96988f4888414a5eaed5b31f4dfd4670cd60bed2443194",
       "kind": "original_fig_player_buff_expiry_after_item_medium_dismissal",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -958,7 +958,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-dispel-rgb-reference.json",
-      "sha256": "02b997e93216a500422f74fcadb4e99a556702b38150c8ca0a683f0e1808c94a",
+      "sha256": "b5180c5dbcf52e1a5bf34aae3dd953498fcb7327b36ddc72ac2d45093e116278",
       "kind": "original_fig_player_buff_expiry_after_item_dispel",
       "registered_rgb_pairs": 13,
       "exact_rgb_pages": 13,
@@ -967,7 +967,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-empty-af-rgb-reference.json",
-      "sha256": "5d7f8cf27650b3156502e3791a0a209fa7d94c2b89a4127842e5c65819dff053",
+      "sha256": "846b6d0d5cafd62536e68795d1f818762174d5e6d24d1e0700d2202b73b2b9fb",
       "kind": "original_fig_player_buff_expiry_after_empty_af_medium_item",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
@@ -976,7 +976,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-empty-b0-rgb-reference.json",
-      "sha256": "df5e6f864c383c5c46fa9037c8b118f52f57265fadcecd031c1fb1505ecc764d",
+      "sha256": "b2373806bfb5afa458776ff319827a612b7e7c521fcde4fb3c22bf3b3e616c43",
       "kind": "original_fig_player_buff_expiry_after_empty_b0_medium_item",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
@@ -985,7 +985,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-empty-medium-rgb-reference.json",
-      "sha256": "f41970fe5505a6a6b0244377511bf2a47c9618d4e32929b3ca9fc69b8ff7c110",
+      "sha256": "afb2c289925a8e6b39090c3eacd6ab3044c8ab363e6e928a9ec645020b8f103c",
       "kind": "original_fig_player_buff_expiry_after_empty_medium_item",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
@@ -994,7 +994,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-medium-rgb-reference.json",
-      "sha256": "f59aff48cd762cee7c157e36054e8fa737754d9874fb0f744697bff79a0e54db",
+      "sha256": "82178d7fdbf6e82ae4ab4adcc4c587969dd7f2459682b37b1431ce00a9340e60",
       "kind": "original_fig_player_buff_expiry_after_item_medium_install",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
@@ -1003,7 +1003,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-missing-medium-rgb-reference.json",
-      "sha256": "3d5e016abf4b5bfb6a9351e756c24fb65e9ad4fba5356fa938e67cecaa48006b",
+      "sha256": "7477edaf6edbf8ee5bb612069312de58f9e7d8b8bbc723134c2df5b66ec36b5f",
       "kind": "original_fig_player_buff_expiry_after_item_missing_medium",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 6,
@@ -1012,7 +1012,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-rgb-reference.json",
-      "sha256": "fc92bcb67351476da74bc2500d70ef531ad0b33fc18f3c0b963465225b7f9fcf",
+      "sha256": "d4298f154cc6a122b2a77c3c780a12d8ad711246548f851ee81c8c591789bd1b",
       "kind": "original_fig_player_buff_expiry_after_item",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 3,
@@ -1021,7 +1021,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-status-rgb-reference.json",
-      "sha256": "9f97009b009d6892110910fea4133c5ec9d20992ba8ac72797063d02736f2c1e",
+      "sha256": "1b1d2a96a4e77292f2c121cd4a84f4cfe1bee0788f278309738704a704dd0468",
       "kind": "original_fig_player_buff_expiry_after_item_status",
       "registered_rgb_pairs": 11,
       "exact_rgb_pages": 11,
@@ -1030,7 +1030,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-item-support-rgb-reference.json",
-      "sha256": "8414543207fde56a9fa2b1d3767d1065b45c43af38b8e25eb03fdbd9d125d783",
+      "sha256": "7648366faeb994cc761736beed10c9305051e526339552f6e42f2a42dcf3d578",
       "kind": "original_fig_player_buff_expiry_after_item_support",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
@@ -1039,7 +1039,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-missing-medium-rgb-reference.json",
-      "sha256": "3a6746d2274ee6860141ea83cec83885b6612482a398acf13f23291d7c33f897",
+      "sha256": "cb1dc50f88d13bf0fbaebeeeb6bff69c6aba3384af1e6ef5c252bec18be5890f",
       "kind": "original_fig_player_buff_expiry_after_missing_medium",
       "registered_rgb_pairs": 8,
       "exact_rgb_pages": 8,
@@ -1048,7 +1048,7 @@
     },
     {
       "path": "scripts/fig-player-buff-expiry-rgb-reference.json",
-      "sha256": "52e7b3234c10a8fb88a2304bcdad9fcd1549a06719ce827bf5255c33286d4916",
+      "sha256": "c3725bd87b13810afeab4a5e050dc166aacceb6fda77b96bc52a9bb0de11eaa5",
       "kind": "original_fig_player_buff_expiry",
       "registered_rgb_pairs": 7,
       "exact_rgb_pages": 7,
@@ -1057,7 +1057,7 @@
     },
     {
       "path": "scripts/fig-player-critical-hit-rgb-reference.json",
-      "sha256": "f9a5c1178218c48e5e970b17a986ca5740707f03a8b1ea2dfd4d00a29fbc3ca0",
+      "sha256": "3cf0bcc83953d37374cc505d3f62782db7eea1af7cd2ff33e34498bc6d5bf4c4",
       "kind": "original_fig_player_critical_hit",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
@@ -1066,7 +1066,7 @@
     },
     {
       "path": "scripts/fig-player-critical-rgb-reference.json",
-      "sha256": "9f9f7dc0ee62f0c2d4d3d9b7777a69ee2a83753c8e93f572ded954da33582449",
+      "sha256": "720eb1caca690eae2410d04528bd5bb54a63e87a815a01f4805589cbf9fbdf86",
       "kind": "original_fig_player_critical_attack",
       "registered_rgb_pairs": 17,
       "exact_rgb_pages": 17,
@@ -1084,7 +1084,7 @@
     },
     {
       "path": "scripts/fig-player-dispel-rgb-reference.json",
-      "sha256": "a77d3a75224fa42d1d57bf62e96c43c01a9ceeda1ddc9c3af7192ac5947a86d9",
+      "sha256": "7ab16570213ec54181c1d2f5b0700db142120daab60b563ef5c16034df309ec8",
       "kind": "original_fig_player_dispel",
       "registered_rgb_pairs": 14,
       "exact_rgb_pages": 14,
@@ -1093,7 +1093,7 @@
     },
     {
       "path": "scripts/fig-player-effect32-rgb-reference.json",
-      "sha256": "3cbdc787bab2aef83285aab5ffd80501ed359c359b48b33960fa7cbf3dbfc7ac",
+      "sha256": "4c8949894a25606b7d0cfbcb2b1fb84b7e53d8486df852489c3c1dc53ec7318e",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 62,
       "exact_rgb_pages": 62,
@@ -1102,7 +1102,7 @@
     },
     {
       "path": "scripts/fig-player-effect34-rgb-reference.json",
-      "sha256": "4ca1bebb342fbd9bbd32b7c71b73bada3d50aed24c3bbdfc02c7edfbf0f32a1d",
+      "sha256": "2cf05c983fc7e5f4e59f7054093d13a4dc48fcb38b36fbe7070675cc5a068a99",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
@@ -1111,7 +1111,7 @@
     },
     {
       "path": "scripts/fig-player-effect35-rgb-reference.json",
-      "sha256": "5a3ee93b4b950a812cb95c357d2b325d79399672c310808c1105f7f48dcd248b",
+      "sha256": "e7f3522cdc2c7462e2ec7be8fd9462463a5d987a68d5a4e7f71742b08baac86e",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
@@ -1120,7 +1120,7 @@
     },
     {
       "path": "scripts/fig-player-effect36-rgb-reference.json",
-      "sha256": "3f75c9bf91b4a65c34ed6f2dc617adc9b2d7a921cc5c28a53dc2cb368d4628e8",
+      "sha256": "9fc633016f2d7213fdff82c26ea1eb2c8dba3abdb3b1ecdfed68dfe1e226fc62",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 25,
       "exact_rgb_pages": 25,
@@ -1129,7 +1129,7 @@
     },
     {
       "path": "scripts/fig-player-effect37-rgb-reference.json",
-      "sha256": "112c3c5b51fba756290a6393e5a955cf8e54cf4ae1ff340a7aee49390c04d79b",
+      "sha256": "1d341a8f074df5138cc00dbc6a0fab1df4b33016fadc943b80ef489203c34a00",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
@@ -1138,7 +1138,7 @@
     },
     {
       "path": "scripts/fig-player-effect38-rgb-reference.json",
-      "sha256": "42abf5ee55ab392206839dc08ba89f6f96721dc727daae7fd9970dcebb402221",
+      "sha256": "5dd9e97bcd1ae903b2f0a2f744716409514fb526cb852eef4ce443b28b0bdbc4",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 51,
       "exact_rgb_pages": 51,
@@ -1147,7 +1147,7 @@
     },
     {
       "path": "scripts/fig-player-effect39-rgb-reference.json",
-      "sha256": "ac770e708412f0db6ca0cba716e5c77604bfbd7902bb0697e1a0258be24e6a90",
+      "sha256": "a69b6f3fafc7d6eed108d95899720696e22d95f4a9ea8953dd6d92d84ef57282",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 34,
       "exact_rgb_pages": 34,
@@ -1156,7 +1156,7 @@
     },
     {
       "path": "scripts/fig-player-effect3a-rgb-reference.json",
-      "sha256": "536787bbc8bd183de792d669cd00571abbe831d02155707cae267c099937e63c",
+      "sha256": "d33fa74e6196b09724eaa8672f12f562e0db5ceb5ec062798f27d0b82994f6b9",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 49,
       "exact_rgb_pages": 49,
@@ -1165,7 +1165,7 @@
     },
     {
       "path": "scripts/fig-player-effect40-rgb-reference.json",
-      "sha256": "dab04be4306092d6c5cd7064ade06750786bcfb3cd7a62c65d05f346df2b02aa",
+      "sha256": "7ee36e11709279854b11c7e7d75ba81451b792fe84bf9633647e00222bc2ed95",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 44,
       "exact_rgb_pages": 44,
@@ -1174,7 +1174,7 @@
     },
     {
       "path": "scripts/fig-player-effect41-rgb-reference.json",
-      "sha256": "7e4ee3508136a86e7f5476d29724adc4c0900dcef41089c0899493da3419dbbf",
+      "sha256": "9ec7a305a1e7508df47e32215c8c2eff65d164d9f2abaa591eeace2a15917e58",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 55,
       "exact_rgb_pages": 55,
@@ -1183,7 +1183,7 @@
     },
     {
       "path": "scripts/fig-player-effect42-rgb-reference.json",
-      "sha256": "4ee63ffc5f67b51dd5d7c9c9ab4e600c10c12ea320765a5624a3ed257c572f58",
+      "sha256": "890ed6d77a0268ba10ee45f5c347cfffe5f229de84488a2d97047fb0c7da072f",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 58,
       "exact_rgb_pages": 58,
@@ -1192,7 +1192,7 @@
     },
     {
       "path": "scripts/fig-player-effect43-rgb-reference.json",
-      "sha256": "d96f8cc8462700b2fa07f731788ead981f3a3700c4d4dc92c69c8becde74c74a",
+      "sha256": "1634699bf1448a133912a274b8226bfa0dbf99d3c9d18b983d9ff84afd012478",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 37,
       "exact_rgb_pages": 37,
@@ -1201,7 +1201,7 @@
     },
     {
       "path": "scripts/fig-player-effect44-rgb-reference.json",
-      "sha256": "bf778c9c8999bb3d03097f968f1712ae1a48e1d4bf75f06b3cee1553f93922b8",
+      "sha256": "92a39e56d3cc81337505c1506495fee8b763f76de70f4371b3beb5a6ea53257f",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
@@ -1210,7 +1210,7 @@
     },
     {
       "path": "scripts/fig-player-effect45-rgb-reference.json",
-      "sha256": "04704e557d5cdd82d70f0f7e737564e36a7b2e16438216a08e73dc53109efab1",
+      "sha256": "b3346b56b949f12a283fb050a5ce27c0cf95e6fc9824071192a6bfd644c8f55d",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
@@ -1219,7 +1219,7 @@
     },
     {
       "path": "scripts/fig-player-effect46-rgb-reference.json",
-      "sha256": "623ecbc1b0ac5eba7a8a22e1015e53fb52f3bdb60ed60b3f5b375ec7f6313ed9",
+      "sha256": "7e1bd4fdab28569ebbd62a3338c7956104a836ae17cd7ad192a32d710b021c82",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 42,
       "exact_rgb_pages": 42,
@@ -1228,7 +1228,7 @@
     },
     {
       "path": "scripts/fig-player-effect47-escape-rgb-reference.json",
-      "sha256": "c0a47fc41adf81d913538a8ee7ccfcb87de6c4d3e2d81cce8e6212c9fb1758ba",
+      "sha256": "334f6fe126cc3149adc3df0f92d47f9aa5da4dbecbe35abb59c323f34762fe32",
       "kind": "original_fig_player_effect47_escape",
       "registered_rgb_pairs": 5,
       "exact_rgb_pages": 5,
@@ -1237,7 +1237,7 @@
     },
     {
       "path": "scripts/fig-player-effect47-fixed-rgb-reference.json",
-      "sha256": "d281bbbd874182620c43edce6a19d9d9a154fce2fc001bc9cb92b2e2abe76d2e",
+      "sha256": "3cfaa216ec4a376aff8eb7fde73a1f74efb9cd845b36cedb6a858b885fe46fcc",
       "kind": "original_fig_player_effect47_fixed",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -1246,7 +1246,7 @@
     },
     {
       "path": "scripts/fig-player-effect48-rgb-reference.json",
-      "sha256": "b35bf85f087fe76828f81d082cad91b7ff5010f199ecb2b03fa617b7cee5f725",
+      "sha256": "8d590c4fbb5913d1924ee0c33f30ddc58a043bd1c7438aea18989b2b3fedc989",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
@@ -1255,7 +1255,7 @@
     },
     {
       "path": "scripts/fig-player-effect49-rgb-reference.json",
-      "sha256": "1032e6e98c40bfc883073a251ee3d75026715090acef5e508568254695c60d8f",
+      "sha256": "8d5101e9ca8304bd0730e252f30810e23ee7de8f6d933644a695d4517d8227fc",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 52,
       "exact_rgb_pages": 52,
@@ -1264,7 +1264,7 @@
     },
     {
       "path": "scripts/fig-player-effect4a-rgb-reference.json",
-      "sha256": "8959dab6a95d2ba7de35460dd920b6ec554342bcae56e2493071414c5c7b10d2",
+      "sha256": "b7c2f20bb90120b849dfb35f9e8f9cb6f4c6e8e1762cfc276a1b0d4d999b9a3f",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 38,
       "exact_rgb_pages": 38,
@@ -1273,7 +1273,7 @@
     },
     {
       "path": "scripts/fig-player-effect4b-kill-rgb-reference.json",
-      "sha256": "6e1545787282eefbb0094403c023f7a0368ac3a41f812ba233d33532ebea5a48",
+      "sha256": "57aca0c6153b02df0d27707c74daaf24433b998d774bb6ab3d5b691dcc3cae0a",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
@@ -1282,7 +1282,7 @@
     },
     {
       "path": "scripts/fig-player-effect4c-rgb-reference.json",
-      "sha256": "53c76f614526a052cf16d811c6a86568916d446d35b616d298a41a2bcca81d6a",
+      "sha256": "53ad2ccb55058b45ac09cfa7be1ecfb7aa02e38a5dc6dcb7d71a6983ed6e3163",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 51,
       "exact_rgb_pages": 51,
@@ -1291,7 +1291,7 @@
     },
     {
       "path": "scripts/fig-player-effect4d-rgb-reference.json",
-      "sha256": "ea770e7a3d31e69e897765a4bd2fea3d0bbffc634c7b075d3c073a5905a435a4",
+      "sha256": "ae2804ad70b5a2cad67a7d07e22ed789491e53225431a2f21452c31f411b4de2",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 48,
       "exact_rgb_pages": 48,
@@ -1300,7 +1300,7 @@
     },
     {
       "path": "scripts/fig-player-effect4e-rgb-reference.json",
-      "sha256": "b3b5604fa9cf5ae589340ecf627b4c1eb6a32ad601d70963d3c2e5714f943dfe",
+      "sha256": "812530dabcba259dd5e05d87c8fdb9dfe0c3a42e99a13c7841997bbb7e61a4f7",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -1309,7 +1309,7 @@
     },
     {
       "path": "scripts/fig-player-effect4f-rgb-reference.json",
-      "sha256": "776879ad2a35990286031e144a665fb0ccc839c3ea4bf437e34708b3f0ee639a",
+      "sha256": "ead3b145670ce3980f9fbbe81f045d6788a6b4a99dfcb03238cddb01769126ec",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 49,
       "exact_rgb_pages": 49,
@@ -1318,7 +1318,7 @@
     },
     {
       "path": "scripts/fig-player-effect50-rgb-reference.json",
-      "sha256": "8356807694917d5226425a3e253c159fd3a44bc0a39814af15404904ef617485",
+      "sha256": "8359abfccf079eaa32e4390c71c47d75ea9fe9ccc775f777cc235a1752882cd0",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
@@ -1327,7 +1327,7 @@
     },
     {
       "path": "scripts/fig-player-effect51-rgb-reference.json",
-      "sha256": "db1047161bf08085e2e79b3b829dcad3ff1fbdd0da77d1a1dcb4858a1ccc18ed",
+      "sha256": "f2ebfce2a7161deb12d71eabdc77f5a242cc13db1bf0d74e5e2bac8aca75c0dc",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 52,
       "exact_rgb_pages": 52,
@@ -1336,7 +1336,7 @@
     },
     {
       "path": "scripts/fig-player-effect52-kill-rgb-reference.json",
-      "sha256": "4cd43f3f65a1db1e038306e4c0790909b25267cb4bd16c27458eb3a384b45765",
+      "sha256": "9850128a9373c8579b2fea01ea36beb58accc8300d4cabc7d5b819fd504f4fc8",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 33,
       "exact_rgb_pages": 33,
@@ -1345,7 +1345,7 @@
     },
     {
       "path": "scripts/fig-player-effect53-rgb-reference.json",
-      "sha256": "e149698bf960e7bffc247dd9df7913bbd4f24bf59725b2cf3409e819ebcbf00e",
+      "sha256": "78d211f56f467a19c3fa9c58166db894a32889069d10627302e5dc3ac7d268dd",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -1354,7 +1354,7 @@
     },
     {
       "path": "scripts/fig-player-effect54-kill-rgb-reference.json",
-      "sha256": "bda8a8ca46bb481125475e343246a3d8e48a9da52e8374495285bbcbe92c0dcc",
+      "sha256": "8f1454079c85390aef98610c3df47cbeb7c8635d0bf107a63fa91edfde9dae12",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
@@ -1363,7 +1363,7 @@
     },
     {
       "path": "scripts/fig-player-effect55-rgb-reference.json",
-      "sha256": "03cef9a1059c22531fb7abc026f408298f62a9553e2464217d8b151e8260f22b",
+      "sha256": "486279e5bc844387f8baac9553cf05c43ee1904edff6347f5532f246aa13a891",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 27,
       "exact_rgb_pages": 27,
@@ -1372,7 +1372,7 @@
     },
     {
       "path": "scripts/fig-player-effect56-kill-rgb-reference.json",
-      "sha256": "3a7fd75c28556ce5f6f744917f9ada910617c2a2f22d74709ed6365104068d78",
+      "sha256": "d88bdf9358a64a0ddba11fc4cda3781278d3ac17fc0a388f91e35fd170bb7ec7",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -1381,7 +1381,7 @@
     },
     {
       "path": "scripts/fig-player-effect57-kill-rgb-reference.json",
-      "sha256": "c600edf2d8fb9847b37796da57c41334d9396ce91dad3e4364aba6994f76ab8c",
+      "sha256": "47ed5959432e1323d42139a9306959ef17203ae2835ad408029f6df4f764f015",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -1390,7 +1390,7 @@
     },
     {
       "path": "scripts/fig-player-effect58-kill-rgb-reference.json",
-      "sha256": "b54edbc17cb9e5573ffd819ef17a12d8aa1a0839c90760d15714ab9f1993b3de",
+      "sha256": "3430102412a5ad0f569e9cf3fc6b6ada36eec3ef96a95c217b6954527d957eed",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 30,
       "exact_rgb_pages": 30,
@@ -1399,7 +1399,7 @@
     },
     {
       "path": "scripts/fig-player-effect59-kill-rgb-reference.json",
-      "sha256": "e80bf7fe7ab0b09aceeca15e4a018db5c65d3a7bfe75ff0220dc12c9cd66bf31",
+      "sha256": "98b9ee95b3b2705d6b3a01379e2014be4b650cce5ff9d04b736b51428d433806",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 35,
       "exact_rgb_pages": 35,
@@ -1408,7 +1408,7 @@
     },
     {
       "path": "scripts/fig-player-effect5a-rgb-reference.json",
-      "sha256": "8a454b90396dd2e9d3cce800014fcbb21b3f7e203236fddd9df49c1cc5b00d4a",
+      "sha256": "b98122d19096bce72b6ba4ae0f81e4cb8eac4e42bfd714efc3f0b1f2a9f80cc2",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 50,
       "exact_rgb_pages": 50,
@@ -1417,7 +1417,7 @@
     },
     {
       "path": "scripts/fig-player-effect5b-kill-rgb-reference.json",
-      "sha256": "f8b4fde54b50298f3fb3002b420698281efe5e8df5bed469519275a99ab28a38",
+      "sha256": "48e2b0ec801d8e82a021eb3b6f70226b927c444f326c9e372699742958d88bbb",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 28,
       "exact_rgb_pages": 28,
@@ -1426,7 +1426,7 @@
     },
     {
       "path": "scripts/fig-player-effect5c-kill-rgb-reference.json",
-      "sha256": "2939714aed5fb55f22f9b34fde039fee724b0e73043d09cafb905a16221b7bba",
+      "sha256": "29d60ab44afb8463bca2c5a9aa7f0e52e7c645161f2c9f8686cfafcc1fc2825c",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -1435,7 +1435,7 @@
     },
     {
       "path": "scripts/fig-player-effect5d-kill-rgb-reference.json",
-      "sha256": "dfea22e78f12ce9017b901511829bb7714d4cd59bc5fdcf7b061b0ca31ed29c0",
+      "sha256": "e33850760820e34c3a834cf8fb753c5aaa944730305887c7d12c6764c94b7ddc",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 38,
       "exact_rgb_pages": 38,
@@ -1444,7 +1444,7 @@
     },
     {
       "path": "scripts/fig-player-effect5e-resistance-rgb-reference.json",
-      "sha256": "e026a48fca55f2f7de2b8a5de3c5055bc76fc3a151cf1f0bada90c60002ca57b",
+      "sha256": "237d0ef3d7cc3cc06ec5f572ba5217b5640891a7cbc2728a14b95f601a534be4",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 42,
       "exact_rgb_pages": 42,
@@ -1453,7 +1453,7 @@
     },
     {
       "path": "scripts/fig-player-effect5f-status-rgb-reference.json",
-      "sha256": "5f27c7c48433a6391608b62933c466770fb0ad6b0a5135728ddc06e2be25995f",
+      "sha256": "aff4d85943696a3c0cfdc6aee1c81cd9ec4f35c3b8329226f3397893a2fed4d9",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 21,
       "exact_rgb_pages": 21,
@@ -1462,7 +1462,7 @@
     },
     {
       "path": "scripts/fig-player-effect60-status-rgb-reference.json",
-      "sha256": "f62db0a35e4a6ed81e299fb9ec3e27baaff4de440df1b62dbadd302c7bd0bab8",
+      "sha256": "436d9510abdaf4aad3e83c7ba1d6806ba15b92e23e839b49f544b7f70773ce64",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 25,
       "exact_rgb_pages": 25,
@@ -1471,7 +1471,7 @@
     },
     {
       "path": "scripts/fig-player-effect64-status-rgb-reference.json",
-      "sha256": "654aae3246037741763790b1149e620b0c74beef91091aff2a5d39a68fbaa99f",
+      "sha256": "d6fbbb68fe29344d558f64a399f7584c00098fb7daa30d2d992ef7560b3a84dd",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 32,
       "exact_rgb_pages": 32,
@@ -1480,7 +1480,7 @@
     },
     {
       "path": "scripts/fig-player-effect65-status-rgb-reference.json",
-      "sha256": "eaec1b69bb6bbe637d936049dd298f84e6228bf2bccdcfb8086f1dc8c68e2790",
+      "sha256": "fb5c6ddf05f240087f185fd4a62957e74f1704a225699d0ed517a6d5f533731b",
       "kind": "original_fig_player_effect",
       "registered_rgb_pairs": 43,
       "exact_rgb_pages": 43,
@@ -1489,7 +1489,7 @@
     },
     {
       "path": "scripts/fig-player-empty-medium-rgb-reference.json",
-      "sha256": "6cde6b5b94b71cd38e2ac38e2613ce826187ac5b1d0ab6fac62b8cb63360e6b9",
+      "sha256": "ef6d39d38f852cafc852f16eb97dc0f5bb5d87354fff229fb669824c988fe2e7",
       "kind": "original_fig_player_empty_medium_dismissal",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -1498,7 +1498,7 @@
     },
     {
       "path": "scripts/fig-player-escape-failure-rgb-reference.json",
-      "sha256": "21ccdf621b949b149f8b9f6e33a6f73e2af141e813fb36833ca7264508e6a523",
+      "sha256": "0bfaf4a812d4abd6fd125047fb8c651da32d7ed307390b8b3bbc9c81ca34365b",
       "kind": "original_fig_player_escape_failure_checkpoint",
       "registered_rgb_pairs": 31,
       "exact_rgb_pages": 31,
@@ -1516,7 +1516,7 @@
     },
     {
       "path": "scripts/fig-player-medium-rgb-reference.json",
-      "sha256": "65524af0b01a6dfa8f5005265950fa13cf3707579c77ea567976058b19f5e941",
+      "sha256": "b33ab42d67774bc871438a6deda51232414be8017976688760dd75abe1df9fba",
       "kind": "original_fig_player_medium_install_dismiss",
       "registered_rgb_pairs": 10,
       "exact_rgb_pages": 10,
@@ -1525,7 +1525,7 @@
     },
     {
       "path": "scripts/fig-player-status-rgb-reference.json",
-      "sha256": "de31f374def844fdc3c8efda4473f08cd8ef393903cc7dfaf75be872b523b331",
+      "sha256": "eec2f81ea9dfffd1b0da4f38298cc23faa9f3c78ee2a587ba939a475b8dc07c4",
       "kind": "original_fig_player_status_variants",
       "registered_rgb_pairs": 15,
       "exact_rgb_pages": 15,
@@ -1534,7 +1534,7 @@
     },
     {
       "path": "scripts/fig-player-support-all-rgb-reference.json",
-      "sha256": "11c61260dd4dfaa216bf85d77a263d26e975fddd5839cc8154bcde5a3e359115",
+      "sha256": "555a1d97abaf720bff4546d88d3fb67eb1c1bef73ca1613a704ad43211eff8b7",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -1543,7 +1543,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect01-class5-rgb-reference.json",
-      "sha256": "26c9aa98e919dde103bf821cd1b082546a4565e8b34faaddb6d6a9989d44ae7c",
+      "sha256": "21d1b4cd68b57e910b809102df5b87fd5c46ec14704e3e706538e6883e673bde",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1552,7 +1552,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect02-class1-rgb-reference.json",
-      "sha256": "d3e655867cdd91cace6d69f302c3c1a86dce9026500664df138d4d4590b1b9ad",
+      "sha256": "9e2c004fc4f3f612c72a54cdeb287939f01e098e803aeb66447c8442a213b38a",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1561,7 +1561,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect03-reachable-rgb-reference.json",
-      "sha256": "52330bd0b17474ee8bb0a1f4144f905498fd080e5cdcaac3f4b8bba3dcf0b663",
+      "sha256": "14f9610634fe143be341d689662fbaaf3c13bbf68da6b0b32e02de02fca5300f",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1570,7 +1570,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect07-rgb-reference.json",
-      "sha256": "f568f471343994089608b9d92db09c62f8946d5e38d3b10c489e70ef2c9099cd",
+      "sha256": "5c437cd70db048aa5f047b2e1515d3f446c66e2c1f13c5fb6b27d9decc5adc8e",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1579,7 +1579,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0a-rgb-reference.json",
-      "sha256": "156e36c3c33bad0e625bc1d72548192c8a40c040c6941afd28fa0451ca85a0cd",
+      "sha256": "167ddc96745e9a9fe68d40a3d74991520a3e3bb51e9155f7128f7baf243618fa",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1588,7 +1588,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0b-rgb-reference.json",
-      "sha256": "cc1e976f63d948487036691fa518a676b8bc6a64d53f053b9ee5fea96722f0db",
+      "sha256": "031f5a1c7d71c78cec272d06b04a43532fccbf6db350294e87342eb66793d99d",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1597,7 +1597,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0d-rgb-reference.json",
-      "sha256": "1c533db1299fca28754f36262881c6f0968478a3e9332e4aa148e8dd41f55ac8",
+      "sha256": "e7faa0e74a0eed385cecdf87f021c8b15f9af7d3c2649a80813b069b3a577779",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -1606,7 +1606,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0e-rgb-reference.json",
-      "sha256": "dd8ac23cd6003d63ebfc3669a8367d4b75673c870637916fa8157d904e092e6a",
+      "sha256": "a60d3331924af0d2133a49a6986ac67ab45f45b9f2aa32b7e7ab0701e50aea7b",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,
@@ -1615,7 +1615,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect0f-rgb-reference.json",
-      "sha256": "65fafe8664628a8dc993147ee147e4bbe1989e6067c04f4343d9e6b9ce06ff8b",
+      "sha256": "cd4f567b85695f83f4cdcfbcc87a4ba4243b61ed6b98306af32b866c1220cd94",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1624,7 +1624,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect19-class2-rgb-reference.json",
-      "sha256": "c16e1e45260f40cf069f01a861a905f5c34bc0f842b3f8434e61cbdda88c9648",
+      "sha256": "37908793dace313e3dba6d28ab89471256200277e712bb9ac006f89b45c07d77",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1633,7 +1633,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect19-rgb-reference.json",
-      "sha256": "80256384c1ab39e53c13e39807cebc6dfccd9fee2aae8ea9bb2051b0b650740f",
+      "sha256": "eb1bf1da0b235dcb3bc104d89276c0f3b9212d10ad4acbbd01871fa1306d8162",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1642,7 +1642,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect1a-rgb-reference.json",
-      "sha256": "134d1694a363ac8261693284e8975af4282b7ebafac2d6e9713365417304e95c",
+      "sha256": "9b86140a8068adfcbf9b7e5691364d36cab9ae34fe2854be15b7b7223c1766f0",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1651,7 +1651,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect1e-rgb-reference.json",
-      "sha256": "319c11bea9af8b10296576c14af469103e0f3e94ac1f1fe235d1f9129a69dfdc",
+      "sha256": "fde94d455e81abbfe46ed29cf82ed0d658faa994d08defcf873b9262d8a78ff6",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1660,7 +1660,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect2-rgb-reference.json",
-      "sha256": "d0cf0b79debf23373641f9586c29f7c189be0c8d458c489f2da5bcbf8916c435",
+      "sha256": "2c8c5f9fdeb2b2e202a03391c3eca921cb967f681cce9422f6ad041b70e13dbd",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1669,7 +1669,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect3-rgb-reference.json",
-      "sha256": "ee4e6d6b79dfbbfb6a072c935d37088080a3b221c9c22a9c99cdc0f47e3e1fd2",
+      "sha256": "3f17e3418aa577adb109327279321ade32e19ef5a38d536b010e6f9ff83a0925",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1678,7 +1678,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect4-rgb-reference.json",
-      "sha256": "4816272390045c79a7bdaccdf5231d63dc6aecc97e19904be4b0d451b5238841",
+      "sha256": "067cfbacf2843ff174ad733535be7da16d134c184e16f33b11d7794aeaeeb680",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1687,7 +1687,7 @@
     },
     {
       "path": "scripts/fig-player-support-effect9-rgb-reference.json",
-      "sha256": "5e42c8e50048dc925a29c5ac234b77045d0df077f451fc01706ad0e977c2e7bd",
+      "sha256": "a5936deb7e125b7ab96f3e54676d668ffe375e6013b5831cfcc72bbde6f2bd49",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
@@ -1696,7 +1696,7 @@
     },
     {
       "path": "scripts/fig-player-support-rgb-reference.json",
-      "sha256": "028799b4296078af446dbcaa917a9a34f1ec25a2634ffa7331c245d2312f2479",
+      "sha256": "55f751066acd4060e75d658e5466bfeaa30cf156904907ba2d9c2cbb61ff03cb",
       "kind": "original_fig_player_support",
       "registered_rgb_pairs": 6,
       "exact_rgb_pages": 6,

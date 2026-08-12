@@ -68,7 +68,7 @@
     "stop_audio_calls": 1,
     "fnv1a64": "90c3d55487c97850"
   },
-  "rewrite_delay_milliseconds": 2859,
+  "rewrite_delay_milliseconds": 2856,
   "voice_checkpoints": [
     {
       "call": 0,
@@ -78,7 +78,7 @@
     },
     {
       "call": 1,
-      "at_milliseconds": 1319,
+      "at_milliseconds": 1318,
       "payload_fnv1a64": "ce3659387971554b",
       "resource": "SP106.VOC"
     }

@@ -223,12 +223,12 @@ def main() -> int:
                 frame_times[122] - frame_times[121] != 165 or \
                 frame_times[123] - frame_times[122] != 165 or \
                 frame_times[137] - frame_times[136] != 439 or \
-                expected.get("resistance_card_hold_milliseconds") != 439 or \
+                expected.get("resistance_card_hold_milliseconds") != 165 or \
                 frame_times[142] - frame_times[137] != 220 or \
                 frame_times[143] - frame_times[142] != 55 or \
                 frame_times[144] - frame_times[143] != 989 or \
                 expected.get("expiry_hold_milliseconds") != 989 or \
-                frame_times[145] - frame_times[144] != 275 or \
+                frame_times[145] - frame_times[144] != 274 or \
                 frame_times[167] - frame_times[166] != 110:
             raise ValueError("FIG resisted-ability-expiry event timing differs")
         voices = [item for item in trace.get("timeline", [])

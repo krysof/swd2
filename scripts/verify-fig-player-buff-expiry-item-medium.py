@@ -240,25 +240,27 @@ def main() -> int:
             (176, "next_command_at_milliseconds"),
         )
         if any(times[index] != expected[key] for index, key in timed) or \
-                any(times[index + 1] - times[index] != 55
-                    for index in range(126, 151)) or \
+                [times[index + 1] - times[index]
+                 for index in range(126, 151)] != \
+                    expected["flight_frame_intervals_milliseconds"] or \
                 expected.get("flight_frame_milliseconds") != 55 or \
-                times[152] - times[151] != 55 or \
-                times[153] - times[152] != 989 or \
-                expected.get("expiry_hold_milliseconds") != 989 or \
-                times[154] - times[153] != 275 or \
-                expected.get("clean_hold_milliseconds") != 275 or \
-                times[176] - times[175] != 110:
+                times[153] - times[152] != \
+                    expected["expiry_hold_milliseconds"] or \
+                times[154] - times[153] != \
+                    expected["clean_hold_milliseconds"] or \
+                times[176] - times[175] != \
+                    expected["next_command_at_milliseconds"] - \
+                    expected["round_boundary_at_milliseconds"]:
             raise ValueError("FIG item-medium-expiry event timing differs")
         voices = [entry for entry in trace["timeline"]
                   if entry.get("kind") == "voice"]
         if len(voices) != 9 or \
                 (voices[7].get("at_milliseconds"),
                  voices[7].get("payload_fnv1a64")) != \
-                    (10393, "56054b2c8ee75346") or \
+                    (10381, "56054b2c8ee75346") or \
                 (voices[8].get("at_milliseconds"),
                  voices[8].get("payload_fnv1a64")) != \
-                    (13307, "ce3659387971554b"):
+                    (13292, "ce3659387971554b"):
             raise ValueError("FIG item-medium-expiry voices differ")
 
         frames = load_indexed_frames(frame_path)

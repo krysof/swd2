@@ -186,14 +186,14 @@ def main() -> int:
                 frame_times[134] - frame_times[133] != \
                     expected["expiry_hold_milliseconds"] or \
                 expected["expiry_hold_milliseconds"] != 989 or \
-                frame_times[135] - frame_times[134] != 275 or \
+                frame_times[135] - frame_times[134] != 274 or \
                 frame_times[157] - frame_times[156] != 110:
             raise ValueError("FIG item-status-expiry event timing differs")
         voices = [item for item in trace.get("timeline", [])
                   if item.get("kind") == "voice"]
-        if voices[7].get("at_milliseconds") != 10118 or \
+        if voices[7].get("at_milliseconds") != 10106 or \
                 voices[7].get("payload_fnv1a64") != "c6ae00bdfaa4b22e" or \
-                voices[8].get("at_milliseconds") != 13141 or \
+                voices[8].get("at_milliseconds") != 13127 or \
                 voices[8].get("payload_fnv1a64") != "ce3659387971554b":
             raise ValueError("FIG item-status-expiry voices differ")
 

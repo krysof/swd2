@@ -241,25 +241,27 @@ def main() -> int:
             (183, "next_command_at_milliseconds"),
         )
         if any(times[index] != expected[key] for index, key in timed) or \
-                any(times[index + 1] - times[index] != 55
-                    for index in range(126, 158)) or \
+                [times[index + 1] - times[index]
+                 for index in range(126, 158)] != \
+                    expected["flight_frame_intervals_milliseconds"] or \
                 expected.get("flight_frame_milliseconds") != 55 or \
-                times[159] - times[158] != 55 or \
-                times[160] - times[159] != 989 or \
-                expected.get("expiry_hold_milliseconds") != 989 or \
-                times[161] - times[160] != 275 or \
-                expected.get("clean_hold_milliseconds") != 275 or \
-                times[183] - times[182] != 110:
+                times[160] - times[159] != \
+                    expected["expiry_hold_milliseconds"] or \
+                times[161] - times[160] != \
+                    expected["clean_hold_milliseconds"] or \
+                times[183] - times[182] != \
+                    expected["next_command_at_milliseconds"] - \
+                    expected["round_boundary_at_milliseconds"]:
             raise ValueError("FIG item-AF-expiry event timing differs")
         voices = [entry for entry in trace["timeline"]
                   if entry.get("kind") == "voice"]
         if len(voices) != 9 or \
                 (voices[7].get("at_milliseconds"),
                  voices[7].get("payload_fnv1a64")) != \
-                    (10393, "56054b2c8ee75346") or \
+                    (10381, "56054b2c8ee75346") or \
                 (voices[8].get("at_milliseconds"),
                  voices[8].get("payload_fnv1a64")) != \
-                    (13692, "ce3659387971554b"):
+                    (13676, "ce3659387971554b"):
             raise ValueError("FIG item-AF-expiry voices differ")
 
         frames = load_indexed_frames(frame_path)

@@ -48,7 +48,7 @@
     "last_height": 200,
     "fnv1a64": "97cd63db74b0b252"
   },
-  "rewrite_delay_milliseconds": 7095,
+  "rewrite_delay_milliseconds": 7085,
   "rewrite_audio": {
     "music_calls": 1,
     "voice_calls": 4,
@@ -61,25 +61,25 @@
   "voice_checkpoints": [
     {
       "call": 0,
-      "at_milliseconds": 440,
+      "at_milliseconds": 439,
       "payload_fnv1a64": "56054b2c8ee75346",
       "resource": "SP049.VOC"
     },
     {
       "call": 1,
-      "at_milliseconds": 2365,
+      "at_milliseconds": 2362,
       "payload_fnv1a64": "ce3659387971554b",
       "resource": "SP106.VOC"
     },
     {
       "call": 2,
-      "at_milliseconds": 4345,
+      "at_milliseconds": 4339,
       "payload_fnv1a64": "309e81a048cdcef2",
       "resource": "SP061.VOC"
     },
     {
       "call": 3,
-      "at_milliseconds": 5555,
+      "at_milliseconds": 5547,
       "payload_fnv1a64": "ce3659387971554b",
       "resource": "SP106.VOC"
     }

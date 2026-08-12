@@ -48,50 +48,50 @@
     "stop_audio_calls": 1,
     "fnv1a64": "4492a9204bad6361"
   },
-  "rewrite_delay_milliseconds": 10833,
+  "rewrite_delay_milliseconds": 10820,
   "rewrite_voice_timeline": [
     {
       "call": 0,
-      "at_milliseconds": 1980,
+      "at_milliseconds": 1977,
       "payload_fnv1a64": "309e81a048cdcef2"
     },
     {
       "call": 1,
-      "at_milliseconds": 2749,
+      "at_milliseconds": 2746,
       "payload_fnv1a64": "ce3659387971554b"
     },
     {
       "call": 2,
-      "at_milliseconds": 4399,
+      "at_milliseconds": 4394,
       "payload_fnv1a64": "ce3659387971554b"
     },
     {
       "call": 3,
-      "at_milliseconds": 5939,
+      "at_milliseconds": 5932,
       "payload_fnv1a64": "5e2d752bd87a76d0"
     },
     {
       "call": 4,
-      "at_milliseconds": 6654,
+      "at_milliseconds": 6646,
       "payload_fnv1a64": "f77c825f09a667a7"
     },
     {
       "call": 5,
-      "at_milliseconds": 8579,
+      "at_milliseconds": 8568,
       "payload_fnv1a64": "ce3659387971554b"
     },
     {
       "call": 6,
-      "at_milliseconds": 10503,
+      "at_milliseconds": 10491,
       "payload_fnv1a64": "94bb5914d0c4e7cf"
     }
   ],
   "rewrite_final_frame_times_milliseconds": [
-    9844,
-    10009,
-    10503,
-    10723,
-    10833
+    9832,
+    9996,
+    10491,
+    10710,
+    10820
   ],
   "rewrite_state_fnv1a64": "71acc10273b5d94c",
   "rewrite_mapz_fnv1a64": "827f0f1b725a0958",

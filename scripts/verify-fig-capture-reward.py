@@ -76,7 +76,8 @@ def main() -> int:
                 "music_calls": 2, "voice_calls": 2,
                 "stop_music_calls": 0, "stop_audio_calls": 1,
                 "fnv1a64": "6013373949c72bbc"} or \
-                trace.get("delay_milliseconds") != 5170:
+                trace.get("delay_milliseconds") != \
+                    expected["rewrite_delay_milliseconds"]:
             raise ValueError("FIG capture-reward audio or timing differs")
         checkpoints = trace.get("input_checkpoints", [])
         if len(checkpoints) != 12 or \

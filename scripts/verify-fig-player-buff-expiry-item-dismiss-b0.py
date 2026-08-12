@@ -250,26 +250,27 @@ def main() -> int:
             (226, "next_command_at_milliseconds"),
         )
         if any(times[index] != expected[key] for index, key in timed) or \
-                expected.get("dismiss_voice_at_milliseconds") != 14518 or \
-                any(times[index + 1] - times[index] != 55
-                    for index in range(189, 201)) or \
+                [times[index + 1] - times[index]
+                 for index in range(189, 201)] != \
+                    expected["dismiss_flip_intervals_milliseconds"] or \
                 expected.get("dismiss_flip_milliseconds") != 55 or \
-                times[202] - times[201] != 55 or \
-                times[203] - times[202] != 989 or \
-                expected.get("expiry_hold_milliseconds") != 989 or \
-                times[204] - times[203] != 275 or \
-                expected.get("clean_hold_milliseconds") != 275 or \
-                times[226] - times[225] != 110:
+                times[203] - times[202] != \
+                    expected["expiry_hold_milliseconds"] or \
+                times[204] - times[203] != \
+                    expected["clean_hold_milliseconds"] or \
+                times[226] - times[225] != \
+                    expected["next_command_at_milliseconds"] - \
+                    expected["round_boundary_at_milliseconds"]:
             raise ValueError("FIG item-medium-dismiss expiry timing differs")
         voices = [entry for entry in trace["timeline"]
                   if entry.get("kind") == "voice"]
         if len(voices) != 11 or \
                 (voices[9].get("at_milliseconds"),
                  voices[9].get("payload_fnv1a64")) != \
-                    (14518, "309e81a048cdcef2") or \
+                    (14500, "309e81a048cdcef2") or \
                 (voices[10].get("at_milliseconds"),
                  voices[10].get("payload_fnv1a64")) != \
-                    (16717, "ce3659387971554b"):
+                    (16697, "ce3659387971554b"):
             raise ValueError("FIG empty-medium-expiry voices differ")
 
         frames = load_indexed_frames(frame_path)

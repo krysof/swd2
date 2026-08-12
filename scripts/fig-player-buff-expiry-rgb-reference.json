@@ -45,7 +45,7 @@
     "last_height": 200,
     "fnv1a64": "45855e38add79dfa"
   },
-  "rewrite_delay_milliseconds": 26728,
+  "rewrite_delay_milliseconds": 26694,
   "rewrite_audio": {
     "music_calls": 1,
     "voice_calls": 22,
@@ -58,12 +58,12 @@
   "rewrite_name_fnv1a64": "e3d2853e2676513b",
   "rewrite_final_fnv1a64": "af179c330ec6eaff",
   "expiry_rewrite_frame": 311,
-  "expiry_at_milliseconds": 23704,
+  "expiry_at_milliseconds": 23673,
   "clean_rewrite_frame": 312,
-  "clean_at_milliseconds": 24693,
+  "clean_at_milliseconds": 24662,
   "expiry_hold_milliseconds": 989,
   "following_action_rewrite_frame": 313,
-  "following_action_at_milliseconds": 24968,
+  "following_action_at_milliseconds": 24936,
   "matched_frames": [
     {
       "kind": "retained_action_pose",

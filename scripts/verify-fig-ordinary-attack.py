@@ -74,7 +74,8 @@ def main() -> int:
                 "music_calls": 1, "voice_calls": 0,
                 "stop_music_calls": 0, "stop_audio_calls": 1,
                 "fnv1a64": "971fb031ff7f6f85"} or \
-                trace.get("delay_milliseconds") != 1980:
+                trace.get("delay_milliseconds") != \
+                    expected["rewrite_delay_milliseconds"]:
             raise ValueError("FIG ordinary-attack audio or timing differs")
         if (trace.get("state_fnv1a64"), trace.get("mapz_fnv1a64"),
                 trace.get("name_fnv1a64")) != (

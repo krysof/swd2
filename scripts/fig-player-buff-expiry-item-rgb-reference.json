@@ -51,7 +51,7 @@
     "last_height": 200,
     "fnv1a64": "352ab99b94848c6b"
   },
-  "rewrite_delay_milliseconds": 14957,
+  "rewrite_delay_milliseconds": 14940,
   "rewrite_audio": {
     "music_calls": 1,
     "voice_calls": 9,
@@ -65,12 +65,12 @@
   "rewrite_final_fnv1a64": "4179c6261fb68ed7",
   "retained_pose_rewrite_frame": 156,
   "expiry_rewrite_frame": 157,
-  "expiry_at_milliseconds": 11933,
+  "expiry_at_milliseconds": 11919,
   "clean_rewrite_frame": 158,
-  "clean_at_milliseconds": 12922,
-  "expiry_hold_milliseconds": 989,
+  "clean_at_milliseconds": 12907,
+  "expiry_hold_milliseconds": 988,
   "following_action_rewrite_frame": 159,
-  "following_action_at_milliseconds": 13197,
+  "following_action_at_milliseconds": 13182,
   "matched_frames": [
     {
       "kind": "action_tail_clean",

@@ -113,7 +113,7 @@ def main() -> int:
             for item in trace.get("timeline", []) if item.get("kind") == "frame"
         }
         if tuple(frame_times.get(index) for index in range(4, 8)) != \
-                (0, 0, 275, 440):
+                (0, 0, 275, 439):
             raise ValueError("26af resisted-status flip timing differs")
 
         frames = load_indexed_frames(frame_path)

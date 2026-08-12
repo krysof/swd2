@@ -249,8 +249,8 @@ def main() -> int:
                 times[183] - times[182] != 55 or \
                 times[184] - times[183] != 989 or \
                 expected.get("expiry_hold_milliseconds") != 989 or \
-                times[185] - times[184] != 275 or \
-                expected.get("clean_hold_milliseconds") != 275 or \
+                times[185] - times[184] != 274 or \
+                expected.get("clean_hold_milliseconds") != 274 or \
                 times[207] - times[206] != 110:
             raise ValueError("FIG learned-medium-expiry timing differs")
         voices = [entry for entry in trace["timeline"]
@@ -258,10 +258,10 @@ def main() -> int:
         if len(voices) != 9 or \
                 (voices[7].get("at_milliseconds"),
                  voices[7].get("payload_fnv1a64")) != \
-                    (12428, "309e81a048cdcef2") or \
+                    (12413, "309e81a048cdcef2") or \
                 (voices[8].get("at_milliseconds"),
                  voices[8].get("payload_fnv1a64")) != \
-                    (14627, "ce3659387971554b"):
+                    (14610, "ce3659387971554b"):
             raise ValueError("FIG learned-medium-expiry voices differ")
 
         frames = load_indexed_frames(frame_path)

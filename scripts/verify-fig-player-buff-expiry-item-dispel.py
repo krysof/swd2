@@ -219,14 +219,14 @@ def main() -> int:
                 frame_times[141] - frame_times[140] != 55 or \
                 frame_times[142] - frame_times[141] != 989 or \
                 expected.get("expiry_hold_milliseconds") != 989 or \
-                frame_times[143] - frame_times[142] != 275 or \
+                frame_times[143] - frame_times[142] != 274 or \
                 frame_times[165] - frame_times[164] != 110:
             raise ValueError("FIG item-dispel-expiry event timing differs")
         voices = [item for item in trace.get("timeline", [])
                   if item.get("kind") == "voice"]
-        if voices[7].get("at_milliseconds") != 10118 or \
+        if voices[7].get("at_milliseconds") != 10106 or \
                 voices[7].get("payload_fnv1a64") != "fed9b0dfce76db90" or \
-                voices[8].get("at_milliseconds") != 12592 or \
+                voices[8].get("at_milliseconds") != 12578 or \
                 voices[8].get("payload_fnv1a64") != "ce3659387971554b":
             raise ValueError("FIG item-dispel-expiry voices differ")
 

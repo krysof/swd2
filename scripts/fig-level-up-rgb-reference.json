@@ -45,7 +45,7 @@
         "stop_audio_calls": 1,
         "fnv1a64": "7b969b8fb8024a39"
       },
-      "rewrite_delay_milliseconds": 1650
+      "rewrite_delay_milliseconds": 1648
     },
     {
       "label": "learned_ability_9",
@@ -86,7 +86,7 @@
         "stop_audio_calls": 1,
         "fnv1a64": "7b969b8fb8024a39"
       },
-      "rewrite_delay_milliseconds": 1650
+      "rewrite_delay_milliseconds": 1648
     }
   ]
 }

@@ -198,9 +198,9 @@ def main() -> int:
             raise ValueError("FIG item-support-expiry event timing differs")
         voices = [item for item in trace.get("timeline", [])
                   if item.get("kind") == "voice"]
-        if voices[7].get("at_milliseconds") != 10118 or \
+        if voices[7].get("at_milliseconds") != 10106 or \
                 voices[7].get("payload_fnv1a64") != "f0f35db044f8d79f" or \
-                voices[8].get("at_milliseconds") != 12261 or \
+                voices[8].get("at_milliseconds") != 12248 or \
                 voices[8].get("payload_fnv1a64") != "ce3659387971554b":
             raise ValueError("FIG item-support-expiry voices differ")
 

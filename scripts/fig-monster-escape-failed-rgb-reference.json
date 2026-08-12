@@ -30,7 +30,7 @@
     "stop_audio_calls": 1,
     "fnv1a64": "142f853a62d24015"
   },
-  "rewrite_delay_milliseconds": 8686,
+  "rewrite_delay_milliseconds": 8678,
   "rewrite_state_fnv1a64": "e130b3973f13d8cd",
   "pages": [
     {

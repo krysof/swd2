@@ -13,11 +13,6 @@ from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
 SEQUENCE_FRAMES = tuple(range(5, 32))
-SEQUENCE_TIMES = (
-    0, 0, 989, 1264, 1539, 1759, 1759, 1814, 1869, 1924, 1979,
-    2034, 2089, 2144, 2199, 2254, 2309, 2364, 2419, 2474, 2529,
-    2584, 2639, 2694, 3024, 3189, 3299,
-)
 
 
 def sha256(data: bytes) -> str:
@@ -114,7 +109,7 @@ def main() -> int:
             for item in timeline if item.get("kind") == "frame"
         }
         if tuple(frame_times.get(index) for index in SEQUENCE_FRAMES) != \
-                SEQUENCE_TIMES:
+                tuple(reference["sequence_at_milliseconds"]):
             raise ValueError("FIG capture-failure frame timing differs")
         voices = [item for item in timeline if item.get("kind") == "voice"]
         checks = reference.get("voice_checkpoints")

@@ -45,7 +45,7 @@
     "last_height": 200,
     "fnv1a64": "68e7f4f4b7f4db1a"
   },
-  "rewrite_delay_milliseconds": 14791,
+  "rewrite_delay_milliseconds": 14775,
   "rewrite_audio": {
     "music_calls": 5,
     "voice_calls": 10,
@@ -56,7 +56,7 @@
   "rewrite_state_fnv1a64": "c0a8c8a7c9086ce7",
   "rewrite_final_fnv1a64": "f57fcfa3da6c0796",
   "expiry_rewrite_frame": 133,
-  "expiry_at_milliseconds": 11218,
+  "expiry_at_milliseconds": 11205,
   "matched_frames": [
     {
       "kind": "pre_expiry_commit",

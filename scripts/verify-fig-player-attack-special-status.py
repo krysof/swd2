@@ -110,7 +110,7 @@ def main() -> int:
                 "modern frames 11..13" not in limitation or \
                 "modern frame 27" not in limitation or \
                 expected.get("status_voice_times_milliseconds") != \
-                    [1540, 2474]:
+                    [1538, 2472]:
             raise ValueError(
                 "FIG player-attack-special-status capture limitation missing")
         status_voice = expected.get("status_voice_payload_fnv1a64")

@@ -166,7 +166,7 @@ def main() -> int:
                     expected["following_action_at_milliseconds"] or \
                 frame_times[clean_frame] - frame_times[expiry_frame] != \
                     expected["expiry_hold_milliseconds"] or \
-                expected["expiry_hold_milliseconds"] != 989:
+                expected["expiry_hold_milliseconds"] != 988:
             raise ValueError("FIG item-expiry event timing differs")
 
         frames = load_indexed_frames(frame_path)

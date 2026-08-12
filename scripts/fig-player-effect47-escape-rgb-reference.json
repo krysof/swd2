@@ -49,7 +49,7 @@
     "stop_audio_calls": 1,
     "fnv1a64": "16334c5f6d0530bc"
   },
-  "rewrite_delay_milliseconds": 605,
+  "rewrite_delay_milliseconds": 604,
   "rewrite_state_fnv1a64": "f5eeca7e6cfff957",
   "rewrite_final_fnv1a64": "7020f84110095755",
   "effect_voice_at_milliseconds": 330,

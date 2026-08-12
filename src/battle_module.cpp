@@ -64,6 +64,8 @@ std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
 
 bool delay_for_or_frontend_quit(
     PlatformBackend& platform, std::chrono::milliseconds duration);
+bool delay_for_or_frontend_quit(
+    PlatformBackend& platform, FigTimerClock& clock, std::uint32_t ticks);
 
 std::uint16_t span_word(std::span<const std::uint8_t> bytes, std::size_t offset) {
     if (offset + 2U > bytes.size()) return 0;
@@ -1080,7 +1082,8 @@ void draw_battle_media(BattleSurface& surface,
 
 bool present_story_battle_setup(GameContext& context,
                                 const BattleSurface& background,
-                                std::uint16_t encounter_directory_offset) {
+                                std::uint16_t encounter_directory_offset,
+                                FigTimerClock& timer_clock) {
     if (encounter_directory_offset == 0x42) {
         // FIG 32aa..32c9 decodes AD/CD523 into its dedicated +4000 segment
         // before the first command round.  It is not displayed yet: 2e30
@@ -1124,7 +1127,7 @@ bool present_story_battle_setup(GameContext& context,
             std::span<const std::uint8_t, 768>(frame.palette),
         });
         if (!delay_for_or_frontend_quit(
-                context.platform, fig_timer_ticks(3))) {
+                context.platform, timer_clock, 3)) {
             return false;
         }
     }
@@ -1672,7 +1675,7 @@ void present_event_frame(
 bool present_fig_page_wipe(GameContext& context,
                            const BattleSurface& previous,
                            const BattleSurface& next,
-                           std::chrono::milliseconds tick) {
+                           FigTimerClock& timer_clock) {
     auto frame = previous;
     frame.palette = next.palette;
     auto first_line = 0;
@@ -1683,7 +1686,8 @@ bool present_fig_page_wipe(GameContext& context,
                   next.pixels.begin() + static_cast<std::ptrdiff_t>(last),
                   frame.pixels.begin() + static_cast<std::ptrdiff_t>(first));
         present_battle_surface(context, frame);
-        if (!delay_for_or_frontend_quit(context.platform, tick)) return false;
+        if (!delay_for_or_frontend_quit(
+                context.platform, timer_clock, 1)) return false;
         first_line = line_end;
     }
     return true;
@@ -2039,6 +2043,7 @@ bool present_medium_summon_animation(
     const LegacyFont& fallback, const BattleVisualState& visual,
     const BattleSessionEvent& event,
     std::uint16_t encounter_directory_offset,
+    FigTimerClock& timer_clock,
     BattleSurface* retained_action_surface = nullptr) {
     const auto summoned_source = event.source_is_summoned_ally;
     const auto player_source = !event.source_is_monster && !summoned_source;
@@ -2119,7 +2124,7 @@ bool present_medium_summon_animation(
             *retained_action_surface = frame;
         }
         if (!delay_for_or_frontend_quit(
-                context.platform, fig_timer_ticks(1))) {
+                context.platform, timer_clock, 1)) {
             return false;
         }
 
@@ -2154,16 +2159,17 @@ bool present_round_events(
     BattleVisualState& visual, const BattleRoundResult& result,
     std::uint16_t encounter_directory_offset,
     const std::array<PlayerBattleCommand, 4>& commands,
-    std::size_t& existing_result_palette_shift) {
-    constexpr auto action_delay = fig_timer_ticks(3);
-    constexpr auto effect_delay = fig_timer_ticks(1);
-    constexpr auto status_card_delay = fig_timer_ticks(18);
-    constexpr auto ward_card_delay = fig_timer_ticks(5);
-    constexpr auto immunity_card_delay = fig_timer_ticks(8);
-    constexpr auto monster_action_card_delay = fig_timer_ticks(4);
-    constexpr auto summoned_action_card_delay = fig_timer_ticks(9);
-    constexpr auto capture_action_card_delay = fig_timer_ticks(18);
-    constexpr auto summon_install_delay = fig_timer_ticks(10);
+    std::size_t& existing_result_palette_shift,
+    FigTimerClock& timer_clock) {
+    constexpr auto action_delay = 3U;
+    constexpr auto effect_delay = 1U;
+    constexpr auto status_card_delay = 18U;
+    constexpr auto ward_card_delay = 5U;
+    constexpr auto immunity_card_delay = 8U;
+    constexpr auto monster_action_card_delay = 4U;
+    constexpr auto summoned_action_card_delay = 9U;
+    constexpr auto capture_action_card_delay = 18U;
+    constexpr auto summon_install_delay = 10U;
     std::map<std::uint16_t, SpriteArchive> effect_cache;
     std::array<bool, 4> player_resource_cost_presented{};
     const auto present_player_resource_cost = [&](const BattleSessionEvent& event) {
@@ -2236,8 +2242,9 @@ bool present_round_events(
     auto alternate_page = previous_page;
     std::optional<std::array<std::uint8_t, 768>>
         retained_composite_dispatcher_palette;
-    const auto delay = [&](std::chrono::milliseconds duration) {
-        if (delay_for_or_frontend_quit(context.platform, duration)) return true;
+    const auto delay = [&](std::uint32_t ticks) {
+        if (delay_for_or_frontend_quit(
+                context.platform, timer_clock, ticks)) return true;
         frontend_abort = true;
         return false;
     };
@@ -2644,6 +2651,7 @@ bool present_round_events(
                             context, base_surface, encounter, items,
                             menu_sprites, font, fallback, visual,
                             medium_event, encounter_directory_offset,
+                            timer_clock,
                             &retained)) {
                         frontend_abort = true;
                         return false;
@@ -2711,14 +2719,14 @@ bool present_round_events(
                     context, base_surface, encounter, items, menu_sprites,
                     font, fallback, visual, summon_name_event, abilities,
                     encounter_directory_offset, false, &alternate_page);
-                if (!delay(fig_timer_ticks(7))) return false;
+                if (!delay(7)) return false;
             }
             play_voice_cue(context, {FigVoiceFile::sp, 0x31,
                                      FigVoiceTiming::before_action});
             if (!present_medium_summon_animation(
                     context, base_surface, encounter, items, menu_sprites,
                     font, fallback, visual, event,
-                    encounter_directory_offset,
+                    encounter_directory_offset, timer_clock,
                     event.source_is_monster ? &alternate_page : nullptr)) {
                 frontend_abort = true;
                 return false;
@@ -2884,7 +2892,7 @@ bool present_round_events(
                 encounter_directory_offset, false, &dismissal_name_page);
             // 262f suppresses the normal ability voice for 35h/43h/53h but
             // still retains the name card for seven INT-08h timer ticks.
-            if (!delay(fig_timer_ticks(7))) return false;
+            if (!delay(7)) return false;
             play_voice_cue(context, {FigVoiceFile::sp, 0x3d,
                                      FigVoiceTiming::before_action});
 
@@ -3519,7 +3527,7 @@ bool present_round_events(
             }
         }
         if (monster_named_action && !monster_special_player_resistance) {
-            if (!delay(fig_timer_ticks(7))) return false;
+            if (!delay(7)) return false;
             if (event.monster_generic_path) {
                 // 2464 first flips the bare scratch page that 262f restored;
                 // the single-target path then composes its selected card page.
@@ -3642,7 +3650,7 @@ bool present_round_events(
             }
             const auto slots = fig_all_target_slot_span(
                 event.target, next_target, visual.party_count);
-            return delay(action_delay * static_cast<int>(slots));
+            return delay(action_delay * static_cast<std::uint32_t>(slots));
         };
         const auto dispatcher_immediate_return =
             effect_first && dispatcher_event &&
@@ -3935,7 +3943,7 @@ bool present_round_events(
                     false);
                 if (!present_fig_page_wipe(
                         context, prior_weapon_frame, overlay_frame,
-                        effect_delay)) {
+                        timer_clock)) {
                     frontend_abort = true;
                     return false;
                 }
@@ -3951,7 +3959,7 @@ bool present_round_events(
                     event.damage != 0 && !event.evaded);
                 if (!present_fig_page_wipe(
                         context, overlay_frame, reaction_frame,
-                        effect_delay)) {
+                        timer_clock)) {
                     frontend_abort = true;
                     return false;
                 }
@@ -4223,7 +4231,7 @@ bool present_round_events(
         if (monster_all_target_action && effect_first && event.target != 0) {
             // 24ca still waits three ticks for each dead slot skipped before
             // the first emitted living-target event.
-            if (!delay(action_delay * static_cast<int>(event.target))) {
+            if (!delay(action_delay * static_cast<std::uint32_t>(event.target))) {
                 return false;
             }
         }
@@ -5098,6 +5106,11 @@ bool delay_for_or_frontend_quit(
     return !platform.poll_frontend_quit();
 }
 
+bool delay_for_or_frontend_quit(
+    PlatformBackend& platform, FigTimerClock& clock, std::uint32_t ticks) {
+    return delay_for_or_frontend_quit(platform, clock.advance(ticks));
+}
+
 BattleSurface compose_settlement_scene(
     const BattleSurface& base_surface, const BattleEncounter& encounter,
     const ScriptArchive& items, const std::filesystem::path& game_root,
@@ -5162,7 +5175,7 @@ bool present_defeat_summary(
     const BattleEncounter& encounter, const ScriptArchive& items,
     const SpriteArchive& menu_sprites, const LegacyFont& font,
     const LegacyFont& fallback, const BattleSession& session,
-    const BattleAbilityDatabase& abilities) {
+    const BattleAbilityDatabase& abilities, FigTimerClock& timer_clock) {
     play_battle_music(context, context.game_root / "RX" / "DEAD.RIX", false);
     auto frame = base_surface;
     draw_enemies(frame, encounter, items, context.game_root, menu_sprites,
@@ -5178,8 +5191,7 @@ bool present_defeat_summary(
         320, 200, frame.pixels,
         std::span<const std::uint8_t, 768>(frame.palette),
     });
-    return delay_for_or_frontend_quit(
-        context.platform, fig_timer_ticks(54));
+    return delay_for_or_frontend_quit(context.platform, timer_clock, 54);
 }
 
 bool present_level_ups(
@@ -5259,6 +5271,7 @@ bool present_level_ups(
 Marker BattleModule::run(GameContext& context, Marker input) {
     if (input != Marker::open_figure) return Marker::none;
 
+    FigTimerClock timer_clock;
     begin_battle_shared_state(context.shared_state);
 
     const auto database = BattleDatabase::load(context.game_root / "ORC.EXE");
@@ -5312,7 +5325,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
     const auto fighters = load_sprites(context.game_root / "SW" / "FMAN.RSK");
 
     if (!present_story_battle_setup(
-            context, base_surface, encounter_offset)) {
+            context, base_surface, encounter_offset, timer_clock)) {
         context.platform.stop_audio();
         finish_battle_shared_state(context.shared_state);
         return Marker::none;
@@ -5353,7 +5366,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 });
                 const auto text_delay = context.shared_state.u16(0x3f2);
                 if (text_delay != 0) {
-                    context.platform.delay_for(fig_timer_ticks(text_delay));
+                    context.platform.delay_for(timer_clock.advance(text_delay));
                 }
                 const auto text_action = context.platform.poll_text_input();
                 if (text_action == InputAction::quit) {
@@ -5530,7 +5543,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                                 context.shared_state.u16(0x3f2);
                             if (text_delay != 0) {
                                 context.platform.delay_for(
-                                    fig_timer_ticks(text_delay));
+                                    timer_clock.advance(text_delay));
                             }
                             const auto text_action =
                                 context.platform.poll_text_input();
@@ -5623,7 +5636,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                     abilities, command_font, command_name_font,
                     fighters, menu_sprites, visual, round_result,
                     encounter_offset, round_commands,
-                    existing_result_palette_shift)) {
+                    existing_result_palette_shift, timer_clock)) {
                 quit_battle = true;
                 break;
             }
@@ -5651,7 +5664,7 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                 std::span<const std::uint8_t, 768>(surface.palette),
             });
             if (!delay_for_or_frontend_quit(
-                    context.platform, fig_timer_ticks(2))) {
+                    context.platform, timer_clock, 2)) {
                 quit_battle = true;
                 break;
             }
@@ -5717,7 +5730,8 @@ Marker BattleModule::run(GameContext& context, Marker input) {
             if (outcome == BattleOutcome::defeat) {
                 frontend_quit = !present_defeat_summary(
                     context, base_surface, encounter, items, menu_sprites,
-                    command_font, command_name_font, session, abilities);
+                    command_font, command_name_font, session, abilities,
+                    timer_clock);
             }
             finish_battle_shared_state(context.shared_state);
             if (frontend_quit) {

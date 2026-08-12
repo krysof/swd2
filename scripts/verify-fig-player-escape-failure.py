@@ -13,11 +13,6 @@ from swd2_frame_capture import expand_rgb, load_indexed_frames
 
 
 PAGE_FRAMES = tuple(range(1, 32))
-PAGE_TIMES = (
-    0, 0, 0, 0, 0, 165, 330, 605, 880, 1100, 1100, 1155, 1210,
-    1265, 1320, 1375, 1430, 1485, 1540, 1595, 1650, 1705, 1760,
-    1815, 1870, 1925, 1980, 2035, 2365, 2530, 2640,
-)
 
 
 def sha256(data: bytes) -> str:
@@ -113,7 +108,8 @@ def main() -> int:
             item["frame"]: item["at_milliseconds"]
             for item in timeline if item.get("kind") == "frame"
         }
-        if tuple(frame_times.get(index) for index in PAGE_FRAMES) != PAGE_TIMES:
+        if tuple(frame_times.get(index) for index in PAGE_FRAMES) != \
+                tuple(reference["page_at_milliseconds"]):
             raise ValueError("FIG escape-failure frame timing differs")
         voices = [item for item in timeline if item.get("kind") == "voice"]
         if len(voices) != 1 or (

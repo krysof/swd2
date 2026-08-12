@@ -113,7 +113,7 @@ def main() -> int:
             item["frame"]: item["at_milliseconds"]
             for item in trace.get("timeline", []) if item.get("kind") == "frame"
         }
-        if tuple(frame_times.get(index) for index in (4, 5, 6)) != (0, 275, 440):
+        if tuple(frame_times.get(index) for index in (4, 5, 6)) != (0, 275, 439):
             raise ValueError(
                 "silent 26af action regained a name-card/effect hold")
 

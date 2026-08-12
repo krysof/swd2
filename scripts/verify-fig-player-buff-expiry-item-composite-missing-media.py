@@ -223,13 +223,11 @@ def main() -> int:
             (157, "next_command_at_milliseconds"),
         )
         if any(times[index] != expected[key] for index, key in timed) or \
-                times[127] - times[126] != \
-                    expected["missing_card_hold_milliseconds"] or \
-                times[128] - times[127] != \
-                    expected["missing_card_hold_milliseconds"] or \
-                any(times[index + 1] - times[index] !=
-                    expected["restoration_step_milliseconds"]
-                    for index in range(128, 133)) or \
+                [times[127] - times[126], times[128] - times[127]] != \
+                    expected["missing_card_hold_intervals_milliseconds"] or \
+                [times[index + 1] - times[index]
+                 for index in range(128, 133)] != \
+                    expected["restoration_step_intervals_milliseconds"] or \
                 times[134] - times[133] != \
                     expected["expiry_hold_milliseconds"] or \
                 times[135] - times[134] != expected["clean_hold_milliseconds"]:

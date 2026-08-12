@@ -259,10 +259,10 @@ def main() -> int:
         if len(voices) != 9 or \
                 (voices[7].get("at_milliseconds"),
                  voices[7].get("payload_fnv1a64")) != \
-                    (12263, "309e81a048cdcef2") or \
+                    (12248, "309e81a048cdcef2") or \
                 (voices[8].get("at_milliseconds"),
                  voices[8].get("payload_fnv1a64")) != \
-                    (14462, "ce3659387971554b"):
+                    (14445, "ce3659387971554b"):
             raise ValueError("FIG learned-medium-expiry voices differ")
 
         frames = load_indexed_frames(frame_path)

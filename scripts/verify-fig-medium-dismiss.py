@@ -21,7 +21,6 @@ PAGE_LABELS = (
     "22e0 bare cleanup page after mediator removal",
 )
 FLIP_FRAMES = tuple(range(38, 47))
-FLIP_TIMES = (2803, 2803, 2858, 2913, 2968, 3023, 3078, 3133, 3188)
 
 
 def sha256(data: bytes) -> str:
@@ -122,8 +121,12 @@ def main() -> int:
             for item in trace.get("timeline", []) if item.get("kind") == "frame"
         }
         if tuple(frame_times.get(index) for index in FLIP_FRAMES) != \
-                FLIP_TIMES or frame_times.get(36) != 2419 or \
-                frame_times.get(37) != 2419 or frame_times.get(47) != 3518:
+                tuple(reference["flip_at_milliseconds"]) or \
+                frame_times.get(36) != \
+                    reference["preparation_at_milliseconds"] or \
+                frame_times.get(37) != \
+                    reference["dismissal_name_at_milliseconds"] or \
+                frame_times.get(47) != reference["cleanup_at_milliseconds"]:
             raise ValueError("2731 eight-flip or 22e0 timing differs")
         voices = [
             item for item in trace.get("timeline", [])
