@@ -3848,3 +3848,24 @@ release entity record, the absence of Confirm, the blocked final state, the
 13-frame/193 ms rewrite timeline, the full page and every dialogue stage.
 This proves one shipped automatic collision route; it is not a claim that all
 world entities or a full playthrough are complete.
+
+The earlier `5298` behavior-six case is now measured separately.  MAPZ
+directory byte offset 10 selects MA-DE.  Its released entity five record is
+`sprite=0300h, direction=0, cell=51342, behavior=6, delay=15, offsets=0/-16,
+animation=4, flags=000ah, event=20, frame=0`.  The evidence fixture preserves
+that record exactly and changes only the other twelve entity behaviors to
+three, preventing unrelated autonomous actors from crossing the comparison
+area.  At world `(106,142)` one Right poll collides with the entity's
+three-word footprint.  Original `5298` changes behavior six to hidden behavior
+three before testing flag `8000h`; the party does not move, CHNA directory 20
+is not entered, and there are zero text boundaries or Confirm inputs.
+
+MA-DE's animated lower foliage has already advanced to a different DAC phase
+when DOSBox-X first samples the loaded world, so the evidence does not pretend
+that the whole page is equal.  The `x=80..239,y=0..119` area includes the
+complete party/entity overlap and a large fixed building background.  Its
+visible-before and removed-after pages both match the rewrite in all 19,200
+RGB pixels.  The two-poll, two-page, 58 ms trace, unchanged serialized MAPZ
+hash and stationary final state are failure-closed.  Together with SBOUT this
+directly covers both collision branches described above: behavior-six removal
+before flags, and non-six `8000h` automatic event dispatch.
