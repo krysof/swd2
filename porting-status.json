@@ -2276,7 +2276,7 @@
         "scripts/verify-evidence-manifest.py"
       ],
       "remaining": [
-        "MT→ED→DEMO→OM/DAQ 路径已由 26 个严格边界输入、818 张提交页和 23,427ms 时间线完整跨过开场实体并抵达首个空闲世界 poll；继续从该确定性状态录制到结局的原版输入/状态基准",
+        "MT→ED→DEMO→OM/DAQ 路径已由 55 个严格边界输入、848 张提交页和 24,297ms 时间线完整跨过开场实体，沿 28 步实际碰撞路径命中 AREA1/MAP0 action 200ah 并抵达首个普通目的地区域的空闲 world poll；继续从该确定性状态录制到结局的原版输入/状态基准",
         "生成通过哈希校验的 playthrough manifest"
       ]
     },

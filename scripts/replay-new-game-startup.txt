@@ -2,10 +2,16 @@
 # MEO -> RPG title/New Game (ED) -> DEMO skip -> RPG (OM) -> DAQ opening
 # event -> first event-free ordinary world poll. Seventeen field Confirms
 # advance the opening; the eighteenth closes it and returns to normal OC,
-# followed by one idle poll. This reaches the real new-game world but is
-# deliberately not represented as a complete playthrough.
+# followed by one idle poll. The final 28 directional polls walk the released
+# AREA1 path into its first non-special MAP0 transition (action 200Ah), then a
+# second idle poll proves the destination world loop is live. This reaches the
+# first village map but is deliberately not a complete playthrough.
 WAIT:CONFIRM*4
 WAIT:CANCEL
 POLL:CONFIRM*19
+POLL:NONE
+POLL:DOWN*14
+POLL:RIGHT*11
+POLL:UP*3
 POLL:NONE
 POLL:QUIT
