@@ -3,12 +3,12 @@
   "kind": "fig_rgb_checkpoint",
   "status": "checkpoint_not_complete",
   "scope": "Aggregate index of every committed FIG reference containing registered rewrite/original RGB page or crop digest pairs; this is not the final all-scene pixel_diffs completion manifest.",
-  "source_count": 206,
-  "registered_rgb_pair_count": 5213,
-  "exact_rgb_page_count": 5140,
+  "source_count": 208,
+  "registered_rgb_pair_count": 5241,
+  "exact_rgb_page_count": 5168,
   "exact_rgb_crop_count": 73,
   "nonmatching_rgb_pair_count": 0,
-  "unique_exact_rgb_page_count": 2855,
+  "unique_exact_rgb_page_count": 2866,
   "unique_exact_rgb_crop_count": 57,
   "sources": [
     {
@@ -152,6 +152,15 @@
       "kind": "original_fig_captured_ally_zero_physical",
       "registered_rgb_pairs": 57,
       "exact_rgb_pages": 57,
+      "exact_rgb_crops": 0,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-capture-failure-rgb-reference.json",
+      "sha256": "767c9c08c192a7a6f7fcf468af6a899f3a3be5abeabda75ab2225d51ab473395",
+      "kind": "original_fig_random_capture_failure_sequence",
+      "registered_rgb_pairs": 27,
+      "exact_rgb_pages": 27,
       "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },
@@ -1853,6 +1862,15 @@
       "kind": "original_fig_story_42_hit_reaction",
       "registered_rgb_pairs": 9,
       "exact_rgb_pages": 9,
+      "exact_rgb_crops": 0,
+      "nonmatching_rgb_pairs": 0
+    },
+    {
+      "path": "scripts/fig-summon-replace-rgb-reference.json",
+      "sha256": "fe7a992c463bdff89bdad9f71e2f75752839fe714e204428f0495de88276ef8d",
+      "kind": "original_fig_summon_replacement",
+      "registered_rgb_pairs": 1,
+      "exact_rgb_pages": 1,
       "exact_rgb_crops": 0,
       "nonmatching_rgb_pairs": 0
     },

@@ -34,6 +34,7 @@ def main() -> int:
         expected = json.loads(args.reference.read_text(encoding="utf-8"))
         if expected.get("schema_version") != 1 or \
                 expected.get("kind") != "original_fig_summon_replacement" or \
+                expected.get("status") != "exact_rgb_checkpoint" or \
                 expected.get("formation_directory_offset") != 100 or \
                 expected.get("initial_captured_items") != [420, 419, 418] or \
                 expected.get("installed_captured_items") != [420, 418] or \
@@ -92,6 +93,7 @@ def main() -> int:
         if sha256(pixels) != expected["rewrite_indexed_sha256"] or \
                 sha256(palette) != expected["rewrite_palette_sha256"] or \
                 sha256(rgb) != expected["rewrite_rgb_sha256"] or \
+                sha256(rgb) != expected["original_rgb_sha256"] or \
                 sha256(rgb) != expected["capture_rgb_sha256"]:
             raise ValueError("FIG summon-replacement page differs from original")
 

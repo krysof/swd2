@@ -57,5 +57,7 @@
   "rewrite_final_fnv1a64": "8708cf2467159b22",
   "rewrite_indexed_sha256": "9d947e2784bdac03d6015c428469e2bff3d1f649d0823428705ebbd197707291",
   "rewrite_palette_sha256": "88cf70c9b49459cb05bbadec70d8cfb4aeb6cb088e66b1bc9afc79b62878df71",
-  "rewrite_rgb_sha256": "4e9d06f0965d0549ad265e30006bbe7386842d40b49a9bd5a8a7358c21a64b7b"
+  "rewrite_rgb_sha256": "4e9d06f0965d0549ad265e30006bbe7386842d40b49a9bd5a8a7358c21a64b7b",
+  "status": "exact_rgb_checkpoint",
+  "original_rgb_sha256": "4e9d06f0965d0549ad265e30006bbe7386842d40b49a9bd5a8a7358c21a64b7b"
 }

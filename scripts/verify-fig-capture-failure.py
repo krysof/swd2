@@ -131,7 +131,8 @@ def main() -> int:
             rgb = expand_rgb(pixels, palette)
             if sha256(pixels) != page["rewrite_indexed_sha256"] or \
                     sha256(palette) != page["rewrite_palette_sha256"] or \
-                    sha256(rgb) != page["rgb_sha256"]:
+                    sha256(rgb) != page["rewrite_rgb_sha256"] or \
+                    sha256(rgb) != page["original_rgb_sha256"]:
                 raise ValueError(
                     "FIG capture-failure exact sequence differs at frame " +
                     str(page["rewrite_frame"]))
