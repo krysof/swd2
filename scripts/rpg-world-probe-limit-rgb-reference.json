@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_buin1_probe_limit_sequence",
+  "status": "exact_rgb_checkpoint",
+  "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+  "capture_harness_sha256": "b884ff334ce081992422aa9a6b7e6a31685443c10869fa819d0fcb2a4e92b04b",
+  "release_mapz_sha256": "b9e31ff2d3dac2efbd314b6dfe7426eab88c7757315a1ae10695aad961eea917",
+  "fixture_mapz_sha256": "c8b35df562edaa1929ba3e79b324e885b5b0893f5fa53447488d18f7cabdf433",
+  "name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+  "area_layout_sha256": "beb80f72b096bad87e9a5f3817bf50038db2238812a233815e12496de15b6752",
+  "area_graphics_metadata_sha256": "c3a09c63d0634bd2fabcd8dbc836c42600067a5d2a1431badaf8a0d9016963a7",
+  "area_overlay_sha256": "77e1387d4e14cb7e2eb42ea264b049fb190bbc1b2f9105589b4ecba554ca0e08",
+  "entity_sprite_archive_sha256": "6a6aaa018645ad3a241d54938622416a4b45c197b7e8f551855f5bb1c797e581",
+  "music_sha256": "036fcf18cf8cd57e00dba304d7865f04917f2f9062021afb884b80331a178f0f",
+  "event_archive_sha256": "6940c589ae9d2ea3a4f960bd3b8b4d8621ca598da747e11da76463464c63072b",
+  "event_font_sha256": "8403126e430decc5a37a6256b3a785b278f93c34634754f9ec347c84dc9eb348",
+  "fixture_save_sha256": "25e95285b2d09f5c14c226ea9889e75af13902377693a81122227b30289169db",
+  "map_location_directory_offset": 268,
+  "entity_index": 0,
+  "release_entity_fields": [
+    5120,
+    6,
+    60878,
+    1,
+    10,
+    0,
+    65520,
+    4,
+    10,
+    40,
+    1
+  ],
+  "fixture_behaviors": [
+    1,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "player_world_position": [
+    10,
+    169
+  ],
+  "player_direction": 9,
+  "entity_world_footprint": [
+    [
+      15,
+      169
+    ],
+    [
+      16,
+      169
+    ],
+    [
+      17,
+      169
+    ]
+  ],
+  "entity_initial_direction": 6,
+  "event_directory_offset": 40,
+  "automatic_event_flag": false,
+  "capture_autotype": "original-rpg-world-probe-limit-autotype.txt",
+  "capture_autotype_sha256": "9d39745403e5faf662463b32d613eedf45037d0180983ae8bc87f538cf0c9653",
+  "replay_input": "replay-rpg-world-probe-limit.txt",
+  "replay_input_sha256": "f0606e757f46abe4cc8e67c38e9f3fc9b11c7c07d7a5714b4d0113e3d49388c9",
+  "capture_wait_seconds": 6.5,
+  "capture_pace_seconds": 1.2,
+  "capture_time_limit_seconds": 11,
+  "capture_review_fps": 70,
+  "capture_video_frames": 770,
+  "capture_review_frames": 769,
+  "capture_dosbox_exit_code": 0,
+  "capture_video_sha256": "fde6f08c59045d740891f55b14dbe1c7bf42d5674e90d38f967d0cf5dd7a66c6",
+  "capture_manifest_sha256": "0ef763a5b5c524fdc8c5a19d7a74bba5bd8f8d97f1a03e5e87b0ff386847bd61",
+  "rewrite_input": {
+    "total": 2,
+    "consumed": 2,
+    "remaining": 0,
+    "implicit_quit_calls": 0
+  },
+  "rewrite_boundaries": {
+    "wait": 0,
+    "poll": 2,
+    "text": 0,
+    "frontend": 0
+  },
+  "rewrite_video": {
+    "frames": 2,
+    "direct_updates": 0,
+    "last_width": 320,
+    "last_height": 200,
+    "fnv1a64": "b94ba840e20be35d"
+  },
+  "rewrite_audio": {
+    "music_calls": 1,
+    "voice_calls": 0,
+    "stop_music_calls": 0,
+    "stop_audio_calls": 1,
+    "fnv1a64": "dfcf0c93a81299a9"
+  },
+  "rewrite_delay_milliseconds": 58,
+  "rewrite_state_fnv1a64": "a9e0bf82fa6149c3",
+  "rewrite_mapz_fnv1a64": "21d25caefe119ae0",
+  "rewrite_name_fnv1a64": "e3d2853e2676513b",
+  "matched_frames": [
+    {
+      "kind": "probe_limit_initial",
+      "rewrite_frame": 0,
+      "original_review_frame": 238,
+      "original_png_sha256": "354a6e3e1b7918fd7ffb547f8095e4d1577422709309c32c62cb474e865fd680",
+      "rewrite_indexed_sha256": "d2f9e25d7dfbdb9da9aa19d5bc45dc4672bd95524166078b8984c757ef2158fb",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "f01ef8bba3159d251d17ec42f4f669021b5d8ce57a899947ec30bcc37ca45076",
+      "original_rgb_sha256": "f01ef8bba3159d251d17ec42f4f669021b5d8ce57a899947ec30bcc37ca45076"
+    },
+    {
+      "kind": "probe_limit_after_confirm",
+      "rewrite_frame": 1,
+      "original_review_frame": 500,
+      "original_png_sha256": "354a6e3e1b7918fd7ffb547f8095e4d1577422709309c32c62cb474e865fd680",
+      "rewrite_indexed_sha256": "d2f9e25d7dfbdb9da9aa19d5bc45dc4672bd95524166078b8984c757ef2158fb",
+      "rewrite_palette_sha256": "e2944ac37e60afe96d156378e323e07d394542c3e5d38ddf05cba9e74850d557",
+      "rewrite_rgb_sha256": "f01ef8bba3159d251d17ec42f4f669021b5d8ce57a899947ec30bcc37ca45076",
+      "original_rgb_sha256": "f01ef8bba3159d251d17ec42f4f669021b5d8ce57a899947ec30bcc37ca45076"
+    }
+  ],
+  "forward_probe_cells": [
+    [
+      11,
+      169
+    ],
+    [
+      12,
+      169
+    ],
+    [
+      13,
+      169
+    ],
+    [
+      14,
+      169
+    ]
+  ],
+  "first_out_of_range_cell": [
+    15,
+    169
+  ],
+  "event_dispatched": false,
+  "confirm_inputs": 1,
+  "text_boundaries": 0
+}

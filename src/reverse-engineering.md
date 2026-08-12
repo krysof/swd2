@@ -4045,6 +4045,19 @@ world pages match original review frames `238/463/501/505/644` over every
 320×200 RGB pixel.  This twenty-sixth original OC route locks the inclusive
 four-cell upper bound of `523d/52fd` rather than inferring it from code alone.
 
+The neighbouring negative case closes the other side of that boundary.  The
+same isolated entity remains at `(15..17,169)`, but the east-facing leader
+moves one cell west to `(10,169)`.  Confirm now probes only `(11..14,169)`;
+the actor's first word at `(15,169)` would require a fifth forward probe.
+The untouched executable accepts exactly one Space pulse without entering a
+text boundary or changing the world page.  Its pages immediately before and
+after that pulse, review frames `238` and `500`, are byte-identical in RGB and
+both match the rewrite's two submitted 320×200 pages.  The replay additionally
+locks zero text/direct-update calls and unchanged final SAVE/MAPZ/NAME state.
+Together with the fourth-cell hit, this twenty-seventh original OC route proves
+that four is the exact search distance: inclusive at four and exclusive at
+five.
+
 ### RPG SWRO7 behavior-five animated decoration
 
 The second nonwalking animation class now has its own released-data capture

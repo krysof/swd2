@@ -1026,6 +1026,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_fourth_probe_validation PROPERTIES
         DEPENDS rpg_world_fourth_probe_prepare)
     add_test(
+        NAME rpg_world_probe_limit_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-probe-limit-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-probe-limit-save"
+    )
+    add_test(
+        NAME rpg_world_probe_limit_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-probe-limit.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-probe-limit-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-probe-limit"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-probe-limit-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_probe_limit_validation PROPERTIES
+        DEPENDS rpg_world_probe_limit_prepare)
+    add_test(
         NAME rpg_world_side_ray_prepare
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-side-ray-fixture.py"
