@@ -4611,7 +4611,7 @@ if(BUILD_TESTING)
         NAME long_run_checkpoint_validation
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-long-run-checkpoint.py"
-                "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-10-macos"
+                "${PROJECT_SOURCE_DIR}/verification/long_run/checkpoint-2026-08-12-macos-arm64"
     )
     add_test(
         NAME linux_arm64_checkpoint_validation

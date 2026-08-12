@@ -51,8 +51,21 @@ def main() -> int:
                 webkit.get("idbfs", {}).get("cycles") != \
                 coverage["webkit_idbfs_restart_cycles"]:
             raise ValueError("checkpoint component counts/status differ")
-        if edge.get("gesture", {}).get("deliveries_after_release_fence") != 0:
+        gesture = edge.get("gesture", {})
+        world_start = gesture.get("world_start", {})
+        world_finish = gesture.get("world_finish", {})
+        if gesture.get("deliveries_after_release_fence") != 0:
             raise ValueError("Edge touch delivery continued after release fence")
+        if gesture.get("requested_world_frames") != 69 or \
+                gesture.get("wasm_world_deliveries", 0) < 69 or \
+                gesture.get("presented_world_samples", 0) < 69 or \
+                not isinstance(world_start, dict) or \
+                not isinstance(world_finish, dict) or \
+                (world_start.get("x"), world_start.get("y")) == \
+                (world_finish.get("x"), world_finish.get("y")):
+            raise ValueError("Edge held touch did not move the RPG world")
+        if edge.get("assets") != webkit.get("assets"):
+            raise ValueError("Edge and WebKit did not test the same WASM assets")
         artifacts = matrix.get("artifacts")
         expected = {
             "native_log_sha256": sha256(native_path),

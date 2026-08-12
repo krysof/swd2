@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "kind": "wasm_browser_runtime_checks",
+  "status": "verified",
+  "limitation": "Headless desktop Edge with mobile emulation is not a physical iOS/Android device test.",
+  "browser": "Edg/151.0.4129.78",
+  "protocol_version": "1.3",
+  "host": {
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "device_scale_factor": 2
+  },
+  "layout": {
+    "portrait_rotation_applied": true,
+    "right_button_rect": {
+      "x": 148.5,
+      "y": 111,
+      "width": 44,
+      "height": 48,
+      "top": 111,
+      "right": 192.5,
+      "bottom": 159,
+      "left": 148.5
+    }
+  },
+  "gesture": {
+    "touch_start_events": 1,
+    "requested_world_frames": 69,
+    "hold_milliseconds": 2790.0849999934435,
+    "touch_end_events": 1,
+    "direction": "right",
+    "wasm_world_deliveries": 71,
+    "first_to_last_delivery_milliseconds": 2750.9900000095367,
+    "deliveries_before_release_fence": 0,
+    "deliveries_after_release_fence": 0,
+    "presented_world_samples": 71,
+    "world_start": {
+      "x": 127,
+      "y": 13,
+      "screen_x": 38,
+      "screen_y": 80,
+      "viewport_x": 107,
+      "viewport_y": 1
+    },
+    "world_finish": {
+      "x": 138,
+      "y": 15,
+      "screen_x": 38,
+      "screen_y": 80,
+      "viewport_x": 118,
+      "viewport_y": 3
+    }
+  },
+  "idbfs": {
+    "cycles": 100,
+    "initial_sync": "completed",
+    "exact_probe_write": "completed",
+    "page_reloads": 100,
+    "restored_bytes": "exact",
+    "cleanup_sync": "completed",
+    "result": "pass"
+  },
+  "assets": {
+    "index.html": "3646b130c7b1955f71a49359491483a456e1fa0ff3a51393c3252290f4b38194",
+    "index.js": "8995977e50ac783ae63b7512ee4d0ecb9aee8a0463f7389b1d896376ae953278",
+    "index.wasm": "760f846c371dde6aee759d834ae2f35ae0f521802a39312122d5182a1878dfd9",
+    "index.data": "cc57db3e8963aaabed56cd2cf9a774da1575175c4182046bebfe828687760321"
+  }
+}

@@ -2220,8 +2220,10 @@ WASM/data loader），runner 只允许这一条且拒绝额外页面错误。该
 清理/恢复错误。首次短跑还发现 CDP 的 `Input.dispatchTouchEvent(touchEnd)` promise 会在
 renderer 接受任务、但 DOM 回调尚未执行时返回；旧测试偶发把此时已经开始的一帧诊断算成
 “松手后仍移动”。runner 现在先等待 `swd2HeldDirection==0` 作为 DOM 释放栅栏，再要求
-随后 250ms 零追加，连续五次短跑和正式 100 周期 Edge 检查均通过。登记的长期检查点另
-执行 250 次独立原生 MEO→RPG 回放（每次 trace SHA-256 相同）以及 1000 次 WebKit 两文档
+随后 250ms 零追加，连续五次短跑和 2026-08-12 的正式 100 周期 Edge 检查均通过；
+该批 Edge 运行还锁定 71 个方向交付、71 个已呈现世界位置及 `(127,13)→(138,15)` 的
+实际角色移动。登记的长期检查点另执行 250 次独立原生 MEO→RPG 回放（每次 trace
+SHA-256 相同）以及 1000 次 WebKit 两文档
 恢复/删除周期；矩阵报告仍列出多小时活动音频、Windows/Linux、物理手机和手柄缺口，
 因此长期平台门只进入 `in_progress`，绝不生成最终 verified manifest。
 
