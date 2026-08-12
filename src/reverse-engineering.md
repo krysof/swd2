@@ -3383,3 +3383,13 @@ against the archive, and every item is tied to its original capture,
 deterministic replay, verifier and exact-RGB reference.  Together this closed
 family currently contributes 594 exact full pages and 56 exact crops; a new
 shipped composite or a missing/mislabelled evidence file makes CTest fail.
+
+The matching learned-command domain is smaller than the eleven descriptors
+suggest.  `audit-fig-learned-composites.py` reads all four 60-row ORC growth
+tables plus the four released `SAVE.DA1` actor ability lists.  Only abilities
+80 (`60h/46h`, growth table 0 row 36) and 90 (`38h/3ah`, row 29) are reachable
+as player-learned `6bh` commands.  Their two independent learned-route captures
+contribute 127 exact full RGB pages.  Ability 85's `43h/36h` learned capture is
+kept as a 32-page synthetic dispatcher regression, but the audit explicitly
+forbids counting it as a shipped learnable route.  The other eight descriptors
+are reachable only through their `ability_id+140` type-10 ITEM wrappers.
