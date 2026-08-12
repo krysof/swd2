@@ -58,6 +58,8 @@ def main() -> int:
             raise ValueError("Windows PE compiler-runtime import boundary differs")
         if not isinstance(native.get("source_commit"), str) or \
                 re.fullmatch(r"[0-9a-f]{40}", native["source_commit"]) is None or \
+                not isinstance(native.get("source_tree"), str) or \
+                re.fullmatch(r"[0-9a-f]{40}", native["source_tree"]) is None or \
                 not isinstance(native.get("compiler"), str) or \
                 "mingw" not in native["compiler"].lower():
             raise ValueError("Windows compiler/source identity differs")

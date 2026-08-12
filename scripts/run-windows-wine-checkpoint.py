@@ -78,6 +78,9 @@ def main() -> int:
         source_commit = checked(
             ["git", "rev-parse", "HEAD"], "git revision", cwd=root
         ).stdout.strip()
+        source_tree = checked(
+            ["git", "rev-parse", "HEAD^{tree}"], "git source tree", cwd=root
+        ).stdout.strip()
         if not args.windows_executable.is_file():
             raise ValueError("Windows checkpoint executable is absent")
         if not args.native_executable.is_file():
@@ -87,7 +90,7 @@ def main() -> int:
         if not build_record_path.is_file():
             raise ValueError("Windows cross-build native-log.json is absent")
         build_record = json.loads(build_record_path.read_text(encoding="utf-8"))
-        if build_record.get("source_commit") != source_commit or \
+        if build_record.get("source_tree") != source_tree or \
                 build_record.get("executable_sha256") != sha256(
                     args.windows_executable):
             raise ValueError(
@@ -178,6 +181,7 @@ def main() -> int:
                 "status": "verified",
                 "scope": "emulated_not_windows_host",
                 "source_commit": source_commit,
+                "source_tree": source_tree,
                 "host_system": platform.system(),
                 "host_architecture": platform.machine(),
                 "container_base": BASE_IMAGE,

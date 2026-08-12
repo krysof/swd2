@@ -73,7 +73,9 @@ def main() -> int:
             raise ValueError("Windows Wine execution identity differs")
         if not isinstance(execution.get("source_commit"), str) or \
                 re.fullmatch(r"[0-9a-f]{40}", execution["source_commit"]) is None or \
-                execution["source_commit"] != build.get("source_commit") or \
+                not isinstance(execution.get("source_tree"), str) or \
+                re.fullmatch(r"[0-9a-f]{40}", execution["source_tree"]) is None or \
+                execution["source_tree"] != build.get("source_tree") or \
                 execution.get("windows_executable_sha256") != \
                 build.get("executable_sha256"):
             raise ValueError("Windows Wine source/executable identity differs")

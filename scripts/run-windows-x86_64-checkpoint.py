@@ -68,6 +68,9 @@ def main() -> int:
         source_commit = checked(
             ["git", "rev-parse", "HEAD"], "git revision", cwd=root
         ).stdout.strip()
+        source_tree = checked(
+            ["git", "rev-parse", "HEAD^{tree}"], "git source tree", cwd=root
+        ).stdout.strip()
         target = checked(
             [compiler, "-dumpmachine"], "compiler target").stdout.strip()
         if target != "x86_64-w64-mingw32":
@@ -120,6 +123,7 @@ def main() -> int:
             "kind": "swd2_windows_cross_build_checkpoint",
             "status": "verified",
             "source_commit": source_commit,
+            "source_tree": source_tree,
             "compiler": compiler_version,
             "compiler_target": target,
             "build_type": "Release",
