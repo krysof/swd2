@@ -3893,3 +3893,26 @@ outside the crop continues to have an unrelated palette phase, so this evidence
 does not promote the comparisons to whole-page equality.  CTest also locks the
 untouched target record, isolated behavior vector, 61-poll/61-page trace,
 unchanged player state and serialized MAPZ digest.
+
+### RPG BUIN1 explicit interaction and facing restoration
+
+The Confirm-only `523d/52fd` search is now exercised independently of walking
+collisions.  MAPZ directory byte offset 268 selects BUIN1 entity zero with its
+released fields unchanged: behavior one, initial direction six, three-word
+footprint `(15..17,169)`, flags `000ah` (no automatic-event bit), and CHNA2
+directory byte offset 40.  The fixture hides its ten unrelated neighbours and
+places the leader at `(18,169)` facing west.  A single Confirm therefore finds
+the actor along the centre ray; no movement direction is supplied.
+
+`52b4` temporarily turns the entity opposite the leader, from direction six
+to nine, before presenting the event world page.  The original capture does
+not sample that very short page on its own, but the turned sprite remains
+fully visible behind CHNA2's first direct text update, complete dialogue and
+animated end marker.  Those three full 320×200 pages match modern frames
+`2/3/4` exactly at original review frames `465/501/505`.  After the final
+Confirm, `52b4` restores direction six; both the initial and restored world
+pages also match exactly at original frames `238/544`.  The strict replay
+locks one initial field Confirm, one text-acceleration Confirm, one closing
+field Confirm, Quit, all six submitted pages, the two direct updates and final
+SAVE/MAPZ/NAME summaries.  This is the fifteenth original OC world route and
+does not stand in for the still-incomplete full playthrough.

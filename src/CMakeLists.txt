@@ -836,6 +836,25 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_world_entity_roam_validation PROPERTIES
         DEPENDS rpg_world_entity_roam_prepare)
     add_test(
+        NAME rpg_world_interaction_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-rpg-world-interaction-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-interaction-save"
+    )
+    add_test(
+        NAME rpg_world_interaction_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-world-interaction.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/rpg-world-interaction-save"
+                "${CMAKE_BINARY_DIR}/rpg-world-interaction"
+                "${PROJECT_SOURCE_DIR}/scripts/rpg-world-interaction-rgb-reference.json"
+    )
+    set_tests_properties(rpg_world_interaction_validation PROPERTIES
+        DEPENDS rpg_world_interaction_prepare)
+    add_test(
         NAME rpg_magic_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

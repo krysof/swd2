@@ -129,11 +129,16 @@
         "scripts/prepare-rpg-world-entity-roam-fixture.py",
         "scripts/replay-rpg-world-entity-roam.txt",
         "scripts/rpg-world-entity-roam-rgb-reference.json",
-        "scripts/verify-rpg-world-entity-roam.py"
+        "scripts/verify-rpg-world-entity-roam.py",
+        "scripts/original-rpg-world-interaction-autotype.txt",
+        "scripts/prepare-rpg-world-interaction-fixture.py",
+        "scripts/replay-rpg-world-interaction.txt",
+        "scripts/rpg-world-interaction-rgb-reference.json",
+        "scripts/verify-rpg-world-interaction.py"
       ],
       "remaining": [
         "RPG DATA:37a0 的 42 项场景动作表、3407..3938 原版处理器、全部 00h..29h 状态摘要、75 个可达玩家能力及 49 项场景 ITEM 域已由 src/tests/test_main.cpp 穷举锁定；物品 248/6bh 是唯一发行数据越表故障并在现代运行时安全拒绝",
-        "现有 6,862 个唯一地点/实体图状态已在否/是两套输入下完成 13,724 次执行并锁定最终 SharedState/MAPZ 汇总检查点；AREA1 的四向视口滚动、四向角色屏幕移动、两类拐角滑动及不可滑动硬阻挡共十一条原版 OC 路线已登记二十四张完整 RGB 零差异页；SBOUT 8000h 自动碰撞事件作为第十二条原版 OC 路线，在没有 Confirm 输入且坐标保持不变的条件下另登记一张完整 RGB 页和十张 288×80 对话 crop；MA-DE 行为6碰撞消失作为第十三条 OC 路线，以零 Confirm/零文字边界登记消失前后两张 160×120 crop；MA-DE 行为0自主实体作为第十四条 OC 路线，在零方向/零 Confirm 的六十次空闲轮询中登记五个完整 128×128 移动实体 crop，直接覆盖 4f1c 代码流驱动的南/东/东/西/南位置、朝向及动画序列；继续把其余状态逐一与原版场景帧和状态基准对照",
+        "现有 6,862 个唯一地点/实体图状态已在否/是两套输入下完成 13,724 次执行并锁定最终 SharedState/MAPZ 汇总检查点；AREA1 的四向视口滚动、四向角色屏幕移动、两类拐角滑动及不可滑动硬阻挡共十一条原版 OC 路线已登记二十四张完整 RGB 零差异页；SBOUT 8000h 自动碰撞事件作为第十二条原版 OC 路线，在没有 Confirm 输入且坐标保持不变的条件下另登记一张完整 RGB 页和十张 288×80 对话 crop；MA-DE 行为6碰撞消失作为第十三条 OC 路线，以零 Confirm/零文字边界登记消失前后两张 160×120 crop；MA-DE 行为0自主实体作为第十四条 OC 路线，在零方向/零 Confirm 的六十次空闲轮询中登记五个完整 128×128 移动实体 crop，直接覆盖 4f1c 代码流驱动的南/东/东/西/南位置、朝向及动画序列；BUIN1 显式 Confirm 实体作为第十五条 OC 路线，登记初始、对向转身后的三张对话页及恢复朝向共五张完整 RGB 零差异页，锁定 523d/52fd 搜索与 52b4 临时转身/恢复；继续把其余状态逐一与原版场景帧和状态基准对照",
         "以完整新游戏通关回放验证 DAQ 开场事件后的全部状态无分歧"
       ]
     },
