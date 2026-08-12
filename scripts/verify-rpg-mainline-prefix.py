@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the released main story through Wild Bear Mountain and T2 entry."""
+"""Lock the released main story through T2 and the ONE3A temple approach."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ def main() -> int:
             ("RPG.EXE", "MT", "ED", True),
             ("DEMO.EXE", "ED", "--", True),
         ]
-        for _ in range(6):
+        for _ in range(9):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if len(expected_transitions) == 3 else "OC",
                  "IF", True),
@@ -74,31 +74,31 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 1924,
-            ("input", "consumed"): 1924,
+            ("input", "total"): 2768,
+            ("input", "consumed"): 2768,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 100,
-            ("boundaries", "poll"): 1827,
-            ("boundaries", "text"): 129,
-            ("video", "frames"): 5591,
-            ("video", "direct_updates"): 1908,
-            ("video", "fnv1a64"): "00a40c0e3fe0d0dd",
-            ("audio", "music_calls"): 38,
-            ("audio", "voice_calls"): 58,
-            ("audio", "stop_audio_calls"): 16,
-            ("audio", "fnv1a64"): "e787479490195566",
+            ("boundaries", "wait"): 154,
+            ("boundaries", "poll"): 2617,
+            ("boundaries", "text"): 496,
+            ("video", "frames"): 8165,
+            ("video", "direct_updates"): 3004,
+            ("video", "fnv1a64"): "e114d6bcb66daab1",
+            ("audio", "music_calls"): 51,
+            ("audio", "voice_calls"): 69,
+            ("audio", "stop_audio_calls"): 22,
+            ("audio", "fnv1a64"): "51514c296f9fdd0a",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 205135:
+        if trace.get("delay_milliseconds") != 284936:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "b7ff851ac0057323",
+            "state_fnv1a64": "885e3e074de72341",
             "mapz_fnv1a64": "ae6c1bca924a54ac",
             "name_fnv1a64": "e3d2853e2676513b",
         }
@@ -106,8 +106,8 @@ def main() -> int:
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 5591 or frames[-1] != "e8875c4faa5ffc81":
-            raise ValueError("mainline final TW-2A world frame differs")
+        if len(frames) != 8165 or frames[-1] != "3a4d52483706445e":
+            raise ValueError("mainline final ONE3A world frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -135,9 +135,28 @@ def main() -> int:
             1858: ("WAIT", "CONFIRM", "0bdb7bc7c2296b61", "ae6c1bca924a54ac"),
             1859: ("POLL", "DOWN", "e310b387046e727f", "ae6c1bca924a54ac"),
             1922: ("POLL", "NONE", "b7ff851ac0057323", "ae6c1bca924a54ac"),
-            1923: ("POLL", "QUIT", "b7ff851ac0057323", "ae6c1bca924a54ac"),
+            1923: ("POLL", "UP", "b7ff851ac0057323", "ae6c1bca924a54ac"),
+            1969: ("POLL", "NONE", "d2be14e5f720dc66", "ae6c1bca924a54ac"),
+            2017: ("POLL", "NONE", "9a0ece6fcda24daa", "ae6c1bca924a54ac"),
+            2070: ("POLL", "NONE", "81bb69a3e97cad5e", "ae6c1bca924a54ac"),
+            2119: ("POLL", "CONFIRM", "0ecf7718b538523d", "ae6c1bca924a54ac"),
+            2120: ("WAIT", "CONFIRM", "0ecf7718b538523d", "ae6c1bca924a54ac"),
+            2121: ("POLL", "UP", "d6274b10f78f891c", "ae6c1bca924a54ac"),
+            2223: ("POLL", "DOWN", "6f99742f0c73ff63", "ae6c1bca924a54ac"),
+            2269: ("POLL", "NONE", "735baa81a53beb07", "ae6c1bca924a54ac"),
+            2471: ("POLL", "DOWN", "976f4c41ea912414", "ae6c1bca924a54ac"),
+            2503: ("WAIT", "DOWN", "d3a6b7d6804f957c", "ae6c1bca924a54ac"),
+            2511: ("POLL", "CANCEL", "93fae7418cf33770", "ae6c1bca924a54ac"),
+            2527: ("POLL", "RIGHT", "fa7c12a40015c214", "ae6c1bca924a54ac"),
+            2607: ("WAIT", "DOWN", "1d7e3854a1113b11", "ae6c1bca924a54ac"),
+            2611: ("POLL", "DOWN", "80b77a90f0702b61", "ae6c1bca924a54ac"),
+            2703: ("WAIT", "DOWN", "174bafb9d7cf31ff", "ae6c1bca924a54ac"),
+            2711: ("POLL", "CANCEL", "acf8feee8c44df81", "ae6c1bca924a54ac"),
+            2730: ("POLL", "RIGHT", "76249f8b988cdb49", "ae6c1bca924a54ac"),
+            2766: ("POLL", "NONE", "885e3e074de72341", "ae6c1bca924a54ac"),
+            2767: ("POLL", "QUIT", "885e3e074de72341", "ae6c1bca924a54ac"),
         }
-        if len(checkpoints) != 1924:
+        if len(checkpoints) != 2768:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -158,7 +177,18 @@ def main() -> int:
             1851: (66, 123, 56, 0),
             1855: (66, 124, 57, 0),
             1922: (74, 96, 153, 3),
-            1923: (74, 96, 153, 3),
+            1969: (90, 36, 36, 3),
+            2017: (104, 118, 131, 0),
+            2070: (88, 32, 114, 3),
+            2121: (88, 45, 45, 0),
+            2223: (108, 29, 75, 0),
+            2269: (102, 117, 109, 0),
+            2471: (110, 48, 31, 3),
+            2503: (110, 62, 49, 9),
+            2607: (110, 95, 94, 0),
+            2703: (110, 149, 126, 9),
+            2766: (120, 61, 37, 3),
+            2767: (120, 61, 37, 3),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -180,36 +210,40 @@ def main() -> int:
             raise ValueError("persisted mainline NAME differs from live font")
 
         # Flags 0/2/4 come from the village and entrance; entry 200 adds flag 8
-        # after the Fire-Eyed Suanni battle. The freed father then adds flag 18
-        # in the next story word before the secret mechanism becomes usable.
+        # after the Fire-Eyed Suanni battle. The freed father adds flag 18 in
+        # the next story word, the T2 mayor adds flag 22, and the boat sequence
+        # adds flag 44 in the following word before entering ONE2A.
         if u16(save, 0x4A2) != 0xA880:
             raise ValueError("village/Stronghold/boss story flags are not exact")
-        if u16(save, 0x4A4) != 0x2000:
-            raise ValueError("freed-father secret-door flag is not exact")
+        if u16(save, 0x4A4) != 0x2200 or u16(save, 0x4A6) != 0x0008:
+            raise ValueError("freed-father/mayor/boat story flags are not exact")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 74:
-            raise ValueError("mainline did not finish in TW-2A directory 74")
+        if u16(save, 0x424) != 120:
+            raise ValueError("mainline did not finish in ONE3A directory 120")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (96, 153):
+        if (world_x, world_y) != (61, 37):
             raise ValueError(
-                f"mainline final T2 position is {(world_x, world_y)!r}")
-        if u16(save, 0x10) != 3 or u16(save, 0x104) != 121:
-            raise ValueError("boss victory party count or money reward differs")
+                f"mainline final ONE3A position is {(world_x, world_y)!r}")
+        if u16(save, 0x10) != 3 or u16(save, 0x104) != 96:
+            raise ValueError("T2 inn party count or money charge differs")
+        if u16(save, 0x49C) != 0x1100:
+            raise ValueError("ONE2A encounter random cursor differs")
         expected_party = [
-            (0x0000, 28, 59, 1, 36),
-            (0x1000, 5, 59, 2, 37),
-            (0x3000, 0, 65, 18, 18),
+            (0x0000, 48, 59, 52, 52, 36, 36),
+            (0x0000, 59, 59, 18, 18, 2, 37),
+            (0x0000, 65, 65, 56, 56, 18, 18),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
             actual = (u16(save, base + 8), u16(save, base + 0x2D),
-                      u16(save, base + 0x2F), u16(save, base + 0x55),
+                      u16(save, base + 0x2F), u16(save, base + 0x35),
+                      u16(save, base + 0x37), u16(save, base + 0x55),
                       u16(save, base + 0x57))
             if actual != expected:
                 raise ValueError(
-                    f"boss victory actor {actor} state is {actual!r}, expected {expected!r}")
+                    f"ONE3A actor {actor} state is {actual!r}, expected {expected!r}")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -236,7 +270,7 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(village -> Fire-Eyed Suanni -> secret passage -> T2 entry)"
+        "(village -> Fire-Eyed Suanni -> T2 -> inn -> ONE3A approach)"
     )
     return 0
 

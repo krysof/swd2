@@ -1,16 +1,14 @@
 # Deterministic main-story prefix reconstructed from the released MAPZ, MAP0,
 # CHNA1, ORC, ITEM and FIG data. It performs the real single-process startup,
-# completes the DAQ opening and first-village story, enters Wild Bear
-# Stronghold, defeats four ordinary encounters and wins the Fire-Eyed Suanni
-# chief battle with explicit per-actor commands over nine rounds. It then
-# returns to the freed villager, learns and opens the released secret passage,
-# crosses to AREA1's far side, escapes its deterministic encounter, and enters
-# the next T2 region through MAP0 action 204ah.
+# completes the DAQ opening and first-village story, wins the Fire-Eyed Suanni
+# chief battle, opens the Wild Bear Mountain secret passage, obtains the T2
+# mayor's boat permission, restores the party at the released inn, and crosses
+# ONE2A through three deterministic random encounters.
 #
-# The final ordinary world poll is at the exact TW-2A directory-74 spawn after
-# story flags 8/18, travel flag 3 and every Stronghold one-shot MAPZ mutation
-# have persisted. This is evidence through the first major boss and mountain
-# crossing, not a claim of a complete playthrough.
+# The final ordinary world poll is at ONE3A directory 120 after story flags
+# 8/18/22/44, travel flag three and every Stronghold one-shot MAPZ mutation
+# have persisted. This is a mainline checkpoint, not a claim of a complete
+# playthrough.
 WAIT:CONFIRM*4
 WAIT:CANCEL
 POLL:CONFIRM*19
@@ -301,5 +299,158 @@ POLL:LEFT*3
 POLL:DOWN*3
 POLL:LEFT*7
 POLL:UP*2
+POLL:NONE
+# Enter the T2 town hall through its released behavior-6 doorway.
+POLL:UP*20
+POLL:RIGHT*15
+POLL:UP*3
+POLL:RIGHT*3
+POLL:UP*5
+POLL:NONE
+# Ask the T2 mayor about the river demons and obtain boat permission.
+POLL:UP*20
+POLL:CONFIRM
+POLL:CONFIRM*4
+POLL:DOWN*22
+POLL:NONE
+# Enter the T2 inn.
+POLL:DOWN*2
+POLL:LEFT*9
+POLL:UP*26
+POLL:RIGHT*3
+POLL:UP*3
+POLL:RIGHT*3
+POLL:UP*4
+POLL:RIGHT
+POLL:UP
+POLL:NONE
+POLL:UP*30
+POLL:LEFT*17
+POLL:UP
+POLL:CONFIRM
+WAIT:CONFIRM
+# Take the inn stair back down.
+POLL:UP*2
+POLL:LEFT*3
+POLL:UP*3
+POLL:LEFT*5
+POLL:UP*11
+POLL:LEFT*22
+POLL:UP*24
+POLL:RIGHT*15
+POLL:DOWN*18
+POLL:UP
+POLL:NONE
+# Leave the inn to TW-2A.
+POLL:DOWN*41
+POLL:RIGHT
+POLL:DOWN
+POLL:NONE
+# Board the T2 boat after the inn restored the full party.
+POLL:DOWN*2
+POLL:LEFT*11
+POLL:UP*3
+POLL:LEFT
+POLL:UP*29
+POLL:LEFT*12
+POLL:UP*5
+POLL:LEFT
+POLL:UP*3
+POLL:LEFT
+POLL:UP*9
+POLL:LEFT*2
+POLL:UP*9
+POLL:LEFT
+POLL:UP*3
+POLL:LEFT*3
+POLL:UP*27
+POLL:LEFT*35
+POLL:UP
+POLL:CONFIRM
+POLL:CONFIRM*42
+# Reach ONE2A's first deterministic encounter.
+POLL:DOWN*18
+POLL:RIGHT*14
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+# Use the actor-one Qi Gathering talisman twice after the encounter.
+POLL:CANCEL
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:UP
+WAIT:CONFIRM
+WAIT:CANCEL
+WAIT:CANCEL
+WAIT:CANCEL
+POLL:RIGHT*4
+POLL:DOWN*3
+POLL:RIGHT*25
+POLL:UP*2
+POLL:DOWN*46
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:DOWN*29
+POLL:RIGHT*3
+POLL:DOWN*5
+POLL:RIGHT*3
+POLL:DOWN*8
+POLL:RIGHT*34
+POLL:UP
+POLL:RIGHT*2
+POLL:UP*2
+POLL:RIGHT*5
+# Escape the third ONE2A encounter on its second attempt.
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+# Spend actor one's remaining Qi Gathering uses on all three actors.
+POLL:CANCEL
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+# First cast targets actor zero (the default target).
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:CONFIRM
+# Second cast targets actor one.
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+# Third cast targets actor two.
+WAIT:CONFIRM
+WAIT:CONFIRM
+WAIT:UP
+WAIT:CONFIRM
+WAIT:CANCEL
+WAIT:CANCEL
+WAIT:CANCEL
+# Enter ONE3A at the stone-lion approach.
+POLL:RIGHT*2
+POLL:UP*4
+POLL:RIGHT*5
+POLL:UP*25
 POLL:NONE
 POLL:QUIT
