@@ -2116,4 +2116,47 @@ WAIT:DOWN
 WAIT:CONFIRM
 WAIT:CONFIRM
 
+# Continue across DAU4 into directory 444 and reach its next released random
+# encounter.
+POLL:RIGHT*6
+POLL:DOWN
+POLL:RIGHT
+POLL:DOWN*6
+POLL:LEFT
+POLL:DOWN
+POLL:LEFT
+POLL:DOWN*4
+POLL:RIGHT
+POLL:DOWN*2
+POLL:RIGHT
+POLL:DOWN
+POLL:RIGHT*6
+POLL:DOWN*24
+POLL:LEFT*18
+
+# Second post-Xirang directory-308 fight, round one: abilities 76 and 70
+# select monster one, then actors two and three attack monster two.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+
+# Round two uses four ordinary attacks on the two survivors.
+WAIT:CONFIRM*12
+
+# Acknowledge victory and the fourth actor's level-up card.
+WAIT:CONFIRM*2
+
 POLL:QUIT
