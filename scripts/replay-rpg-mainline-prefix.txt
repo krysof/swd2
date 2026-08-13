@@ -2040,4 +2040,48 @@ WAIT:CONFIRM*3
 # Take the remaining three steps and enter directory 198.
 POLL:UP*3
 
+# Reach and open the anomalous chest. Event 316 adds the fourth party member,
+# installs the quest item, restores the party and advances story flag 34 using
+# only released event opcodes before it requests fixed encounter 12.
+POLL:UP*34
+POLL:CONFIRM*25
+
+# Fixed encounter 12, round one: actor zero uses ability 76 on monster zero,
+# actor one attacks monster zero, actor two uses ability 16 on monster one,
+# and the new fourth actor attacks monster zero.
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*3
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*3
+
+# Round two: actor zero repeats ability 76; actor one selects ability 70;
+# actor two repeats ability 16; actor three uses ability 50 on party actor one.
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+
+# Acknowledge victory plus the actor-zero and actor-one level-up cards.
+WAIT:CONFIRM*3
+
 POLL:QUIT

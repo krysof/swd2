@@ -60,9 +60,9 @@ def main() -> int:
         ]
         # The released route enters FIG for the original ten encounters,
         # another 29 legal ONE2A training battles, fixed encounter 18, four
-        # return/mine encounters, fixed Taotie encounter 16, then fourteen
-        # legal post-Taotie encounters through Great Yu directory 198.
-        for index in range(59):
+        # return/mine encounters, fixed Taotie encounter 16, then fifteen
+        # legal post-Taotie encounters through Great Yu's fixed encounter 12.
+        for index in range(60):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -77,40 +77,40 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 9833,
-            ("input", "consumed"): 9833,
+            ("input", "total"): 9933,
+            ("input", "consumed"): 9933,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 998,
-            ("boundaries", "poll"): 8872,
-            ("boundaries", "text"): 661,
-            ("video", "frames"): 27894,
-            ("video", "direct_updates"): 4162,
-            ("video", "fnv1a64"): "dfa3376671d75008",
-            ("audio", "music_calls"): 270,
-            ("audio", "voice_calls"): 529,
-            ("audio", "stop_audio_calls"): 122,
-            ("audio", "fnv1a64"): "f95cd649b5a852d5",
+            ("boundaries", "wait"): 1039,
+            ("boundaries", "poll"): 8931,
+            ("boundaries", "text"): 736,
+            ("video", "frames"): 29027,
+            ("video", "direct_updates"): 4877,
+            ("video", "fnv1a64"): "72f3dc4ece5f21c5",
+            ("audio", "music_calls"): 276,
+            ("audio", "voice_calls"): 539,
+            ("audio", "stop_audio_calls"): 124,
+            ("audio", "fnv1a64"): "6e0dba20f8fa3037",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 1235812:
+        if trace.get("delay_milliseconds") != 1275084:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "f16b738b806b1ff8",
-            "mapz_fnv1a64": "94818e710189bb2f",
+            "state_fnv1a64": "eb298b6d5d4f59eb",
+            "mapz_fnv1a64": "f5452f802bfc8fbf",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 27894 or frames[-1] != "1dbd34af076ea39a":
-            raise ValueError("mainline final directory-198 frame differs")
+        if len(frames) != 29027 or frames[-1] != "249488e88fe847d6":
+            raise ValueError("mainline final post-encounter-12 frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -234,9 +234,15 @@ def main() -> int:
             9698: ("WAIT", "CONFIRM", "78eb894fe06b3352", "94818e710189bb2f"),
             9800: ("WAIT", "LEFT", "b44fc211317ac530", "94818e710189bb2f"),
             9828: ("WAIT", "CONFIRM", "2375ee363c1c733f", "94818e710189bb2f"),
-            9832: ("POLL", "QUIT", "f16b738b806b1ff8", "94818e710189bb2f"),
+            9832: ("POLL", "UP", "f16b738b806b1ff8", "94818e710189bb2f"),
+            9866: ("POLL", "CONFIRM", "75803a4a2e5ac9a3", "94818e710189bb2f"),
+            9891: ("WAIT", "LEFT", "636783f32b78aa47", "f5452f802bfc8fbf"),
+            9929: ("WAIT", "CONFIRM", "ffb267e9d7938b74", "f5452f802bfc8fbf"),
+            9930: ("WAIT", "CONFIRM", "fd307a07b2b6cab4", "f5452f802bfc8fbf"),
+            9931: ("WAIT", "CONFIRM", "eb298b6d5d4f59eb", "f5452f802bfc8fbf"),
+            9932: ("POLL", "QUIT", "eb298b6d5d4f59eb", "f5452f802bfc8fbf"),
         }
-        if len(checkpoints) != 9833:
+        if len(checkpoints) != 9933:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -344,6 +350,10 @@ def main() -> int:
             9800: (442, 150, 14, 3),
             9828: (442, 150, 14, 3),
             9832: (198, 71, 70, 3),
+            9866: (198, 71, 36, 3),
+            9891: (198, 71, 36, 3),
+            9929: (198, 71, 36, 3),
+            9932: (198, 71, 36, 3),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -368,8 +378,9 @@ def main() -> int:
         # already-proven village, Stronghold, mayor, boat and stone-lion bits.
         if u16(save, 0x4A2) != 0xE880:
             raise ValueError("village/Stronghold/river-demon story flags are not exact")
-        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0x0008:
-            raise ValueError("freed-father/mayor/boat/tablet story flags are not exact")
+        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0x2008:
+            raise ValueError(
+                "freed-father/mayor/boat/tablet/xirang story flags are not exact")
         if u16(save, 0x4A8) != 0x8000:
             raise ValueError("ONE3A stone-lion story flag 48 was not set")
         if save[0x521] != 1:
@@ -378,20 +389,21 @@ def main() -> int:
             raise ValueError("deeper waterway checkpoint is not directory 198")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (71, 70):
+        if (world_x, world_y) != (71, 36):
             raise ValueError(f"deeper waterway position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
-        if u16(save, 0x10) != 3 or u16(save, 0x104) != 3361:
+        if u16(save, 0x10) != 4 or u16(save, 0x104) != 3401:
             raise ValueError("post-waterway-battle party count or money differs")
-        if u16(save, 0x49C) != 0x1000:
+        if u16(save, 0x49C) != 0x103C:
             raise ValueError("deeper-waterway FIG random cursor differs")
         if u16(save, 0x51A) != 0x0004:
             raise ValueError("Taotie MAP0 once-only trigger flag was not retained")
         expected_party = [
-            (0x1000, 25, 123, 101, 101, 43, 75, 476, 511),
-            (0x0000, 49, 125, 35, 35, 2, 83, 463, 509),
-            (0x0000, 15, 150, 71, 129, 42, 42, 231, 711),
+            (0x0000, 134, 134, 110, 110, 84, 84, 31, 717),
+            (0x0000, 138, 138, 42, 42, 91, 91, 20, 706),
+            (0x0000, 150, 150, 69, 129, 42, 42, 297, 711),
+            (0x0000, 117, 117, 42, 42, 68, 75, 456, 505),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -405,8 +417,10 @@ def main() -> int:
                     f"directory-198 actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
-                for actor in range(3)] != [15, 15, 16]:
-            raise ValueError("legal waterway victory levels differ")
+                for actor in range(4)] != [16, 16, 16, 15]:
+            raise ValueError("legal Xirang victory levels differ")
+        if u16(save, 0x382) != 93:
+            raise ValueError("event 316 did not install the Xirang quest item")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -446,6 +460,9 @@ def main() -> int:
         if map_field(image, 176, 3, 0) != 3 or \
                 map_field(image, 176, 9, 0) != 306:
             raise ValueError("Great Yu waterway gate was not persistently opened")
+        if map_field(image, 198, 0, 0) != 49 or \
+                map_field(image, 198, 9, 0) != 202:
+            raise ValueError("event 316 chest did not persist its opened state")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--":
             raise ValueError("mainline checkpoint did not stop at explicit world quit")
@@ -454,7 +471,7 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> river demon -> Taotie -> Great Yu tablet -> waterway 198)"
+        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> river demon -> Taotie -> Great Yu tablet -> Xirang encounter)"
     )
     return 0
 
