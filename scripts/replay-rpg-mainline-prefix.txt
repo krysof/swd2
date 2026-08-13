@@ -2046,22 +2046,8 @@ POLL:UP*3
 POLL:UP*34
 POLL:CONFIRM*25
 
-# Fixed encounter 12, round one: actor zero uses ability 76 on monster zero,
-# actor one attacks monster zero, actor two uses ability 16 on monster one,
-# and the new fourth actor attacks monster zero.
-WAIT:LEFT
-WAIT:CONFIRM*3
-WAIT:CONFIRM*3
-WAIT:LEFT
-WAIT:CONFIRM
-WAIT:DOWN
-WAIT:CONFIRM
-WAIT:DOWN
-WAIT:CONFIRM
-WAIT:CONFIRM*3
-
-# Round two: actor zero repeats ability 76; actor one selects ability 70;
-# actor two repeats ability 16; actor three uses ability 50 on party actor one.
+# Fixed encounter 12, round one: focus the first stone-lion spirit with
+# abilities 76/70/15 while the fourth actor damages the second.
 WAIT:LEFT
 WAIT:CONFIRM*3
 WAIT:LEFT
@@ -2069,19 +2055,65 @@ WAIT:CONFIRM
 WAIT:DOWN
 WAIT:CONFIRM*2
 WAIT:LEFT
-WAIT:CONFIRM
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
 WAIT:DOWN
+WAIT:CONFIRM
+
+# Round two selects the sole remaining spirit; FIG auto-commits its target.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:LEFT
 WAIT:CONFIRM
 WAIT:DOWN
 WAIT:CONFIRM
 WAIT:LEFT
-WAIT:CONFIRM
-WAIT:DOWN*2
-WAIT:CONFIRM
-WAIT:DOWN
-WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:CONFIRM*2
 
 # Acknowledge victory plus the actor-zero and actor-one level-up cards.
 WAIT:CONFIRM*3
+
+# Return to DAU4 and advance along the southern exit route until its first
+# released random encounter.
+POLL:DOWN*36
+POLL:DOWN*9
+POLL:LEFT*12
+POLL:DOWN
+POLL:LEFT
+POLL:DOWN
+POLL:LEFT
+POLL:DOWN
+POLL:LEFT
+POLL:DOWN
+POLL:LEFT
+POLL:DOWN*8
+POLL:RIGHT
+POLL:DOWN
+
+# First post-Xirang directory-308 fight, round one. All four actors survive:
+# basic attack monster three, basic attack monster zero, ability 15 on monster
+# zero, and basic attack monster one.
+WAIT:CONFIRM*2
+WAIT:DOWN*3
+WAIT:CONFIRM
+WAIT:CONFIRM*3
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+
+# Round two clears the remaining monsters one and two.
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM
 
 POLL:QUIT
