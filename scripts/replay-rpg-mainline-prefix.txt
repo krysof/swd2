@@ -2923,5 +2923,12 @@ POLL:CONFIRM*2
 POLL:RIGHT*27
 POLL:DOWN*27
 POLL:LEFT*36
+# This step enters directory 252 at (28,59). MAP0 special action 4011h then
+# begins event 334 and its scripted 1-up/11-right/1-up choreography moves the
+# party to (39,57). The final QUIT is consumed by the first dialogue page, so
+# this diagnostic prefix deliberately stops before event 334's MAPZ writes and
+# battle opcode 58. A canonical continuation must replace this QUIT with the
+# remaining dialogue/battle input; it must not treat this partial event as a
+# completed story checkpoint.
 POLL:UP*1
 POLL:QUIT

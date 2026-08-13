@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the released main story through Jianmu's directory-252 boss approach."""
+"""Lock the released main story to Jianmu event 334's first dialogue."""
 
 from __future__ import annotations
 
@@ -515,6 +515,12 @@ def main() -> int:
             raise ValueError("Jianmu directory-252 party count or money differs")
         if u16(save, 0x49C) != 0x1300:
             raise ValueError("Jianmu directory-252 FIG random cursor differs")
+        # The last Up enters directory 252 at (28,59), and MAP0 action 4011h
+        # sets bit 0010h before calling entity one's event 334. Its initial
+        # 1-up/11-right/1-up choreography produces (39,57); QUIT is consumed
+        # by the first dialogue, before opcode 3/34 and opcode 58. This is a
+        # diagnostic mid-event boundary, not proof that the story battle was
+        # completed or a canonical persisted-resume point.
         if u16(save, 0x51A) != 0x0014:
             raise ValueError("Jianmu/Taotie MAP0 once-only trigger flags differ")
         expected_party = [

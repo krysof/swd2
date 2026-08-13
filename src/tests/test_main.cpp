@@ -7592,6 +7592,8 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 jianmu_host.battle_transitions == 1U &&
                 jianmu_host.battle_transition_opcodes ==
                     std::vector<std::uint16_t>{58U} &&
+                jianmu_state.world_x() == 39U &&
+                jianmu_state.world_y() == 57U &&
                 jianmu_state.u16(0x4a0) == 0x802cU &&
                 jianmu_state.u16(0x51c) == 0U &&
                 jianmu_world.location_at_directory_offset(252U)
