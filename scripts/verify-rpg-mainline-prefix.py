@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the released main story through the Xirang handoff and Jianmu gate."""
+"""Lock the released main story through the first Jianmu guardian."""
 
 from __future__ import annotations
 
@@ -62,8 +62,9 @@ def main() -> int:
         # another 29 legal ONE2A training battles, fixed encounter 18, four
         # return/mine encounters, fixed Taotie encounter 16, then twenty-one
         # legal post-Taotie encounters through the sixth post-Xirang return
-        # fight, plus the two overworld encounters on the road to the temple.
-        for index in range(68):
+        # fight, the two overworld encounters on the road to the temple, and
+        # fixed Jianmu encounter 14.
+        for index in range(69):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -78,40 +79,40 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 11127,
-            ("input", "consumed"): 11127,
+            ("input", "total"): 11326,
+            ("input", "consumed"): 11326,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 1323,
-            ("boundaries", "poll"): 9841,
-            ("boundaries", "text"): 758,
-            ("video", "frames"): 32575,
-            ("video", "direct_updates"): 4989,
-            ("video", "fnv1a64"): "95087efa66743b20",
-            ("audio", "music_calls"): 314,
-            ("audio", "voice_calls"): 621,
-            ("audio", "stop_audio_calls"): 140,
-            ("audio", "fnv1a64"): "780afc3403a717f2",
+            ("boundaries", "wait"): 1438,
+            ("boundaries", "poll"): 9925,
+            ("boundaries", "text"): 783,
+            ("video", "frames"): 34017,
+            ("video", "direct_updates"): 5401,
+            ("video", "fnv1a64"): "1ae312e3b30ec0bf",
+            ("audio", "music_calls"): 320,
+            ("audio", "voice_calls"): 659,
+            ("audio", "stop_audio_calls"): 142,
+            ("audio", "fnv1a64"): "eaddc7b5320e464c",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 1446839:
+        if trace.get("delay_milliseconds") != 1516720:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "59edb911a01ef098",
-            "mapz_fnv1a64": "ebac54aa8c810d33",
+            "state_fnv1a64": "72afb064fd46af96",
+            "mapz_fnv1a64": "8853834e394c715a",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 32575 or frames[-1] != "65cdbfc1b03b04ee":
-            raise ValueError("mainline final Jianmu-entry frame differs")
+        if len(frames) != 34017 or frames[-1] != "df1947b3d6f215a0":
+            raise ValueError("mainline final first-Jianmu-guardian frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -265,9 +266,16 @@ def main() -> int:
             11086: ("POLL", "DOWN", "f930cb1d1a997e48", "f5452f802bfc8fbf"),
             11108: ("POLL", "RIGHT", "6c57fc8752351472", "f5452f802bfc8fbf"),
             11125: ("POLL", "NONE", "53543ed5fe942304", "ebac54aa8c810d33"),
-            11126: ("POLL", "QUIT", "59edb911a01ef098", "ebac54aa8c810d33"),
+            11126: ("POLL", "UP", "59edb911a01ef098", "ebac54aa8c810d33"),
+            11168: ("POLL", "UP", "c02b6d6da1ea1277", "ebac54aa8c810d33"),
+            11195: ("POLL", "CONFIRM", "f09bf423ca95e331", "ebac54aa8c810d33"),
+            11197: ("WAIT", "LEFT", "4f8f46f9423b47d0", "eb4d06993c03bdca"),
+            11311: ("WAIT", "CONFIRM", "3cf5e2e6af23b4da", "eb4d06993c03bdca"),
+            11312: ("POLL", "CONFIRM", "72afb064fd46af96", "eb4d06993c03bdca"),
+            11324: ("POLL", "CONFIRM", "72afb064fd46af96", "8853834e394c715a"),
+            11325: ("POLL", "QUIT", "72afb064fd46af96", "8853834e394c715a"),
         }
-        if len(checkpoints) != 11127:
+        if len(checkpoints) != 11326:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -402,6 +410,13 @@ def main() -> int:
             11108: (214, 41, 35, 0),
             11125: (214, 45, 20, 3),
             11126: (216, 89, 167, 3),
+            11168: (220, 30, 36, 3),
+            11195: (220, 36, 15, 3),
+            11197: (220, 36, 15, 3),
+            11311: (220, 36, 15, 3),
+            11312: (220, 36, 15, 3),
+            11324: (220, 36, 15, 3),
+            11325: (220, 36, 15, 3),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -423,7 +438,8 @@ def main() -> int:
             raise ValueError("persisted mainline NAME differs from live font")
 
         # The Taoist handoff adds flag 36 after all previously proven story
-        # flags; the Jianmu gate then persistently redirects AREA1 entity 3.
+        # flags. The Jianmu gate redirects AREA1 entity 3, then event 322
+        # moves the blocking root and event 324 installs its post-battle text.
         if u16(save, 0x4A2) != 0xE880:
             raise ValueError("village/Stronghold/river-demon story flags are not exact")
         if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0x2808:
@@ -433,25 +449,25 @@ def main() -> int:
             raise ValueError("ONE3A stone-lion story flag 48 was not set")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 216:
-            raise ValueError("post-Xirang checkpoint is not Jianmu directory 216")
+        if u16(save, 0x424) != 220:
+            raise ValueError("first Jianmu guardian checkpoint is not directory 220")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (89, 167):
-            raise ValueError(f"Jianmu entry position is {(world_x, world_y)!r}")
+        if (world_x, world_y) != (36, 15):
+            raise ValueError(f"Jianmu guardian position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
-        if u16(save, 0x10) != 4 or u16(save, 0x104) != 4097:
-            raise ValueError("post-temple party count or money differs")
-        if u16(save, 0x49C) != 0x1200:
-            raise ValueError("post-Xirang FIG random cursor differs")
+        if u16(save, 0x10) != 4 or u16(save, 0x104) != 4497:
+            raise ValueError("post-guardian party count or money differs")
+        if u16(save, 0x49C) != 0x12CE:
+            raise ValueError("post-guardian FIG random cursor differs")
         if u16(save, 0x51A) != 0x0004:
             raise ValueError("Taotie MAP0 once-only trigger flag was not retained")
         expected_party = [
-            (0x0000, 131, 134, 110, 110, 59, 84, 496, 717),
-            (0x0000, 93, 138, 42, 42, 16, 91, 485, 706),
-            (0x0000, 161, 161, 140, 140, 46, 46, 51, 847),
-            (0x0000, 100, 140, 46, 46, 84, 84, 416, 702),
+            (0x1000, 22, 134, 110, 110, 16, 84, 616, 717),
+            (0x0000, 94, 138, 42, 42, 5, 91, 605, 706),
+            (0x0000, 112, 161, 0, 140, 46, 46, 171, 847),
+            (0x0000, 100, 140, 46, 46, 49, 84, 536, 702),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -462,11 +478,11 @@ def main() -> int:
                       u16(save, base + 0x3B))
             if actual != expected:
                 raise ValueError(
-                    f"post-temple actor {actor} state is {actual!r}, "
+                    f"post-guardian actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
                 for actor in range(4)] != [16, 16, 17, 16]:
-            raise ValueError("legal post-Xirang overworld battle levels differ")
+            raise ValueError("post-guardian party levels differ")
         if u16(save, 0x382) != 93:
             raise ValueError("event 316 did not install the Xirang quest item")
 
@@ -513,6 +529,12 @@ def main() -> int:
             raise ValueError("event 316 chest did not persist its opened state")
         if map_field(image, 214, 9, 3) != 450:
             raise ValueError("Jianmu gate did not persist event 318 -> 450")
+        if map_field(image, 216, 2, 0) != 42950:
+            raise ValueError("Jianmu guardian did not move the blocking root")
+        if map_field(image, 220, 9, 0) != 308:
+            raise ValueError("Jianmu guardian did not persist event 322 -> 308")
+        if map_field(image, 126, 3, 2) != 3:
+            raise ValueError("Jianmu guardian did not hide directory 126 entity two")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--":
             raise ValueError("mainline checkpoint did not stop at explicit world quit")
@@ -521,7 +543,7 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> river demon -> Taotie -> Great Yu tablet -> Xirang -> Taoist temple -> Jianmu)"
+        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> river demon -> Taotie -> Great Yu tablet -> Xirang -> Taoist temple -> Jianmu guardian)"
     )
     return 0
 
