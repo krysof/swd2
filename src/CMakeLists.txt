@@ -375,7 +375,7 @@ if(BUILD_TESTING)
                 --require-module RPG.EXE
                 --require-module DEMO.EXE
                 --require-module FIG.EXE
-                --min-frames 4200
+                --min-frames 21000
     )
     set_tests_properties(rpg_mainline_prefix_validation PROPERTIES
         DEPENDS rpg_mainline_prefix_replay)
