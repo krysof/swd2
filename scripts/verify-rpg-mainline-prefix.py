@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the released main story through the revealed ONE2A river demon."""
+"""Lock the released main story through Taotie and the Great Yu tablet."""
 
 from __future__ import annotations
 
@@ -59,8 +59,9 @@ def main() -> int:
             ("DEMO.EXE", "ED", "--", True),
         ]
         # The released route enters FIG for the original ten encounters,
-        # another 29 legal ONE2A training battles, then fixed encounter 18.
-        for index in range(40):
+        # another 29 legal ONE2A training battles, fixed encounter 18, four
+        # return/mine encounters, and fixed Taotie encounter 16.
+        for index in range(45):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -75,40 +76,40 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 7033,
-            ("input", "consumed"): 7033,
+            ("input", "total"): 8036,
+            ("input", "consumed"): 8036,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 620,
-            ("boundaries", "poll"): 6450,
-            ("boundaries", "text"): 545,
-            ("video", "frames"): 21173,
-            ("video", "direct_updates"): 3682,
-            ("video", "fnv1a64"): "9e8691b75cb05581",
-            ("audio", "music_calls"): 196,
-            ("audio", "voice_calls"): 395,
-            ("audio", "stop_audio_calls"): 84,
-            ("audio", "fnv1a64"): "ffbff6c37d3480ae",
+            ("boundaries", "wait"): 755,
+            ("boundaries", "poll"): 7318,
+            ("boundaries", "text"): 592,
+            ("video", "frames"): 23981,
+            ("video", "direct_updates"): 4000,
+            ("video", "fnv1a64"): "00d575823e2639a2",
+            ("audio", "music_calls"): 217,
+            ("audio", "voice_calls"): 457,
+            ("audio", "stop_audio_calls"): 94,
+            ("audio", "fnv1a64"): "31a43a7c1dce3019",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 920540:
+        if trace.get("delay_milliseconds") != 1064363:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "241c141199d6b002",
-            "mapz_fnv1a64": "eb4b3375572e040b",
+            "state_fnv1a64": "fea2a4b299109254",
+            "mapz_fnv1a64": "760c33e95c6bbb40",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 21173 or frames[-1] != "d4b658618c9c9f61":
-            raise ValueError("mainline final post-river-demon directory-588 frame differs")
+        if len(frames) != 23981 or frames[-1] != "073f70de02df0707":
+            raise ValueError("mainline final Great Yu tablet frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -177,9 +178,20 @@ def main() -> int:
             7027: ("WAIT", "CONFIRM", "7da1a7f0978818e2", "eb4b3375572e040b"),
             7028: ("WAIT", "CONFIRM", "955e932abf6ba075", "eb4b3375572e040b"),
             7029: ("POLL", "CONFIRM", "47665f035a1de0c2", "eb4b3375572e040b"),
-            7032: ("POLL", "QUIT", "241c141199d6b002", "eb4b3375572e040b"),
+            7032: ("POLL", "DOWN", "241c141199d6b002", "eb4b3375572e040b"),
+            7162: ("WAIT", "DOWN", "03c35ddd60162750", "eb4b3375572e040b"),
+            7303: ("WAIT", "CONFIRM", "e62aa6d1f412fa2c", "eb4b3375572e040b"),
+            7400: ("POLL", "LEFT", "0b169ac6a1f5d3b3", "eb4b3375572e040b"),
+            7442: ("POLL", "RIGHT", "a0a3291fc84768d3", "eb4b3375572e040b"),
+            7665: ("WAIT", "DOWN", "1ec2ba6b2933bfb2", "eb4b3375572e040b"),
+            7807: ("WAIT", "DOWN", "6c5f56b697b8edaa", "eb4b3375572e040b"),
+            7879: ("POLL", "CONFIRM", "477aa39066c5b525", "eb4b3375572e040b"),
+            7880: ("WAIT", "LEFT", "c8d2b36b8a5ca675", "65524db874b766dc"),
+            7985: ("WAIT", "CONFIRM", "5ffd3935ea073a53", "65524db874b766dc"),
+            8026: ("POLL", "CONFIRM", "03b63d2186e98146", "65524db874b766dc"),
+            8035: ("POLL", "QUIT", "fea2a4b299109254", "760c33e95c6bbb40"),
         }
-        if len(checkpoints) != 7033:
+        if len(checkpoints) != 8036:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -232,6 +244,17 @@ def main() -> int:
             7028: (122, 75, 98, 3),
             7029: (588, 76, 98, 0),
             7032: (588, 76, 98, 0),
+            7162: (588, 74, 166, 0),
+            7303: (128, 44, 166, 6),
+            7400: (136, 65, 99, 3),
+            7442: (140, 32, 114, 3),
+            7665: (132, 52, 156, 3),
+            7807: (132, 70, 88, 9),
+            7879: (132, 107, 88, 0),
+            7880: (132, 107, 88, 0),
+            7985: (132, 107, 88, 0),
+            8026: (132, 121, 114, 9),
+            8035: (132, 121, 114, 9),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -252,32 +275,34 @@ def main() -> int:
         if len(name) != 514 or fnv1a64(name) != digests["name_fnv1a64"]:
             raise ValueError("persisted mainline NAME differs from live font")
 
-        # Event 338 adds flag one (4000h) after the already-proven village,
-        # Stronghold, mayor, boat and stone-lion bits.
+        # Event 338 and the Great Yu tablet add their flags after the
+        # already-proven village, Stronghold, mayor, boat and stone-lion bits.
         if u16(save, 0x4A2) != 0xE880:
             raise ValueError("village/Stronghold/river-demon story flags are not exact")
-        if u16(save, 0x4A4) != 0x2200 or u16(save, 0x4A6) != 0x0008:
-            raise ValueError("freed-father/mayor/boat story flags are not exact")
+        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0x0008:
+            raise ValueError("freed-father/mayor/boat/tablet story flags are not exact")
         if u16(save, 0x4A8) != 0x8000:
             raise ValueError("ONE3A stone-lion story flag 48 was not set")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 588:
-            raise ValueError("post-river-demon event did not relocate to directory 588")
+        if u16(save, 0x424) != 132:
+            raise ValueError("Great Yu tablet checkpoint is not in directory 132")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (76, 98):
-            raise ValueError(f"post-river-demon position is {(world_x, world_y)!r}")
+        if (world_x, world_y) != (121, 114):
+            raise ValueError(f"Great Yu tablet position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
-        if u16(save, 0x10) != 3 or u16(save, 0x104) != 2896:
-            raise ValueError("post-river-demon party count or money differs")
-        if u16(save, 0x49C) != 0x1E00:
-            raise ValueError("ONE2A training/fixed-battle random cursor differs")
+        if u16(save, 0x10) != 3 or u16(save, 0x104) != 3011:
+            raise ValueError("post-Taotie party count or money differs")
+        if u16(save, 0x49C) != 0x102A:
+            raise ValueError("post-Taotie FIG random cursor differs")
+        if u16(save, 0x51A) != 0x0004:
+            raise ValueError("Taotie MAP0 once-only trigger flag was not retained")
         expected_party = [
-            (0x3000, 0, 123, 101, 101, 0, 75, 61, 511),
-            (0x2000, 0, 125, 35, 35, 6, 83, 48, 509),
-            (0x0000, 51, 134, 3, 118, 35, 35, 330, 514),
+            (0x0000, 68, 123, 101, 101, 45, 75, 161, 511),
+            (0x0000, 125, 125, 35, 35, 4, 83, 148, 509),
+            (0x0000, 71, 134, 11, 118, 35, 35, 430, 514),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -288,7 +313,7 @@ def main() -> int:
                       u16(save, base + 0x3B))
             if actual != expected:
                 raise ValueError(
-                    f"post-river-demon actor {actor} state is {actual!r}, "
+                    f"post-Taotie actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
                 for actor in range(3)] != [15, 15, 15]:
@@ -321,6 +346,11 @@ def main() -> int:
                     map_field(image, location, 9, 20) != 338:
                 raise ValueError(
                     "river-demon event did not persist the aliased entity redirects")
+        if map_field(image, 132, 3, 1) != 3 or \
+                map_field(image, 132, 9, 1) != 350:
+            raise ValueError("Taotie was not persistently hidden after victory")
+        if map_field(image, 132, 9, 0) != 346:
+            raise ValueError("Great Yu tablet did not persist event 278 -> 346")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--":
             raise ValueError("mainline checkpoint did not stop at explicit world quit")
@@ -329,7 +359,7 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> legal training -> river-demon victory -> event 338)"
+        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> legal training -> river demon -> Taotie -> Great Yu tablet)"
     )
     return 0
 
