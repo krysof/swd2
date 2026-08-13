@@ -72,6 +72,68 @@ LaunchResult Launcher::run(const ModuleRunner& runner) const {
     return result;
 }
 
+LaunchResult Launcher::resume(Marker marker,
+                              const ModuleRunner& runner) const {
+    if (marker != Marker::menu_ready && marker != Marker::open_figure &&
+        marker != Marker::open_demo && marker != Marker::continue_rpg &&
+        marker != Marker::returned_from_demo) {
+        throw std::invalid_argument(
+            "launcher resume requires MT, IF, ED, OC, or OM");
+    }
+
+    LaunchResult result;
+    const auto invoke = [&](Module module) {
+        const Marker input = marker;
+        const auto child = runner(module, input);
+        marker = child.marker;
+        result.transitions.push_back({module, input, marker, child.launched});
+        return child.launched;
+    };
+    const auto launch_failed = [&]() {
+        result.reason = StopReason::child_launch_failed;
+        result.final_marker = marker;
+        return result;
+    };
+
+    if (marker == Marker::open_demo) {
+        if (!invoke(Module::demo)) return launch_failed();
+        // SWD2.EXE owns this marker; DEMO.EXE's return value is discarded.
+        marker = Marker::returned_from_demo;
+    } else if (marker == Marker::open_figure) {
+        if (!invoke(Module::figure)) return launch_failed();
+        if (marker != Marker::continue_rpg) {
+            result.reason = StopReason::module_requested_exit;
+            result.final_marker = marker;
+            return result;
+        }
+    }
+
+    while (result.transitions.size() < transition_limit_) {
+        if (!invoke(Module::rpg)) return launch_failed();
+
+        if (marker == Marker::open_demo) {
+            if (result.transitions.size() >= transition_limit_) break;
+            if (!invoke(Module::demo)) return launch_failed();
+            marker = Marker::returned_from_demo;
+            continue;
+        }
+
+        if (marker == Marker::open_figure) {
+            if (result.transitions.size() >= transition_limit_) break;
+            if (!invoke(Module::figure)) return launch_failed();
+            if (marker == Marker::continue_rpg) continue;
+        }
+
+        result.reason = StopReason::module_requested_exit;
+        result.final_marker = marker;
+        return result;
+    }
+
+    result.reason = StopReason::transition_limit;
+    result.final_marker = marker;
+    return result;
+}
+
 std::string_view module_name(Module module) noexcept {
     switch (module) {
     case Module::menu: return "MEO.EXE";

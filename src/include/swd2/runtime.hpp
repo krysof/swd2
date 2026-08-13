@@ -69,6 +69,8 @@ class MonolithicRuntime {
 public:
     explicit MonolithicRuntime(ModuleRegistry registry);
     [[nodiscard]] LaunchResult run(GameContext& context) const;
+    [[nodiscard]] LaunchResult resume(GameContext& context,
+                                      Marker marker) const;
 
 private:
     ModuleRegistry registry_;

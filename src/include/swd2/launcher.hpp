@@ -62,6 +62,10 @@ class Launcher {
 public:
     explicit Launcher(std::size_t transition_limit = 10'000);
     [[nodiscard]] LaunchResult run(const ModuleRunner& runner) const;
+    // Continue the launcher protocol from a persisted DOS marker without
+    // returning after the first restored module.
+    [[nodiscard]] LaunchResult resume(Marker marker,
+                                      const ModuleRunner& runner) const;
 
 private:
     std::size_t transition_limit_;

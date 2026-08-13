@@ -151,6 +151,52 @@ void test_launcher() {
                 rejected.transitions.size() == 1U &&
                 swd2::marker_name(rejected.final_marker) == "01",
             "launcher did not preserve MEO's literal rejection marker");
+
+    std::vector<std::pair<Module, Marker>> resumed_calls;
+    const std::vector<Marker> resumed_outputs{
+        Marker::open_figure, Marker::continue_rpg, Marker::none};
+    cursor = 0;
+    const auto resumed = swd2::Launcher().resume(
+        Marker::continue_rpg, [&](Module module, Marker input) {
+            resumed_calls.emplace_back(module, input);
+            return swd2::ModuleResult{true, resumed_outputs.at(cursor++)};
+        });
+    const std::vector<std::pair<Module, Marker>> expected_resumed{
+        {Module::rpg, Marker::continue_rpg},
+        {Module::figure, Marker::open_figure},
+        {Module::rpg, Marker::continue_rpg},
+    };
+    require(resumed_calls == expected_resumed &&
+                resumed.reason == swd2::StopReason::module_requested_exit &&
+                resumed.final_marker == Marker::none,
+            "launcher did not continue a restored OC/IF protocol");
+
+    resumed_calls.clear();
+    cursor = 0;
+    const std::vector<Marker> demo_outputs{Marker::none, Marker::none};
+    const auto resumed_demo = swd2::Launcher().resume(
+        Marker::open_demo, [&](Module module, Marker input) {
+            resumed_calls.emplace_back(module, input);
+            return swd2::ModuleResult{true, demo_outputs.at(cursor++)};
+        });
+    require(resumed_calls ==
+                std::vector<std::pair<Module, Marker>>{
+                    {Module::demo, Marker::open_demo},
+                    {Module::rpg, Marker::returned_from_demo}} &&
+                resumed_demo.final_marker == Marker::none,
+            "launcher resume did not preserve the ED/OM owner boundary");
+
+    auto invalid_resume_rejected = false;
+    try {
+        static_cast<void>(swd2::Launcher().resume(
+            Marker::none, [](Module, Marker) {
+                return swd2::ModuleResult{};
+            }));
+    } catch (const std::invalid_argument&) {
+        invalid_resume_rejected = true;
+    }
+    require(invalid_resume_rejected,
+            "launcher accepted an impossible persisted marker");
 }
 
 void test_paths() {

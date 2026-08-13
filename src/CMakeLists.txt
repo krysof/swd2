@@ -391,6 +391,57 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_mainline_prefix_checkpoint PROPERTIES
         DEPENDS rpg_mainline_prefix_validation)
     add_test(
+        NAME rpg_jianmu_grind_prepare
+        COMMAND "${CMAKE_COMMAND}" -E remove_directory
+                "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-saves"
+    )
+    set_tests_properties(rpg_jianmu_grind_prepare PROPERTIES
+        DEPENDS rpg_mainline_prefix_checkpoint)
+    add_test(
+        NAME rpg_jianmu_grind_seed
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory
+                "${CMAKE_BINARY_DIR}/rpg-mainline-prefix-saves"
+                "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-saves"
+    )
+    set_tests_properties(rpg_jianmu_grind_seed PROPERTIES
+        DEPENDS rpg_jianmu_grind_prepare)
+    add_test(
+        NAME rpg_jianmu_grind_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-saves"
+                --slot 3
+                --resume-marker OC
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-jianmu-grind.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-trace.json"
+    )
+    set_tests_properties(rpg_jianmu_grind_replay PROPERTIES
+        DEPENDS rpg_jianmu_grind_seed)
+    add_test(
+        NAME rpg_jianmu_grind_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-replay-trace.py"
+                "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-trace.json"
+                --require-module RPG.EXE
+                --require-module FIG.EXE
+                --min-frames 7000
+    )
+    set_tests_properties(rpg_jianmu_grind_validation PROPERTIES
+        DEPENDS rpg_jianmu_grind_replay)
+    add_test(
+        NAME rpg_jianmu_grind_checkpoint
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-jianmu-grind.py"
+                "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-saves/SAVE.DA3"
+                "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-saves/MAPZ.DA3"
+                "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-saves/NAME3.DSK"
+    )
+    set_tests_properties(rpg_jianmu_grind_checkpoint PROPERTIES
+        DEPENDS rpg_jianmu_grind_validation)
+    add_test(
         NAME rpg_name_bitmap_replay
         COMMAND swd2_rewrite
                 --game "${PROJECT_SOURCE_DIR}/game"

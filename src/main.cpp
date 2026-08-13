@@ -469,7 +469,20 @@ private:
         }
         if (++unmatched_nonblocking_calls_ > 1'000'000U) {
             throw std::runtime_error(
-                "replay made no progress across one million nonblocking polls");
+                "replay made no progress across one million nonblocking polls "
+                "at input " + std::to_string(cursor_) +
+                ": runtime requested " +
+                std::string(swd2::replay_boundary_name(boundary)) +
+                " but next input requires " +
+                std::string(swd2::replay_boundary_name(step.boundary)) +
+                " (" + std::string(swd2::input_action_name(step.action)) +
+                ") last consumed=" +
+                (input_checkpoints.empty()
+                     ? std::string("none")
+                     : (std::to_string(input_checkpoints.back().index) +
+                        ":" +
+                        std::string(swd2::input_action_name(
+                            input_checkpoints.back().action)))));
         }
         return swd2::InputAction::none;
     }
@@ -654,7 +667,8 @@ void run_monolithic(const std::filesystem::path& game_root,
                     const std::optional<std::filesystem::path>& trace_output,
                     const std::optional<std::filesystem::path>& frame_output,
                     bool require_all_inputs,
-                    std::optional<swd2::Marker> start_marker) {
+                    std::optional<swd2::Marker> start_marker,
+                    std::optional<swd2::Marker> resume_marker) {
     ReplayPlatform platform(std::move(inputs), frame_output);
     auto slot = swd2::SaveSlot::open(game_root, save_root, slot_number);
     swd2::GameContext context{
@@ -685,7 +699,10 @@ void run_monolithic(const std::filesystem::path& game_root,
     modules.add(std::make_unique<swd2::BattleModule>());
     modules.add(std::make_unique<swd2::DemoModule>());
     swd2::LaunchResult result;
-    if (start_marker) {
+    if (resume_marker) {
+        result = swd2::MonolithicRuntime(std::move(modules)).resume(
+            context, *resume_marker);
+    } else if (start_marker) {
         const auto module = [&]() {
             switch (*start_marker) {
             case swd2::Marker::menu_ready:
@@ -2058,10 +2075,12 @@ void usage(const char* program) {
               << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save]"
                  " [--trace-output FILE.json] [--frame-output FILE.swd2frames]"
                  " [--start-marker MT|IF|ED|OC|OM]"
+                 " [--resume-marker MT|IF|ED|OC|OM]"
                  " --run-script CONFIRM,CONFIRM,RIGHT,DOWN,QUIT\n"
               << "  " << program
               << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save]"
                  " [--start-marker MT|IF|ED|OC|OM]"
+                 " [--resume-marker MT|IF|ED|OC|OM]"
                  " --run-replay INPUT.txt --trace-output FILE.json"
                  " [--frame-output FILE.swd2frames]\n";
 #ifdef SWD2_HAVE_SDL2
@@ -2088,6 +2107,7 @@ int main(int argc, char** argv) {
         std::optional<std::filesystem::path> replay_trace;
         std::optional<std::filesystem::path> replay_frames;
         std::optional<swd2::Marker> start_marker;
+        std::optional<swd2::Marker> resume_marker;
         bool strict_replay = false;
         std::size_t render_index = 0;
 
@@ -2156,6 +2176,8 @@ int main(int argc, char** argv) {
                 replay_frames = std::filesystem::path(argv[++i]);
             } else if (argument == "--start-marker" && i + 1 < argc) {
                 start_marker = parse_marker(argv[++i]);
+            } else if (argument == "--resume-marker" && i + 1 < argc) {
+                resume_marker = parse_marker(argv[++i]);
             } else if (argument == "--play") {
                 mode = Mode::play;
             } else if (argument == "--help" || argument == "-h") {
@@ -2167,6 +2189,10 @@ int main(int argc, char** argv) {
         }
 
         if (save_root.empty()) save_root = game_root / "portable-saves";
+        if (start_marker && resume_marker) {
+            throw std::runtime_error(
+                "--start-marker and --resume-marker are mutually exclusive");
+        }
         if (replay_trace && mode != Mode::run) {
             throw std::runtime_error("--trace-output requires --run-script or --run-replay");
         }
@@ -2206,7 +2232,7 @@ int main(int argc, char** argv) {
             run_monolithic(game_root, swd2::parse_replay_input(input_text),
                            save_root, slot_number, write_save,
                            replay_trace, replay_frames, strict_replay,
-                           start_marker);
+                           start_marker, resume_marker);
         } else if (mode == Mode::play) {
 #ifdef SWD2_HAVE_SDL2
             play_monolithic(game_root, save_root, slot_number, write_save);

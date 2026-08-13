@@ -50,4 +50,16 @@ LaunchResult MonolithicRuntime::run(GameContext& context) const {
     });
 }
 
+LaunchResult MonolithicRuntime::resume(GameContext& context,
+                                       Marker marker) const {
+    Launcher launcher;
+    return launcher.resume(marker, [&](Module module, Marker input) {
+        auto* implementation = registry_.find(module);
+        if (!implementation) {
+            return ModuleResult{false, Marker::none};
+        }
+        return ModuleResult{true, implementation->run(context, input)};
+    });
+}
+
 }  // namespace swd2
