@@ -1890,4 +1890,154 @@ POLL:UP*7
 POLL:RIGHT*14
 POLL:DOWN*5
 
+# Restore the party once before the next Great Yu waterway encounter. This is
+# the released field menu and ability path; the replay never patches SAVE.
+POLL:CANCEL
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM*6
+WAIT:RIGHT
+WAIT:CONFIRM*3
+WAIT:UP
+WAIT:CONFIRM
+WAIT:CANCEL*3
+
+# Advance until the carried RPG encounter gate opens ORC directory 308.
+POLL:DOWN*2
+POLL:RIGHT*6
+POLL:UP*9
+
+# First directory-308 fight, round one: actor zero uses ability 76 on monster
+# one, actor one uses ability 50 on actor zero, and actor two attacks monster
+# three.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN*3
+WAIT:CONFIRM
+
+# Round two: actors zero and one attack monsters one and zero; actor two uses
+# ability 15 on monster two, then acknowledge the victory summary.
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*3
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM*2
+
+# Continue through directory 448 into its directory-442 companion section.
+POLL:UP*12
+POLL:RIGHT*2
+POLL:UP*15
+POLL:RIGHT*4
+POLL:UP
+POLL:RIGHT*28
+POLL:UP
+POLL:RIGHT*11
+POLL:UP*12
+POLL:RIGHT*36
+POLL:UP
+
+# Second directory-308 fight, round one: actors zero and one attack monster
+# two, while actor two attacks monster three.
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN*3
+WAIT:CONFIRM
+
+# Round two: actor zero uses ability 9 on party actor two; actor one attacks
+# monster one and actor two uses ability 15 on the same monster.
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+
+# Round three: the sole target auto-commits for two attacks, then actor two
+# selects ability 16. Acknowledge the victory summary.
+WAIT:CONFIRM*4
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM*2
+
+# Traverse the upper directory-442 passages until the third encounter.
+POLL:RIGHT
+POLL:UP
+POLL:RIGHT
+POLL:UP*2
+POLL:RIGHT
+POLL:UP
+POLL:RIGHT
+POLL:UP
+POLL:RIGHT
+POLL:UP*18
+POLL:LEFT*6
+POLL:UP
+POLL:LEFT
+POLL:UP*2
+POLL:LEFT
+POLL:UP*4
+POLL:RIGHT
+POLL:UP*2
+POLL:RIGHT
+POLL:UP*5
+POLL:LEFT
+POLL:UP
+POLL:LEFT*6
+POLL:UP
+POLL:LEFT
+POLL:UP*17
+POLL:RIGHT*16
+POLL:UP*6
+
+# Third directory-308 fight, round one: actor zero uses ability 76 on monster
+# two, actor one attacks monster zero, and actor two uses ability 15 on monster
+# two.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:CONFIRM*3
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+
+# Round two: actor zero uses ability 76 on physical monster one; actor one
+# attacks physical monster three; actor two selects ability 16 and physical
+# monster one. Acknowledge the victory summary.
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM*3
+
+# Take the remaining three steps and enter directory 198.
+POLL:UP*3
+
 POLL:QUIT
