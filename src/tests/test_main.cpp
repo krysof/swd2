@@ -7563,6 +7563,62 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 state.u16(0x4a0) == 68,
             "event opcode 48 did not preserve both FIG launch arguments");
 
+    // CHNA1 byte offset 334 is the Jianmu unnamed-Taoist story.  Its released
+    // stream hides the current entity and installs event 336 on location 220
+    // *before* opcode 58 starts ORC directory 44.  Unlike opcodes 48/59/60,
+    // opcode 58 has no post-battle event argument: FIG victory and defeat both
+    // return through OC with these two MAPZ changes already committed.  This
+    // is a script property, not a playthrough assumption that the level-30,
+    // 1821-HP encounter first has to be won.
+    TestEventHost jianmu_host;
+    auto jianmu_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto jianmu_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(jianmu_state, jianmu_world, 252U);
+    auto& jianmu_area =
+        jianmu_world.location_at_directory_offset(252U).area;
+    require(jianmu_area.entity_fields[3][1] == 4U &&
+                jianmu_area.entity_fields[9][1] == 334U &&
+                jianmu_world.location_at_directory_offset(220U)
+                        .area.entity_fields[9][0] != 336U,
+            "released MAPA no longer exposes the Jianmu event-334 setup");
+    jianmu_state.set_u16(0x51c, 0U);
+    const auto jianmu_story = swd2::execute_event(
+        archive, 334U, jianmu_state, &jianmu_area, 1U,
+        jianmu_host, 10'000U, &jianmu_world);
+    require(jianmu_story.status == swd2::EventVmStatus::completed &&
+                jianmu_story.commands_executed == 29U &&
+                jianmu_story.last_opcode == 58U &&
+                jianmu_story.requested_marker == swd2::Marker::open_figure &&
+                jianmu_host.battle_transitions == 1U &&
+                jianmu_host.battle_transition_opcodes ==
+                    std::vector<std::uint16_t>{58U} &&
+                jianmu_state.u16(0x4a0) == 0x802cU &&
+                jianmu_state.u16(0x51c) == 0U &&
+                jianmu_world.location_at_directory_offset(252U)
+                        .area.entity_fields[3][1] == 3U &&
+                jianmu_world.location_at_directory_offset(220U)
+                        .area.entity_fields[9][0] == 336U,
+            "Jianmu event 334 did not commit its pre-battle story state exactly");
+
+    // Returning to the Jianmu mage consumes the event installed above.  With
+    // story flag 50 still clear, record 336 gives the northern-passage clue
+    // and persists the mage's ordinary follow-up record 340.  No battle result
+    // value is read on this path.
+    TestEventHost mage_host;
+    swd2::install_map_location(jianmu_state, jianmu_world, 220U);
+    auto& mage_area =
+        jianmu_world.location_at_directory_offset(220U).area;
+    const auto mage_followup = swd2::execute_event(
+        archive, 336U, jianmu_state, &mage_area, 0U,
+        mage_host, 10'000U, &jianmu_world);
+    require(mage_followup.status == swd2::EventVmStatus::completed &&
+                mage_followup.commands_executed == 4U &&
+                mage_host.dialogues == 1U &&
+                mage_followup.requested_marker == swd2::Marker::none &&
+                jianmu_world.location_at_directory_offset(220U)
+                        .area.entity_fields[9][0] == 340U,
+            "Jianmu event 336 did not install its released mage follow-up");
+
     const std::vector<std::vector<std::uint8_t>> exit_records = {
         event_words({52, 41, 99, 0xffff}),
     };
