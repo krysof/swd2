@@ -2402,4 +2402,38 @@ POLL:UP*1
 POLL:RIGHT*2
 POLL:UP*7
 
+# Return through the first DAU2 chamber toward directory 182.
+POLL:UP*11
+POLL:LEFT*3
+POLL:UP
+POLL:LEFT*10
+POLL:UP*11
+
+# Sixth post-Xirang fight, round one: ordinary attacks focus monsters zero/one.
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+
+# Round two clears monsters zero and two.
+WAIT:CONFIRM*6
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM
+
+# Complete the route and cross into directory 182.
+POLL:UP*20
+POLL:RIGHT*13
+POLL:DOWN*3
+
 POLL:QUIT
