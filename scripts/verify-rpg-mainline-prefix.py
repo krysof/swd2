@@ -77,31 +77,31 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 10702,
-            ("input", "consumed"): 10702,
+            ("input", "total"): 10771,
+            ("input", "consumed"): 10771,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
             ("boundaries", "wait"): 1270,
-            ("boundaries", "poll"): 9469,
+            ("boundaries", "poll"): 9538,
             ("boundaries", "text"): 736,
-            ("video", "frames"): 31574,
+            ("video", "frames"): 31644,
             ("video", "direct_updates"): 4877,
-            ("video", "fnv1a64"): "5ba7cd07ec91c81f",
-            ("audio", "music_calls"): 301,
+            ("video", "fnv1a64"): "12273f53500f4920",
+            ("audio", "music_calls"): 302,
             ("audio", "voice_calls"): 604,
             ("audio", "stop_audio_calls"): 136,
-            ("audio", "fnv1a64"): "645bc8e1ce93930b",
+            ("audio", "fnv1a64"): "a824a256ff00ff68",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 1405166:
+        if trace.get("delay_milliseconds") != 1407196:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "6e8aae1f1797b5db",
+            "state_fnv1a64": "353c5e35890cee26",
             "mapz_fnv1a64": "f5452f802bfc8fbf",
             "name_fnv1a64": "e3d2853e2676513b",
         }
@@ -109,7 +109,7 @@ def main() -> int:
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 31574 or frames[-1] != "365f1d3eb0677106":
+        if len(frames) != 31644 or frames[-1] != "4fc48e880f5b65dd":
             raise ValueError("mainline final post-Xirang-return frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
@@ -252,9 +252,11 @@ def main() -> int:
             10539: ("WAIT", "CONFIRM", "fd9382ba67927f30", "f5452f802bfc8fbf"),
             10599: ("POLL", "UP", "9479a103ef3b8781", "f5452f802bfc8fbf"),
             10664: ("WAIT", "CONFIRM", "1b334c16f96ad022", "f5452f802bfc8fbf"),
-            10701: ("POLL", "QUIT", "6e8aae1f1797b5db", "f5452f802bfc8fbf"),
+            10701: ("POLL", "DOWN", "6e8aae1f1797b5db", "f5452f802bfc8fbf"),
+            10769: ("POLL", "DOWN", "7f7b26a9fb1907c6", "f5452f802bfc8fbf"),
+            10770: ("POLL", "QUIT", "353c5e35890cee26", "f5452f802bfc8fbf"),
         }
-        if len(checkpoints) != 10702:
+        if len(checkpoints) != 10771:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -380,6 +382,8 @@ def main() -> int:
             10599: (186, 51, 158, 3),
             10664: (186, 38, 135, 3),
             10701: (182, 53, 111, 0),
+            10769: (178, 84, 157, 0),
+            10770: (178, 84, 158, 0),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -411,11 +415,11 @@ def main() -> int:
             raise ValueError("ONE3A stone-lion story flag 48 was not set")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 182:
-            raise ValueError("post-Xirang checkpoint is not DAU directory 182")
+        if u16(save, 0x424) != 178:
+            raise ValueError("post-Xirang checkpoint is not AREA1 directory 178")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (53, 111):
+        if (world_x, world_y) != (84, 158):
             raise ValueError(f"post-Xirang DAU4 position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
@@ -497,7 +501,7 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> river demon -> Taotie -> Great Yu tablet -> Xirang encounter -> sixth return battle)"
+        "(village -> Fire-Eyed Suanni -> T2 -> stone lions -> river demon -> Taotie -> Great Yu tablet -> Xirang encounter -> waterway exit)"
     )
     return 0
 

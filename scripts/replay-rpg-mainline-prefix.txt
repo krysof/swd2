@@ -2436,4 +2436,7 @@ POLL:UP*20
 POLL:RIGHT*13
 POLL:DOWN*3
 
+# Leave the outer DAU chamber and return to the overworld.
+POLL:DOWN*69
+
 POLL:QUIT
