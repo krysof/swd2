@@ -2159,4 +2159,53 @@ WAIT:CONFIRM*12
 # Acknowledge victory and the fourth actor's level-up card.
 WAIT:CONFIRM*2
 
+# Follow directory 444's southern corridor toward the directory-190 exit.
+POLL:LEFT*4
+POLL:DOWN
+POLL:LEFT*2
+POLL:DOWN*3
+POLL:LEFT
+POLL:DOWN*3
+POLL:RIGHT*2
+POLL:DOWN*12
+POLL:LEFT
+POLL:DOWN*30
+POLL:LEFT*2
+POLL:DOWN*22
+POLL:LEFT
+POLL:DOWN
+POLL:LEFT
+
+# Third post-Xirang directory-308 fight, round one. Abilities 76 and 70
+# focus monster three; actors two and three attack monster zero.
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN*3
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:DOWN*3
+WAIT:CONFIRM
+WAIT:CONFIRM*6
+
+# Round two clears monsters one and two with ability 76 and ordinary attacks.
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM
+
+# Finish the final ten steps and leave DAU4 for directory 190.
+POLL:LEFT*4
+POLL:DOWN
+POLL:LEFT
+POLL:DOWN*4
+
 POLL:QUIT
