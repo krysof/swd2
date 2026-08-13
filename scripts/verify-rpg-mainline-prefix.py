@@ -77,31 +77,31 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 8860,
-            ("input", "consumed"): 8860,
+            ("input", "total"): 9100,
+            ("input", "consumed"): 9100,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 795,
-            ("boundaries", "poll"): 8102,
-            ("boundaries", "text"): 614,
-            ("video", "frames"): 25482,
-            ("video", "direct_updates"): 4115,
-            ("video", "fnv1a64"): "5f78cab624fe1963",
-            ("audio", "music_calls"): 245,
-            ("audio", "voice_calls"): 474,
+            ("boundaries", "wait"): 800,
+            ("boundaries", "poll"): 8337,
+            ("boundaries", "text"): 661,
+            ("video", "frames"): 25908,
+            ("video", "direct_updates"): 4162,
+            ("video", "fnv1a64"): "43666ae57862c2a2",
+            ("audio", "music_calls"): 247,
+            ("audio", "voice_calls"): 478,
             ("audio", "stop_audio_calls"): 110,
-            ("audio", "fnv1a64"): "99b9f4b4fe2d68a5",
+            ("audio", "fnv1a64"): "c9842644cde8cd39",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 1125133:
+        if trace.get("delay_milliseconds") != 1141108:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "a8b6a177e67267a7",
+            "state_fnv1a64": "939e5add24241a7a",
             "mapz_fnv1a64": "94818e710189bb2f",
             "name_fnv1a64": "e3d2853e2676513b",
         }
@@ -109,7 +109,7 @@ def main() -> int:
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 25482 or frames[-1] != "db5a72128f1a448e":
+        if len(frames) != 25908 or frames[-1] != "468a511ff12a6995":
             raise ValueError("mainline final first-inner-waterway frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
@@ -195,20 +195,27 @@ def main() -> int:
             8187: ("WAIT", "DOWN", "9044363c8126a4e4", "760c33e95c6bbb40"),
             8274: ("WAIT", "DOWN", "24fe3f9e70800f3a", "760c33e95c6bbb40"),
             8307: ("POLL", "RIGHT", "0ade2862064a94a0", "760c33e95c6bbb40"),
-            8358: ("WAIT", "DOWN", "68f09cd08af127f2", "760c33e95c6bbb40"),
-            8421: ("POLL", "UP", "fbd23e3fbc3b6f94", "760c33e95c6bbb40"),
-            8436: ("WAIT", "DOWN", "5cbc27ae3bd76099", "760c33e95c6bbb40"),
-            8542: ("POLL", "CONFIRM", "8b8d7494025249db", "760c33e95c6bbb40"),
-            8547: ("POLL", "DOWN", "8b8d7494025249db", "94818e710189bb2f"),
-            8575: ("WAIT", "DOWN", "027c0ce2ff784cdd", "94818e710189bb2f"),
-            8667: ("WAIT", "DOWN", "ee4f677f8ac5675f", "94818e710189bb2f"),
-            8673: ("POLL", "LEFT", "9cf8bbda62520fe7", "94818e710189bb2f"),
-            8716: ("POLL", "UP", "de9c5a84ba4859ef", "94818e710189bb2f"),
-            8783: ("POLL", "UP", "c693ed1273969dce", "94818e710189bb2f"),
-            8815: ("WAIT", "DOWN", "e5fd32adeee04729", "94818e710189bb2f"),
-            8859: ("POLL", "QUIT", "a8b6a177e67267a7", "94818e710189bb2f"),
+            8325: ("POLL", "LEFT", "79ae822da3ee5f4d", "760c33e95c6bbb40"),
+            8367: ("POLL", "RIGHT", "1223268f047a3ad9", "760c33e95c6bbb40"),
+            8415: ("WAIT", "CONFIRM", "03bba5a4988a4547", "760c33e95c6bbb40"),
+            8501: ("POLL", "LEFT", "63a4346e05c51c2a", "760c33e95c6bbb40"),
+            8513: ("POLL", "DOWN", "41435dd6d1a3a752", "760c33e95c6bbb40"),
+            8556: ("POLL", "DOWN", "cb4ff85ccc0f07ed", "760c33e95c6bbb40"),
+            8591: ("WAIT", "DOWN", "ff353f6ec799b4f9", "760c33e95c6bbb40"),
+            8655: ("POLL", "UP", "b5bc7b51af0f82a8", "760c33e95c6bbb40"),
+            8671: ("WAIT", "DOWN", "347288f9979bf108", "760c33e95c6bbb40"),
+            8777: ("POLL", "CONFIRM", "4bca1ba0d6d531a3", "760c33e95c6bbb40"),
+            8778: ("POLL", "CONFIRM", "4bca1ba0d6d531a3", "ac4bfe2d15e586cc"),
+            8782: ("POLL", "DOWN", "4bca1ba0d6d531a3", "94818e710189bb2f"),
+            8810: ("WAIT", "DOWN", "55b81bb5030a3cea", "94818e710189bb2f"),
+            8902: ("WAIT", "DOWN", "17a7b03cc2aa9295", "94818e710189bb2f"),
+            8911: ("POLL", "DOWN", "cd11aeb82d489a9b", "94818e710189bb2f"),
+            8956: ("POLL", "UP", "91176114dcdcc56c", "94818e710189bb2f"),
+            9023: ("POLL", "UP", "0a0bcfbc2ac32aab", "94818e710189bb2f"),
+            9054: ("WAIT", "DOWN", "1838b690c3f58190", "94818e710189bb2f"),
+            9099: ("POLL", "QUIT", "939e5add24241a7a", "94818e710189bb2f"),
         }
-        if len(checkpoints) != 8860:
+        if len(checkpoints) != 9100:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -276,18 +283,25 @@ def main() -> int:
             8187: (132, 31, 94, 6),
             8274: (132, 53, 149, 0),
             8307: (134, 85, 86, 0),
-            8358: (134, 85, 134, 6),
-            8421: (130, 45, 164, 3),
-            8436: (130, 45, 149, 3),
-            8542: (130, 50, 56, 3),
-            8547: (130, 50, 56, 3),
-            8575: (130, 50, 84, 0),
-            8667: (130, 46, 166, 0),
-            8673: (116, 114, 157, 0),
-            8716: (176, 53, 177, 3),
-            8783: (180, 51, 116, 3),
-            8815: (180, 38, 133, 0),
-            8859: (184, 120, 132, 0),
+            8325: (136, 65, 99, 3),
+            8367: (140, 32, 114, 3),
+            8415: (140, 46, 82, 3),
+            8501: (174, 42, 114, 6),
+            8513: (156, 50, 72, 0),
+            8556: (138, 82, 98, 0),
+            8591: (138, 82, 130, 0),
+            8655: (130, 45, 164, 3),
+            8671: (130, 45, 148, 3),
+            8777: (130, 50, 55, 3),
+            8778: (130, 50, 55, 3),
+            8782: (130, 50, 55, 3),
+            8810: (130, 50, 83, 0),
+            8902: (130, 46, 167, 0),
+            8911: (116, 114, 157, 0),
+            8956: (176, 53, 177, 3),
+            9023: (180, 51, 116, 3),
+            9054: (180, 38, 132, 0),
+            9099: (184, 120, 132, 0),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -326,16 +340,16 @@ def main() -> int:
             raise ValueError(f"first inner waterway position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
-        if u16(save, 0x10) != 3 or u16(save, 0x104) != 3011:
+        if u16(save, 0x10) != 3 or u16(save, 0x104) != 2976:
             raise ValueError("post-Taotie party count or money differs")
         if u16(save, 0x49C) != 0x1000:
             raise ValueError("first-inner-waterway FIG random cursor differs")
         if u16(save, 0x51A) != 0x0004:
             raise ValueError("Taotie MAP0 once-only trigger flag was not retained")
         expected_party = [
-            (0x1000, 16, 123, 101, 101, 45, 75, 161, 511),
-            (0x0000, 124, 125, 35, 35, 4, 83, 148, 509),
-            (0x0000, 16, 134, 11, 118, 35, 35, 430, 514),
+            (0x0000, 76, 123, 101, 101, 75, 75, 161, 511),
+            (0x0000, 102, 125, 35, 35, 83, 83, 148, 509),
+            (0x0000, 61, 134, 118, 118, 35, 35, 430, 514),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F

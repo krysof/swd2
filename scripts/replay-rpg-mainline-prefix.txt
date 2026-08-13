@@ -1558,23 +1558,69 @@ POLL:DOWN
 POLL:RIGHT
 POLL:DOWN*17
 
-# Return across AREA1 toward HOL2.
+# Finish the mine transition into AREA1.
 POLL:RIGHT
-POLL:DOWN*48
-POLL:LEFT
-POLL:DOWN
 
-# Escape the AREA1 return encounter.
+# Return to Qingshui Town before entering the waterway.
+POLL:DOWN*12
+POLL:LEFT*4
+POLL:UP
+
+# Walk back to the Qingshui inn.
+POLL:LEFT
+POLL:UP*9
+POLL:LEFT*13
+POLL:UP*19
+
+# Pay 35 taels and restore the party before entering the waterway.
+POLL:RIGHT
+POLL:UP
+POLL:RIGHT*8
+POLL:UP*7
+POLL:RIGHT*2
+POLL:UP
+POLL:RIGHT*2
+POLL:UP*19
+POLL:RIGHT
+POLL:UP*4
+POLL:CONFIRM*2
+WAIT:CONFIRM
+
+# Leave the inn.
+POLL:DOWN*5
+POLL:RIGHT*2
+POLL:DOWN*3
+POLL:RIGHT*9
+POLL:DOWN*8
+POLL:RIGHT*23
+POLL:DOWN*22
+POLL:LEFT*5
+POLL:DOWN
+POLL:LEFT*12
+POLL:UP
+POLL:LEFT*4
+POLL:DOWN*2
+
+# Leave Qingshui Town for AREA1.
+POLL:DOWN*18
+POLL:RIGHT*14
+POLL:DOWN*11
+
+# Cross AREA1 toward HOL2.
+POLL:DOWN*5
+POLL:LEFT
+POLL:DOWN*3
+POLL:RIGHT
+POLL:DOWN*25
+
+# Escape the AREA1 encounter.
 WAIT:DOWN
 WAIT:CONFIRM
 WAIT:RIGHT
 WAIT:CONFIRM
 
 # Enter HOL2 and approach the lake-bottom seal.
-POLL:LEFT
-POLL:DOWN*5
-POLL:LEFT*2
-POLL:DOWN*3
+POLL:DOWN*12
 POLL:RIGHT*3
 POLL:DOWN*6
 POLL:RIGHT
@@ -1587,7 +1633,7 @@ POLL:RIGHT*5
 POLL:UP*2
 
 # Continue toward the seal.
-POLL:UP*15
+POLL:UP*16
 
 # Escape the HOL2 encounter on the second attempt.
 WAIT:DOWN
@@ -1627,16 +1673,21 @@ POLL:DOWN
 POLL:LEFT
 POLL:DOWN*72
 
-# Escape the second HOL2 return encounter.
+# Escape the second HOL2 return encounter on the second attempt.
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
 WAIT:DOWN
 WAIT:CONFIRM
 WAIT:RIGHT
 WAIT:CONFIRM
 
-# Cross the corrected final exit row into AREA1.
+# Cross the final exit row into AREA1.
 POLL:DOWN*2
 
 # Reach the now-open Great Yu waterway gate.
+POLL:UP
 POLL:LEFT*5
 POLL:UP*4
 POLL:LEFT*3
@@ -1662,7 +1713,7 @@ POLL:UP*67
 # Cross the first DAU2 section.
 POLL:UP
 POLL:LEFT*13
-POLL:DOWN*18
+POLL:DOWN*17
 
 # Escape the first waterway encounter.
 WAIT:DOWN
@@ -1671,7 +1722,7 @@ WAIT:RIGHT
 WAIT:CONFIRM
 
 # Reach the first inner DAU3 section.
-POLL:DOWN*13
+POLL:DOWN*14
 POLL:RIGHT*10
 POLL:DOWN
 POLL:RIGHT*3
