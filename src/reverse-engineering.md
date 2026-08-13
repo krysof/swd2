@@ -4263,3 +4263,31 @@ all three west-facing `52fd` ray starts, including the second lateral offset
 and normal direction restoration; vertical-facing symmetry remains established
 from the original offset table and synthetic exhaustive test rather than being
 misreported as another captured route.
+
+### 确定性主线：息壤交付与建木入口
+
+大禹水道返回 AREA1 后，严格回放继续沿西北路线前进，并以发行数据中的
+ORC 目录 164、180 完成两场合法随机战。第一场以四次普通攻击在一回合内
+清场；第二场首回合由角色一/二分别使用能力 70/15，第二回合以普通攻击
+结束。两次 FIG/OC 往返都经过完整命令、目标、胜利与升级界面，没有直接
+改写 SAVE。由此主线模块往返累计到六十八次，角色等级成为
+`16/16/17/16`，金钱为 4097。
+
+道观目录 212 的道士是实体二、事件目录 328。其 opcode 40 在 SAVE 的五十
+个物品字槽中测试物品 93；`f800h` 是只测试、不替换的哨兵。回放从道士西侧
+可达走廊面向东触发三射线交互，完整显示强制定时对白后，opcode 9 设置
+story flag 36。物品 93 仍保留在首槽，证明此处不是交付删除操作。这个路线
+也避免了从 `(37,69)` 面向右时拐角滑动重新改成向上的错误探路姿势。
+
+队伍从道观南门进入 AREA1 目录 214 后，先横移避开原入口，再从
+`(45,23)` 向北踏入 MAP0 特殊动作 `4002h`。动作二调用实体三的事件目录
+318；物品 93 与 flag 36 使其跳到目录 332。opcode 30 把主角向北移动两格，
+opcode 3 随即把该 AREA1 实体的事件字段九从 318 持久重定向到 450。主角
+落在普通转移 `20d8h` 上，下一帧无输入轮询后进入建木目录 216 的发行出生点
+`(89,167)`。
+
+更新后的独立验证器锁定 11,127 个严格输入、32,575 帧、1,446,839ms 的
+70Hz 时间线、140 次模块转换、最终 SAVE/MAPZ/NAME 哈希以及封印实体
+`318 -> 450` 的持久化。最终 state/MAPZ 哈希分别是
+`59edb911a01ef098` 与 `ebac54aa8c810d33`；这只把完整通关证据推进到建木
+入口，不能据此把 `full_playthrough` 或整个移植标为完成。

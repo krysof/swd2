@@ -2439,4 +2439,133 @@ POLL:DOWN*3
 # Leave the outer DAU chamber and return to the overworld.
 POLL:DOWN*69
 
+# Head northwest from the waterway toward the Taoist temple.
+POLL:LEFT*5
+POLL:UP*18
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*17
+POLL:LEFT*5
+POLL:UP*1
+POLL:LEFT*21
+
+# AREA1 encounter 164: four ordinary attacks clear all three monsters.
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:CONFIRM*3
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:CONFIRM
+
+# Continue northwest after the first overworld victory.
+POLL:LEFT*9
+POLL:UP*1
+POLL:LEFT*1
+POLL:UP*7
+POLL:LEFT*1
+POLL:UP*2
+POLL:LEFT*1
+POLL:UP*3
+POLL:LEFT*1
+POLL:UP*18
+POLL:RIGHT*4
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*2
+POLL:UP*3
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*2
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*9
+POLL:UP*1
+POLL:RIGHT*2
+POLL:UP*2
+POLL:RIGHT*2
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*3
+POLL:RIGHT*1
+POLL:UP*2
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*4
+POLL:LEFT*6
+POLL:UP*15
+POLL:LEFT*1
+POLL:UP*1
+POLL:LEFT*1
+POLL:UP*2
+POLL:LEFT*1
+POLL:UP*6
+POLL:LEFT*4
+POLL:UP*1
+POLL:LEFT*1
+
+# AREA1 encounter 180, round one: attack monster two; actors one/two
+# use abilities 70/15 on monsters one/two, and actor three attacks one.
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:DOWN*2
+WAIT:CONFIRM
+WAIT:CONFIRM*2
+WAIT:DOWN
+WAIT:CONFIRM
+
+# Round two uses four ordinary attacks, then acknowledges the level card.
+WAIT:CONFIRM*12
+WAIT:CONFIRM*2
+
+# Enter the northwestern Taoist temple after the Great Yu return.
+POLL:UP
+POLL:LEFT
+POLL:UP*3
+POLL:LEFT*19
+
+# Approach the Taoist from his western aisle, present Xirang and set flag 36.
+POLL:UP*12
+POLL:LEFT*3
+POLL:UP*6
+POLL:LEFT
+POLL:RIGHT
+POLL:CONFIRM*3
+
+# Leave the temple through its southern AREA1 doorway.
+POLL:DOWN*6
+POLL:RIGHT*2
+POLL:DOWN*14
+
+# Cross the opened tree seal and enter the base of Jianmu.
+POLL:RIGHT*4
+POLL:UP*13
+POLL:TICK
 POLL:QUIT
