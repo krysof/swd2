@@ -1728,4 +1728,166 @@ POLL:DOWN
 POLL:RIGHT*3
 POLL:DOWN*13
 
+# Traverse directory 184 toward the next DAU3 maze section.
+POLL:DOWN*17
+POLL:LEFT
+POLL:DOWN
+POLL:LEFT*3
+POLL:DOWN
+POLL:LEFT
+POLL:DOWN*2
+POLL:LEFT*7
+
+# Escape the first directory-184 encounter.
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+
+# Continue through the western and northern passages.
+POLL:LEFT*19
+POLL:UP
+POLL:LEFT
+POLL:UP
+POLL:LEFT
+POLL:UP*4
+POLL:LEFT
+POLL:UP
+POLL:LEFT
+POLL:UP
+POLL:LEFT
+POLL:UP
+POLL:LEFT*5
+POLL:UP
+POLL:LEFT
+POLL:UP
+POLL:LEFT
+POLL:UP*5
+POLL:LEFT*2
+POLL:UP
+POLL:LEFT*2
+POLL:UP
+POLL:LEFT
+POLL:UP*19
+POLL:RIGHT*8
+POLL:UP
+POLL:RIGHT
+POLL:UP*2
+POLL:RIGHT
+POLL:UP
+POLL:RIGHT*4
+POLL:UP*2
+POLL:RIGHT*2
+POLL:UP
+POLL:RIGHT
+POLL:UP*5
+POLL:RIGHT*2
+
+# Escape the second directory-184 encounter.
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+
+# Reach directory 192.
+POLL:RIGHT
+POLL:UP
+POLL:RIGHT*5
+POLL:UP
+POLL:RIGHT
+POLL:UP*13
+POLL:LEFT
+POLL:UP*2
+POLL:LEFT
+POLL:UP
+POLL:LEFT
+POLL:UP
+POLL:LEFT
+POLL:UP
+POLL:LEFT*7
+POLL:UP
+POLL:LEFT
+POLL:UP*10
+POLL:RIGHT*2
+POLL:UP
+POLL:RIGHT
+POLL:UP*2
+POLL:RIGHT*2
+POLL:UP
+POLL:RIGHT*3
+POLL:UP*7
+
+# Use Qi Gathering from the field twice. This spends actor one's AP through
+# the released menu and restores all three actors before the four-monster
+# waterway encounter; no SAVE field is patched by the replay.
+POLL:CANCEL
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM*6
+WAIT:RIGHT
+WAIT:CONFIRM*3
+WAIT:UP
+WAIT:CONFIRM
+WAIT:CANCEL*3
+
+POLL:CANCEL
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM*6
+WAIT:RIGHT
+WAIT:CONFIRM*3
+WAIT:UP
+WAIT:CONFIRM
+WAIT:CANCEL*3
+
+# Approach the directory-192 encounter.
+POLL:UP*13
+POLL:RIGHT*2
+POLL:UP
+POLL:RIGHT*4
+POLL:UP*6
+
+# Round one: actor zero uses ability 76 on monster zero, actor one uses
+# ability 70 on monster zero, and actor two uses ability 16 on monster three.
+WAIT:LEFT
+WAIT:CONFIRM*3
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM*2
+WAIT:LEFT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:DOWN*3
+WAIT:CONFIRM
+
+# Round two: actors zero and one attack monster one, then actor two uses
+# ability 15 on the same target.
+WAIT:CONFIRM*6
+WAIT:LEFT
+WAIT:CONFIRM*3
+
+# Round three: both basic attacks and ability 15 select the sole survivor
+# automatically. Confirm the victory and actor-two level-up cards.
+WAIT:CONFIRM*4
+WAIT:LEFT
+WAIT:CONFIRM*2
+WAIT:CONFIRM*2
+
+# Finish the directory-192 maze and enter directory 448.
+POLL:UP*8
+POLL:RIGHT*8
+POLL:UP*2
+POLL:RIGHT*4
+POLL:UP
+POLL:RIGHT
+POLL:UP
+POLL:RIGHT*5
+POLL:UP*7
+POLL:RIGHT*14
+POLL:DOWN*5
+
 POLL:QUIT
