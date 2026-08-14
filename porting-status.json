@@ -60,7 +60,9 @@
         "src/event_program.cpp",
         "src/rpg_module.cpp",
         "src/main.cpp",
+        "src/CMakeLists.txt",
         "src/tests/test_main.cpp",
+        "scripts/verify-event-manifest.py",
         "src/reverse-engineering.md"
       ]
     },

@@ -170,7 +170,16 @@ if(BUILD_TESTING)
     add_test(
         NAME reachable_event_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-events
+                --event-manifest "${CMAKE_BINARY_DIR}/chna-event-manifest.json"
     )
+    add_test(
+        NAME event_script_manifest
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-event-manifest.py"
+                "${CMAKE_BINARY_DIR}/chna-event-manifest.json"
+    )
+    set_tests_properties(event_script_manifest PROPERTIES
+        DEPENDS reachable_event_audit)
     add_test(
         NAME resource_audit
         COMMAND swd2_rewrite --game "${PROJECT_SOURCE_DIR}/game" --verify-resources

@@ -1546,7 +1546,9 @@ void verify_legacy_program_data(const std::filesystem::path& game_root) {
               << " event records, " << decoded_commands << " commands decoded\n";
 }
 
-void verify_reachable_events(const std::filesystem::path& game_root) {
+void verify_reachable_events(
+    const std::filesystem::path& game_root,
+    const std::optional<std::filesystem::path>& manifest_path = std::nullopt) {
     const auto map_database_path = game_root / "MAPA.EXE";
     const auto world = swd2::MapDatabase::load(map_database_path);
     const auto map_transitions =
@@ -1842,6 +1844,17 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     std::size_t unreachable_unique_records = 0;
     std::size_t static_commands = 0;
     std::set<std::uint16_t> static_opcodes;
+    struct StaticEventSlot {
+        std::string archive;
+        std::uint16_t target{};
+        std::uint16_t physical{};
+        bool reachable{};
+        std::size_t byte_length{};
+        std::size_t command_count{};
+        std::set<std::uint16_t> opcodes;
+        std::uint64_t stream_digest{};
+    };
+    std::vector<StaticEventSlot> static_slots;
     auto static_directory_digest = std::uint64_t{14695981039346656037ULL};
     auto unreachable_directory_digest = std::uint64_t{14695981039346656037ULL};
     const auto mix_static_byte = [](std::uint64_t& digest,
@@ -1890,8 +1903,10 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
             const auto stream = audit->archive.event_stream(index);
             const auto decoded = swd2::decode_event_record(stream);
             static_commands += decoded.commands.size();
+            std::set<std::uint16_t> slot_opcodes;
             for (const auto& command : decoded.commands) {
                 static_opcodes.insert(command.opcode);
+                slot_opcodes.insert(command.opcode);
             }
             ++static_event_slots;
             all_physical_records.insert(physical);
@@ -1902,6 +1917,9 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
                 mix_static_byte(static_directory_digest, byte);
             }
             const auto reachable = audit->visited.contains(target);
+            static_slots.push_back({
+                archive_name, target, physical, reachable, stream.size(),
+                decoded.commands.size(), std::move(slot_opcodes), fnv1a(stream)});
             if (reachable) {
                 ++reachable_event_slots;
                 ++archive_reachable_slots;
@@ -2149,6 +2167,59 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         throw std::runtime_error(
             "deterministic RPG entity-context execution differs from the audit");
     }
+    if (manifest_path) {
+        if (!manifest_path->parent_path().empty()) {
+            std::filesystem::create_directories(manifest_path->parent_path());
+        }
+        std::ofstream output(*manifest_path, std::ios::binary | std::ios::trunc);
+        if (!output) {
+            throw std::runtime_error(
+                "cannot create CHNA event manifest: " + manifest_path->string());
+        }
+        output << "{\n"
+               << "  \"schema\": \"swd2-chna-event-manifest-v1\",\n"
+               << "  \"summary\": {\n"
+               << "    \"archives\": " << roots_by_archive.size() << ",\n"
+               << "    \"slots\": " << static_event_slots << ",\n"
+               << "    \"physical_records\": " << static_unique_records << ",\n"
+               << "    \"commands\": " << static_commands << ",\n"
+               << "    \"reachable_slots\": " << reachable_event_slots << ",\n"
+               << "    \"unreachable_slots\": " << unreachable_event_slots << ",\n"
+               << "    \"reachable_physical_records\": "
+               << reachable_unique_records << ",\n"
+               << "    \"unreachable_physical_records\": "
+               << unreachable_unique_records << ",\n"
+               << "    \"directory_fnv1a64\": \""
+               << hex_digest(static_directory_digest) << "\",\n"
+               << "    \"unreachable_directory_fnv1a64\": \""
+               << hex_digest(unreachable_directory_digest) << "\"\n"
+               << "  },\n"
+               << "  \"slots\": [\n";
+        for (std::size_t index = 0; index < static_slots.size(); ++index) {
+            const auto& slot = static_slots[index];
+            output << "    {\"archive\": \"" << slot.archive
+                   << "\", \"target\": " << slot.target
+                   << ", \"physical_offset\": " << slot.physical
+                   << ", \"reachable\": "
+                   << (slot.reachable ? "true" : "false")
+                   << ", \"byte_length\": " << slot.byte_length
+                   << ", \"command_count\": " << slot.command_count
+                   << ", \"opcodes\": [";
+            auto opcode_index = std::size_t{};
+            for (const auto opcode : slot.opcodes) {
+                if (opcode_index++ != 0U) output << ", ";
+                output << opcode;
+            }
+            output << "], \"stream_fnv1a64\": \""
+                   << hex_digest(slot.stream_digest) << "\"}"
+                   << (index + 1U == static_slots.size() ? "\n" : ",\n");
+        }
+        output << "  ]\n}\n";
+        if (!output) {
+            throw std::runtime_error(
+                "cannot write CHNA event manifest: " + manifest_path->string());
+        }
+    }
     std::cout << "verified reachable RPG event graph: "
               << roots_by_archive.size() << " archives, " << total_roots
               << " roots, " << total_records << " records, "
@@ -2191,6 +2262,8 @@ void usage(const char* program) {
               << "  " << program << " [--game DIR] --verify-battles\n"
               << "  " << program << " [--game DIR] --verify-legacy-program-data\n"
               << "  " << program << " [--game DIR] --verify-events\n"
+              << "  " << program
+              << " [--game DIR] --verify-events --event-manifest FILE.json\n"
               << "  " << program << " --extract INPUT OUTPUT\n"
               << "  " << program << " --render INPUT INDEX OUTPUT.ppm\n"
               << "  " << program << " [--game DIR] --render-meo OUTPUT.ppm\n"
@@ -2232,6 +2305,7 @@ int main(int argc, char** argv) {
         std::filesystem::path replay_input;
         std::optional<std::filesystem::path> replay_trace;
         std::optional<std::filesystem::path> replay_frames;
+        std::optional<std::filesystem::path> event_manifest;
         std::optional<swd2::Marker> start_marker;
         std::optional<swd2::Marker> resume_marker;
         bool strict_replay = false;
@@ -2266,6 +2340,9 @@ int main(int argc, char** argv) {
                 mode = Mode::verify_legacy;
             } else if (argument == "--verify-events") {
                 mode = Mode::verify_events;
+            } else if (argument == "--event-manifest" && i + 1 < argc) {
+                mode = Mode::verify_events;
+                event_manifest = std::filesystem::path(argv[++i]);
             } else if (argument == "--extract" && i + 2 < argc) {
                 mode = Mode::extract;
                 extract_input = argv[++i];
@@ -2340,7 +2417,7 @@ int main(int argc, char** argv) {
         } else if (mode == Mode::verify_legacy) {
             verify_legacy_program_data(game_root);
         } else if (mode == Mode::verify_events) {
-            verify_reachable_events(game_root);
+            verify_reachable_events(game_root, event_manifest);
         } else if (mode == Mode::extract) {
             extract_resource(extract_input, extract_output);
         } else if (mode == Mode::render) {
