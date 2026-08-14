@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the continuous legal route through the second Great Yu mechanism."""
+"""Lock the continuous legal route through FIR3 event 80 and story flag 50."""
 
 from __future__ import annotations
 
@@ -58,27 +58,12 @@ def main() -> int:
             ("RPG.EXE", "MT", "ED", True),
             ("DEMO.EXE", "ED", "--", True),
         ]
-        # The released route enters FIG for the original ten encounters,
-        # another 29 legal ONE2A training battles, fixed encounter 18, four
-        # return/mine encounters, fixed Taotie encounter 16, then twenty-one
-        # legal post-Taotie encounters through the sixth post-Xirang return
-        # fight, the two overworld encounters on the road to the temple, and
-        # fixed Jianmu encounter 14, the eastern TREE encounter, two released
-        # random encounters on the first ascent, and the additional encounter
-        # naturally triggered while descending into the treasure route. Four
-        # dead-party DAIU1 encounters then take the ordinary defeat/OC path;
-        # after event 344 restores the party, three further encounters are
-        # escaped with the unmodified FIG command and released RNG outcomes.
-        # The return through directory 376 adds six more encounters; the last
-        # uses three complete escape attempts before the released roll passes.
-        # The compass-to-rain route contributes one encounter. Nine more occur
-        # on the uninterrupted route from rain-ritual directory 342 through
-        # the Buddha interior and event 28; their two-input completions and
-        # released escape attempts are all boundary-locked by the replay.
-        # Eleven further encounters occur while retracing the Buddha maze,
-        # crossing AREA2 to DAUF, and leaving for the fire route; all use the
-        # same uninterrupted released random stream.
-        for index in range(117):
+        # The released route reaches the prior 127 FIG boundaries without a
+        # checkpoint reload. The reallocated fire-route healing keeps all four
+        # actors alive. Two natural FIR3 encounters and the three fixed
+        # 8016h/8018h/8030h story battles add five ordinary FIG round-trips;
+        # every battle is driven by unmodified released commands and RNG.
+        for index in range(132):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -93,41 +78,41 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 20106,
-            ("input", "consumed"): 20106,
+            ("input", "total"): 22188,
+            ("input", "consumed"): 22188,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 1777,
-            ("boundaries", "poll"): 18364,
-            ("boundaries", "text"): 2775,
-            ("video", "frames"): 53444,
-            ("video", "direct_updates"): 11170,
-            ("video", "fnv1a64"): "da3fff249c0ae713",
-            ("audio", "music_calls"): 509,
-            ("audio", "voice_calls"): 783,
-            ("audio", "stop_music_calls"): 16,
-            ("audio", "stop_audio_calls"): 238,
-            ("audio", "fnv1a64"): "4876ab875f7fed70",
+            ("boundaries", "wait"): 2238,
+            ("boundaries", "poll"): 19985,
+            ("boundaries", "text"): 3027,
+            ("video", "frames"): 59701,
+            ("video", "direct_updates"): 12660,
+            ("video", "fnv1a64"): "c01cf7b0229f77f3",
+            ("audio", "music_calls"): 563,
+            ("audio", "voice_calls"): 894,
+            ("audio", "stop_music_calls"): 17,
+            ("audio", "stop_audio_calls"): 268,
+            ("audio", "fnv1a64"): "a72cfe16ecc64d37",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 2177662:
+        if trace.get("delay_milliseconds") != 2482953:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "39bb552be347c247",
-            "mapz_fnv1a64": "f9d0dc9efabbed1e",
+            "state_fnv1a64": "5e0b40bb8c080c41",
+            "mapz_fnv1a64": "1d0eec73937d37da",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 53444 or frames[-1] != "5f66a2f90a877b4a":
-            raise ValueError("mainline fire-route entry frame differs")
+        if len(frames) != 59701 or frames[-1] != "3e68feb8e92789e3":
+            raise ValueError("mainline FIR3 event-80 frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -405,9 +390,41 @@ def main() -> int:
             19773: ("POLL", "DOWN", "abe2c64db36f8b94", "f9d0dc9efabbed1e"),
             19916: ("WAIT", "DOWN", "a27df2fd2d386cfe", "f9d0dc9efabbed1e"),
             20051: ("WAIT", "DOWN", "e0829cdd480291bb", "f9d0dc9efabbed1e"),
-            20105: ("POLL", "QUIT", "39bb552be347c247", "f9d0dc9efabbed1e"),
+            20105: ("POLL", "CANCEL", "39bb552be347c247", "f9d0dc9efabbed1e"),
+            20962: ("WAIT", "DOWN", "aea32b9143ae5c85", "f9d0dc9efabbed1e"),
+            21068: ("POLL", "CANCEL", "bd20378aecfc3a66", "f9d0dc9efabbed1e"),
+            21092: ("POLL", "UP", "86f3f043a1306b08", "f9d0dc9efabbed1e"),
+            21093: ("WAIT", "DOWN", "4998b27b023adadc", "f9d0dc9efabbed1e"),
+            21120: ("POLL", "UP", "1bf03a52db9b7944", "f9d0dc9efabbed1e"),
+            21200: ("POLL", "RIGHT", "4a6f58b1bc171324", "f9d0dc9efabbed1e"),
+            21369: ("WAIT", "DOWN", "b737b458ad2455a9", "f9d0dc9efabbed1e"),
+            21535: ("WAIT", "DOWN", "6f1a86f71ae8d1d1", "f9d0dc9efabbed1e"),
+            21679: ("WAIT", "DOWN", "77d6d88c853c0809", "f9d0dc9efabbed1e"),
+            21698: ("POLL", "UP", "30f06c96d9645e82", "f9d0dc9efabbed1e"),
+            21785: ("POLL", "RIGHT", "a8957d3a51062cfa", "f9d0dc9efabbed1e"),
+            21786: ("WAIT", "DOWN", "dadad400474a621d", "f9d0dc9efabbed1e"),
+            21929: ("POLL", "RIGHT", "ae7e7d2b4215d877", "f9d0dc9efabbed1e"),
+            21930: ("WAIT", "DOWN", "c02f54dcd1770ba3", "f9d0dc9efabbed1e"),
+            22065: ("POLL", "UP", "cd18996f8bda0349", "f9d0dc9efabbed1e"),
+            22066: ("POLL", "UP", "929898d2bd7681ba", "f9d0dc9efabbed1e"),
+            22067: ("POLL", "CONFIRM", "e9b06aa726840043", "f9d0dc9efabbed1e"),
+            22092: ("POLL", "CONFIRM", "e9b06aa726840043", "18cf034503a645b0"),
+            22093: ("WAIT", "DOWN", "364567d4a4bf6251", "18cf034503a645b0"),
+            22104: ("WAIT", "CONFIRM", "364567d4a4bf6251", "18cf034503a645b0"),
+            22105: ("POLL", "CONFIRM", "92b25693ca70d5ab", "18cf034503a645b0"),
+            22106: ("POLL", "CONFIRM", "92b25693ca70d5ab", "18cf034503a645b0"),
+            22107: ("WAIT", "DOWN", "0d685d8bd5f0f9c7", "0e7e1c8f4335fb48"),
+            22138: ("WAIT", "CONFIRM", "0d685d8bd5f0f9c7", "0e7e1c8f4335fb48"),
+            22139: ("POLL", "CONFIRM", "035ddeb50f3fb08e", "0e7e1c8f4335fb48"),
+            22140: ("POLL", "CONFIRM", "035ddeb50f3fb08e", "0e7e1c8f4335fb48"),
+            22141: ("WAIT", "DOWN", "579a397aa04b79de", "ae97c45e9a7f3e11"),
+            22168: ("WAIT", "CONFIRM", "579a397aa04b79de", "ae97c45e9a7f3e11"),
+            22169: ("POLL", "CONFIRM", "8cc62445f7d88e89", "ae97c45e9a7f3e11"),
+            22178: ("POLL", "CONFIRM", "182b0357bd6ca461", "1d0eec73937d37da"),
+            22186: ("POLL", "CONFIRM", "182b0357bd6ca461", "1d0eec73937d37da"),
+            22187: ("POLL", "QUIT", "5e0b40bb8c080c41", "1d0eec73937d37da"),
         }
-        if len(checkpoints) != 20106:
+        if len(checkpoints) != 22188:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -662,6 +679,20 @@ def main() -> int:
             19773: (676, 146, 99, 3),
             19853: (424, 144, 111, 0),
             20105: (434, 146, 170, 3),
+            21068: (438, 25, 30, 3),
+            21120: (438, 25, 26, 3),
+            21200: (450, 59, 66, 9),
+            21369: (458, 37, 17, 9),
+            21535: (462, 134, 128, 3),
+            21698: (466, 99, 122, 3),
+            21785: (466, 154, 90, 3),
+            21786: (466, 155, 90, 9),
+            21929: (466, 114, 31, 0),
+            21930: (466, 115, 31, 9),
+            22065: (466, 65, 72, 3),
+            22066: (466, 65, 71, 3),
+            22067: (466, 82, 49, 3),
+            22187: (466, 82, 49, 3),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -685,43 +716,45 @@ def main() -> int:
         # The Taoist handoff adds flag 36 after all previously proven story
         # flags. CHNA3 event 20 sets flag 56 at the Zhou patron; after entering
         # DAIU1, CHNA2 event 20 sets flag 33 as it changes the water layout.
-        # Rain event 42 then sets flag 32 and Buddha event 28 sets flag 41.
+        # Rain event 42 then sets flag 32, Buddha event 28 sets flag 41, and
+        # the completed FIR3 event-80 continuation sets flag 50.
         if u16(save, 0x4A2) != 0xE880:
             raise ValueError("village/Stronghold/river-demon story flags are not exact")
         if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0xE848:
             raise ValueError(
                 "water-control/rain/Buddha story flags are not exact")
-        if u16(save, 0x4A8) != 0x8280:
+        if u16(save, 0x4A8) != 0xA280:
             raise ValueError(
-                "stone-lion/patron/second-mechanism story flags are not exact")
+                "stone-lion/patron/mechanism/FIR3 story flags are not exact")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 434:
-            raise ValueError("continuous checkpoint is not fire-route directory 434")
+        if u16(save, 0x424) != 466:
+            raise ValueError("continuous checkpoint is not FIR3 directory 466")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (146, 170):
-            raise ValueError(f"fire-route entry position is {(world_x, world_y)!r}")
+        if (world_x, world_y) != (82, 49):
+            raise ValueError(f"post-event-80 FIR3 position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
-        if u16(save, 0x10) != 4 or u16(save, 0x104) != 635:
-            raise ValueError("post-revival party count or money differs")
-        if u16(save, 0x49C) != 0x1400:
-            raise ValueError("post-compass FIG random cursor differs")
+        if u16(save, 0x10) != 4 or u16(save, 0x104) != 1163:
+            raise ValueError("fire-route party count or money differs")
+        if u16(save, 0x49C) != 0x1818:
+            raise ValueError("post-event-80 FIG random cursor differs")
         if save[0x529] != 1:
             raise ValueError("AREA2 Jianmu return portal did not set travel flag 11")
-        # MAP0 action 4011h sets bit 0010h before event 334. Opcode 3 hides
+        # MAP0 action 4011h sets bit 0010h before event 334; FIR3 action
+        # 400ah later adds bit 0001h before event 52. Opcode 3 hides
         # directory-252 entity one, opcode 34 redirects the location-220 mage
         # to event 336, and opcode 58 executes fixed ORC directory 802ch. The
         # legal default-command trace ends in defeat; event 334 contains no
         # victory/defeat branch and OC resumes at this same world position.
-        if u16(save, 0x51A) != 0x0014:
-            raise ValueError("Jianmu/Taotie MAP0 once-only trigger flags differ")
+        if u16(save, 0x51A) != 0x0015:
+            raise ValueError("Jianmu/Taotie/FIR3 MAP0 once-only trigger flags differ")
         expected_party = [
-            (0, 76, 134, 110, 110, 84, 84, 707, 717),
-            (0, 82, 138, 42, 42, 91, 91, 696, 706),
-            (0, 161, 161, 140, 140, 46, 46, 262, 847),
-            (0, 45, 140, 46, 46, 84, 84, 627, 702),
+            (0, 156, 156, 122, 122, 94, 94, 328, 843),
+            (0, 150, 150, 46, 46, 99, 99, 328, 842),
+            (0, 161, 161, 140, 140, 46, 46, 600, 847),
+            (0, 153, 153, 50, 50, 94, 94, 263, 838),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -732,17 +765,17 @@ def main() -> int:
                       u16(save, base + 0x3B))
             if actual != expected:
                 raise ValueError(
-                    f"fire-route actor {actor} state is {actual!r}, "
+                    f"post-event-80 actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
-                for actor in range(4)] != [16, 16, 17, 16]:
-            raise ValueError("post-guardian party levels differ")
+                for actor in range(4)] != [17, 17, 17, 17]:
+            raise ValueError("post-event-80 party levels differ")
         expected_inventory = [
-            262, 205, 206, 100, 110, 206, 291, 333, 104, 119, 257,
-        ] + [0] * 39
+            262, 206, 110, 206, 291, 333, 104, 119, 257,
+        ] + [0] * 41
         actual_inventory = [u16(save, 0x382 + slot * 2) for slot in range(50)]
         if actual_inventory != expected_inventory:
-            raise ValueError("rain/Buddha inventory replacement or compaction differs")
+            raise ValueError("post-event-80 inventory/compaction differs")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -856,6 +889,16 @@ def main() -> int:
             if actual != expected_treasure_events:
                 raise ValueError(
                     f"Jianmu treasure events differ at location {location}: {actual!r}")
+        # FIR3 action 400ah/event 52 hides entity zero. Events 54 and 78
+        # redirect entity one to 78 then 80 before hiding it, and event 80
+        # finally hides entity two. These words are read from the persistent
+        # released MAPZ area rather than inferred from the final scene.
+        if map_field(image, 466, 3, 0) != 3 or \
+                map_field(image, 466, 9, 0) != 52 or \
+                map_field(image, 466, 3, 1) != 3 or \
+                map_field(image, 466, 9, 1) != 80 or \
+                map_field(image, 466, 3, 2) != 3:
+            raise ValueError("FIR3 event 52/54/78/80 entity chain differs")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--":
             raise ValueError("mainline checkpoint did not stop at explicit world quit")
@@ -864,9 +907,9 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(new game -> event 334 -> legal fixed-battle defeat -> event 336 -> "
-        "AREA2 -> DAIU1 water control -> compass -> rain ritual -> "
-        "Buddha event 28 revival -> DAUF event 46 -> fire-route entry)"
+        "(new game -> event 334 -> event 336 -> AREA2 -> DAIU1 water control "
+        "-> compass -> rain ritual -> Buddha revival -> DAUF mechanism -> "
+        "FIR3 events 52/54/78/80 -> story flag 50)"
     )
     return 0
 
