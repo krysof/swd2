@@ -435,6 +435,50 @@ if(BUILD_TESTING)
     set_tests_properties(rpg_mainline_event334_checkpoint PROPERTIES
         DEPENDS rpg_mainline_event334_validation)
     add_test(
+        NAME rpg_mainline_training_prepare
+        COMMAND "${CMAKE_COMMAND}" -E remove_directory
+                "${CMAKE_BINARY_DIR}/rpg-mainline-training-saves"
+    )
+    add_test(
+        NAME rpg_mainline_training_replay
+        COMMAND swd2_rewrite
+                --game "${PROJECT_SOURCE_DIR}/game"
+                --save-dir "${CMAKE_BINARY_DIR}/rpg-mainline-training-saves"
+                --slot 3
+                --run-replay
+                    "${PROJECT_SOURCE_DIR}/scripts/replay-rpg-mainline-training.txt"
+                --trace-output
+                    "${CMAKE_BINARY_DIR}/rpg-mainline-training-trace.json"
+                --frame-output
+                    "${CMAKE_BINARY_DIR}/rpg-mainline-training-frames.bin"
+    )
+    set_tests_properties(rpg_mainline_training_replay PROPERTIES
+        DEPENDS rpg_mainline_training_prepare)
+    add_test(
+        NAME rpg_mainline_training_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-replay-trace.py"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-training-trace.json"
+                --require-module MEO.EXE
+                --require-module RPG.EXE
+                --require-module DEMO.EXE
+                --require-module FIG.EXE
+                --min-frames 36000
+    )
+    set_tests_properties(rpg_mainline_training_validation PROPERTIES
+        DEPENDS rpg_mainline_training_replay)
+    add_test(
+        NAME rpg_mainline_training_checkpoint
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-mainline-training.py"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-training-trace.json"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-training-saves/SAVE.DA3"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-training-saves/MAPZ.DA3"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-training-saves/NAME3.DSK"
+    )
+    set_tests_properties(rpg_mainline_training_checkpoint PROPERTIES
+        DEPENDS rpg_mainline_training_validation)
+    add_test(
         NAME rpg_jianmu_grind_prepare
         COMMAND "${CMAKE_COMMAND}" -E remove_directory
                 "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-saves"

@@ -188,6 +188,8 @@
         "scripts/verify-rpg-mainline-prefix.py",
         "scripts/replay-rpg-mainline-event334.txt",
         "scripts/verify-rpg-mainline-event334.py",
+        "scripts/replay-rpg-mainline-training.txt",
+        "scripts/verify-rpg-mainline-training.py",
         "scripts/replay-rpg-jianmu-grind.txt",
         "scripts/verify-rpg-jianmu-grind.py",
         "src/reverse-engineering.md"
@@ -2287,12 +2289,14 @@
         "scripts/verify-rpg-mainline-prefix.py",
         "scripts/replay-rpg-mainline-event334.txt",
         "scripts/verify-rpg-mainline-event334.py",
+        "scripts/replay-rpg-mainline-training.txt",
+        "scripts/verify-rpg-mainline-training.py",
         "scripts/replay-rpg-jianmu-grind.txt",
         "scripts/verify-rpg-jianmu-grind.py",
         "src/reverse-engineering.md"
       ],
       "remaining": [
-        "现有连续主线已从新游戏执行完目录252事件334与固定ORC值802ch的合法确定性失败路径，并在OC返回世界页后退出；事件334进入FIG前提交的实体隐藏与法师336重定向均已锁定。静态证据继续闭合到336/340→260→262，并锁定周家庄水源flag33、祭雨flag32、舍利flag41、DAUF门0052h/机关flag54。火燄山地图链和三次OC实体续接已证明为52→54→78→80，event80设置flag50；AREA2至T9四塔的MAP0路线、四个CHNA5宝箱生产者及北塔event592四宝检查也已静态执行，随后进入建木448四宝门；结尾脚本也已静态执行到452/454两场续接及456的228命令正常退出。下一段必须从同一连续轨迹的事件336、目录260/262继续，把已静态证明的节点按实际格坐标、合法战斗输入、OC边界、结尾逐页画面/音频录入，不能靠手工练级或事件名称推断补齐",
+        "现有连续主线已从新游戏执行完目录252事件334与固定ORC值802ch的合法确定性失败路径，并在OC返回世界页后退出；事件334进入FIG前提交的实体隐藏与法师336重定向均已锁定。另一个同样从新游戏开始的连续分支已在目录228通过116个合法世界步触发ORC目录372，并以发行命令页六回合获胜，形成不靠改档的17级训练检查点；它仍须与后续宝物路线及事件334胜利输入合并。静态证据继续闭合到336/340→260→262，并锁定周家庄水源flag33、祭雨flag32、舍利flag41、DAUF门0052h/机关flag54。火燄山地图链和三次OC实体续接已证明为52→54→78→80，event80设置flag50；AREA2至T9四塔的MAP0路线、四个CHNA5宝箱生产者及北塔event592四宝检查也已静态执行，随后进入建木448四宝门；结尾脚本也已静态执行到452/454两场续接及456的228命令正常退出。下一段必须把训练分支、目录252胜利战、事件336和目录260/262合并到同一连续轨迹，再按实际格坐标、合法战斗输入、OC边界、结尾逐页画面/音频录入，不能靠手工练级或事件名称推断补齐",
         "生成包含完整结局路线、原版 trace、现代 trace 与现场 comparison 的通过哈希校验 playthrough manifest"
       ]
     },
