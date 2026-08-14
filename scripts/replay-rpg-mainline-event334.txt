@@ -8,7 +8,12 @@
 # The level-15 party defeats fixed encounter 18, the newly revealed river
 # demon. RPG's released OC continuation consumes SAVE+51c=42, dispatches ONE2A
 # entity 20 / CHNA1 event 338, sets story flag one and relocates to directory
-# 588. This remains a mainline checkpoint, not a complete-playthrough claim.
+# 588. The same strict stream continues through Jianmu event 334, follows its
+# result-independent event-336 redirect, reaches AREA2, proves the CHNA3 patron
+# handoff, enters DAIU1, buys the released 1,000-cash heal, removes its automatic
+# gate actor, executes CHNA2 event 20's water-control mutation, then returns
+# through the unchanged DAIU1 maze and purchases CHNA3 event 22's compass. This
+# remains a mainline checkpoint, not a complete-playthrough claim.
 WAIT:CONFIRM*4
 WAIT:CANCEL
 POLL:CONFIRM*19
@@ -2940,5 +2945,480 @@ POLL:CONFIRM*2
 TEXT:CONFIRM
 POLL:CONFIRM
 WAIT:CONFIRM*24
-# Stop at the first post-battle RPG world input boundary.
+
+# Continue through the released map graph to the mage redirected by event 334.
+# 252 -> 254 target 28,61 action fe path L11 D4
+POLL:LEFT*11
+POLL:DOWN*4
+# 254 -> 246 target 226,17 action f6 path R36 U22 L24 U10 R8 U3 R7 U2 R4 D2
+POLL:RIGHT*36
+POLL:UP*22
+POLL:LEFT*24
+POLL:UP*10
+POLL:RIGHT*8
+POLL:UP*3
+POLL:RIGHT*7
+POLL:UP*2
+POLL:RIGHT*4
+POLL:DOWN*2
+# 246 -> 242 target 107,11 action f2 path D1 L4 D1 L8 D17 L37 U5 R2 U14 R4 D2
+POLL:DOWN*1
+POLL:LEFT*4
+POLL:DOWN*1
+POLL:LEFT*8
+POLL:DOWN*17
+POLL:LEFT*37
+POLL:UP*5
+POLL:RIGHT*2
+POLL:UP*14
+POLL:RIGHT*4
+POLL:DOWN*2
+# 242 -> 238 target 37,57 action ee path R1 D17 R21 D10 R7 D10 L1 D2 L9 D8
+POLL:RIGHT*1
+POLL:DOWN*17
+POLL:RIGHT*21
+POLL:DOWN*10
+POLL:RIGHT*7
+POLL:DOWN*10
+POLL:LEFT*1
+POLL:DOWN*2
+POLL:LEFT*9
+POLL:DOWN*8
+# 238 -> 234 target 153,19 action ea path R2 D2 R28 U32
+POLL:RIGHT*2
+POLL:DOWN*2
+POLL:RIGHT*28
+POLL:UP*32
+# 234 -> 230 target 153,144 action e6 path U1 L41 U1 L4 U1 L2 U2 L1 U1 L3 U1 L1 U1 L31 D19 L3 D1 L1 D3 L1 D4 L1 D3 L2 D1 L1 D12 R1 D1 R1 D1 R1 D2 R89 U18
+POLL:UP*1
+POLL:LEFT*41
+POLL:UP*1
+POLL:LEFT*4
+POLL:UP*1
+POLL:LEFT*2
+POLL:UP*2
+POLL:LEFT*1
+POLL:UP*1
+POLL:LEFT*3
+POLL:UP*1
+POLL:LEFT*1
+POLL:UP*1
+POLL:LEFT*31
+POLL:DOWN*19
+POLL:LEFT*3
+POLL:DOWN*1
+POLL:LEFT*1
+POLL:DOWN*3
+POLL:LEFT*1
+POLL:DOWN*4
+POLL:LEFT*1
+POLL:DOWN*3
+POLL:LEFT*2
+POLL:DOWN*1
+POLL:LEFT*1
+POLL:DOWN*12
+POLL:RIGHT*1
+POLL:DOWN*1
+POLL:RIGHT*1
+POLL:DOWN*1
+POLL:RIGHT*1
+POLL:DOWN*2
+POLL:RIGHT*89
+POLL:UP*18
+# 230 -> 226 target 114,24 action e2 path U1 L5 U19 L42 U10
+POLL:UP*1
+POLL:LEFT*5
+POLL:UP*19
+POLL:LEFT*42
+POLL:UP*10
+# 226 -> 220 target 89,125 action dc path U1 R19 D10 R14 U3
+POLL:UP*1
+POLL:RIGHT*19
+POLL:DOWN*10
+POLL:RIGHT*14
+POLL:UP*3
+
+# Reach the directory-220 mage and execute the installed event 336.
+POLL:RIGHT*8
+POLL:UP*20
+POLL:CONFIRM*5
+# 220 -> 222 target 31,38 action de path L2 D9 L5 D13
+POLL:LEFT*2
+POLL:DOWN*9
+POLL:LEFT*5
+POLL:DOWN*13
+# 222 -> 224 target 56,121 action e0 path D2 L29 U10 L4 D3
+POLL:DOWN*2
+POLL:LEFT*29
+POLL:UP*10
+POLL:LEFT*4
+POLL:DOWN*3
+# 224 -> 228 target 161,56 action e4 path D1 R42 D6 R1 D1 R1 D2 R2 D1 R1 D16
+POLL:DOWN*1
+POLL:RIGHT*42
+POLL:DOWN*6
+POLL:RIGHT*1
+POLL:DOWN*1
+POLL:RIGHT*1
+POLL:DOWN*2
+POLL:RIGHT*2
+POLL:DOWN*1
+POLL:RIGHT*1
+POLL:DOWN*16
+# 228 -> 232 target 153,125 action e8 path D1 L9 D1 L9 D1 L1 D5 L2 D1 L46 D1 L7 D1 L2 D1 L16 U10 R3 U1 R1 U1 R1 U1 R1 U1 R1 U1 R1 U1 R1 U1 R4 U1 R1 U21 R4 U1 R1 U1 R1 U1 R3 U1 R2 U1 R1 U1 R1 U1 R1 U1 R33 D1 R1 D2 R1 D1 R15 D1 R14 D5
+POLL:DOWN*1
+POLL:LEFT*9
+POLL:DOWN*1
+POLL:LEFT*9
+POLL:DOWN*1
+POLL:LEFT*1
+POLL:DOWN*5
+POLL:LEFT*2
+POLL:DOWN*1
+POLL:LEFT*46
+POLL:DOWN*1
+POLL:LEFT*7
+POLL:DOWN*1
+POLL:LEFT*2
+POLL:DOWN*1
+POLL:LEFT*16
+POLL:UP*10
+POLL:RIGHT*3
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*4
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*21
+POLL:RIGHT*4
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*3
+POLL:UP*1
+POLL:RIGHT*2
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*33
+POLL:DOWN*1
+POLL:RIGHT*1
+POLL:DOWN*2
+POLL:RIGHT*1
+POLL:DOWN*1
+POLL:RIGHT*15
+POLL:DOWN*1
+POLL:RIGHT*14
+POLL:DOWN*5
+# 232 -> 236 target 123,48 action ec path D1 L1 D25 L29 U3
+POLL:DOWN*1
+POLL:LEFT*1
+POLL:DOWN*25
+POLL:LEFT*29
+POLL:UP*3
+# 236 -> 240 target 18,3 action f0 path R11 U13 L9 U10 L20 U29
+POLL:RIGHT*11
+POLL:UP*13
+POLL:LEFT*9
+POLL:UP*10
+POLL:LEFT*20
+POLL:UP*29
+# 240 -> 244 target 150,3 action f4 path L4 D1 L1 D3 L1 D15 R38 U13 R11 U12
+POLL:LEFT*4
+POLL:DOWN*1
+POLL:LEFT*1
+POLL:DOWN*3
+POLL:LEFT*1
+POLL:DOWN*15
+POLL:RIGHT*38
+POLL:UP*13
+POLL:RIGHT*11
+POLL:UP*12
+# 244 -> 252 target 195,51 action fc path L19 D10 R24 D18 L30 D8 L2 D1 L4 U1
+POLL:LEFT*19
+POLL:DOWN*10
+POLL:RIGHT*24
+POLL:DOWN*18
+POLL:LEFT*30
+POLL:DOWN*8
+POLL:LEFT*2
+POLL:DOWN*1
+POLL:LEFT*4
+POLL:UP*1
+# 252 -> 250 target 53,49 action fa path U1 R21 U12 R4 D3
+POLL:UP*1
+POLL:RIGHT*21
+POLL:UP*12
+POLL:RIGHT*4
+POLL:DOWN*3
+# 250 -> 256 target 233,7 action 100 path D1 L8 U3
+POLL:DOWN*1
+POLL:LEFT*8
+POLL:UP*3
+# 256 -> 262 target 31,13 action 106 path R1 U4 R6 U3 R1 U1 R1 U1 R1 U1 R1 U1 R2 U18 L1 U1 L3 U1 L1 U1 L5 U2 L1 U1 L5 U1 L1 U21 R2 U1 R2 U1 R1 U1 R2 U24
+POLL:RIGHT*1
+POLL:UP*4
+POLL:RIGHT*6
+POLL:UP*3
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*2
+POLL:UP*18
+POLL:LEFT*1
+POLL:UP*1
+POLL:LEFT*3
+POLL:UP*1
+POLL:LEFT*1
+POLL:UP*1
+POLL:LEFT*5
+POLL:UP*2
+POLL:LEFT*1
+POLL:UP*1
+POLL:LEFT*5
+POLL:UP*1
+POLL:LEFT*1
+POLL:UP*21
+POLL:RIGHT*2
+POLL:UP*1
+POLL:RIGHT*2
+POLL:UP*1
+POLL:RIGHT*1
+POLL:UP*1
+POLL:RIGHT*2
+POLL:UP*24
+# 262 -> 260 target 143,143 action 2104 path U1
+POLL:UP*1
+# From directory 260 enter the northern AREA2 portal.
+POLL:UP
+
+# 262 -> 272 target 125,158 action 2110 path L13 D15 L5 U1
+POLL:LEFT*13
+POLL:DOWN*15
+POLL:LEFT*5
+POLL:UP*1
+# 272 -> 364 target 77,86 action 16c path L3 U2 L1 U1 L4 U29 R4 U21 R6 U11
+POLL:LEFT*3
+POLL:UP*2
+POLL:LEFT*1
+POLL:UP*1
+POLL:LEFT*4
+POLL:UP*29
+POLL:RIGHT*4
+POLL:UP*21
+POLL:RIGHT*6
+POLL:UP*11
+POLL:UP
+POLL:RIGHT
+POLL:UP*11
+POLL:RIGHT*4
+POLL:UP*6
+POLL:CONFIRM*17
+
+# The static path to the Z10 exit is L4 D20. In the uninterrupted DOS-process
+# model, the behavior-zero patron has roamed into that four-cell approach during
+# his long dialogue. Sixteen released world ticks let him clear it, then the
+# next four LEFT samples traverse the original path; no state or MAPZ is patched.
+# 364 -> 366 target 31,37 action 16e path L4 D20
+POLL:LEFT*20
+POLL:DOWN*20
+# 366 -> 280 target 112,102 action 118 path D1 R3 D1 R23 D16 R9 U3
+POLL:DOWN*1
+POLL:RIGHT*3
+POLL:DOWN*1
+POLL:RIGHT*23
+POLL:DOWN*16
+POLL:RIGHT*9
+POLL:UP*3
+POLL:RIGHT*3
+POLL:UP*10
+POLL:RIGHT
+POLL:CONFIRM*2
+POLL:UP
+POLL:RIGHT*4
+POLL:DOWN*2
+
+
+# DAIU1 lower maze: reach CHNA2 event 336. The party is still legally defeated,
+# so the seven-area prefix's four released random encounters execute FIG
+# defeat/OC without invented commands. Event 336 charges 1,000 and branches to
+# event 344; its opcode 12 restores all four original party records.
+POLL:LEFT*25
+POLL:DOWN*2
+POLL:LEFT*11
+POLL:UP*27
+POLL:RIGHT*46
+POLL:UP*4
+POLL:RIGHT*11
+POLL:DOWN*42
+POLL:LEFT*85
+POLL:UP*6
+POLL:LEFT*6
+POLL:UP*36
+POLL:LEFT*23
+POLL:DOWN*42
+POLL:LEFT*30
+POLL:CONFIRM*2
+WAIT:CONFIRM
+TEXT:CONFIRM
+POLL:CONFIRM
+
+# Cross from the healer to automatic actor four. Three released random
+# encounters occur; the first two escape once and the third succeeds on the
+# second unmodified FIG escape attempt.
+POLL:RIGHT*30
+POLL:UP*16
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:UP*22
+POLL:LEFT*26
+POLL:UP*13
+POLL:RIGHT*6
+POLL:UP*29
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:UP*60
+POLL:RIGHT*48
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:RIGHT*24
+POLL:UP*12
+# Collision with field-8 bit 8000h actor four executes CHNA2 event 478 and
+# persistently changes its behavior to three, opening the upper DAIU1 component.
+POLL:UP*3
+POLL:CONFIRM
+# Reach and activate CHNA2 event 20. Its opcode-34 list mutates the released
+# MAPZ aliases, opcode 37 relocates the same RPG process to directory 376 and
+# opcode 9 sets story flag 33; all decisions come from CHNA2, not plot guessing.
+POLL:UP
+POLL:RIGHT*14
+POLL:DOWN*31
+POLL:RIGHT*30
+POLL:UP*9
+POLL:LEFT
+POLL:UP*4
+POLL:CONFIRM*2
+
+# Return from directory 376 to the only DAIU1 exit. Six released random
+# encounters occur on the 630-step RAP path; the first five escape once.
+# The sixth consumes three complete, legal FIG escape attempts before the
+# released random roll succeeds.
+POLL:DOWN*5
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:DOWN*8
+POLL:LEFT*30
+POLL:UP*31
+POLL:LEFT*14
+POLL:DOWN*12
+POLL:LEFT*37
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:LEFT*30
+POLL:DOWN*2
+POLL:LEFT*7
+POLL:DOWN*2
+POLL:LEFT*4
+POLL:DOWN*84
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:DOWN*10
+POLL:RIGHT*44
+POLL:DOWN*2
+POLL:RIGHT*11
+POLL:DOWN*39
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:DOWN*4
+POLL:RIGHT*85
+POLL:UP*6
+POLL:LEFT*6
+POLL:UP*6
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:UP*30
+POLL:LEFT*51
+POLL:DOWN*10
+POLL:RIGHT*6
+POLL:DOWN*21
+POLL:RIGHT*12
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+WAIT:DOWN
+WAIT:CONFIRM
+WAIT:RIGHT
+WAIT:CONFIRM
+POLL:RIGHT*18
+POLL:UP*3
+
+# Directory 286 -> 282 -> the Z10 patron. The behavior-six portal actor is
+# removed by the first collision UP and the following UP enters directory 364.
+POLL:LEFT*7
+POLL:DOWN*13
+POLL:DOWN*2
+POLL:LEFT*13
+POLL:UP*8
+POLL:LEFT*22
+POLL:UP*11
+POLL:UP
+POLL:RIGHT
+POLL:UP*11
+POLL:RIGHT*4
+POLL:UP*6
+
+# Flag 33 redirects CHNA3 event 20 to event 22. Thirteen POLL confirmations
+# traverse its released pages, WAIT:CONFIRM accepts the displayed 3,000
+# price, event 520 subtracts it, and event 522 replaces the first zero
+# inventory word with item 91 before persisting patron event 26.
+POLL:CONFIRM*13
+WAIT:CONFIRM
+POLL:CONFIRM
 POLL:QUIT

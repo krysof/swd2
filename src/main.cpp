@@ -699,43 +699,64 @@ void run_monolithic(const std::filesystem::path& game_root,
     modules.add(std::make_unique<swd2::BattleModule>());
     modules.add(std::make_unique<swd2::DemoModule>());
     swd2::LaunchResult result;
-    if (resume_marker) {
-        result = swd2::MonolithicRuntime(std::move(modules)).resume(
-            context, *resume_marker);
-    } else if (start_marker) {
-        const auto module = [&]() {
-            switch (*start_marker) {
-            case swd2::Marker::menu_ready:
-            case swd2::Marker::continue_rpg:
-            case swd2::Marker::returned_from_demo:
-                return swd2::Module::rpg;
-            case swd2::Marker::open_figure:
-                return swd2::Module::figure;
-            case swd2::Marker::open_demo:
-                return swd2::Module::demo;
-            case swd2::Marker::none:
-            case swd2::Marker::menu_rejected:
-                throw std::runtime_error(
-                    "--start-marker requires MT, IF, ED, OC, or OM");
+    try {
+        if (resume_marker) {
+            result = swd2::MonolithicRuntime(std::move(modules)).resume(
+                context, *resume_marker);
+        } else if (start_marker) {
+            const auto module = [&]() {
+                switch (*start_marker) {
+                case swd2::Marker::menu_ready:
+                case swd2::Marker::continue_rpg:
+                case swd2::Marker::returned_from_demo:
+                    return swd2::Module::rpg;
+                case swd2::Marker::open_figure:
+                    return swd2::Module::figure;
+                case swd2::Marker::open_demo:
+                    return swd2::Module::demo;
+                case swd2::Marker::none:
+                case swd2::Marker::menu_rejected:
+                    throw std::runtime_error(
+                        "--start-marker requires MT, IF, ED, OC, or OM");
+                }
+                throw std::runtime_error("unknown direct-start marker");
+            }();
+            auto* implementation = modules.find(module);
+            if (!implementation) {
+                throw std::runtime_error("direct-start module is not registered");
             }
-            throw std::runtime_error("unknown direct-start marker");
-        }();
-        auto* implementation = modules.find(module);
-        if (!implementation) {
-            throw std::runtime_error("direct-start module is not registered");
+            const auto output = implementation->run(context, *start_marker);
+            result.transitions.push_back({module, *start_marker, output, true});
+            result.final_marker = output;
+            result.reason = swd2::StopReason::module_requested_exit;
+        } else {
+            result = swd2::MonolithicRuntime(std::move(modules)).run(context);
         }
-        const auto output = implementation->run(context, *start_marker);
-        result.transitions.push_back({module, *start_marker, output, true});
-        result.final_marker = output;
-        result.reason = swd2::StopReason::module_requested_exit;
-    } else {
-        result = swd2::MonolithicRuntime(std::move(modules)).run(context);
+    } catch (...) {
+        // A boundary mismatch is exactly where a long reverse-engineering
+        // replay needs its last state/position evidence. Preserve the prefix
+        // before rethrowing instead of losing every checkpoint accumulated by
+        // the strict frontend. The incomplete frame stream deliberately keeps
+        // no DONE trailer and therefore cannot masquerade as pixel evidence.
+        if (trace_output) {
+            write_replay_trace(*trace_output, platform, context, result);
+        }
+        throw;
     }
     if (require_all_inputs && platform.remaining_inputs() != 0U) {
+        if (trace_output) {
+            write_replay_trace(*trace_output, platform, context, result);
+        }
         throw std::runtime_error(
-            "replay stopped before consuming all boundary-locked inputs");
+            "replay stopped after consuming " +
+            std::to_string(platform.consumed_inputs()) + " of " +
+            std::to_string(platform.input_count()) +
+            " boundary-locked inputs");
     }
     if (require_all_inputs && platform.implicit_quit_calls != 0U) {
+        if (trace_output) {
+            write_replay_trace(*trace_output, platform, context, result);
+        }
         throw std::runtime_error(
             "replay exhausted its input and relied on an implicit quit");
     }

@@ -277,6 +277,13 @@ if(BUILD_TESTING)
     set_tests_properties(replay_trace_validation PROPERTIES
         DEPENDS replay_trace_smoke)
     add_test(
+        NAME replay_failure_trace_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-replay-failure-trace.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    add_test(
         NAME rpg_opening_pixel_validation
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-opening.py"

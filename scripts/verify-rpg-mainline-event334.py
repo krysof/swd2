@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock a continuous legal route through Jianmu event 334 and ORC 802ch."""
+"""Lock the continuous legal route through Jianmu and DAIU water control."""
 
 from __future__ import annotations
 
@@ -65,8 +65,13 @@ def main() -> int:
         # fight, the two overworld encounters on the road to the temple, and
         # fixed Jianmu encounter 14, the eastern TREE encounter, two released
         # random encounters on the first ascent, and the additional encounter
-        # naturally triggered while descending into the treasure route.
-        for index in range(74):
+        # naturally triggered while descending into the treasure route. Four
+        # dead-party DAIU1 encounters then take the ordinary defeat/OC path;
+        # after event 344 restores the party, three further encounters are
+        # escaped with the unmodified FIG command and released RNG outcomes.
+        # The return through directory 376 adds six more encounters; the last
+        # uses three complete escape attempts before the released roll passes.
+        for index in range(96):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -81,41 +86,41 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 12514,
-            ("input", "consumed"): 12514,
+            ("input", "total"): 16103,
+            ("input", "consumed"): 16103,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 1603,
-            ("boundaries", "poll"): 10947,
-            ("boundaries", "text"): 945,
-            ("video", "frames"): 36738,
-            ("video", "direct_updates"): 5639,
-            ("video", "fnv1a64"): "59d1ce0ced81ac27",
-            ("audio", "music_calls"): 339,
-            ("audio", "voice_calls"): 721,
+            ("boundaries", "wait"): 1653,
+            ("boundaries", "poll"): 14485,
+            ("boundaries", "text"): 2320,
+            ("video", "frames"): 43168,
+            ("video", "direct_updates"): 7127,
+            ("video", "fnv1a64"): "32251d9c69ab3873",
+            ("audio", "music_calls"): 425,
+            ("audio", "voice_calls"): 744,
             ("audio", "stop_music_calls"): 9,
-            ("audio", "stop_audio_calls"): 152,
-            ("audio", "fnv1a64"): "066176bbbded8350",
+            ("audio", "stop_audio_calls"): 196,
+            ("audio", "fnv1a64"): "171aaaf5706df508",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 1639035:
+        if trace.get("delay_milliseconds") != 1853898:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "79cbe260b2fb6ce4",
-            "mapz_fnv1a64": "4692decfa52e471d",
+            "state_fnv1a64": "1d392680af3022d6",
+            "mapz_fnv1a64": "1ce5c5e974002091",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 36738 or frames[-1] != "51c92fd1c6310e61":
-            raise ValueError("mainline post-event-334 frame differs")
+        if len(frames) != 43168 or frames[-1] != "bc3eb0e9c922f710":
+            raise ValueError("mainline AREA2-entry frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -307,9 +312,48 @@ def main() -> int:
             12487: ("TEXT", "CONFIRM", "e8df9c408029879d", "7424c8843c5b88b9"),
             12489: ("WAIT", "CONFIRM", "ea3d6b70cb99b959", "4692decfa52e471d"),
             12512: ("WAIT", "CONFIRM", "ea3d6b70cb99b959", "4692decfa52e471d"),
-            12513: ("POLL", "QUIT", "79cbe260b2fb6ce4", "4692decfa52e471d"),
+            12513: ("POLL", "LEFT", "79cbe260b2fb6ce4", "4692decfa52e471d"),
+            12528: ("POLL", "RIGHT", "20fbd1da45e45e7a", "4692decfa52e471d"),
+            13272: ("POLL", "RIGHT", "f60254a881c7423f", "4692decfa52e471d"),
+            13300: ("POLL", "CONFIRM", "eec8fba9254358b5", "4692decfa52e471d"),
+            13301: ("POLL", "CONFIRM", "eec8fba9254358b5", "1a617f3a6c3be899"),
+            13305: ("POLL", "LEFT", "eec8fba9254358b5", "1a617f3a6c3be899"),
+            14250: ("POLL", "UP", "ef53d45d46cc7285", "1a617f3a6c3be899"),
+            14251: ("POLL", "UP", "120ddf114a7eca45", "1a617f3a6c3be899"),
+            14252: ("POLL", "LEFT", "8e9b9c2710e38777", "1a617f3a6c3be899"),
+            14286: ("POLL", "LEFT", "94f6d1464da5f093", "1a617f3a6c3be899"),
+            14391: ("POLL", "CONFIRM", "9295ff471905a67e", "1a617f3a6c3be899"),
+            14407: ("POLL", "CONFIRM", "c72c5bbe9b61e6fe", "1a617f3a6c3be899"),
+            14448: ("POLL", "DOWN", "913096258ccd1ff2", "1a617f3a6c3be899"),
+            14520: ("POLL", "UP", "3bda680beca0e6d6", "320ce6bf101700fb"),
+            14527: ("POLL", "LEFT", "5d37dede566947d9", "320ce6bf101700fb"),
+            14925: ("WAIT", "CONFIRM", "992ed821bc2581fa", "320ce6bf101700fb"),
+            14926: ("TEXT", "CONFIRM", "c6df828747ca066e", "320ce6bf101700fb"),
+            14928: ("POLL", "RIGHT", "f57f015cb7cc9768", "320ce6bf101700fb"),
+            14974: ("WAIT", "DOWN", "64f70c7a0809b68e", "320ce6bf101700fb"),
+            15074: ("WAIT", "DOWN", "11cb9942ff13878a", "320ce6bf101700fb"),
+            15186: ("WAIT", "DOWN", "ff6133644d4cbd7d", "320ce6bf101700fb"),
+            15190: ("WAIT", "DOWN", "ff6133644d4cbd7d", "320ce6bf101700fb"),
+            15234: ("POLL", "UP", "576da7f02ecf1891", "9e30ceac1ecfe93f"),
+            15324: ("POLL", "CONFIRM", "46098f1c0a6e493c", "9e30ceac1ecfe93f"),
+            15326: ("POLL", "DOWN", "ad9d13602ed93d55", "93204e39a66528bf"),
+            15331: ("WAIT", "DOWN", "924635f649e8d3e2", "93204e39a66528bf"),
+            15467: ("WAIT", "DOWN", "895af84a6513c4dc", "93204e39a66528bf"),
+            15600: ("WAIT", "DOWN", "69ef028200841ea3", "93204e39a66528bf"),
+            15710: ("WAIT", "DOWN", "176e39baa2d96eb1", "93204e39a66528bf"),
+            15821: ("WAIT", "DOWN", "3cf680d54dff6ce9", "93204e39a66528bf"),
+            15955: ("WAIT", "DOWN", "cfe36e9bdef648fb", "93204e39a66528bf"),
+            15959: ("WAIT", "DOWN", "cfe36e9bdef648fb", "93204e39a66528bf"),
+            15963: ("WAIT", "DOWN", "cfe36e9bdef648fb", "93204e39a66528bf"),
+            15988: ("POLL", "LEFT", "2686352ca54fae40", "93204e39a66528bf"),
+            16008: ("POLL", "DOWN", "ee5f4e321e825f9c", "93204e39a66528bf"),
+            16065: ("POLL", "RIGHT", "a5dee1a02bb1ba80", "93204e39a66528bf"),
+            16087: ("POLL", "CONFIRM", "c083fe607660ad15", "93204e39a66528bf"),
+            16100: ("WAIT", "CONFIRM", "c083fe607660ad15", "93204e39a66528bf"),
+            16101: ("POLL", "CONFIRM", "688dc2c902c3d8f9", "93204e39a66528bf"),
+            16102: ("POLL", "QUIT", "1d392680af3022d6", "1ce5c5e974002091"),
         }
-        if len(checkpoints) != 12514:
+        if len(checkpoints) != 16103:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -477,6 +521,53 @@ def main() -> int:
             12391: (244, 204, 25, 6),
             12485: (252, 39, 57, 3),
             12513: (252, 39, 57, 3),
+            12528: (254, 195, 52, 0),
+            12646: (246, 150, 9, 0),
+            12741: (242, 18, 10, 0),
+            12827: (238, 123, 49, 0),
+            12891: (234, 153, 123, 3),
+            13148: (230, 161, 54, 3),
+            13225: (226, 56, 119, 3),
+            13272: (220, 30, 36, 3),
+            13300: (220, 38, 16, 3),
+            13334: (222, 89, 126, 0),
+            13382: (224, 114, 29, 0),
+            13456: (228, 153, 150, 0),
+            13709: (232, 153, 25, 0),
+            13768: (236, 36, 55, 3),
+            13860: (240, 107, 9, 3),
+            13959: (244, 226, 15, 3),
+            14076: (252, 28, 59, 3),
+            14117: (250, 241, 9, 0),
+            14129: (256, 28, 97, 3),
+            14250: (262, 143, 144, 0),
+            14251: (260, 31, 14, 0),
+            14252: (262, 143, 144, 0),
+            14286: (272, 75, 150, 3),
+            14391: (364, 35, 17, 3),
+            14448: (366, 77, 87, 0),
+            14520: (280, 36, 11, 9),
+            14527: (284, 137, 149, 0),
+            14925: (284, 14, 162, 6),
+            14928: (284, 14, 162, 6),
+            14974: (284, 44, 146, 3),
+            15074: (284, 24, 82, 3),
+            15186: (284, 72, 22, 9),
+            15234: (284, 96, 8, 3),
+            15324: (284, 139, 25, 3),
+            15326: (376, 140, 25, 3),
+            15331: (376, 140, 30, 0),
+            15467: (376, 59, 19, 6),
+            15600: (376, 18, 107, 0),
+            15710: (376, 73, 158, 0),
+            15821: (376, 152, 150, 3),
+            15955: (376, 119, 151, 9),
+            15988: (286, 40, 10, 3),
+            16008: (282, 112, 103, 0),
+            16065: (364, 30, 34, 3),
+            16087: (364, 35, 17, 3),
+            16100: (364, 35, 17, 3),
+            16102: (364, 35, 17, 3),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -498,29 +589,31 @@ def main() -> int:
             raise ValueError("persisted mainline NAME differs from live font")
 
         # The Taoist handoff adds flag 36 after all previously proven story
-        # flags. The Jianmu gate redirects AREA1 entity 3, then event 322
-        # moves the blocking root and event 324 installs its post-battle text.
+        # flags. CHNA3 event 20 sets flag 56 at the Zhou patron; after entering
+        # DAIU1, CHNA2 event 20 sets flag 33 as it changes the water layout.
         if u16(save, 0x4A2) != 0xE880:
             raise ValueError("village/Stronghold/river-demon story flags are not exact")
-        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0x2808:
+        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0x6808:
             raise ValueError(
-                "freed-father/mayor/boat/tablet/xirang/Taoist flags are not exact")
-        if u16(save, 0x4A8) != 0x8000:
-            raise ValueError("ONE3A stone-lion story flag 48 was not set")
+                "pre-DAIU and DAIU water-control story flags are not exact")
+        if u16(save, 0x4A8) != 0x8080:
+            raise ValueError("stone-lion/patron story flags 48 and 56 are not exact")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 252:
-            raise ValueError("Jianmu continuation checkpoint is not directory 252")
+        if u16(save, 0x424) != 364:
+            raise ValueError("post-compass checkpoint is not Zhou patron directory 364")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (39, 57):
-            raise ValueError(f"Jianmu directory-252 position is {(world_x, world_y)!r}")
+        if (world_x, world_y) != (35, 17):
+            raise ValueError(f"Zhou patron position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
-        if u16(save, 0x10) != 4 or u16(save, 0x104) != 4635:
-            raise ValueError("Jianmu directory-252 party count or money differs")
-        if u16(save, 0x49C) != 0x13C4:
-            raise ValueError("Jianmu directory-252 FIG random cursor differs")
+        if u16(save, 0x10) != 4 or u16(save, 0x104) != 635:
+            raise ValueError("post-compass party count or money differs")
+        if u16(save, 0x49C) != 0x1400:
+            raise ValueError("post-compass FIG random cursor differs")
+        if save[0x529] != 1:
+            raise ValueError("AREA2 Jianmu return portal did not set travel flag 11")
         # MAP0 action 4011h sets bit 0010h before event 334. Opcode 3 hides
         # directory-252 entity one, opcode 34 redirects the location-220 mage
         # to event 336, and opcode 58 executes fixed ORC directory 802ch. The
@@ -529,10 +622,10 @@ def main() -> int:
         if u16(save, 0x51A) != 0x0014:
             raise ValueError("Jianmu/Taotie MAP0 once-only trigger flags differ")
         expected_party = [
-            (0x2000, 0, 134, 110, 110, 1, 84, 707, 717),
-            (0x2000, 0, 138, 42, 42, 5, 91, 696, 706),
-            (0x2000, 0, 161, 109, 140, 46, 46, 262, 847),
-            (0x3000, 0, 140, 46, 46, 7, 84, 627, 702),
+            (0x2000, 0, 134, 110, 110, 84, 84, 707, 717),
+            (0x3000, 0, 138, 42, 42, 91, 91, 696, 706),
+            (0x3000, 0, 161, 140, 140, 46, 46, 262, 847),
+            (0x1000, 10, 140, 46, 46, 84, 84, 627, 702),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -543,17 +636,17 @@ def main() -> int:
                       u16(save, base + 0x3B))
             if actual != expected:
                 raise ValueError(
-                    f"Jianmu directory-252 actor {actor} state is {actual!r}, "
+                    f"DAIU1 actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
                 for actor in range(4)] != [16, 16, 17, 16]:
             raise ValueError("post-guardian party levels differ")
         expected_inventory = [
-            93, 205, 206, 100, 110, 206, 291, 333, 104, 119, 257,
-        ] + [0] * 39
+            93, 205, 206, 100, 110, 206, 291, 333, 104, 119, 257, 91,
+        ] + [0] * 38
         actual_inventory = [u16(save, 0x382 + slot * 2) for slot in range(50)]
         if actual_inventory != expected_inventory:
-            raise ValueError("Jianmu treasure inventory or stable compaction differs")
+            raise ValueError("post-compass inventory or stable compaction differs")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -600,8 +693,31 @@ def main() -> int:
             raise ValueError("Jianmu gate did not persist event 318 -> 450")
         if map_field(image, 216, 2, 0) != 42950:
             raise ValueError("Jianmu guardian did not move the blocking root")
-        if map_field(image, 220, 9, 0) != 336:
-            raise ValueError("event 334 did not persist the mage redirect to 336")
+        if map_field(image, 220, 9, 0) != 340:
+            raise ValueError("event 336 did not persist the mage follow-up event 340")
+        # CHNA3 event 82 opens the Zhou-to-DAIU gate by persisting behavior
+        # three on entity zero. CHNA2 event 20's opcode-34 list hides the two
+        # aliased Zhou residents at byte offsets 14/16. All these location
+        # records reference the same released ten-entity MAPZ area.
+        for location in (280, 286, 354, 358):
+            if map_field(image, location, 3, 0) != 3 or \
+                    map_field(image, location, 3, 7) != 3 or \
+                    map_field(image, location, 3, 8) != 3:
+                raise ValueError(
+                    f"Zhou/DAIU gate mutations differ at location {location}")
+        # DAIU1 actor four is an automatic CHNA2 event-478 collision. Event 20
+        # then moves the water-control actor, changes its behavior and event,
+        # and opcode 37 reloads the aliased area as directory 376.
+        for location in (284, 376):
+            if map_field(image, location, 2, 0) != 5302 or \
+                    map_field(image, location, 3, 0) != 5 or \
+                    map_field(image, location, 9, 0) != 44 or \
+                    map_field(image, location, 3, 4) != 3:
+                raise ValueError(
+                    f"DAIU1 water-control mutations differ at location {location}")
+        if map_field(image, 364, 9, 0) != 26:
+            raise ValueError(
+                "compass purchase did not persist patron event 522 -> 26")
         if map_field(image, 252, 3, 1) != 3 or \
                 map_field(image, 252, 9, 1) != 334:
             raise ValueError("event 334 did not persistently hide its trigger entity")
@@ -628,7 +744,8 @@ def main() -> int:
         return 1
     print(
         "RPG mainline prefix validation: OK "
-        "(new game -> released mainline -> Jianmu event 334 -> fixed ORC 802ch legal defeat -> OC world)"
+        "(new game -> event 334 -> legal fixed-battle defeat -> event 336 -> "
+        "AREA2 -> DAIU1 heal/water control -> CHNA3 compass purchase)"
     )
     return 0
 
