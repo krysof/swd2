@@ -7939,20 +7939,98 @@ void test_event_vm(const std::filesystem::path& game_root) {
                     std::vector<std::uint16_t>({59U, 59U, 59U}),
             "FIR3 event 80 did not finish the released three-battle chain");
 
-    auto kunlun_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
-    swd2::install_map_location(fire_state, kunlun_world, 220U);
-    reset_inventory(fire_state, {250U, 278U, 281U, 259U});
+    // The four objects tested by Jianmu event 448 are not test-only gifts.
+    // MAP0 has a released route from AREA2's final portal through T6/T8 to the
+    // T9 hub, and four CHNA5 chest records produce the exact ids via opcode
+    // 40's first-empty-slot path. Lock both the route and the producers.
+    auto treasure_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    const std::array<std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>,
+                     15U> treasure_route{{
+        {262U, 0x21d6U, 470U},
+        {470U, 0x01e6U, 486U},
+        {486U, 0x01faU, 506U},
+        {506U, 0x028aU, 650U},
+        {650U, 0x22d0U, 720U},
+        {720U, 0x02faU, 762U},
+        {762U, 0x2320U, 800U},
+        {762U, 0x233cU, 828U},
+        {762U, 0x2358U, 856U},
+        {856U, 0x0368U, 872U},
+        {762U, 0x2370U, 880U},
+        {880U, 0x0378U, 888U},
+        {888U, 0x0380U, 896U},
+        {896U, 0x0388U, 904U},
+        {904U, 0x038cU, 908U},
+    }};
+    for (const auto& [source, action, destination] : treasure_route) {
+        const auto& source_location =
+            treasure_world.location_at_directory_offset(source);
+        const auto records = post_jianmu_transitions.records(
+            source_location.area.flags);
+        const auto found = std::find_if(records.begin(), records.end(),
+            [action](const auto& record) { return record.action == action; });
+        require(found != records.end() && !found->is_special() &&
+                    found->destination_directory_offset() == destination,
+                "released MAP0 route to one of the four treasures changed");
+    }
+
+    const auto treasure_archive =
+        swd2::ScriptArchive::load(game_root / "CHNA5.EXE");
+    auto treasure_state = fire_state;
+    reset_inventory(treasure_state, {});
+    TestEventHost treasure_host;
+    const std::array<std::tuple<std::uint16_t, std::uint16_t, std::uint16_t>,
+                     4U> treasure_events{{
+        {828U, 48U, 250U},
+        {800U, 56U, 278U},
+        {872U, 60U, 281U},
+        {908U, 324U, 259U},
+    }};
+    std::size_t treasure_slot = 0U;
+    for (const auto& [location_offset, event_offset, item] : treasure_events) {
+        swd2::install_map_location(treasure_state, treasure_world,
+                                   location_offset);
+        auto& treasure_area =
+            treasure_world.location_at_directory_offset(location_offset).area;
+        require(treasure_area.entity_fields[9][1] == event_offset,
+                "released four-treasure chest event root changed");
+        const auto acquired = swd2::execute_event(
+            treasure_archive, event_offset, treasure_state, &treasure_area,
+            1U, treasure_host, 10'000U, &treasure_world);
+        require(acquired.status == swd2::EventVmStatus::completed &&
+                    acquired.commands_executed == 7U &&
+                    treasure_state.u16(0x382U + treasure_slot * 2U) == item &&
+                    treasure_area.entity_fields[0][1] == 0x31U &&
+                    treasure_area.entity_fields[9][1] == 50U,
+                "CHNA5 chest did not produce and persist a released treasure");
+        ++treasure_slot;
+    }
+
+    swd2::install_map_location(treasure_state, treasure_world, 904U);
+    auto& tower_gate_area =
+        treasure_world.location_at_directory_offset(904U).area;
+    require(tower_gate_area.entity_fields[9][2] == 592U,
+            "released northern-tower four-object gate changed");
+    const auto tower_gate = swd2::execute_event(
+        treasure_archive, 592U, treasure_state, &tower_gate_area, 2U,
+        treasure_host, 10'000U, &treasure_world);
+    require(tower_gate.status == swd2::EventVmStatus::completed &&
+                tower_gate.commands_executed == 9U &&
+                tower_gate_area.entity_fields[3][2] == 3U,
+            "CHNA5 event 592 did not accept all four released treasures");
+
+    swd2::install_map_location(treasure_state, treasure_world, 220U);
     TestEventHost kunlun_host;
-    auto& kunlun_area = kunlun_world.location_at_directory_offset(220U).area;
+    auto& kunlun_area = treasure_world.location_at_directory_offset(220U).area;
     const auto kunlun_gate = swd2::execute_event(
-        archive, 340U, fire_state, &kunlun_area, 0U,
-        kunlun_host, 10'000U, &kunlun_world);
+        archive, 340U, treasure_state, &kunlun_area, 0U,
+        kunlun_host, 10'000U, &treasure_world);
     require(kunlun_gate.status == swd2::EventVmStatus::completed &&
                 kunlun_gate.commands_executed == 23U &&
                 kunlun_gate.last_opcode == 59U &&
                 kunlun_gate.requested_marker == swd2::Marker::open_figure &&
-                fire_state.u16(0x51cU) == 2U &&
-                fire_state.u16(0x4a0U) == 0x8036U &&
+                treasure_state.u16(0x51cU) == 2U &&
+                treasure_state.u16(0x4a0U) == 0x8036U &&
                 kunlun_area.entity_fields[9][0] == 452U,
             "CHNA1 event 340 did not branch through four treasures to event 448");
 
