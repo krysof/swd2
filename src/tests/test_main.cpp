@@ -7621,6 +7621,274 @@ void test_event_vm(const std::filesystem::path& game_root) {
                         .area.entity_fields[9][0] == 340U,
             "Jianmu event 336 did not install its released mage follow-up");
 
+    // The released archives also close the story route after that clue.  Do
+    // not infer this route by walking/grinding: lock the MAP0 destinations and
+    // execute the controlling CHNA records themselves.  Story flags use the
+    // literal RPG 5515/5566 MSB-first word layout at SAVE+4a2.
+    const auto story_flag = [](const swd2::SharedState& value,
+                               std::uint16_t flag) {
+        const auto offset = static_cast<std::size_t>(0x4a2U + (flag >> 4U) * 2U);
+        return (value.u16(offset) & (0x8000U >> (flag & 15U))) != 0U;
+    };
+    const auto write_story_flag = [](swd2::SharedState& value,
+                                     std::uint16_t flag, bool enabled) {
+        const auto offset = static_cast<std::size_t>(0x4a2U + (flag >> 4U) * 2U);
+        const auto mask = static_cast<std::uint16_t>(0x8000U >> (flag & 15U));
+        value.set_u16(offset, enabled
+            ? static_cast<std::uint16_t>(value.u16(offset) | mask)
+            : static_cast<std::uint16_t>(value.u16(offset) & ~mask));
+    };
+    const auto reset_inventory = [](swd2::SharedState& value,
+                                    std::initializer_list<std::uint16_t> items) {
+        for (std::size_t index = 0; index < 50U; ++index) {
+            value.set_u16(0x382U + index * 2U, 0U);
+        }
+        std::size_t index = 0;
+        for (const auto item : items) {
+            value.set_u16(0x382U + index++ * 2U, item);
+        }
+    };
+
+    const auto post_jianmu_transitions =
+        swd2::MapTransitionDatabase::load(game_root / "MAP0.EXE");
+    const auto& second_world =
+        jianmu_world.location_at_directory_offset(262U);
+    require(second_world.area.flags == 0xe05cU,
+            "released AREA2 location 262 no longer selects MAP0 list 05ch");
+    const auto find_portal = [&](std::uint16_t action) {
+        const auto records = post_jianmu_transitions.records(
+            second_world.area.flags);
+        return std::find_if(records.begin(), records.end(),
+                            [action](const auto& record) {
+                                return record.action == action;
+                            });
+    };
+    const auto tree_portal = find_portal(0x2104U);
+    const auto buddha_portal = find_portal(0x2108U);
+    const auto zhou_portal = find_portal(0x2110U);
+    const auto area2_records = post_jianmu_transitions.records(
+        second_world.area.flags);
+    require(tree_portal != area2_records.end() &&
+                tree_portal->flag_index == 11U &&
+                tree_portal->destination_directory_offset() == 260U &&
+                buddha_portal != area2_records.end() &&
+                buddha_portal->flag_index == 12U &&
+                buddha_portal->destination_directory_offset() == 264U &&
+                zhou_portal != area2_records.end() &&
+                zhou_portal->flag_index == 13U &&
+                zhou_portal->destination_directory_offset() == 272U,
+            "post-Jianmu AREA2 travel portals no longer match released MAP0");
+
+    const auto post_chapter_two =
+        swd2::ScriptArchive::load(game_root / "CHNA2.EXE");
+    const auto post_chapter_three =
+        swd2::ScriptArchive::load(game_root / "CHNA3.EXE");
+
+    // Zhou's patron installs flag 56 while the water is still blocked.  Once
+    // DAIU event 20 starts the released mechanism, the same entry branches to
+    // its compass offer through story flag 33.
+    auto post_jianmu_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    write_story_flag(post_jianmu_state, 33U, false);
+    write_story_flag(post_jianmu_state, 56U, false);
+    TestEventHost zhou_host;
+    const auto dry_zhou = swd2::execute_event(
+        post_chapter_three, 20U, post_jianmu_state, nullptr, 0U, zhou_host);
+    require(dry_zhou.status == swd2::EventVmStatus::completed &&
+                dry_zhou.commands_executed == 3U &&
+                story_flag(post_jianmu_state, 56U) &&
+                !story_flag(post_jianmu_state, 33U) &&
+                zhou_host.dialogues == 1U,
+            "CHNA3 event 20 did not install the released dry-water quest flag");
+
+    auto water_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    swd2::install_map_location(post_jianmu_state, water_world, 284U);
+    auto& water_area = water_world.location_at_directory_offset(284U).area;
+    TestEventHost water_host;
+    const auto water_started = swd2::execute_event(
+        post_chapter_two, 20U, post_jianmu_state, &water_area, 0U,
+        water_host, 10'000U, &water_world);
+    require(water_started.status == swd2::EventVmStatus::completed &&
+                water_started.commands_executed == 13U &&
+                water_started.requested_map_reload &&
+                water_started.relocated_area.has_value() &&
+                post_jianmu_state.map_location_directory_offset() == 376U &&
+                story_flag(post_jianmu_state, 33U),
+            "CHNA2 event 20 did not run DAIU and set story flag 33");
+
+    zhou_host.confirmation_result = false;
+    const auto wet_zhou = swd2::execute_event(
+        post_chapter_three, 20U, post_jianmu_state, nullptr, 0U, zhou_host);
+    require(wet_zhou.status == swd2::EventVmStatus::completed &&
+                wet_zhou.commands_executed == 5U &&
+                zhou_host.confirmations == 1U &&
+                zhou_host.presentations == 1U,
+            "CHNA3 event 20 did not branch to the released compass offer");
+
+    // The rain-ceremony tail consumes the two released quest objects, sets
+    // flag 32 and relocates to HUMAT.  This is the sole gate that changes the
+    // Buddha-cave monk from event 36's refusal into event 38's opening move.
+    auto relic_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto relic_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(relic_state, relic_world, 340U);
+    reset_inventory(relic_state, {91U, 93U});
+    write_story_flag(relic_state, 32U, false);
+    TestEventHost ceremony_host;
+    auto& ceremony_area = relic_world.location_at_directory_offset(340U).area;
+    const auto ceremony = swd2::execute_event(
+        post_chapter_three, 42U, relic_state, &ceremony_area, 0U,
+        ceremony_host, 10'000U, &relic_world);
+    require(ceremony.status == swd2::EventVmStatus::completed &&
+                ceremony.commands_executed == 74U &&
+                ceremony.requested_map_reload &&
+                relic_state.map_location_directory_offset() == 342U &&
+                story_flag(relic_state, 32U) &&
+                relic_state.u16(0x382U) == 267U &&
+                relic_state.u16(0x384U) == 262U,
+            "CHNA3 event 42 did not commit the released Buddha-relic gate");
+
+    auto cave_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto cave_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(cave_state, cave_world, 264U);
+    auto& cave_area = cave_world.location_at_directory_offset(264U).area;
+    write_story_flag(cave_state, 32U, false);
+    TestEventHost closed_cave_host;
+    const auto closed_cave = swd2::execute_event(
+        post_chapter_two, 36U, cave_state, &cave_area, 0U,
+        closed_cave_host, 10'000U, &cave_world);
+    require(closed_cave.status == swd2::EventVmStatus::completed &&
+                closed_cave.commands_executed == 2U &&
+                cave_area.entity_fields[3][0] == 4U,
+            "CHNA2 event 36 did not preserve the closed Buddha cave");
+    write_story_flag(cave_state, 32U, true);
+    TestEventHost open_cave_host;
+    const auto open_cave = swd2::execute_event(
+        post_chapter_two, 36U, cave_state, &cave_area, 0U,
+        open_cave_host, 10'000U, &cave_world);
+    require(open_cave.status == swd2::EventVmStatus::completed &&
+                open_cave.commands_executed == 7U &&
+                cave_area.entity_fields[3][0] == 3U &&
+                open_cave_host.presentations == 2U,
+            "CHNA2 event 36 did not branch through event 38 and open the cave");
+
+    // BUIN2 event 28 performs the relic/revival sequence, then leaves flag 41
+    // and location 590 for the river-diversion phase.  DAIU event 46 is the
+    // corresponding second mechanism and leaves flag 54/location 676.
+    auto revival_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto revival_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(revival_state, revival_world, 320U);
+    reset_inventory(revival_state, {267U});
+    write_story_flag(revival_state, 41U, false);
+    TestEventHost revival_host;
+    auto& revival_area = revival_world.location_at_directory_offset(320U).area;
+    const auto revival = swd2::execute_event(
+        post_chapter_two, 28U, revival_state, &revival_area, 0U,
+        revival_host, 10'000U, &revival_world);
+    require(revival.status == swd2::EventVmStatus::completed &&
+                revival.commands_executed == 20U &&
+                revival.requested_map_reload &&
+                revival_state.map_location_directory_offset() == 590U &&
+                story_flag(revival_state, 41U) &&
+                revival_state.u16(0x382U) == 0U &&
+                revival.relocated_area->entity_fields[9][0] == 32U,
+            "CHNA2 event 28 did not consume the relic and set story flag 41");
+
+    auto diversion_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto diversion_state = revival_state;
+    swd2::install_map_location(diversion_state, diversion_world, 426U);
+    write_story_flag(diversion_state, 54U, false);
+    TestEventHost diversion_host;
+    auto& diversion_area =
+        diversion_world.location_at_directory_offset(426U).area;
+    require(diversion_area.entity_fields[3][0] == 5U,
+            "released DAUF flag-41 gate no longer starts closed");
+    const auto opened_diversion = swd2::execute_event(
+        post_chapter_two, 50U, diversion_state, &diversion_area, 0U,
+        diversion_host, 10'000U, &diversion_world);
+    require(opened_diversion.status == swd2::EventVmStatus::completed &&
+                opened_diversion.commands_executed == 5U &&
+                diversion_area.entity_fields[3][0] == 3U,
+            "CHNA2 event 50 did not branch to 0052h and open the DAIU gate");
+    const auto diversion = swd2::execute_event(
+        post_chapter_two, 46U, diversion_state, &diversion_area, 0U,
+        diversion_host, 10'000U, &diversion_world);
+    require(diversion.status == swd2::EventVmStatus::completed &&
+                diversion.commands_executed == 22U &&
+                diversion.requested_map_reload &&
+                diversion_state.map_location_directory_offset() == 676U &&
+                story_flag(diversion_state, 54U),
+            "CHNA2 event 46 did not commit the released river diversion");
+
+    // Do not confuse event 50's 0052h branch target with decimal event 52:
+    // the former opens the DAIU gate, while the latter is a distinct FIR3
+    // encounter record.  The four released Fire-Mountain records below are
+    // locked independently until their intervening map/entity transitions are
+    // covered by deterministic replay.  Event 80, not a guessed battle
+    // result, is the later archive tail that sets the return-to-Jianmu flag.
+    const auto& fire_gate = swd2::decode_event_record(
+        post_chapter_two.event_stream(50U / 2U));
+    const auto& fire_first = swd2::decode_event_record(
+        post_chapter_two.event_stream(52U / 2U));
+    const auto& fire_second = swd2::decode_event_record(
+        post_chapter_two.event_stream(54U / 2U));
+    const auto& fire_third = swd2::decode_event_record(
+        post_chapter_two.event_stream(56U / 2U));
+    const auto& fire_fourth = swd2::decode_event_record(
+        post_chapter_two.event_stream(62U / 2U));
+    const auto& opened_daiu_gate = swd2::decode_event_record(
+        post_chapter_two.event_stream(0x52U / 2U));
+    require(fire_gate.commands.front().opcode == 4U &&
+                fire_gate.commands.front().arguments ==
+                    std::vector<std::uint16_t>({41U, 0x52U}) &&
+                opened_daiu_gate.commands.size() == 4U &&
+                opened_daiu_gate.commands[2].opcode == 3U &&
+                opened_daiu_gate.commands[2].arguments ==
+                    std::vector<std::uint16_t>({3U, 3U}) &&
+                opened_daiu_gate.commands[3].opcode == 1U &&
+                fire_first.commands.back().opcode == 59U &&
+                fire_first.commands.back().arguments ==
+                    std::vector<std::uint16_t>({4U, 0x8016U}) &&
+                fire_second.commands.back().opcode == 59U &&
+                fire_second.commands.back().arguments ==
+                    std::vector<std::uint16_t>({4U, 0x8018U}) &&
+                fire_third.commands.back().opcode == 59U &&
+                fire_third.commands.back().arguments ==
+                    std::vector<std::uint16_t>({2U, 0x801aU}) &&
+                fire_fourth.commands.back().opcode == 59U &&
+                fire_fourth.commands.back().arguments ==
+                    std::vector<std::uint16_t>({2U, 0x801cU}),
+            "CHNA2 DAIU gate or Fire-Mountain battle records changed");
+
+    auto fire_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    auto fire_state = diversion_state;
+    swd2::install_map_location(fire_state, fire_world, 466U);
+    write_story_flag(fire_state, 50U, false);
+    TestEventHost fire_tail_host;
+    auto& fire_tail_area = fire_world.location_at_directory_offset(466U).area;
+    const auto fire_tail = swd2::execute_event(
+        post_chapter_two, 80U, fire_state, &fire_tail_area, 0U,
+        fire_tail_host, 10'000U, &fire_world);
+    require(fire_tail.status == swd2::EventVmStatus::completed &&
+                fire_tail.commands_executed == 11U &&
+                story_flag(fire_state, 50U),
+            "CHNA2 event 80 did not set the released return-to-Jianmu flag");
+
+    auto kunlun_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
+    swd2::install_map_location(fire_state, kunlun_world, 220U);
+    reset_inventory(fire_state, {250U, 278U, 281U, 259U});
+    TestEventHost kunlun_host;
+    auto& kunlun_area = kunlun_world.location_at_directory_offset(220U).area;
+    const auto kunlun_gate = swd2::execute_event(
+        archive, 340U, fire_state, &kunlun_area, 0U,
+        kunlun_host, 10'000U, &kunlun_world);
+    require(kunlun_gate.status == swd2::EventVmStatus::completed &&
+                kunlun_gate.commands_executed == 23U &&
+                kunlun_gate.last_opcode == 59U &&
+                kunlun_gate.requested_marker == swd2::Marker::open_figure &&
+                fire_state.u16(0x51cU) == 2U &&
+                fire_state.u16(0x4a0U) == 0x8036U &&
+                kunlun_area.entity_fields[9][0] == 452U,
+            "CHNA1 event 340 did not branch through four treasures to event 448");
+
     const std::vector<std::vector<std::uint8_t>> exit_records = {
         event_words({52, 41, 99, 0xffff}),
     };
