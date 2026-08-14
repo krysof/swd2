@@ -5054,6 +5054,13 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     // current entity, while opcode 34 patches an explicitly selected area.
     auto location = map_database.location_at_directory_offset(
         context.shared_state.map_location_directory_offset());
+    // Opcode 37 loads the destination immediately and then keeps executing
+    // the same event stream against it.  Scripted movement after that load
+    // may scroll the viewport and advance SAVE+40d before control returns to
+    // this outer resource loop.  In that case SAVE+40f already contains the
+    // destination RAP base and must not be recomputed from the location's
+    // original spawn position.
+    const auto preserve_relocated_map_origin = relocated_transient_area.has_value();
     if (relocated_transient_area) {
         location.area = std::move(*relocated_transient_area);
         relocated_transient_area.reset();
@@ -5061,7 +5068,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     prepare_runtime_map_area(location.area);
     context.shared_state.set_u16(0x417, map.layout().width);
     context.shared_state.set_u16(0x419, map.layout().height);
-    if (pending_map_reload_) {
+    if (pending_map_reload_ && !preserve_relocated_map_origin) {
         const auto viewport_cells =
             (static_cast<std::size_t>(context.shared_state.viewport_y()) * map.layout().width +
              context.shared_state.viewport_x()) * 2U;
@@ -5075,6 +5082,8 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         context.shared_state.set_u16(
             0x40f, static_cast<std::uint16_t>(location.map_position - viewport_cells));
         context.shared_state.set_u16(0x40d, location.map_position);
+    }
+    if (pending_map_reload_) {
         pending_map_reload_ = false;
         // RPG:0edc is shared by event relocation, travel and related field
         // loaders. Every one probes the destination MAP0 cell before its

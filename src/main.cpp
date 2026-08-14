@@ -637,6 +637,33 @@ void write_replay_trace(const std::filesystem::path& path,
     if (map_digest) output << '"' << hex_digest(*map_digest) << '"';
     else output << "null";
     output << ",\n"
+           << "  \"final_state\": {\"map_location\": "
+           << context.shared_state.map_location_directory_offset()
+           << ", \"world_x\": " << context.shared_state.world_x()
+           << ", \"world_y\": " << context.shared_state.world_y()
+           << ", \"actor_direction\": "
+           << context.shared_state.actor_direction()
+           << ", \"battle_auxiliary\": "
+           << context.shared_state.battle_auxiliary()
+           << ", \"story_flags\": [";
+    auto emitted_flag = false;
+    for (std::uint16_t flag = 0; flag < 256U; ++flag) {
+        const auto offset = static_cast<std::size_t>(
+            0x4a2U + (flag >> 4U) * 2U);
+        if ((context.shared_state.u16(offset) &
+             (0x8000U >> (flag & 15U))) == 0U) {
+            continue;
+        }
+        if (emitted_flag) output << ", ";
+        output << flag;
+        emitted_flag = true;
+    }
+    output << "], \"inventory\": [";
+    for (std::size_t slot = 0; slot < 50U; ++slot) {
+        if (slot != 0U) output << ", ";
+        output << context.shared_state.u16(0x382U + slot * 2U);
+    }
+    output << "]},\n"
            << "  \"name_fnv1a64\": \""
            << hex_digest(fnv1a(context.name_font)) << "\",\n"
            << "  \"stop_reason\": \"" << swd2::stop_reason_name(result.reason)
