@@ -8034,6 +8034,58 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 kunlun_area.entity_fields[9][0] == 452U,
             "CHNA1 event 340 did not branch through four treasures to event 448");
 
+    // The same entity-current-event rule closes the released ending chain.
+    // 448 already redirected the Jianmu mage to 452 before 8036h.  The first
+    // OC therefore runs 452, transforms the northern treasure 259 -> 316,
+    // redirects to 454 and launches 803ah. The next OC runs 454, redirects to
+    // 456 and launches 4042h; the final OC executes the complete 228-command
+    // ending stream and reaches opcode 52's normal RPG process exit.
+    treasure_state.set_u16(0x51cU, 0U);
+    const auto post_kunlun = swd2::execute_event(
+        archive, kunlun_area.entity_fields[9][0], treasure_state,
+        &kunlun_area, 0U, kunlun_host, 10'000U, &treasure_world);
+    bool has_transformed_treasure = false;
+    bool has_untransformed_treasure = false;
+    for (std::size_t index = 0; index < 50U; ++index) {
+        has_transformed_treasure = has_transformed_treasure ||
+            treasure_state.u16(0x382U + index * 2U) == 316U;
+        has_untransformed_treasure = has_untransformed_treasure ||
+            treasure_state.u16(0x382U + index * 2U) == 259U;
+    }
+    require(post_kunlun.status == swd2::EventVmStatus::completed &&
+                post_kunlun.commands_executed == 45U &&
+                post_kunlun.last_opcode == 60U &&
+                post_kunlun.requested_marker == swd2::Marker::open_figure &&
+                treasure_state.u16(0x51cU) == 2U &&
+                treasure_state.u16(0x4a0U) == 0x803aU &&
+                kunlun_area.entity_fields[9][0] == 454U &&
+                has_transformed_treasure && !has_untransformed_treasure,
+            "CHNA1 event 452 did not prepare the released second ending battle");
+
+    treasure_state.set_u16(0x51cU, 0U);
+    const auto final_battle = swd2::execute_event(
+        archive, kunlun_area.entity_fields[9][0], treasure_state,
+        &kunlun_area, 0U, kunlun_host, 10'000U, &treasure_world);
+    require(final_battle.status == swd2::EventVmStatus::completed &&
+                final_battle.commands_executed == 3U &&
+                final_battle.last_opcode == 60U &&
+                final_battle.requested_marker == swd2::Marker::open_figure &&
+                treasure_state.u16(0x51cU) == 2U &&
+                treasure_state.u16(0x4a0U) == 0x4042U &&
+                kunlun_area.entity_fields[9][0] == 456U,
+            "CHNA1 event 454 did not prepare the released final battle");
+
+    treasure_state.set_u16(0x51cU, 0U);
+    const auto ending = swd2::execute_event(
+        archive, kunlun_area.entity_fields[9][0], treasure_state,
+        &kunlun_area, 0U, kunlun_host, 10'000U, &treasure_world);
+    require(ending.status == swd2::EventVmStatus::completed &&
+                ending.commands_executed == 228U &&
+                ending.last_opcode == 52U &&
+                ending.requested_program_exit &&
+                ending.requested_marker == swd2::Marker::none,
+            "CHNA1 event 456 did not execute the released ending stream");
+
     const std::vector<std::vector<std::uint8_t>> exit_records = {
         event_words({52, 41, 99, 0xffff}),
     };
