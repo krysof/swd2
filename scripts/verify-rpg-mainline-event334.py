@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the continuous legal route through T8 item 89 and into ZF."""
+"""Lock the continuous legal route through T8 and the east T9 treasure."""
 
 from __future__ import annotations
 
@@ -61,9 +61,11 @@ def main() -> int:
         # The released route reaches every boundary without a checkpoint
         # reload. The FIR3, pot-world, false-immortal and item-89 chains
         # include natural encounters plus fixed 8016h/8018h/8030h/801ah/
-        # 801ch/801eh/8022h/8024h/4040h battles; every one is driven by
-        # released commands and RNG.
-        for index in range(184):
+        # 801ch/801eh/8022h/8024h/4040h battles, then the ZF/T9 route and
+        # EAST16 event 54/8034h; every one is driven by released commands and
+        # RNG.  FIG's released defeat epilogue returns OC, so the late trace
+        # deliberately records those legal loss paths rather than editing HP.
+        for index in range(201):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -78,57 +80,57 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 39905,
-            ("input", "consumed"): 39905,
+            ("input", "total"): 43560,
+            ("input", "consumed"): 43560,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 2326,
-            ("boundaries", "poll"): 37614,
-            ("boundaries", "text"): 6296,
-            ("video", "frames"): 87408,
-            ("video", "direct_updates"): 18875,
-            ("video", "fnv1a64"): "9736327e2834ced5",
-            ("audio", "music_calls"): 831,
-            ("audio", "voice_calls"): 948,
+            ("boundaries", "wait"): 2342,
+            ("boundaries", "poll"): 41252,
+            ("boundaries", "text"): 6324,
+            ("video", "frames"): 92167,
+            ("video", "direct_updates"): 19089,
+            ("video", "fnv1a64"): "3c70f7ec4b0eb809",
+            ("audio", "music_calls"): 899,
+            ("audio", "voice_calls"): 958,
             ("audio", "stop_music_calls"): 26,
-            ("audio", "stop_audio_calls"): 372,
-            ("audio", "fnv1a64"): "76dedba406712578",
+            ("audio", "stop_audio_calls"): 406,
+            ("audio", "fnv1a64"): "53d51b8f7be024af",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 3369888:
+        if trace.get("delay_milliseconds") != 3549418:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "2baacee4066be5a6",
-            "mapz_fnv1a64": "a9ededcfa134f463",
+            "state_fnv1a64": "5137460beb568530",
+            "mapz_fnv1a64": "51e2adff0c2b9180",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 87408 or frames[-1] != "6f3f8c5f9c68cf50":
-            raise ValueError("mainline ZF frame differs")
+        if len(frames) != 92167 or frames[-1] != "23a7116247c10e4d":
+            raise ValueError("mainline east-T9 frame differs")
         expected_final_flags = [
             0, 1, 2, 4, 8, 18, 22, 30, 32, 33, 34, 35, 36, 37,
             39, 41, 44, 48, 50, 54, 56, 68, 70, 72, 90,
         ]
         expected_final_inventory = [
-            262, 206, 110, 206, 291, 104, 119, 257, 83, 89,
-        ] + [0] * 40
+            262, 206, 110, 206, 291, 104, 119, 257, 83, 89, 278,
+        ] + [0] * 39
         final_state = trace.get("final_state", {})
         if (final_state.get("map_location"), final_state.get("world_x"),
                 final_state.get("world_y"), final_state.get("actor_direction"),
-                final_state.get("battle_auxiliary")) != (720, 131, 172, 3, 0):
+                final_state.get("battle_auxiliary")) != (824, 79, 77, 3, 0):
             raise ValueError("mainline final-state location/battle boundary differs")
         if final_state.get("story_flags") != expected_final_flags:
             raise ValueError("mainline final-state story flags differ")
         if final_state.get("inventory") != expected_final_inventory:
-            raise ValueError("mainline final-state item-89 inventory differs")
+            raise ValueError("mainline final-state east-T9 inventory differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -461,9 +463,23 @@ def main() -> int:
             39636: ("POLL", "NONE", "1a3eef7f2c74f33b", "0c4eaf7302bf8f76"),
             39902: ("POLL", "UP", "33c539280ea7b95e", "a9ededcfa134f463"),
             39903: ("POLL", "NONE", "2baacee4066be5a6", "a9ededcfa134f463"),
-            39904: ("POLL", "QUIT", "2baacee4066be5a6", "a9ededcfa134f463"),
+            39904: ("POLL", "UP", "2baacee4066be5a6", "a9ededcfa134f463"),
+            40085: ("WAIT", "DOWN", "5b903cfeba46afbd", "a9ededcfa134f463"),
+            40417: ("WAIT", "DOWN", "15a42a49832fd91e", "79a46449c06b7c74"),
+            40801: ("POLL", "NONE", "7b7cb65189c2c1e1", "79a46449c06b7c74"),
+            41585: ("POLL", "NONE", "f3c3271672165be5", "79a46449c06b7c74"),
+            41819: ("POLL", "NONE", "7c324f59447e6d0f", "79a46449c06b7c74"),
+            42177: ("POLL", "NONE", "5a84e211a40c02a2", "79a46449c06b7c74"),
+            42433: ("POLL", "NONE", "83256237a1b57701", "79a46449c06b7c74"),
+            42603: ("POLL", "NONE", "0bdfee144adabf2d", "79a46449c06b7c74"),
+            43047: ("POLL", "NONE", "8acd3609698d8aa8", "79a46449c06b7c74"),
+            43531: ("POLL", "NONE", "0df228bc73715309", "e907ea3385afd38b"),
+            43552: ("POLL", "NONE", "b5c274c8fcffb919", "364d446679bea16e"),
+            43554: ("POLL", "NONE", "5137460beb568530", "51e2adff0c2b9180"),
+            43556: ("TEXT", "CONFIRM", "5137460beb568530", "51e2adff0c2b9180"),
+            43559: ("POLL", "QUIT", "5137460beb568530", "51e2adff0c2b9180"),
         }
-        if len(checkpoints) != 39905:
+        if len(checkpoints) != 43560:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -763,6 +779,19 @@ def main() -> int:
             39902: (720, 131, 173, 3),
             39903: (720, 131, 172, 3),
             39904: (720, 131, 172, 3),
+            40085: (720, 73, 139, 3),
+            40417: (720, 153, 54, 3),
+            40801: (762, 166, 45, 0),
+            41585: (800, 63, 195, 3),
+            41819: (804, 50, 138, 3),
+            42177: (808, 30, 49, 3),
+            42433: (816, 107, 160, 3),
+            42603: (820, 79, 74, 3),
+            43047: (824, 87, 27, 3),
+            43531: (824, 76, 82, 3),
+            43552: (824, 79, 77, 3),
+            43554: (824, 79, 77, 3),
+            43559: (824, 79, 77, 3),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -806,18 +835,18 @@ def main() -> int:
             raise ValueError("HOUW3/SD01/item-89 gate story flags are not exact")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 720:
-            raise ValueError("continuous checkpoint is not ZF directory 720")
+        if u16(save, 0x424) != 824:
+            raise ValueError("continuous checkpoint is not east-T9 directory 824")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (131, 172):
-            raise ValueError(f"ZF position is {(world_x, world_y)!r}")
+        if (world_x, world_y) != (79, 77):
+            raise ValueError(f"east-T9 position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
         if u16(save, 0x10) != 4 or u16(save, 0x104) != 1163:
-            raise ValueError("post-item-89 party count or money differs")
-        if u16(save, 0x49C) != 0x1900:
-            raise ValueError("post-item-89 FIG random cursor differs")
+            raise ValueError("post-east-T9 party count or money differs")
+        if u16(save, 0x49C) != 0x191A:
+            raise ValueError("post-east-T9 FIG random cursor differs")
         if save[0x529] != 1:
             raise ValueError("AREA2 Jianmu return portal did not set travel flag 11")
         # MAP0 action 4011h sets bit 0010h before event 334; FIR3 action
@@ -826,13 +855,14 @@ def main() -> int:
         # to event 336, and opcode 58 executes fixed ORC directory 802ch. The
         # legal default-command trace ends in defeat; event 334 contains no
         # victory/defeat branch and OC resumes at this same world position.
-        if u16(save, 0x51A) != 0x001D:
-            raise ValueError("Jianmu/Taotie/FIR3/SD01 MAP0 once-only trigger flags differ")
+        if u16(save, 0x51A) != 0x005F:
+            raise ValueError(
+                "Jianmu/Taotie/FIR3/SD01/T9 MAP0 once-only trigger flags differ")
         expected_party = [
-            (0, 156, 156, 122, 122, 94, 94, 328, 843),
-            (0, 150, 150, 46, 46, 99, 99, 328, 842),
-            (0, 161, 161, 140, 140, 46, 46, 600, 847),
-            (0, 153, 153, 50, 50, 94, 94, 263, 838),
+            (0x2000, 0, 156, 122, 122, 94, 94, 328, 843),
+            (0x2000, 0, 150, 46, 46, 99, 99, 328, 842),
+            (0x2000, 0, 161, 140, 140, 46, 46, 600, 847),
+            (0x3200, 0, 153, 50, 50, 94, 94, 263, 838),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -843,18 +873,18 @@ def main() -> int:
                       u16(save, base + 0x3B))
             if actual != expected:
                 raise ValueError(
-                    f"post-item-89 actor {actor} state is {actual!r}, "
+                    f"post-east-T9 actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
                 for actor in range(4)] != [17, 17, 17, 17]:
-            raise ValueError("post-item-89 party levels differ")
+            raise ValueError("post-east-T9 party levels differ")
         expected_inventory = [
             262, 206, 110, 206, 291, 104, 119, 257, 83,
-            89,
-        ] + [0] * 40
+            89, 278,
+        ] + [0] * 39
         actual_inventory = [u16(save, 0x382 + slot * 2) for slot in range(50)]
         if actual_inventory != expected_inventory:
-            raise ValueError("post-item-89 inventory/compaction differs")
+            raise ValueError("post-east-T9 inventory/compaction differs")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -1031,6 +1061,17 @@ def main() -> int:
                     f"FUMOD event-24 pair differs at location {location}")
         if map_field(image, 700, 3, 2) != 0:
             raise ValueError("AREA3 item-89 gate actor was not hidden")
+        # EAST16 locations 800/824 alias the same released nine-entity area.
+        # Event 54 changes the guardian's behavior from four to three before
+        # fixed 8034h; event 56 opens entity one, redirects it to event 50 and
+        # inserts item 278 into the first free inventory word.
+        for location in (800, 824):
+            if map_field(image, location, 3, 0) != 3 or \
+                    map_field(image, location, 9, 0) != 54 or \
+                    map_field(image, location, 0, 1) != 49 or \
+                    map_field(image, location, 9, 1) != 50:
+                raise ValueError(
+                    f"east-T9 guardian/chest mutations differ at location {location}")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--":
             raise ValueError("mainline checkpoint did not stop at explicit world quit")
@@ -1042,7 +1083,7 @@ def main() -> int:
         "(new game -> event 334 -> event 336 -> AREA2 -> DAIU1 water control "
         "-> compass -> rain ritual -> Buddha revival -> DAUF mechanism -> "
         "FIR3 events 52/54/78/80 -> flags 39/37/35 -> pot world -> "
-        "false immortal -> HOUW3/ZG -> SD01 item 89 -> ZF)"
+        "false immortal -> HOUW3/ZG -> SD01 item 89 -> ZF -> T9 east item 278)"
     )
     return 0
 

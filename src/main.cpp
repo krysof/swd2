@@ -167,9 +167,13 @@ public:
         std::uint64_t state_digest{};
         std::optional<std::uint64_t> map_digest;
         std::uint16_t map_location{};
+        std::uint16_t map_position{};
+        std::uint16_t viewport_x{};
+        std::uint16_t viewport_y{};
         std::uint16_t world_x{};
         std::uint16_t world_y{};
         std::uint16_t actor_direction{};
+        std::uint16_t battle_encounter{};
     };
 
     enum class TimelineKind {
@@ -382,9 +386,13 @@ private:
             cursor_, boundary, action, hash(context_->shared_state.bytes()),
             std::nullopt,
             context_->shared_state.map_location_directory_offset(),
+            context_->shared_state.map_position(),
+            context_->shared_state.viewport_x(),
+            context_->shared_state.viewport_y(),
             context_->shared_state.world_x(),
             context_->shared_state.world_y(),
-            context_->shared_state.actor_direction()};
+            context_->shared_state.actor_direction(),
+            context_->shared_state.battle_encounter_offset()};
         if (context_->map_database) {
             checkpoint.map_digest = hash(
                 context_->map_database->serialized_bytes());
@@ -553,10 +561,15 @@ void write_replay_trace(const std::filesystem::path& path,
             output << "null";
         }
         output << ", \"map_location\": " << checkpoint.map_location
+               << ", \"map_position\": " << checkpoint.map_position
+               << ", \"viewport_x\": " << checkpoint.viewport_x
+               << ", \"viewport_y\": " << checkpoint.viewport_y
                << ", \"world_x\": " << checkpoint.world_x
                << ", \"world_y\": " << checkpoint.world_y
                << ", \"actor_direction\": "
-               << checkpoint.actor_direction << '}';
+               << checkpoint.actor_direction
+               << ", \"battle_encounter\": "
+               << checkpoint.battle_encounter << '}';
         if (index + 1U != platform.input_checkpoints.size()) output << ',';
         output << '\n';
     }
@@ -639,12 +652,17 @@ void write_replay_trace(const std::filesystem::path& path,
     output << ",\n"
            << "  \"final_state\": {\"map_location\": "
            << context.shared_state.map_location_directory_offset()
+           << ", \"map_position\": " << context.shared_state.map_position()
+           << ", \"viewport_x\": " << context.shared_state.viewport_x()
+           << ", \"viewport_y\": " << context.shared_state.viewport_y()
            << ", \"world_x\": " << context.shared_state.world_x()
            << ", \"world_y\": " << context.shared_state.world_y()
            << ", \"actor_direction\": "
            << context.shared_state.actor_direction()
            << ", \"battle_auxiliary\": "
            << context.shared_state.battle_auxiliary()
+           << ", \"battle_encounter\": "
+           << context.shared_state.battle_encounter_offset()
            << ", \"story_flags\": [";
     auto emitted_flag = false;
     for (std::uint16_t flag = 0; flag < 256U; ++flag) {
