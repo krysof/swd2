@@ -435,7 +435,7 @@ if(BUILD_TESTING)
                 --require-module RPG.EXE
                 --require-module DEMO.EXE
                 --require-module FIG.EXE
-                --min-frames 50000
+                --min-frames 53000
     )
     set_tests_properties(rpg_mainline_event334_validation PROPERTIES
         DEPENDS rpg_mainline_event334_replay)

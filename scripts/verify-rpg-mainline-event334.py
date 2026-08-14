@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the continuous legal route through the rain ritual and Buddha revival."""
+"""Lock the continuous legal route through the second Great Yu mechanism."""
 
 from __future__ import annotations
 
@@ -75,7 +75,10 @@ def main() -> int:
         # on the uninterrupted route from rain-ritual directory 342 through
         # the Buddha interior and event 28; their two-input completions and
         # released escape attempts are all boundary-locked by the replay.
-        for index in range(106):
+        # Eleven further encounters occur while retracing the Buddha maze,
+        # crossing AREA2 to DAUF, and leaving for the fire route; all use the
+        # same uninterrupted released random stream.
+        for index in range(117):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -90,41 +93,41 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 18317,
-            ("input", "consumed"): 18317,
+            ("input", "total"): 20106,
+            ("input", "consumed"): 20106,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 1715,
-            ("boundaries", "poll"): 16637,
-            ("boundaries", "text"): 2559,
-            ("video", "frames"): 50569,
-            ("video", "direct_updates"): 10954,
-            ("video", "fnv1a64"): "6b3e9305f00ac79b",
-            ("audio", "music_calls"): 471,
-            ("audio", "voice_calls"): 764,
-            ("audio", "stop_music_calls"): 15,
-            ("audio", "stop_audio_calls"): 216,
-            ("audio", "fnv1a64"): "bcc206b7fdbfbf96",
+            ("boundaries", "wait"): 1777,
+            ("boundaries", "poll"): 18364,
+            ("boundaries", "text"): 2775,
+            ("video", "frames"): 53444,
+            ("video", "direct_updates"): 11170,
+            ("video", "fnv1a64"): "da3fff249c0ae713",
+            ("audio", "music_calls"): 509,
+            ("audio", "voice_calls"): 783,
+            ("audio", "stop_music_calls"): 16,
+            ("audio", "stop_audio_calls"): 238,
+            ("audio", "fnv1a64"): "4876ab875f7fed70",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 2084347:
+        if trace.get("delay_milliseconds") != 2177662:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "d2790e040a6594fa",
-            "mapz_fnv1a64": "e70220eeeabfc2ae",
+            "state_fnv1a64": "39bb552be347c247",
+            "mapz_fnv1a64": "f9d0dc9efabbed1e",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 50569 or frames[-1] != "b65ddab9013f5b99":
-            raise ValueError("mainline Buddha-revival frame differs")
+        if len(frames) != 53444 or frames[-1] != "5f66a2f90a877b4a":
+            raise ValueError("mainline fire-route entry frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -387,11 +390,24 @@ def main() -> int:
             18237: ("WAIT", "DOWN", "c357154acc61d097", "e5dc4894c05e48b2"),
             18240: ("WAIT", "CONFIRM", "c357154acc61d097", "e5dc4894c05e48b2"),
             18241: ("POLL", "NONE", "b8f3379c764cfe7d", "e5dc4894c05e48b2"),
-            # CHNA2 event 28 has completed before the explicit quit: location
-            # 590, four-member restore, item 267 removal, event 32 and flag 41.
-            18316: ("POLL", "QUIT", "d2790e040a6594fa", "e70220eeeabfc2ae"),
+            # CHNA2 event 28 has completed before the route leaves location
+            # 590; subsequent checkpoints lock the released return encounters,
+            # DAUF gate/event mutations and fire-route entry.
+            18316: ("POLL", "RIGHT", "d2790e040a6594fa", "e70220eeeabfc2ae"),
+            18403: ("WAIT", "DOWN", "a488f44753105b61", "e70220eeeabfc2ae"),
+            18523: ("WAIT", "DOWN", "9a6aafd5f7ac32ce", "e70220eeeabfc2ae"),
+            18828: ("WAIT", "DOWN", "002e729167d3b2fd", "e70220eeeabfc2ae"),
+            19132: ("WAIT", "DOWN", "71f064830fc4c475", "e70220eeeabfc2ae"),
+            19268: ("WAIT", "DOWN", "43780c5f888318dd", "e70220eeeabfc2ae"),
+            19418: ("WAIT", "DOWN", "eca2684121f52359", "e70220eeeabfc2ae"),
+            19617: ("WAIT", "DOWN", "a204447055b1f27b", "e70220eeeabfc2ae"),
+            19764: ("POLL", "UP", "05bc0ce696a2cb4e", "968a48b1f50adca0"),
+            19773: ("POLL", "DOWN", "abe2c64db36f8b94", "f9d0dc9efabbed1e"),
+            19916: ("WAIT", "DOWN", "a27df2fd2d386cfe", "f9d0dc9efabbed1e"),
+            20051: ("WAIT", "DOWN", "e0829cdd480291bb", "f9d0dc9efabbed1e"),
+            20105: ("POLL", "QUIT", "39bb552be347c247", "f9d0dc9efabbed1e"),
         }
-        if len(checkpoints) != 18317:
+        if len(checkpoints) != 20106:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -629,6 +645,23 @@ def main() -> int:
             18211: (328, 80, 22, 0),
             18235: (332, 144, 172, 3),
             18316: (590, 145, 126, 0),
+            18375: (334, 97, 16, 0),
+            18456: (326, 122, 49, 3),
+            18721: (322, 41, 20, 0),
+            18757: (318, 93, 28, 3),
+            18915: (314, 132, 20, 0),
+            19053: (310, 50, 22, 0),
+            19102: (306, 63, 93, 3),
+            19172: (302, 133, 109, 0),
+            19246: (298, 110, 164, 0),
+            19504: (270, 10, 16, 0),
+            19555: (266, 38, 94, 0),
+            19703: (422, 43, 59, 3),
+            19742: (426, 145, 144, 3),
+            19764: (430, 147, 108, 3),
+            19773: (676, 146, 99, 3),
+            19853: (424, 144, 111, 0),
+            20105: (434, 146, 170, 3),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -658,16 +691,17 @@ def main() -> int:
         if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0xE848:
             raise ValueError(
                 "water-control/rain/Buddha story flags are not exact")
-        if u16(save, 0x4A8) != 0x8080:
-            raise ValueError("stone-lion/patron story flags 48 and 56 are not exact")
+        if u16(save, 0x4A8) != 0x8280:
+            raise ValueError(
+                "stone-lion/patron/second-mechanism story flags are not exact")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 590:
-            raise ValueError("post-revival checkpoint is not Buddha directory 590")
+        if u16(save, 0x424) != 434:
+            raise ValueError("continuous checkpoint is not fire-route directory 434")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (145, 126):
-            raise ValueError(f"Buddha revival position is {(world_x, world_y)!r}")
+        if (world_x, world_y) != (146, 170):
+            raise ValueError(f"fire-route entry position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
         if u16(save, 0x10) != 4 or u16(save, 0x104) != 635:
@@ -684,10 +718,10 @@ def main() -> int:
         if u16(save, 0x51A) != 0x0014:
             raise ValueError("Jianmu/Taotie MAP0 once-only trigger flags differ")
         expected_party = [
-            (0, 134, 134, 110, 110, 84, 84, 707, 717),
-            (0, 138, 138, 42, 42, 91, 91, 696, 706),
+            (0, 76, 134, 110, 110, 84, 84, 707, 717),
+            (0, 82, 138, 42, 42, 91, 91, 696, 706),
             (0, 161, 161, 140, 140, 46, 46, 262, 847),
-            (0, 140, 140, 46, 46, 84, 84, 627, 702),
+            (0, 45, 140, 46, 46, 84, 84, 627, 702),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -698,7 +732,7 @@ def main() -> int:
                       u16(save, base + 0x3B))
             if actual != expected:
                 raise ValueError(
-                    f"post-revival actor {actor} state is {actual!r}, "
+                    f"fire-route actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
                 for actor in range(4)] != [16, 16, 17, 16]:
@@ -795,6 +829,15 @@ def main() -> int:
                     map_field(image, location, 9, 0) != 32:
                 raise ValueError(
                     f"Buddha revival redirect differs at location {location}")
+        # Raw directory 0052h opens the shared DAUF gate. Event 46 then
+        # redirects entity one to event 48 before relocating to directory 676.
+        for location in (426, 430, 432, 676):
+            if map_field(image, location, 3, 0) != 3 or \
+                    map_field(image, location, 9, 0) != 50 or \
+                    map_field(image, location, 3, 1) != 7 or \
+                    map_field(image, location, 9, 1) != 48:
+                raise ValueError(
+                    f"DAUF gate/mechanism mutations differ at location {location}")
         if map_field(image, 252, 3, 1) != 3 or \
                 map_field(image, 252, 9, 1) != 334:
             raise ValueError("event 334 did not persistently hide its trigger entity")
@@ -823,7 +866,7 @@ def main() -> int:
         "RPG mainline prefix validation: OK "
         "(new game -> event 334 -> legal fixed-battle defeat -> event 336 -> "
         "AREA2 -> DAIU1 water control -> compass -> rain ritual -> "
-        "Buddha event 28 revival)"
+        "Buddha event 28 revival -> DAUF event 46 -> fire-route entry)"
     )
     return 0
 

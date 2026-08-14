@@ -467,9 +467,9 @@ private:
                 " but next input requires " +
                 std::string(swd2::replay_boundary_name(step.boundary)));
         }
-        if (++unmatched_nonblocking_calls_ > 1'000'000U) {
+        if (++unmatched_nonblocking_calls_ > 10'000U) {
             throw std::runtime_error(
-                "replay made no progress across one million nonblocking polls "
+                "replay made no progress across ten thousand nonblocking polls "
                 "at input " + std::to_string(cursor_) +
                 ": runtime requested " +
                 std::string(swd2::replay_boundary_name(boundary)) +
