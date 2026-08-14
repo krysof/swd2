@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the continuous legal route through Jianmu and DAIU water control."""
+"""Lock the continuous legal route through the rain ritual and Buddha revival."""
 
 from __future__ import annotations
 
@@ -71,7 +71,11 @@ def main() -> int:
         # escaped with the unmodified FIG command and released RNG outcomes.
         # The return through directory 376 adds six more encounters; the last
         # uses three complete escape attempts before the released roll passes.
-        for index in range(96):
+        # The compass-to-rain route contributes one encounter. Nine more occur
+        # on the uninterrupted route from rain-ritual directory 342 through
+        # the Buddha interior and event 28; their two-input completions and
+        # released escape attempts are all boundary-locked by the replay.
+        for index in range(106):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -86,41 +90,41 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 16103,
-            ("input", "consumed"): 16103,
+            ("input", "total"): 18317,
+            ("input", "consumed"): 18317,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 1653,
-            ("boundaries", "poll"): 14485,
-            ("boundaries", "text"): 2320,
-            ("video", "frames"): 43168,
-            ("video", "direct_updates"): 7127,
-            ("video", "fnv1a64"): "32251d9c69ab3873",
-            ("audio", "music_calls"): 425,
-            ("audio", "voice_calls"): 744,
-            ("audio", "stop_music_calls"): 9,
-            ("audio", "stop_audio_calls"): 196,
-            ("audio", "fnv1a64"): "171aaaf5706df508",
+            ("boundaries", "wait"): 1715,
+            ("boundaries", "poll"): 16637,
+            ("boundaries", "text"): 2559,
+            ("video", "frames"): 50569,
+            ("video", "direct_updates"): 10954,
+            ("video", "fnv1a64"): "6b3e9305f00ac79b",
+            ("audio", "music_calls"): 471,
+            ("audio", "voice_calls"): 764,
+            ("audio", "stop_music_calls"): 15,
+            ("audio", "stop_audio_calls"): 216,
+            ("audio", "fnv1a64"): "bcc206b7fdbfbf96",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 1853898:
+        if trace.get("delay_milliseconds") != 2084347:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "1d392680af3022d6",
-            "mapz_fnv1a64": "1ce5c5e974002091",
+            "state_fnv1a64": "d2790e040a6594fa",
+            "mapz_fnv1a64": "e70220eeeabfc2ae",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 43168 or frames[-1] != "bc3eb0e9c922f710":
-            raise ValueError("mainline AREA2-entry frame differs")
+        if len(frames) != 50569 or frames[-1] != "b65ddab9013f5b99":
+            raise ValueError("mainline Buddha-revival frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -351,9 +355,43 @@ def main() -> int:
             16087: ("POLL", "CONFIRM", "c083fe607660ad15", "93204e39a66528bf"),
             16100: ("WAIT", "CONFIRM", "c083fe607660ad15", "93204e39a66528bf"),
             16101: ("POLL", "CONFIRM", "688dc2c902c3d8f9", "93204e39a66528bf"),
-            16102: ("POLL", "QUIT", "1d392680af3022d6", "1ce5c5e974002091"),
+            16102: ("POLL", "LEFT", "1d392680af3022d6", "1ce5c5e974002091"),
+            # Compass -> rain ritual -> first HUMAT audience. The two MAPZ
+            # changes distinguish event 42's scene mutation from event 152's
+            # persistent entity redirect rather than inferring either from
+            # the final directory alone.
+            16326: ("POLL", "LEFT", "bba2f44ddb533a2a", "3162ef986cebc8d5"),
+            16736: ("POLL", "CONFIRM", "1b43a4a2fc2945c6", "794b60c7b65e93cf"),
+            16835: ("POLL", "CONFIRM", "c210fe7731d77169", "ada1882d2c1d1177"),
+            16846: ("POLL", "RIGHT", "dedd745ce6106621", "afd1a3598433b9dd"),
+            # Continuous-stream FIG boundaries on the road to and inside the
+            # Buddha maps. These are not checkpoint-resume approximations.
+            16998: ("WAIT", "DOWN", "191e610a921298f1", "afd1a3598433b9dd"),
+            17001: ("WAIT", "CONFIRM", "191e610a921298f1", "afd1a3598433b9dd"),
+            17107: ("POLL", "CONFIRM", "848cf70c68a8db0b", "afd1a3598433b9dd"),
+            17109: ("POLL", "LEFT", "848cf70c68a8db0b", "e5dc4894c05e48b2"),
+            17174: ("WAIT", "DOWN", "53d7570ba3bfe57a", "e5dc4894c05e48b2"),
+            17189: ("WAIT", "CONFIRM", "53d7570ba3bfe57a", "e5dc4894c05e48b2"),
+            17321: ("WAIT", "DOWN", "9249ce168dd3adaf", "e5dc4894c05e48b2"),
+            17336: ("WAIT", "CONFIRM", "9249ce168dd3adaf", "e5dc4894c05e48b2"),
+            17470: ("WAIT", "DOWN", "f48d977be81101c2", "e5dc4894c05e48b2"),
+            17471: ("WAIT", "CONFIRM", "f48d977be81101c2", "e5dc4894c05e48b2"),
+            17653: ("WAIT", "DOWN", "c1657d681f06a818", "e5dc4894c05e48b2"),
+            17654: ("WAIT", "CONFIRM", "c1657d681f06a818", "e5dc4894c05e48b2"),
+            17785: ("WAIT", "DOWN", "12cc31106c0a1a73", "e5dc4894c05e48b2"),
+            17786: ("WAIT", "CONFIRM", "12cc31106c0a1a73", "e5dc4894c05e48b2"),
+            17939: ("WAIT", "DOWN", "cf6d5bc7f9dd16c5", "e5dc4894c05e48b2"),
+            17946: ("WAIT", "CONFIRM", "cf6d5bc7f9dd16c5", "e5dc4894c05e48b2"),
+            18077: ("WAIT", "DOWN", "d934a4b1551fe993", "e5dc4894c05e48b2"),
+            18080: ("WAIT", "CONFIRM", "d934a4b1551fe993", "e5dc4894c05e48b2"),
+            18237: ("WAIT", "DOWN", "c357154acc61d097", "e5dc4894c05e48b2"),
+            18240: ("WAIT", "CONFIRM", "c357154acc61d097", "e5dc4894c05e48b2"),
+            18241: ("POLL", "NONE", "b8f3379c764cfe7d", "e5dc4894c05e48b2"),
+            # CHNA2 event 28 has completed before the explicit quit: location
+            # 590, four-member restore, item 267 removal, event 32 and flag 41.
+            18316: ("POLL", "QUIT", "d2790e040a6594fa", "e70220eeeabfc2ae"),
         }
-        if len(checkpoints) != 16103:
+        if len(checkpoints) != 18317:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -568,6 +606,29 @@ def main() -> int:
             16087: (364, 35, 17, 3),
             16100: (364, 35, 17, 3),
             16102: (364, 35, 17, 3),
+            16126: (366, 77, 87, 0),
+            16179: (274, 125, 159, 0),
+            16256: (288, 116, 26, 6),
+            16341: (294, 60, 131, 6),
+            16449: (336, 53, 173, 3),
+            16585: (340, 92, 177, 3),
+            16835: (342, 92, 77, 0),
+            16846: (342, 93, 84, 3),
+            16974: (338, 110, 101, 0),
+            17060: (264, 57, 19, 6),
+            17109: (264, 13, 16, 6),
+            17113: (268, 13, 170, 3),
+            17369: (296, 165, 148, 3),
+            17443: (300, 10, 83, 3),
+            17511: (304, 4, 22, 0),
+            17560: (308, 110, 81, 3),
+            17699: (312, 55, 45, 3),
+            17855: (316, 6, 20, 0),
+            17891: (320, 25, 176, 3),
+            18160: (324, 158, 12, 0),
+            18211: (328, 80, 22, 0),
+            18235: (332, 144, 172, 3),
+            18316: (590, 145, 126, 0),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -591,25 +652,26 @@ def main() -> int:
         # The Taoist handoff adds flag 36 after all previously proven story
         # flags. CHNA3 event 20 sets flag 56 at the Zhou patron; after entering
         # DAIU1, CHNA2 event 20 sets flag 33 as it changes the water layout.
+        # Rain event 42 then sets flag 32 and Buddha event 28 sets flag 41.
         if u16(save, 0x4A2) != 0xE880:
             raise ValueError("village/Stronghold/river-demon story flags are not exact")
-        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0x6808:
+        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0xE848:
             raise ValueError(
-                "pre-DAIU and DAIU water-control story flags are not exact")
+                "water-control/rain/Buddha story flags are not exact")
         if u16(save, 0x4A8) != 0x8080:
             raise ValueError("stone-lion/patron story flags 48 and 56 are not exact")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 364:
-            raise ValueError("post-compass checkpoint is not Zhou patron directory 364")
+        if u16(save, 0x424) != 590:
+            raise ValueError("post-revival checkpoint is not Buddha directory 590")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (35, 17):
-            raise ValueError(f"Zhou patron position is {(world_x, world_y)!r}")
+        if (world_x, world_y) != (145, 126):
+            raise ValueError(f"Buddha revival position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
         if u16(save, 0x10) != 4 or u16(save, 0x104) != 635:
-            raise ValueError("post-compass party count or money differs")
+            raise ValueError("post-revival party count or money differs")
         if u16(save, 0x49C) != 0x1400:
             raise ValueError("post-compass FIG random cursor differs")
         if save[0x529] != 1:
@@ -622,10 +684,10 @@ def main() -> int:
         if u16(save, 0x51A) != 0x0014:
             raise ValueError("Jianmu/Taotie MAP0 once-only trigger flags differ")
         expected_party = [
-            (0x2000, 0, 134, 110, 110, 84, 84, 707, 717),
-            (0x3000, 0, 138, 42, 42, 91, 91, 696, 706),
-            (0x3000, 0, 161, 140, 140, 46, 46, 262, 847),
-            (0x1000, 10, 140, 46, 46, 84, 84, 627, 702),
+            (0, 134, 134, 110, 110, 84, 84, 707, 717),
+            (0, 138, 138, 42, 42, 91, 91, 696, 706),
+            (0, 161, 161, 140, 140, 46, 46, 262, 847),
+            (0, 140, 140, 46, 46, 84, 84, 627, 702),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -636,17 +698,17 @@ def main() -> int:
                       u16(save, base + 0x3B))
             if actual != expected:
                 raise ValueError(
-                    f"DAIU1 actor {actor} state is {actual!r}, "
+                    f"post-revival actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
                 for actor in range(4)] != [16, 16, 17, 16]:
             raise ValueError("post-guardian party levels differ")
         expected_inventory = [
-            93, 205, 206, 100, 110, 206, 291, 333, 104, 119, 257, 91,
-        ] + [0] * 38
+            262, 205, 206, 100, 110, 206, 291, 333, 104, 119, 257,
+        ] + [0] * 39
         actual_inventory = [u16(save, 0x382 + slot * 2) for slot in range(50)]
         if actual_inventory != expected_inventory:
-            raise ValueError("post-compass inventory or stable compaction differs")
+            raise ValueError("rain/Buddha inventory replacement or compaction differs")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -718,6 +780,21 @@ def main() -> int:
         if map_field(image, 364, 9, 0) != 26:
             raise ValueError(
                 "compass purchase did not persist patron event 522 -> 26")
+        # The first HUMAT audience executes after the rain relocation and
+        # changes entity six from CHNA3 directory 152 to 154. At the Buddha
+        # entrance event 38 opens entity zero by changing behavior four to
+        # three. Event 28 finally redirects the aliased BUIN2 entity zero to
+        # event 32 before relocating to the location-590 view of that area.
+        if map_field(image, 342, 9, 6) != 154:
+            raise ValueError("HUMAT audience did not persist event 152 -> 154")
+        if map_field(image, 264, 3, 0) != 3 or \
+                map_field(image, 264, 9, 0) != 36:
+            raise ValueError("Buddha entrance monk was not persistently opened")
+        for location in (320, 324, 332, 590):
+            if map_field(image, location, 3, 0) != 7 or \
+                    map_field(image, location, 9, 0) != 32:
+                raise ValueError(
+                    f"Buddha revival redirect differs at location {location}")
         if map_field(image, 252, 3, 1) != 3 or \
                 map_field(image, 252, 9, 1) != 334:
             raise ValueError("event 334 did not persistently hide its trigger entity")
@@ -745,7 +822,8 @@ def main() -> int:
     print(
         "RPG mainline prefix validation: OK "
         "(new game -> event 334 -> legal fixed-battle defeat -> event 336 -> "
-        "AREA2 -> DAIU1 heal/water control -> CHNA3 compass purchase)"
+        "AREA2 -> DAIU1 water control -> compass -> rain ritual -> "
+        "Buddha event 28 revival)"
     )
     return 0
 
