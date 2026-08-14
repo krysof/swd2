@@ -7819,21 +7819,11 @@ void test_event_vm(const std::filesystem::path& game_root) {
             "CHNA2 event 46 did not commit the released river diversion");
 
     // Do not confuse event 50's 0052h branch target with decimal event 52:
-    // the former opens the DAIU gate, while the latter is a distinct FIR3
-    // encounter record.  The four released Fire-Mountain records below are
-    // locked independently until their intervening map/entity transitions are
-    // covered by deterministic replay.  Event 80, not a guessed battle
-    // result, is the later archive tail that sets the return-to-Jianmu flag.
+    // the former opens the DAIU gate, while the latter belongs to FIR3.  MAP0
+    // supplies an exact static route from AREA2 through the fire labyrinth to
+    // FIR3, whose special action 10 invokes entity zero once.
     const auto& fire_gate = swd2::decode_event_record(
         post_chapter_two.event_stream(50U / 2U));
-    const auto& fire_first = swd2::decode_event_record(
-        post_chapter_two.event_stream(52U / 2U));
-    const auto& fire_second = swd2::decode_event_record(
-        post_chapter_two.event_stream(54U / 2U));
-    const auto& fire_third = swd2::decode_event_record(
-        post_chapter_two.event_stream(56U / 2U));
-    const auto& fire_fourth = swd2::decode_event_record(
-        post_chapter_two.event_stream(62U / 2U));
     const auto& opened_daiu_gate = swd2::decode_event_record(
         post_chapter_two.event_stream(0x52U / 2U));
     require(fire_gate.commands.front().opcode == 4U &&
@@ -7843,34 +7833,111 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 opened_daiu_gate.commands[2].opcode == 3U &&
                 opened_daiu_gate.commands[2].arguments ==
                     std::vector<std::uint16_t>({3U, 3U}) &&
-                opened_daiu_gate.commands[3].opcode == 1U &&
-                fire_first.commands.back().opcode == 59U &&
-                fire_first.commands.back().arguments ==
-                    std::vector<std::uint16_t>({4U, 0x8016U}) &&
-                fire_second.commands.back().opcode == 59U &&
-                fire_second.commands.back().arguments ==
-                    std::vector<std::uint16_t>({4U, 0x8018U}) &&
-                fire_third.commands.back().opcode == 59U &&
-                fire_third.commands.back().arguments ==
-                    std::vector<std::uint16_t>({2U, 0x801aU}) &&
-                fire_fourth.commands.back().opcode == 59U &&
-                fire_fourth.commands.back().arguments ==
-                    std::vector<std::uint16_t>({2U, 0x801cU}),
-            "CHNA2 DAIU gate or Fire-Mountain battle records changed");
+                opened_daiu_gate.commands[3].opcode == 1U,
+            "CHNA2 DAIU gate 0052h branch changed");
 
     auto fire_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
     auto fire_state = diversion_state;
+    const auto fire_transition = [&](std::uint16_t location_offset,
+                                     std::uint16_t action) {
+        const auto& location =
+            fire_world.location_at_directory_offset(location_offset);
+        const auto records = post_jianmu_transitions.records(location.area.flags);
+        const auto found = std::find_if(records.begin(), records.end(),
+            [action](const auto& record) { return record.action == action; });
+        return found == records.end()
+            ? std::optional<swd2::MapTransitionRecord>{}
+            : std::optional<swd2::MapTransitionRecord>{*found};
+    };
+    const auto area2_to_fire = fire_transition(436U, 0x21b2U);
+    const auto fire_to_maze = fire_transition(434U, 0x01b6U);
+    const auto maze_one = fire_transition(438U, 0x01c2U);
+    const auto maze_two = fire_transition(450U, 0x01caU);
+    const auto maze_three = fire_transition(458U, 0x01ceU);
+    const auto maze_four = fire_transition(462U, 0x01d2U);
+    const auto fire_trigger = fire_transition(466U, 0x400aU);
+    require(area2_to_fire && area2_to_fire->flag_index == 19U &&
+                area2_to_fire->destination_directory_offset() == 434U &&
+                fire_to_maze &&
+                fire_to_maze->destination_directory_offset() == 438U &&
+                maze_one && maze_one->destination_directory_offset() == 450U &&
+                maze_two && maze_two->destination_directory_offset() == 458U &&
+                maze_three &&
+                maze_three->destination_directory_offset() == 462U &&
+                maze_four && maze_four->destination_directory_offset() == 466U &&
+                fire_trigger && fire_trigger->is_special() &&
+                fire_trigger->special_action() == 10U,
+            "released MAP0 route to FIR3 special action 10 changed");
+
+    // FIR3's battle continuation is fully data-driven.  Event 52 hides entity
+    // zero and exposes entity two before 8016h, while +51c=4 selects entity
+    // one after OC. Event 54 changes that entity's event 54 -> 78 before
+    // 8018h; event 78 changes it 78 -> 80 and hides it before 8030h. The last
+    // OC therefore executes event 80, which hides entity two and sets flag 50.
     swd2::install_map_location(fire_state, fire_world, 466U);
     write_story_flag(fire_state, 50U, false);
-    TestEventHost fire_tail_host;
-    auto& fire_tail_area = fire_world.location_at_directory_offset(466U).area;
-    const auto fire_tail = swd2::execute_event(
-        post_chapter_two, 80U, fire_state, &fire_tail_area, 0U,
-        fire_tail_host, 10'000U, &fire_world);
+    TestEventHost fire_host;
+    const auto run_fire_event = [&](std::uint16_t target,
+                                    std::size_t entity) {
+        auto& active = fire_world.location_at_directory_offset(466U).area;
+        return swd2::execute_event(post_chapter_two, target, fire_state,
+                                   &active, entity, fire_host, 10'000U,
+                                   &fire_world);
+    };
+    auto& initial_fire_area = fire_world.location_at_directory_offset(466U).area;
+    require(initial_fire_area.entity_fields[3][0] == 4U &&
+                initial_fire_area.entity_fields[9][0] == 52U &&
+                initial_fire_area.entity_fields[3][1] == 4U &&
+                initial_fire_area.entity_fields[9][1] == 54U &&
+                initial_fire_area.entity_fields[3][2] == 3U,
+            "released FIR3 entity continuation setup changed");
+    const auto phoenix = run_fire_event(52U, 0U);
+    const auto& after_phoenix =
+        fire_world.location_at_directory_offset(466U).area;
+    require(phoenix.status == swd2::EventVmStatus::completed &&
+                phoenix.commands_executed == 54U &&
+                phoenix.requested_marker == swd2::Marker::open_figure &&
+                fire_state.u16(0x51cU) == 4U &&
+                fire_state.u16(0x4a0U) == 0x8016U &&
+                after_phoenix.entity_fields[3][0] == 3U &&
+                after_phoenix.entity_fields[0][2] == 0x490fU &&
+                after_phoenix.entity_fields[3][2] == 4U,
+            "FIR3 event 52 did not prepare its released first battle state");
+
+    fire_state.set_u16(0x51cU, 0U);  // RPG 0129 clears before entity-one dispatch.
+    const auto fire_second = run_fire_event(after_phoenix.entity_fields[9][1], 1U);
+    const auto& after_second =
+        fire_world.location_at_directory_offset(466U).area;
+    require(fire_second.status == swd2::EventVmStatus::completed &&
+                fire_second.commands_executed == 5U &&
+                fire_state.u16(0x51cU) == 4U &&
+                fire_state.u16(0x4a0U) == 0x8018U &&
+                after_second.entity_fields[9][1] == 78U,
+            "FIR3 event 54 did not redirect the post-battle entity to 78");
+
+    fire_state.set_u16(0x51cU, 0U);
+    const auto fire_third = run_fire_event(after_second.entity_fields[9][1], 1U);
+    const auto& after_third =
+        fire_world.location_at_directory_offset(466U).area;
+    require(fire_third.status == swd2::EventVmStatus::completed &&
+                fire_third.commands_executed == 5U &&
+                fire_state.u16(0x51cU) == 4U &&
+                fire_state.u16(0x4a0U) == 0x8030U &&
+                after_third.entity_fields[9][1] == 80U &&
+                after_third.entity_fields[3][1] == 3U,
+            "FIR3 event 78 did not redirect the post-battle entity to 80");
+
+    fire_state.set_u16(0x51cU, 0U);
+    const auto fire_tail = run_fire_event(after_third.entity_fields[9][1], 1U);
+    const auto& after_fire = fire_world.location_at_directory_offset(466U).area;
     require(fire_tail.status == swd2::EventVmStatus::completed &&
                 fire_tail.commands_executed == 11U &&
-                story_flag(fire_state, 50U),
-            "CHNA2 event 80 did not set the released return-to-Jianmu flag");
+                fire_tail.requested_marker == swd2::Marker::none &&
+                after_fire.entity_fields[3][2] == 3U &&
+                story_flag(fire_state, 50U) &&
+                fire_host.battle_transition_opcodes ==
+                    std::vector<std::uint16_t>({59U, 59U, 59U}),
+            "FIR3 event 80 did not finish the released three-battle chain");
 
     auto kunlun_world = swd2::MapDatabase::load(game_root / "MAPA.EXE");
     swd2::install_map_location(fire_state, kunlun_world, 220U);
