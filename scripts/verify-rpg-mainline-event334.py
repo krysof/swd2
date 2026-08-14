@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lock the continuous legal route through FIR3 event 80 and story flag 50."""
+"""Lock the continuous legal route through the pot world into T8 AREA3."""
 
 from __future__ import annotations
 
@@ -58,12 +58,11 @@ def main() -> int:
             ("RPG.EXE", "MT", "ED", True),
             ("DEMO.EXE", "ED", "--", True),
         ]
-        # The released route reaches the prior 127 FIG boundaries without a
-        # checkpoint reload. The reallocated fire-route healing keeps all four
-        # actors alive. Two natural FIR3 encounters and the three fixed
-        # 8016h/8018h/8030h story battles add five ordinary FIG round-trips;
-        # every battle is driven by unmodified released commands and RNG.
-        for index in range(132):
+        # The released route reaches every boundary without a checkpoint
+        # reload. The FIR3, pot-world and false-immortal chains include both
+        # natural encounters and fixed 8016h/8018h/8030h/801ah/801ch/801eh
+        # battles; every one is driven by released commands and RNG.
+        for index in range(161):
             expected_transitions.extend([
                 ("RPG.EXE", "OM" if index == 0 else "OC", "IF", True),
                 ("FIG.EXE", "IF", "OC", True),
@@ -78,41 +77,41 @@ def main() -> int:
             raise ValueError(f"mainline transitions differ: {transitions!r}")
 
         expected_values = {
-            ("input", "total"): 22188,
-            ("input", "consumed"): 22188,
+            ("input", "total"): 29050,
+            ("input", "consumed"): 29050,
             ("input", "remaining"): 0,
             ("input", "implicit_quit_calls"): 0,
-            ("boundaries", "wait"): 2238,
-            ("boundaries", "poll"): 19985,
-            ("boundaries", "text"): 3027,
-            ("video", "frames"): 59701,
-            ("video", "direct_updates"): 12660,
-            ("video", "fnv1a64"): "c01cf7b0229f77f3",
-            ("audio", "music_calls"): 563,
-            ("audio", "voice_calls"): 894,
-            ("audio", "stop_music_calls"): 17,
-            ("audio", "stop_audio_calls"): 268,
-            ("audio", "fnv1a64"): "a72cfe16ecc64d37",
+            ("boundaries", "wait"): 2294,
+            ("boundaries", "poll"): 26791,
+            ("boundaries", "text"): 5960,
+            ("video", "frames"): 72783,
+            ("video", "direct_updates"): 16556,
+            ("video", "fnv1a64"): "905b4418230743b8",
+            ("audio", "music_calls"): 724,
+            ("audio", "voice_calls"): 934,
+            ("audio", "stop_music_calls"): 22,
+            ("audio", "stop_audio_calls"): 326,
+            ("audio", "fnv1a64"): "7c1052a3f9fc7c21",
         }
         for (section, key), expected in expected_values.items():
             actual = trace.get(section, {}).get(key)
             if actual != expected:
                 raise ValueError(
                     f"mainline {section}.{key} is {actual!r}, expected {expected!r}")
-        if trace.get("delay_milliseconds") != 2482953:
+        if trace.get("delay_milliseconds") != 2900260:
             raise ValueError("mainline cumulative 70-Hz timing differs")
 
         digests = {
-            "state_fnv1a64": "5e0b40bb8c080c41",
-            "mapz_fnv1a64": "1d0eec73937d37da",
+            "state_fnv1a64": "cbe073ccb671a163",
+            "mapz_fnv1a64": "ab2b35ccfda81299",
             "name_fnv1a64": "e3d2853e2676513b",
         }
         for key, expected in digests.items():
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 59701 or frames[-1] != "3e68feb8e92789e3":
-            raise ValueError("mainline FIR3 event-80 frame differs")
+        if len(frames) != 72783 or frames[-1] != "5714f11f1655fa28":
+            raise ValueError("mainline T8 AREA3 frame differs")
 
         checkpoints = trace.get("input_checkpoints", [])
         expected_checkpoints = {
@@ -422,9 +421,20 @@ def main() -> int:
             22169: ("POLL", "CONFIRM", "8cc62445f7d88e89", "ae97c45e9a7f3e11"),
             22178: ("POLL", "CONFIRM", "182b0357bd6ca461", "1d0eec73937d37da"),
             22186: ("POLL", "CONFIRM", "182b0357bd6ca461", "1d0eec73937d37da"),
-            22187: ("POLL", "QUIT", "5e0b40bb8c080c41", "1d0eec73937d37da"),
+            22187: ("POLL", "DOWN", "5e0b40bb8c080c41", "1d0eec73937d37da"),
+            24387: ("POLL", "DOWN", "9dbf3f211709f214", "4982984b41afc248"),
+            25049: ("POLL", "NONE", "2ceb2ebc078627a5", "4982984b41afc248"),
+            25416: ("POLL", "CONFIRM", "f202a7377ac4377d", "8684996ddc4139f5"),
+            25721: ("POLL", "CONFIRM", "e7cee8906e7dd930", "a7a30e58554d7d6d"),
+            26729: ("POLL", "NONE", "56c0d318592ff586", "255d058598cfb5aa"),
+            27267: ("POLL", "NONE", "c732f2015a59e703", "255d058598cfb5aa"),
+            27731: ("POLL", "NONE", "5ee719bdadfc47f3", "255d058598cfb5aa"),
+            28276: ("POLL", "NONE", "21e2283bfcabdc78", "ab2b35ccfda81299"),
+            28549: ("POLL", "NONE", "0e104c7f68ada357", "ab2b35ccfda81299"),
+            29048: ("POLL", "NONE", "cbe073ccb671a163", "ab2b35ccfda81299"),
+            29049: ("POLL", "QUIT", "cbe073ccb671a163", "ab2b35ccfda81299"),
         }
-        if len(checkpoints) != 22188:
+        if len(checkpoints) != 29050:
             raise ValueError("mainline input checkpoint count differs")
         for index, expected in expected_checkpoints.items():
             item = checkpoints[index]
@@ -693,6 +703,24 @@ def main() -> int:
             22066: (466, 65, 71, 3),
             22067: (466, 82, 49, 3),
             22187: (466, 82, 49, 3),
+            24387: (340, 91, 28, 3),
+            24696: (338, 110, 101, 0),
+            24882: (470, 43, 50, 3),
+            25049: (482, 57, 18, 9),
+            25340: (498, 11, 13, 0),
+            25416: (510, 44, 22, 0),
+            25721: (678, 25, 17, 3),
+            26729: (678, 25, 17, 3),
+            27267: (606, 166, 19, 0),
+            27731: (584, 25, 27, 3),
+            28276: (632, 107, 156, 0),
+            28549: (634, 48, 127, 6),
+            28862: (506, 70, 12, 0),
+            28883: (636, 39, 10, 0),
+            28991: (642, 29, 75, 0),
+            29034: (646, 43, 38, 0),
+            29048: (650, 26, 164, 0),
+            29049: (650, 26, 164, 0),
         }
         for index, expected in expected_positions.items():
             item = checkpoints[index]
@@ -717,10 +745,12 @@ def main() -> int:
         # flags. CHNA3 event 20 sets flag 56 at the Zhou patron; after entering
         # DAIU1, CHNA2 event 20 sets flag 33 as it changes the water layout.
         # Rain event 42 then sets flag 32, Buddha event 28 sets flag 41, and
-        # the completed FIR3 event-80 continuation sets flag 50.
+        # the completed FIR3 event-80 continuation sets flag 50. HUMA2 event
+        # 38 adds flag 39; the first false-immortal meeting adds flag 37 and
+        # pot-immortal event 68 adds flag 35 before the return confrontation.
         if u16(save, 0x4A2) != 0xE880:
             raise ValueError("village/Stronghold/river-demon story flags are not exact")
-        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0xE848:
+        if u16(save, 0x4A4) != 0x2202 or u16(save, 0x4A6) != 0xFD48:
             raise ValueError(
                 "water-control/rain/Buddha story flags are not exact")
         if u16(save, 0x4A8) != 0xA280:
@@ -728,18 +758,18 @@ def main() -> int:
                 "stone-lion/patron/mechanism/FIR3 story flags are not exact")
         if save[0x521] != 1:
             raise ValueError("far-side AREA1 travel flag three was not set")
-        if u16(save, 0x424) != 466:
-            raise ValueError("continuous checkpoint is not FIR3 directory 466")
+        if u16(save, 0x424) != 650:
+            raise ValueError("continuous checkpoint is not T8 AREA3 directory 650")
         world_x = u16(save, 0x41B) + ((u16(save, 0x012) + 2) >> 1)
         world_y = u16(save, 0x41D) + ((u16(save, 0x02A) + 16) >> 3)
-        if (world_x, world_y) != (82, 49):
-            raise ValueError(f"post-event-80 FIR3 position is {(world_x, world_y)!r}")
+        if (world_x, world_y) != (26, 164):
+            raise ValueError(f"T8 AREA3 position is {(world_x, world_y)!r}")
         if u16(save, 0x51C) != 0:
             raise ValueError("RPG did not consume and clear the post-battle entity continuation")
-        if u16(save, 0x10) != 4 or u16(save, 0x104) != 1163:
-            raise ValueError("fire-route party count or money differs")
-        if u16(save, 0x49C) != 0x1818:
-            raise ValueError("post-event-80 FIG random cursor differs")
+        if u16(save, 0x10) != 3 or u16(save, 0x104) != 1163:
+            raise ValueError("post-pot-world party count or money differs")
+        if u16(save, 0x49C) != 0x1900:
+            raise ValueError("post-pot-world FIG random cursor differs")
         if save[0x529] != 1:
             raise ValueError("AREA2 Jianmu return portal did not set travel flag 11")
         # MAP0 action 4011h sets bit 0010h before event 334; FIR3 action
@@ -751,10 +781,10 @@ def main() -> int:
         if u16(save, 0x51A) != 0x0015:
             raise ValueError("Jianmu/Taotie/FIR3 MAP0 once-only trigger flags differ")
         expected_party = [
-            (0, 156, 156, 122, 122, 94, 94, 328, 843),
-            (0, 150, 150, 46, 46, 99, 99, 328, 842),
-            (0, 161, 161, 140, 140, 46, 46, 600, 847),
-            (0, 153, 153, 50, 50, 94, 94, 263, 838),
+            (512, 5, 156, 122, 122, 94, 94, 328, 843),
+            (4096, 23, 150, 46, 46, 99, 99, 328, 842),
+            (8192, 0, 153, 50, 50, 94, 94, 263, 838),
+            (8192, 0, 161, 140, 140, 46, 46, 600, 847),
         ]
         for actor, expected in enumerate(expected_party):
             base = 0x106 + actor * 0x9F
@@ -765,17 +795,17 @@ def main() -> int:
                       u16(save, base + 0x3B))
             if actual != expected:
                 raise ValueError(
-                    f"post-event-80 actor {actor} state is {actual!r}, "
+                    f"post-pot-world actor {actor} state is {actual!r}, "
                     f"expected {expected!r}")
         if [u16(save, 0x106 + actor * 0x9F + 0x31)
                 for actor in range(4)] != [17, 17, 17, 17]:
-            raise ValueError("post-event-80 party levels differ")
+            raise ValueError("post-pot-world party levels differ")
         expected_inventory = [
-            262, 206, 110, 206, 291, 333, 104, 119, 257,
+            262, 206, 110, 206, 291, 104, 119, 257, 83,
         ] + [0] * 41
         actual_inventory = [u16(save, 0x382 + slot * 2) for slot in range(50)]
         if actual_inventory != expected_inventory:
-            raise ValueError("post-event-80 inventory/compaction differs")
+            raise ValueError("post-pot-world inventory/compaction differs")
 
         header_size = u16(mapz, 8) * 16
         image = mapz[header_size:]
@@ -899,6 +929,37 @@ def main() -> int:
                 map_field(image, 466, 9, 1) != 80 or \
                 map_field(image, 466, 3, 2) != 3:
             raise ValueError("FIR3 event 52/54/78/80 entity chain differs")
+        # Flag 50 is consumed by CHNA3 30 -> 34 -> 38 at HUMA2. The latter
+        # redirects its actor to event 44 and sets flag 39, which is then read
+        # by the CHNA2 72 -> 74 gate in the released T6 room.
+        if map_field(image, 340, 3, 0) != 4 or \
+                map_field(image, 340, 9, 0) != 44:
+            raise ValueError("HUMA2 flag-39 producer did not persist event 44")
+        # ZD event 56 redirects and hides the body thief before fixed 801ah.
+        # T7 event 34 opens both FUZHO ends; HU04 62/64 hides the body thief,
+        # leaves the pot immortal on 66, and restores item 83. CHNA4 event 24
+        # leaves the PUDO mouth on event 28, while event 26 remains installed
+        # on the real-immortal actor after relocating the party to T6.
+        if map_field(image, 498, 3, 0) != 3 or \
+                map_field(image, 498, 9, 0) != 70:
+            raise ValueError("ZD body-thief redirect differs")
+        if any(map_field(image, 516, 3, entity) != 3
+               for entity in (0, 1)):
+            raise ValueError("T7 FUZHO passages were not both opened")
+        if map_field(image, 520, 9, 4) != 412:
+            raise ValueError("T7 item-83 actor did not persist event 412")
+        if map_field(image, 548, 3, 0) != 3 or \
+                map_field(image, 548, 9, 0) != 64:
+            raise ValueError("HU04 body-thief event did not persist its hidden state")
+        if map_field(image, 584, 3, 0) != 0 or \
+                map_field(image, 584, 9, 0) != 66:
+            raise ValueError("Z20 pot-immortal event did not persist event 66")
+        if map_field(image, 596, 3, 0) != 7 or \
+                map_field(image, 596, 9, 0) != 28:
+            raise ValueError("PUDO return mouth did not persist event 28")
+        if map_field(image, 604, 3, 0) != 5 or \
+                map_field(image, 604, 9, 0) != 26:
+            raise ValueError("real-immortal actor did not persist event 26")
         if trace.get("stop_reason") != "module requested exit" or \
                 trace.get("final_marker") != "--":
             raise ValueError("mainline checkpoint did not stop at explicit world quit")
@@ -909,7 +970,8 @@ def main() -> int:
         "RPG mainline prefix validation: OK "
         "(new game -> event 334 -> event 336 -> AREA2 -> DAIU1 water control "
         "-> compass -> rain ritual -> Buddha revival -> DAUF mechanism -> "
-        "FIR3 events 52/54/78/80 -> story flag 50)"
+        "FIR3 events 52/54/78/80 -> flags 39/37/35 -> pot world -> "
+        "false immortal -> T8 AREA3)"
     )
     return 0
 
