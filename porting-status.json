@@ -59,7 +59,9 @@
         "src/event_vm.cpp",
         "src/event_program.cpp",
         "src/rpg_module.cpp",
-        "src/tests/test_main.cpp"
+        "src/main.cpp",
+        "src/tests/test_main.cpp",
+        "src/reverse-engineering.md"
       ]
     },
     {

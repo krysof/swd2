@@ -1834,13 +1834,111 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
     std::size_t total_roots = 0;
     std::size_t total_records = 0;
     std::size_t total_commands = 0;
+    std::size_t static_event_slots = 0;
+    std::size_t static_unique_records = 0;
+    std::size_t reachable_event_slots = 0;
+    std::size_t reachable_unique_records = 0;
+    std::size_t unreachable_event_slots = 0;
+    std::size_t unreachable_unique_records = 0;
+    std::size_t static_commands = 0;
+    std::set<std::uint16_t> static_opcodes;
+    auto static_directory_digest = std::uint64_t{14695981039346656037ULL};
+    auto unreachable_directory_digest = std::uint64_t{14695981039346656037ULL};
+    const auto mix_static_byte = [](std::uint64_t& digest,
+                                    std::uint8_t value) {
+        digest ^= value;
+        digest *= 1099511628211ULL;
+    };
+    const auto mix_static_word = [&](std::uint64_t& digest,
+                                     std::uint16_t value) {
+        mix_static_byte(digest, static_cast<std::uint8_t>(value));
+        mix_static_byte(digest, static_cast<std::uint8_t>(value >> 8U));
+    };
+    const auto mix_static_name = [&](std::uint64_t& digest,
+                                     const std::string& value) {
+        for (const auto character : value) {
+            mix_static_byte(digest, static_cast<std::uint8_t>(character));
+        }
+        mix_static_byte(digest, 0U);
+    };
     for (const auto& [archive_name, audit] : audits) {
         const auto root_count = roots_by_archive.at(archive_name).size();
         total_roots += root_count;
         total_records += audit->visited.size();
         total_commands += audit->commands;
+
+        // Directory words 0..9 are the sentinel and CHNA resource header;
+        // RPG event pointers are byte offsets into slots 10 onward. Decode
+        // every one of those slots, including records which have no path from
+        // any released MAPA entity. This makes a successful story replay
+        // unnecessary for discovering hidden or abandoned script data: the
+        // graph classifies it statically and the two digests fail closed if a
+        // slot, alias, physical record or byte stream changes.
+        if (audit->archive.entry_count() < 10U) {
+            throw std::runtime_error(
+                archive_name + " has no complete CHNA resource header");
+        }
+        std::set<std::uint16_t> all_physical_records;
+        std::set<std::uint16_t> reachable_physical_records;
+        std::set<std::uint16_t> unreachable_physical_records;
+        std::size_t archive_reachable_slots = 0;
+        std::size_t archive_unreachable_slots = 0;
+        for (std::size_t index = 10U;
+             index < audit->archive.entry_count(); ++index) {
+            const auto target = static_cast<std::uint16_t>(index * 2U);
+            const auto physical = audit->archive.offsets()[index];
+            const auto stream = audit->archive.event_stream(index);
+            const auto decoded = swd2::decode_event_record(stream);
+            static_commands += decoded.commands.size();
+            for (const auto& command : decoded.commands) {
+                static_opcodes.insert(command.opcode);
+            }
+            ++static_event_slots;
+            all_physical_records.insert(physical);
+            mix_static_name(static_directory_digest, archive_name);
+            mix_static_word(static_directory_digest, target);
+            mix_static_word(static_directory_digest, physical);
+            for (const auto byte : stream) {
+                mix_static_byte(static_directory_digest, byte);
+            }
+            const auto reachable = audit->visited.contains(target);
+            if (reachable) {
+                ++reachable_event_slots;
+                ++archive_reachable_slots;
+                reachable_physical_records.insert(physical);
+            } else {
+                ++unreachable_event_slots;
+                ++archive_unreachable_slots;
+                unreachable_physical_records.insert(physical);
+                mix_static_name(unreachable_directory_digest, archive_name);
+                mix_static_word(unreachable_directory_digest, target);
+                mix_static_word(unreachable_directory_digest, physical);
+                for (const auto byte : stream) {
+                    mix_static_byte(unreachable_directory_digest, byte);
+                }
+            }
+        }
+        // An alias is reachable if any released directory slot naming that
+        // physical record is reachable. Do not count the same bytes as dead
+        // merely because a second, unused alias points to them.
+        for (auto iterator = unreachable_physical_records.begin();
+             iterator != unreachable_physical_records.end();) {
+            if (reachable_physical_records.contains(*iterator)) {
+                iterator = unreachable_physical_records.erase(iterator);
+            } else {
+                ++iterator;
+            }
+        }
+        static_unique_records += all_physical_records.size();
+        reachable_unique_records += reachable_physical_records.size();
+        unreachable_unique_records += unreachable_physical_records.size();
         std::cout << archive_name << ": roots=" << root_count
                   << ", reachable records=" << audit->visited.size()
+                  << '/' << archive_reachable_slots << " event slots, dead slots="
+                  << archive_unreachable_slots << ", dead physical records="
+                  << unreachable_physical_records.size() << ", physical="
+                  << reachable_physical_records.size() << "/"
+                  << all_physical_records.size()
                   << ", commands=" << audit->commands
                   << ", opcodes=" << audit->opcodes.size() << '\n';
     }
@@ -1855,6 +1953,27 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
         event_pointer_mutations != 37U || invisible_fixed_bss_operations != 1U) {
         throw std::runtime_error(
             "reachable RPG event graph differs from the audited release");
+    }
+    if (static_event_slots != 1768U ||
+        static_unique_records != 1607U ||
+        reachable_event_slots != 1065U ||
+        reachable_unique_records != 1064U ||
+        unreachable_event_slots != 703U ||
+        unreachable_unique_records != 543U ||
+        reachable_event_slots + unreachable_event_slots != static_event_slots ||
+        reachable_unique_records + unreachable_unique_records !=
+            static_unique_records ||
+        static_commands != 7462U || static_opcodes != expected_opcodes ||
+        static_directory_digest != 0xca749c59020d6a1fULL ||
+        unreachable_directory_digest != 0x4562b736f681dbeeULL) {
+        throw std::runtime_error(
+            "complete CHNA static directory audit differs from the release: slots=" +
+            std::to_string(static_event_slots) + ", physical=" +
+            std::to_string(static_unique_records) + ", reachable physical=" +
+            std::to_string(reachable_unique_records) + ", dead physical=" +
+            std::to_string(unreachable_unique_records) + ", commands=" +
+            std::to_string(static_commands) + ", opcodes=" +
+            std::to_string(static_opcodes.size()));
     }
     const std::array<std::size_t, 11> expected_opcode3_field_mutations{
         200U, 0U, 2U, 63U, 0U, 0U, 0U, 0U, 0U, 403U, 0U};
@@ -2054,7 +2173,14 @@ void verify_reachable_events(const std::filesystem::path& game_root) {
               << hex_digest(context_state_digests[1])
               << ", MAPZ checkpoints "
               << hex_digest(context_map_digests[0]) << '/'
-              << hex_digest(context_map_digests[1]) << '\n';
+              << hex_digest(context_map_digests[1]) << "; all "
+              << static_event_slots << " CHNA event slots/"
+              << static_unique_records << " physical records/"
+              << static_commands << " commands decoded, "
+              << unreachable_event_slots << " statically unreachable slots/"
+              << unreachable_unique_records << " physical records, directory hashes "
+              << hex_digest(static_directory_digest) << '/'
+              << hex_digest(unreachable_directory_digest) << '\n';
 }
 
 void usage(const char* program) {
