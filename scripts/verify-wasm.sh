@@ -119,9 +119,13 @@ grep -Fq "browser SDL canvas backing store is not fixed at 960x600" \
   echo "error: Web runtime does not enforce a fixed landscape SDL backing store" >&2
   exit 1
 }
-grep -Fq "browser audio synthesis and context rates disagree" \
+grep -Fq "browser audio context returned an unsupported sample rate" \
   "$site/index.wasm" || {
-  echo "error: Web runtime does not enforce matching synthesis/device rates" >&2
+  echo "error: Web runtime does not validate the synthesis/device rate" >&2
+  exit 1
+}
+grep -Fq "audio-buffer-source" "$site/index.js" || {
+  echo "error: Web runtime does not use render-thread AudioBuffer playback" >&2
   exit 1
 }
 python3 - "$site/index.html" <<'PY'

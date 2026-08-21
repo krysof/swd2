@@ -226,8 +226,9 @@
         Module.SDL2 ||= {};
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!Module.SDL2.audioContext && AudioContextClass) {
-          // Create the exact context later reused by Emscripten SDL while the
-          // browser still considers this call part of the start-button gesture.
+          // Create the exact context later reused by the render-thread
+          // AudioBuffer backend while the browser still considers this call
+          // part of the start-button gesture.
           Module.SDL2.audioContext = audioRateSelfTest
             ? new AudioContextClass({ sampleRate: audioRateSelfTest })
             : new AudioContextClass();

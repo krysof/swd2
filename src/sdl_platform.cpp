@@ -171,6 +171,7 @@ struct SdlPlatform::Impl {
     std::vector<std::uint32_t> rgba;
     SDL_AudioDeviceID audio_device{};
     int audio_rate{44'100};
+    bool audio_initialized{};
     std::vector<std::int16_t> music_samples;
     std::vector<std::int16_t> voice_samples;
     std::size_t music_cursor{};
@@ -459,14 +460,13 @@ struct SdlPlatform::Impl {
     }
 
     void ensure_audio() {
-        if (audio_device != 0) return;
+        if (audio_initialized) return;
 #ifdef __EMSCRIPTEN__
-        // Emscripten's SDL2 output callback is clocked by the Web Audio
-        // context.  Use that exact rate for RIX/VOC generation instead of
-        // asking SDL_AudioStream to bridge a fixed 44.1-kHz callback to the
-        // browser's usually-48-kHz ScriptProcessorNode.  Keeping the callback
-        // and Web Audio clocks identical avoids a device-dependent playback
-        // ratio (the audible high-key failure on mobile Safari).
+        // Keep browser playback on Web Audio's render thread. Emscripten
+        // SDL2's ScriptProcessor callback runs on the JavaScript main thread,
+        // so decoding a destination map can starve it and insert an audible
+        // gap at every scene change. AudioBufferSourceNode continues rendering
+        // while the synchronous DOS-style core is loading the next scene.
         const auto context_rate = EM_ASM_INT({
             const context = Module.SDL2 && Module.SDL2.audioContext;
             return context ? context.sampleRate : 0;
@@ -476,7 +476,120 @@ struct SdlPlatform::Impl {
                 "browser audio context returned an unsupported sample rate");
         }
         audio_rate = context_rate;
-#endif
+        EM_ASM({
+            const context = Module.SDL2.audioContext;
+            if (!Module.swd2WebAudio) {
+                const audio = Module.swd2WebAudio = ({
+                    context,
+                    musicSource: null,
+                    musicKey: null,
+                    voiceSource: null,
+                    buffers: new Map(),
+                    serial: 0,
+                    cacheLimit: 4
+                });
+                audio.stopSource = source => {
+                    if (!source) return;
+                    source.onended = null;
+                    try { source.stop(); } catch (_) {}
+                    try { source.disconnect(); } catch (_) {}
+                };
+                audio.stopMusic = () => {
+                    audio.stopSource(audio.musicSource);
+                    audio.musicSource = null;
+                    audio.musicKey = null;
+                };
+                audio.stopVoice = () => {
+                    audio.stopSource(audio.voiceSource);
+                    audio.voiceSource = null;
+                };
+                audio.startMusic = (key, pointer, length, rate, loop) => {
+                    let entry = audio.buffers.get(key);
+                    if (!entry) {
+                        if (!pointer || !length || rate !== context.sampleRate) {
+                            throw new Error('invalid SWD2 Web Audio music buffer');
+                        }
+                        const buffer = context.createBuffer(1, length, rate);
+                        const destination = buffer.getChannelData(0);
+                        const source = HEAP16.subarray(pointer >>> 1,
+                            (pointer >>> 1) + length);
+                        for (let index = 0; index < length; ++index) {
+                            destination[index] = source[index] / 32768;
+                        }
+                        entry = ({ buffer, used: ++audio.serial });
+                        audio.buffers.set(key, entry);
+                        Module.swd2AudioBufferCacheMisses =
+                            (Module.swd2AudioBufferCacheMisses | 0) + 1;
+                        while (audio.buffers.size > audio.cacheLimit) {
+                            let oldestKey = null;
+                            let oldestUse = Infinity;
+                            for (const pair of audio.buffers) {
+                                const candidateKey = pair[0];
+                                const candidate = pair[1];
+                                if (candidate.used < oldestUse) {
+                                    oldestKey = candidateKey;
+                                    oldestUse = candidate.used;
+                                }
+                            }
+                            if (oldestKey === null) break;
+                            audio.buffers.delete(oldestKey);
+                        }
+                    } else {
+                        entry.used = ++audio.serial;
+                        Module.swd2AudioBufferCacheHits =
+                            (Module.swd2AudioBufferCacheHits | 0) + 1;
+                    }
+                    audio.stopMusic();
+                    const node = context.createBufferSource();
+                    node.buffer = entry.buffer;
+                    node.loop = Boolean(loop);
+                    node.connect(context.destination);
+                    node.onended = () => {
+                        if (audio.musicSource === node) audio.musicSource = null;
+                        try { node.disconnect(); } catch (_) {}
+                    };
+                    node.start();
+                    audio.musicSource = node;
+                    audio.musicKey = key;
+                };
+                audio.startVoice = (pointer, length, rate) => {
+                    if (!pointer || !length || rate !== context.sampleRate) {
+                        throw new Error('invalid SWD2 Web Audio voice buffer');
+                    }
+                    const buffer = context.createBuffer(1, length, rate);
+                    const destination = buffer.getChannelData(0);
+                    const source = HEAP16.subarray(pointer >>> 1,
+                        (pointer >>> 1) + length);
+                    for (let index = 0; index < length; ++index) {
+                        destination[index] = source[index] / 32768;
+                    }
+                    audio.stopVoice();
+                    const node = context.createBufferSource();
+                    node.buffer = buffer;
+                    node.connect(context.destination);
+                    node.onended = () => {
+                        if (audio.voiceSource === node) audio.voiceSource = null;
+                        try { node.disconnect(); } catch (_) {}
+                    };
+                    node.start();
+                    audio.voiceSource = node;
+                };
+            }
+            Module.swd2AudioBackend = 'audio-buffer-source';
+            document.documentElement.dataset.audioBackend =
+                Module.swd2AudioBackend;
+        });
+        audio_initialized = true;
+        EM_ASM({
+            Module.swd2AudioSynthesisRate = $0;
+            const context = Module.SDL2 && Module.SDL2.audioContext;
+            Module.swd2AudioContextRate = context ? context.sampleRate : 0;
+            document.documentElement.dataset.audioSynthesisRate = String($0);
+            document.documentElement.dataset.audioContextRate =
+                String(Module.swd2AudioContextRate || 0);
+        }, audio_rate);
+        return;
+#else
         SDL_AudioSpec desired{};
         desired.freq = audio_rate;
         desired.format = AUDIO_S16SYS;
@@ -495,23 +608,9 @@ struct SdlPlatform::Impl {
             throw std::runtime_error("SDL audio backend cannot accept mono S16 audio");
         }
         audio_rate = obtained.freq;
-#ifdef __EMSCRIPTEN__
-        if (audio_rate != context_rate) {
-            SDL_CloseAudioDevice(audio_device);
-            audio_device = 0;
-            throw std::runtime_error(
-                "browser audio synthesis and context rates disagree");
-        }
-        EM_ASM({
-            Module.swd2AudioSynthesisRate = $0;
-            const context = Module.SDL2 && Module.SDL2.audioContext;
-            Module.swd2AudioContextRate = context ? context.sampleRate : 0;
-            document.documentElement.dataset.audioSynthesisRate = String($0);
-            document.documentElement.dataset.audioContextRate =
-                String(Module.swd2AudioContextRate || 0);
-        }, audio_rate);
-#endif
         SDL_PauseAudioDevice(audio_device, 0);
+        audio_initialized = true;
+#endif
     }
 };
 
@@ -714,6 +813,31 @@ ClockTime SdlPlatform::clock_time() const {
 
 void SdlPlatform::play_music(std::span<const std::uint8_t> rix_data, bool loop) {
     impl_->ensure_audio();
+#ifdef __EMSCRIPTEN__
+    // Use the complete RIX bytes, not a collision-prone digest, as the
+    // in-session key for the four-entry decoded AudioBuffer LRU. The cache is
+    // deliberately checked before OPL synthesis, so returning from a battle
+    // or revisiting a map does not stall the scene transition to rebuild the
+    // same multi-minute PCM stream.
+    constexpr auto hex = "0123456789abcdef";
+    std::string cache_key(rix_data.size() * 2U, '0');
+    for (std::size_t index = 0; index < rix_data.size(); ++index) {
+        cache_key[index * 2U] = hex[rix_data[index] >> 4U];
+        cache_key[index * 2U + 1U] = hex[rix_data[index] & 0x0fU];
+    }
+    const auto cached = EM_ASM_INT({
+        const audio = Module.swd2WebAudio;
+        const key = UTF8ToString($0);
+        return audio && audio.buffers.has(key) ? 1 : 0;
+    }, cache_key.c_str());
+    if (cached != 0) {
+        EM_ASM({
+            const key = UTF8ToString($0);
+            Module.swd2WebAudio.startMusic(key, 0, 0, $1, $2);
+        }, cache_key.c_str(), impl_->audio_rate, loop ? 1 : 0);
+        return;
+    }
+#endif
     const auto sequence = decode_rix(rix_data);
     const auto rate = static_cast<std::uint32_t>(impl_->audio_rate);
     auto music = synthesize_rix(sequence, rate);
@@ -721,25 +845,43 @@ void SdlPlatform::play_music(std::span<const std::uint8_t> rix_data, bool loop) 
     if (loop_clock.samples_per_loop() != music.mono_samples.size()) {
         throw std::runtime_error("RIX PCM and loop clock duration disagree");
     }
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        const key = UTF8ToString($0);
+        Module.swd2WebAudio.startMusic(key, $1, $2, $3, $4);
+    }, cache_key.c_str(), music.mono_samples.data(), music.mono_samples.size(),
+       impl_->audio_rate, loop ? 1 : 0);
+#else
     SDL_LockAudioDevice(impl_->audio_device);
     impl_->music_samples = std::move(music.mono_samples);
     impl_->music_cursor = 0;
     impl_->music_loop_clock = loop_clock;
     impl_->loop_music = loop;
     SDL_UnlockAudioDevice(impl_->audio_device);
+#endif
 }
 
 void SdlPlatform::play_voice(std::span<const std::uint8_t> voc_data) {
     impl_->ensure_audio();
     auto voice = resample_voice(
         decode_voc(voc_data), static_cast<std::uint32_t>(impl_->audio_rate));
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        Module.swd2WebAudio.startVoice($0, $1, $2);
+    }, voice.mono_samples.data(), voice.mono_samples.size(), impl_->audio_rate);
+#else
     SDL_LockAudioDevice(impl_->audio_device);
     impl_->voice_samples = std::move(voice.mono_samples);
     impl_->voice_cursor = 0;
     SDL_UnlockAudioDevice(impl_->audio_device);
+#endif
 }
 
 void SdlPlatform::stop_music() {
+#ifdef __EMSCRIPTEN__
+    if (!impl_->audio_initialized) return;
+    EM_ASM({ Module.swd2WebAudio.stopMusic(); });
+#else
     if (impl_->audio_device == 0) return;
     SDL_LockAudioDevice(impl_->audio_device);
     impl_->music_samples.clear();
@@ -747,9 +889,17 @@ void SdlPlatform::stop_music() {
     impl_->music_loop_clock = {};
     impl_->loop_music = false;
     SDL_UnlockAudioDevice(impl_->audio_device);
+#endif
 }
 
 void SdlPlatform::stop_audio() {
+#ifdef __EMSCRIPTEN__
+    if (!impl_->audio_initialized) return;
+    EM_ASM({
+        Module.swd2WebAudio.stopMusic();
+        Module.swd2WebAudio.stopVoice();
+    });
+#else
     if (impl_->audio_device == 0) return;
     SDL_LockAudioDevice(impl_->audio_device);
     impl_->music_samples.clear();
@@ -759,6 +909,7 @@ void SdlPlatform::stop_audio() {
     impl_->music_loop_clock = {};
     impl_->loop_music = false;
     SDL_UnlockAudioDevice(impl_->audio_device);
+#endif
 }
 
 }  // namespace swd2

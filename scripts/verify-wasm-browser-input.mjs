@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 // Real-browser boundary test for touch hold, persistent release caching,
-// original title/Continue loading after a browser restart, device-rate music,
-// and IDBFS restart. The WASM
+// original title/Continue loading after a browser restart, render-thread
+// device-rate music, and IDBFS restart. The WASM
 // polling boundary records deliveries only when ?input-self-test=1 is present,
 // proving the input crossed DOM -> generated JS -> ASYNCIFY -> SDL C++.
 
@@ -384,15 +384,43 @@ try {
       `Number(Module.swd2AudioSynthesisRate) > 0 &&
        Number(Module.swd2AudioContextRate) > 0`),
     'browser music synthesis rate', 30_000);
+  const audioCacheReplay = await cdp.evaluate(`(() => {
+    const audio = Module.swd2WebAudio;
+    const beforeHits = Number(Module.swd2AudioBufferCacheHits) || 0;
+    const beforeMisses = Number(Module.swd2AudioBufferCacheMisses) || 0;
+    if (!audio?.musicKey || !audio.musicSource) return null;
+    audio.startMusic(audio.musicKey, 0, 0, audio.context.sampleRate,
+      audio.musicSource.loop);
+    return {
+      hits: (Number(Module.swd2AudioBufferCacheHits) || 0) - beforeHits,
+      misses: (Number(Module.swd2AudioBufferCacheMisses) || 0) - beforeMisses
+    };
+  })()`);
+  if (!audioCacheReplay || audioCacheReplay.hits !== 1 ||
+      audioCacheReplay.misses !== 0) {
+    fail(`browser music cache did not restart a decoded track without ` +
+      `resynthesis: ${JSON.stringify(audioCacheReplay)}`);
+  }
   const audioRuntime = await cdp.evaluate(`({
     synthesisRate: Number(Module.swd2AudioSynthesisRate),
     contextRate: Number(Module.swd2AudioContextRate),
-    contextState: Module.SDL2.audioContext.state
+    contextState: Module.SDL2.audioContext.state,
+    backend: Module.swd2AudioBackend,
+    bufferedTracks: Module.swd2WebAudio?.buffers?.size || 0,
+    cacheHits: Number(Module.swd2AudioBufferCacheHits) || 0,
+    cacheMisses: Number(Module.swd2AudioBufferCacheMisses) || 0,
+    scriptProcessor: Boolean(Module.SDL2.audio?.scriptProcessorNode),
+    musicBufferRate: Module.swd2WebAudio?.musicSource?.buffer?.sampleRate || 0,
+    playbackRate: Module.swd2WebAudio?.musicSource?.playbackRate?.value || 0
   })`);
   if (audioRuntime.synthesisRate !== 48_000 ||
       audioRuntime.contextRate !== 48_000 ||
-      audioRuntime.contextState !== 'running') {
-    fail(`browser audio synthesis did not follow the 48-kHz Web Audio ` +
+      audioRuntime.contextState !== 'running' ||
+      audioRuntime.backend !== 'audio-buffer-source' ||
+      audioRuntime.bufferedTracks < 1 || audioRuntime.cacheMisses < 1 ||
+      audioRuntime.scriptProcessor || audioRuntime.musicBufferRate !== 48_000 ||
+      audioRuntime.playbackRate !== 1) {
+    fail(`browser render-thread audio did not follow the 48-kHz Web Audio ` +
       `device clock: ${JSON.stringify(audioRuntime)}`);
   }
 
@@ -659,7 +687,14 @@ try {
   const resumeAudio = await cdp.evaluate(`({
     synthesisRate: Number(Module.swd2AudioSynthesisRate),
     contextRate: Number(Module.swd2AudioContextRate),
-    contextState: Module.SDL2.audioContext.state
+    contextState: Module.SDL2.audioContext.state,
+    backend: Module.swd2AudioBackend,
+    bufferedTracks: Module.swd2WebAudio?.buffers?.size || 0,
+    cacheHits: Number(Module.swd2AudioBufferCacheHits) || 0,
+    cacheMisses: Number(Module.swd2AudioBufferCacheMisses) || 0,
+    scriptProcessor: Boolean(Module.SDL2.audio?.scriptProcessorNode),
+    musicBufferRate: Module.swd2WebAudio?.musicSource?.buffer?.sampleRate || 0,
+    playbackRate: Module.swd2WebAudio?.musicSource?.playbackRate?.value || 0
   })`);
   const resumedBattlePage = resumeRuntime.battleCommandPages[0];
   if (resumeRuntime.route !== 'original-title' ||
@@ -675,8 +710,12 @@ try {
   }
   if (resumeAudio.synthesisRate !== 48_000 ||
       resumeAudio.contextRate !== 48_000 ||
-      resumeAudio.contextState !== 'running') {
-    fail(`music loaded through original Continue lost the Web Audio device rate: ${
+      resumeAudio.contextState !== 'running' ||
+      resumeAudio.backend !== 'audio-buffer-source' ||
+      resumeAudio.bufferedTracks < 1 || resumeAudio.cacheMisses < 1 ||
+      resumeAudio.scriptProcessor || resumeAudio.musicBufferRate !== 48_000 ||
+      resumeAudio.playbackRate !== 1) {
+    fail(`music loaded through original Continue lost render-thread Web Audio: ${
       JSON.stringify(resumeAudio)}`);
   }
   const cachedSecondLoad = Object.fromEntries(
@@ -754,7 +793,22 @@ try {
       resumed_synthesis_rate_hz: resumeAudio.synthesisRate,
       resumed_context_rate_hz: resumeAudio.contextRate,
       resumed_context_state: resumeAudio.contextState,
-      conversion: 'RIX/VOC generation at the Web Audio device rate',
+      backend: audioRuntime.backend,
+      buffered_tracks: audioRuntime.bufferedTracks,
+      buffer_cache_hits: audioRuntime.cacheHits,
+      buffer_cache_misses: audioRuntime.cacheMisses,
+      script_processor_present: audioRuntime.scriptProcessor,
+      music_buffer_rate_hz: audioRuntime.musicBufferRate,
+      playback_rate: audioRuntime.playbackRate,
+      cache_replay: audioCacheReplay,
+      resumed_backend: resumeAudio.backend,
+      resumed_buffered_tracks: resumeAudio.bufferedTracks,
+      resumed_buffer_cache_hits: resumeAudio.cacheHits,
+      resumed_buffer_cache_misses: resumeAudio.cacheMisses,
+      resumed_music_buffer_rate_hz: resumeAudio.musicBufferRate,
+      resumed_playback_rate: resumeAudio.playbackRate,
+      conversion: 'RIX/VOC generation at the Web Audio device rate; ' +
+        'AudioBufferSource render-thread playback',
     },
     original_continue_after_restart: {
       marker_slot: 1,

@@ -146,17 +146,6 @@ void install_map_actor_profile(SharedState& state, bool uses_man1) {
     }
 }
 
-SpriteArchive load_default_map_actors(const std::filesystem::path& game_root,
-                                      SharedState& state) {
-    // RPG:e94 calls 13b4 for area bit 8000h and 136c otherwise.  Besides
-    // choosing MAN1/BMAN1, those routines install the twelve horizontal and
-    // four groups of vertical sprite offsets used by 506d.
-    const auto uses_man1 = (state.u16(0x408) & 0x8000U) != 0U;
-    install_map_actor_profile(state, uses_man1);
-    return SpriteArchive::parse(decode_rsk_block(read_file(
-        game_root / (uses_man1 ? "MAN1.RSK" : "BMAN1.RSK"))).data);
-}
-
 std::optional<std::pair<std::uint8_t, std::uint8_t>>
 map_special_actor_resource(std::uint16_t action) {
     switch (action) {
@@ -948,6 +937,13 @@ public:
                  std::span<const std::uint8_t> equipment_stat_labels,
                  std::function<Viewport()> scene_provider,
                  std::function<void()> scene_palette_advance,
+                 std::function<std::shared_ptr<const MapResource>(
+                     const std::filesystem::path&,
+                     const std::filesystem::path&)> map_resource_loader,
+                 std::function<std::shared_ptr<const LegacyFont>(
+                     const std::filesystem::path&)> event_font_loader,
+                 std::function<std::shared_ptr<const SpriteArchive>(
+                     const std::filesystem::path&)> actor_archive_loader,
                  MapDatabase* map_database,
                  const MapTransitionDatabase* map_transitions,
                  const SaveSlotWriter* save_slot,
@@ -1000,6 +996,9 @@ public:
           equipment_stat_labels_(equipment_stat_labels),
           scene_provider_(std::move(scene_provider)),
           scene_palette_advance_(std::move(scene_palette_advance)),
+          map_resource_loader_(std::move(map_resource_loader)),
+          event_font_loader_(std::move(event_font_loader)),
+          actor_archive_loader_(std::move(actor_archive_loader)),
           map_database_(map_database), map_transitions_(map_transitions),
           save_slot_(save_slot),
           load_slot_(load_slot), live_map_database_(live_map_database),
@@ -1216,11 +1215,11 @@ public:
                 state_.area_collision_path());
             graphics.replace_extension();
             layout.replace_extension();
-            relocated_map_ = MapResource::load(game_root_ / graphics,
-                                               game_root_ / layout);
+            relocated_map_ = map_resource_loader_(game_root_ / graphics,
+                                                  game_root_ / layout);
             relocated_palette_ = relocated_map_->palette();
             relocated_palette_animation_ = relocated_map_->animation_words();
-            relocated_font_ = LegacyFont::load(
+            relocated_font_ = event_font_loader_(
                 game_root_ /
                 normalize_dos_asset_path(state_.event_data_path()));
 
@@ -1239,7 +1238,10 @@ public:
                 }
                 if (playing_music_) *playing_music_ = destination_music;
             }
-            relocated_actors_ = load_default_map_actors(game_root_, state_);
+            const auto uses_man1 = (state_.u16(0x408) & 0x8000U) != 0U;
+            install_map_actor_profile(state_, uses_man1);
+            relocated_actors_ = actor_archive_loader_(
+                game_root_ / (uses_man1 ? "MAN1.RSK" : "BMAN1.RSK"));
             relocated_actor_resource_variant_ = 0;
             state_.set_u16(0x417, relocated_map_->layout().width);
             state_.set_u16(0x419, relocated_map_->layout().height);
@@ -1300,11 +1302,10 @@ public:
             if (const auto resource = map_special_actor_resource(action)) {
                 if (relocated_actor_resource_variant_ != resource->first) {
                     relocated_actor_resource_variant_ = resource->first;
-                    relocated_actors_ = SpriteArchive::parse(
-                        decode_rsk_block(read_file(
-                            game_root_ /
-                            ("BMAN" + std::to_string(resource->second) +
-                             ".RSK"))).data);
+                    relocated_actors_ = actor_archive_loader_(
+                        game_root_ /
+                        ("BMAN" + std::to_string(resource->second) +
+                         ".RSK"));
                 }
             }
             auto event_entity = map_special_event_entity(action);
@@ -4416,6 +4417,13 @@ private:
     std::span<const std::uint8_t> equipment_stat_labels_;
     std::function<Viewport()> scene_provider_;
     std::function<void()> scene_palette_advance_;
+    std::function<std::shared_ptr<const MapResource>(
+        const std::filesystem::path&,
+        const std::filesystem::path&)> map_resource_loader_;
+    std::function<std::shared_ptr<const LegacyFont>(
+        const std::filesystem::path&)> event_font_loader_;
+    std::function<std::shared_ptr<const SpriteArchive>(
+        const std::filesystem::path&)> actor_archive_loader_;
     MapDatabase* map_database_{};
     const MapTransitionDatabase* map_transitions_{};
     const SaveSlotWriter* save_slot_{};
@@ -4440,11 +4448,11 @@ private:
     bool palette_dark_{};
     bool quit_requested_{};
     const MapAreaRecord* relocated_area_{};
-    std::optional<MapResource> relocated_map_;
+    std::shared_ptr<const MapResource> relocated_map_;
     std::array<std::uint8_t, 768> relocated_palette_{};
     std::array<std::uint16_t, 24> relocated_palette_animation_{};
-    std::optional<SpriteArchive> relocated_actors_;
-    std::optional<LegacyFont> relocated_font_;
+    std::shared_ptr<const SpriteArchive> relocated_actors_;
+    std::shared_ptr<const LegacyFont> relocated_font_;
     std::uint8_t relocated_actor_resource_variant_{};
     std::map<std::uint16_t, SpriteArchive> relocated_animation_sets_;
 };
@@ -4623,6 +4631,20 @@ std::optional<InputAction> corner_slide(const MapLocationRecord& location,
 }
 
 }  // namespace
+
+std::shared_ptr<const MapResource> RpgModule::load_map_resource(
+    const std::filesystem::path& graphics_base_path,
+    const std::filesystem::path& layout_base_path) {
+    const auto key = std::pair{graphics_base_path.lexically_normal(),
+                               layout_base_path.lexically_normal()};
+    if (const auto found = map_resource_cache_.find(key);
+        found != map_resource_cache_.end()) {
+        return found->second;
+    }
+    auto resource = std::make_shared<const MapResource>(
+        MapResource::load(key.first, key.second));
+    return map_resource_cache_.emplace(key, std::move(resource)).first->second;
+}
 
 Marker RpgModule::run(GameContext& context, Marker input_marker) {
     // A map-changing event reloads resources by restarting this outer loop.
@@ -5078,6 +5100,43 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     FieldActionRuntime field_action_runtime;
     RpgMenuRuntime menu_runtime;
     std::optional<MapAreaRecord> relocated_transient_area;
+    // The data package is already resident in the browser, but rebuilding
+    // decoded DOS resources on every doorway still blocks the JavaScript main
+    // thread. Keep immutable session resources decoded across area changes;
+    // map tiles additionally live in RpgModule's cross-battle cache.
+    std::map<std::filesystem::path, ScriptArchive> event_archive_cache;
+    std::map<std::filesystem::path, std::shared_ptr<const LegacyFont>>
+        event_font_cache;
+    std::map<std::filesystem::path, std::shared_ptr<const SpriteArchive>>
+        actor_archive_cache;
+    const auto load_event_archive = [&](const std::filesystem::path& path)
+        -> const ScriptArchive& {
+        if (const auto found = event_archive_cache.find(path);
+            found != event_archive_cache.end()) {
+            return found->second;
+        }
+        return event_archive_cache.emplace(path, ScriptArchive::load(path))
+            .first->second;
+    };
+    const auto load_event_font = [&](const std::filesystem::path& path) {
+        if (const auto found = event_font_cache.find(path);
+            found != event_font_cache.end()) {
+            return found->second;
+        }
+        auto font = std::make_shared<const LegacyFont>(LegacyFont::load(path));
+        return event_font_cache.emplace(path, std::move(font))
+            .first->second;
+    };
+    const auto load_actor_archive = [&](const std::filesystem::path& path) {
+        if (const auto found = actor_archive_cache.find(path);
+            found != actor_archive_cache.end()) {
+            return found->second;
+        }
+        auto archive = std::make_shared<const SpriteArchive>(
+            SpriteArchive::parse(decode_rsk_block(read_file(path)).data));
+        return actor_archive_cache.emplace(path, std::move(archive))
+            .first->second;
+    };
     // RPG:e94 immediately probes a normal MAP0 destination and recursively
     // dispatches its spawn trigger before any page flip. Keep the C++ area
     // reload iterative while preserving that no-intermediate-frame boundary.
@@ -5094,8 +5153,10 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     auto layout_relative = normalize_dos_asset_path(context.shared_state.area_collision_path());
     graphics_relative.replace_extension();
     layout_relative.replace_extension();
-    const auto map = MapResource::load(context.game_root / graphics_relative,
-                                       context.game_root / layout_relative);
+    const auto map_resource = load_map_resource(
+        context.game_root / graphics_relative,
+        context.game_root / layout_relative);
+    const auto& map = *map_resource;
     MapDatabase* active_map_database = context.map_database.get();
     if (active_map_database == nullptr) {
         const auto map_database_path = context.game_root / "MAPZ.DA1";
@@ -5148,10 +5209,13 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         // first ordinary world page, not only transitions entered from e94.
         check_chained_transition_before_present = true;
     }
-    const auto event_archive = ScriptArchive::load(
-        context.game_root / normalize_dos_asset_path(context.shared_state.event_executable_path()));
-    const auto event_font = LegacyFont::load(
-        context.game_root / normalize_dos_asset_path(context.shared_state.event_data_path()));
+    const auto& event_archive = load_event_archive(
+        context.game_root /
+        normalize_dos_asset_path(context.shared_state.event_executable_path()));
+    const auto event_font_resource = load_event_font(
+        context.game_root /
+        normalize_dos_asset_path(context.shared_state.event_data_path()));
+    const auto& event_font = *event_font_resource;
     const auto name_font = LegacyFont::parse(context.name_font);
     const auto requested_music =
         normalize_dos_asset_path(context.shared_state.music_path());
@@ -5164,11 +5228,11 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         }
         playing_music = requested_music;
     }
-    static_cast<void>(event_archive);
-    static_cast<void>(event_font);
     static_cast<void>(location);
-    auto actors = load_default_map_actors(context.game_root,
-                                          context.shared_state);
+    const auto uses_man1 = (context.shared_state.u16(0x408) & 0x8000U) != 0U;
+    install_map_actor_profile(context.shared_state, uses_man1);
+    auto actors = load_actor_archive(
+        context.game_root / (uses_man1 ? "MAN1.RSK" : "BMAN1.RSK"));
     std::uint8_t actor_resource_variant = 0;
     std::map<std::uint16_t, SpriteArchive> animation_sets;
     auto map_palette = map.palette();
@@ -5182,7 +5246,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
             context.shared_state.viewport_y(), true);
         Viewport viewport{std::move(background.pixels), map_palette};
         draw_world_characters(viewport, location.area, context.shared_state,
-                              context.game_root, actors, animation_sets);
+                              context.game_root, *actors, animation_sets);
         map.composite_viewport_foreground(
             viewport.pixels, context.shared_state.viewport_x(),
             context.shared_state.viewport_y(), true);
@@ -5218,6 +5282,10 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
             inventory_category_labels, equipment_slot_labels,
             equipment_stat_labels,
             compose_scene, advance_scene_palette,
+            [this](const auto& graphics, const auto& layout) {
+                return load_map_resource(graphics, layout);
+            },
+            load_event_font, load_actor_archive,
             &map_database, &map_transitions, &context.save_slot,
             &context.load_slot, &context.map_database,
             &context.name_font,
@@ -5331,8 +5399,7 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
             actor_resource_variant = actor_resource->first;
             const auto path = context.game_root /
                 ("BMAN" + std::to_string(actor_resource->second) + ".RSK");
-            actors = SpriteArchive::parse(
-                decode_rsk_block(read_file(path)).data);
+            actors = load_actor_archive(path);
         }
 
         // f19's non-location actions 1..4/10/12..21 call 52b4 for a fixed

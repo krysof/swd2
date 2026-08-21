@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "kind": "wasm_browser_runtime_checks",
+  "status": "verified",
+  "limitation": "Headless desktop Edge with mobile emulation is not a physical iOS/Android device test.",
+  "browser": "Edg/151.0.4129.93",
+  "protocol_version": "1.3",
+  "host": {
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "device_scale_factor": 2
+  },
+  "layout": {
+    "portrait_rotation_applied": true,
+    "canvas_backing": {
+      "width": 960,
+      "height": 600,
+      "aspect": "8:5"
+    },
+    "stage_long_to_short_ratio": 1.6,
+    "right_button_rect": {
+      "x": 148.5,
+      "y": 111,
+      "width": 44,
+      "height": 48,
+      "top": 111,
+      "right": 192.5,
+      "bottom": 159,
+      "left": 148.5
+    }
+  },
+  "resource_cache": {
+    "version": "2026.08.22.dev",
+    "name": "swd2-web-2026.08.22.dev",
+    "first_runtime_state": "active",
+    "first_runtime_controlled": true,
+    "cached_urls": [
+      "http://127.0.0.1:55145/index.data?v=2026.08.22.dev",
+      "http://127.0.0.1:55145/index.html",
+      "http://127.0.0.1:55145/index.js?v=2026.08.22.dev",
+      "http://127.0.0.1:55145/index.wasm?v=2026.08.22.dev"
+    ],
+    "second_launch_from_service_worker": {
+      "index.js": true,
+      "index.wasm": true,
+      "index.data": true
+    }
+  },
+  "audio": {
+    "synthesis_rate_hz": 48000,
+    "forced_test_context_rate_hz": 48000,
+    "context_state": "running",
+    "resumed_synthesis_rate_hz": 48000,
+    "resumed_context_rate_hz": 48000,
+    "resumed_context_state": "running",
+    "backend": "audio-buffer-source",
+    "buffered_tracks": 2,
+    "buffer_cache_hits": 1,
+    "buffer_cache_misses": 2,
+    "script_processor_present": false,
+    "music_buffer_rate_hz": 48000,
+    "playback_rate": 1,
+    "cache_replay": {
+      "hits": 1,
+      "misses": 0
+    },
+    "resumed_backend": "audio-buffer-source",
+    "resumed_buffered_tracks": 4,
+    "resumed_buffer_cache_hits": 0,
+    "resumed_buffer_cache_misses": 4,
+    "resumed_music_buffer_rate_hz": 48000,
+    "resumed_playback_rate": 1,
+    "conversion": "RIX/VOC generation at the Web Audio device rate; AudioBufferSource render-thread playback"
+  },
+  "original_continue_after_restart": {
+    "marker_slot": 1,
+    "retained_nonzero_battle_auxiliary": 42,
+    "browser_gate_label": "点击进入并开启声音",
+    "external_resume_button": false,
+    "command_line_resume_argument": false,
+    "route": "original-title",
+    "password_then_original_title": true,
+    "original_title_menu_entries": 2,
+    "selected_original_slot": 1,
+    "clock_hundredth_override": 1,
+    "staged_random_cursor": 4096,
+    "movement_inputs_before_battle": 154,
+    "world_polls_before_battle": 170,
+    "battle_command_page": {
+      "randomCursor": 4125,
+      "encounterOffset": 182,
+      "milliseconds": 17770.314999997616
+    }
+  },
+  "title_input_fence": {
+    "repeated_confirm_during_password_fade": "discarded",
+    "opening_menu_entries_before_user_choice": 1,
+    "opening_menu_responses_before_user_choice": 0,
+    "opening_menu_waiting_for_user_choice": true
+  },
+  "meo_challenge": {
+    "clock_fields": "DOS DH second / DL hundredth",
+    "positions": [
+      {
+        "second": 50,
+        "hundredth": 11,
+        "x": 37,
+        "y": 155
+      },
+      {
+        "second": 51,
+        "hundredth": 39,
+        "x": 93,
+        "y": 158
+      },
+      {
+        "second": 51,
+        "hundredth": 69,
+        "x": 153,
+        "y": 158
+      }
+    ],
+    "horizontal_span_pixels": 116
+  },
+  "gesture": {
+    "touch_start_events": 1,
+    "requested_world_frames": 69,
+    "hold_milliseconds": 2729.839999973774,
+    "touch_end_events": 1,
+    "direction": "right",
+    "wasm_world_deliveries": 69,
+    "first_to_last_delivery_milliseconds": 2695.5799999833107,
+    "deliveries_before_release_fence": 0,
+    "deliveries_after_release_fence": 0,
+    "presented_world_samples": 69,
+    "world_start": {
+      "x": 127,
+      "y": 13,
+      "screen_x": 38,
+      "screen_y": 80,
+      "viewport_x": 107,
+      "viewport_y": 1
+    },
+    "world_finish": {
+      "x": 138,
+      "y": 15,
+      "screen_x": 38,
+      "screen_y": 80,
+      "viewport_x": 118,
+      "viewport_y": 3
+    }
+  },
+  "idbfs": {
+    "cycles": 1,
+    "initial_sync": "completed",
+    "exact_probe_write": "completed",
+    "page_reloads": 1,
+    "restored_bytes": "exact",
+    "cleanup_sync": "completed",
+    "result": "pass"
+  },
+  "assets": {
+    "index.html": "63c3737323003f5984bc9d04196cbf392df842964f58746694b4cc6c66b4b7cb",
+    "index.js": "1b3a630d568ba0d3733bd9d30b0b992d6af4f854f56f7115e2db6cb1654f95c4",
+    "index.wasm": "b790b4bcbce59f5ab3ae62e319b2877ab6b0f5fe6b5db9402c98db5a722741b5",
+    "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a",
+    "service-worker.js": "7707bfbec629596b96655112d721703d4bfe1713be24194f07b233d14ffa33c9"
+  }
+}
