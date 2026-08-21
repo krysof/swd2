@@ -51,6 +51,9 @@ void record_browser_world_sample(const SharedState& state) {
     // The DOM callback never enters WASM; this records the world coordinates
     // observed by the ordinary RPG frame loop while the touch level is held.
     EM_ASM({
+        if (Module.swd2InputSelfTestEnabled) {
+            Module.swd2WorldPolls = (Module.swd2WorldPolls | 0) + 1;
+        }
         if (Module.swd2InputSelfTestEnabled &&
                 Module.swd2HeldDirection && Module.swd2WorldSamples &&
                 Module.swd2WorldSamples.length < 512) {

@@ -513,11 +513,26 @@ try {
 
   // Create the same marker written after an explicit in-game Record. Leave a
   // nonzero value in SAVE+51c as ordinary saves are allowed to do: direct
-  // loading must not mistake it for OC's post-battle entity callback. On the
-  // next real load the page must pass --resume-save into C++ and reach the
-  // world without replaying MEO/title.
+  // loading must not mistake it for OC's post-battle entity callback. Stage a
+  // two-cell clear AREA1 path and cursor 1000h as well. The next document fixes
+  // RPG's load-time DOS hundredth to one, producing the odd cursor 1001h; 130
+  // alternating legal steps must then cross the random encounter's initial
+  // enemy page and reach the FIG command compositor rather than aborting there.
   await cdp.evaluate(`new Promise((resolve, reject) => {
     const save = FS.readFile('/saves/SAVE.DA1');
+    const word = (offset, value) => {
+      save[offset] = value & 255;
+      save[offset + 1] = value >>> 8 & 255;
+    };
+    word(0x012, 38);      // actor screen x -> world x 20 at viewport zero
+    word(0x02a, 80);      // actor screen y -> world y 12 at viewport zero
+    word(0x0a2, 9);       // face right
+    word(0x40d, 8);       // AREA1 first cell
+    word(0x40f, 8);
+    word(0x41b, 0);       // viewport x/y
+    word(0x41d, 0);
+    word(0x424, 8);       // AREA1 MAPZ location directory offset
+    word(0x49c, 0x1000);  // becomes deliberately odd 1001h after load
     save[0x51c] = 42;
     save[0x51d] = 0;
     FS.writeFile('/saves/SAVE.DA1', save);
@@ -527,7 +542,8 @@ try {
   networkResponses.length = 0;
   await cdp.send('Page.navigate', {
     url: `http://127.0.0.1:${httpPort}/?input-self-test=1` +
-      `&audio-rate-self-test=48000&quick-resume=1`,
+      `&audio-rate-self-test=48000&clock-hundredth-self-test=1` +
+      `&quick-resume=1`,
   });
   await waitUntil(
     () => cdp.evaluate(`Boolean(globalThis.Module &&
@@ -560,25 +576,40 @@ try {
   await cdp.evaluate(
     `Module.swd2InputDeliveries.length = 0;
      Module.swd2WorldSamples.length = 0;
+     Module.swd2WorldPolls = 0;
+     Module.swd2BattleCommandPages.length = 0;
      Module.swd2DirectionQueue.length = 0;
      Module.swd2HeldDirection = 0`);
-  const resumeDirectionRect = await cdp.evaluate(
-    `document.querySelector('[data-key="ArrowRight"]').getBoundingClientRect().toJSON()`);
-  const resumeX = resumeDirectionRect.x + resumeDirectionRect.width / 2;
-  const resumeY = resumeDirectionRect.y + resumeDirectionRect.height / 2;
-  await cdp.send('Input.dispatchTouchEvent', {
-    type: 'touchStart',
-    touchPoints: [{ x: resumeX, y: resumeY, id: 8,
-      radiusX: 3, radiusY: 3, force: 1 }],
-  });
   await waitUntil(
-    () => cdp.evaluate(
-      `Module.swd2InputDeliveries.length >= 10 &&
-       Module.swd2WorldSamples.length >= 10`),
+    () => cdp.evaluate(`Module.swd2WorldPolls >= 1`),
     'directly resumed RPG world loop', 8_000);
+
+  let encounterInputs = 0;
+  for (; encounterInputs < 170; ++encounterInputs) {
+    const right = (encounterInputs & 1) === 0;
+    const name = right ? 'ArrowRight' : 'ArrowLeft';
+    const virtualCode = right ? 39 : 37;
+    await cdp.send('Input.dispatchKeyEvent', {
+      type: 'keyDown', key: name, code: name,
+      windowsVirtualKeyCode: virtualCode, nativeVirtualKeyCode: virtualCode,
+    });
+    await cdp.send('Input.dispatchKeyEvent', {
+      type: 'keyUp', key: name, code: name,
+      windowsVirtualKeyCode: virtualCode, nativeVirtualKeyCode: virtualCode,
+    });
+    await sleep(45);
+    if (await cdp.evaluate(`Module.swd2BattleCommandPages.length > 0`)) {
+      ++encounterInputs;
+      break;
+    }
+  }
+  await waitUntil(
+    () => cdp.evaluate(`Module.swd2BattleCommandPages.length > 0`),
+    'loaded odd-cursor encounter command page', 8_000);
   const resumeRuntime = await cdp.evaluate(`({
-    deliveries: Module.swd2InputDeliveries.slice(),
-    worldSamples: Module.swd2WorldSamples.slice(),
+    worldPolls: Module.swd2WorldPolls,
+    battleCommandPages: Module.swd2BattleCommandPages.slice(),
+    clockHundredth: Module.swd2ClockHundredthSelfTest,
     applied: document.documentElement.dataset.resumeApplied
   })`);
   const resumeAudio = await cdp.evaluate(`({
@@ -586,12 +617,14 @@ try {
     contextRate: Number(Module.swd2AudioContextRate),
     contextState: Module.SDL2.audioContext.state
   })`);
-  await cdp.send('Input.dispatchTouchEvent', {
-    type: 'touchEnd', touchPoints: [],
-  });
-  if (resumeRuntime.applied !== '1' || resumeRuntime.deliveries.length < 10 ||
-      resumeRuntime.worldSamples.length < 10) {
-    fail('last-slot direct continuation did not reach the RPG world loop');
+  const resumedBattlePage = resumeRuntime.battleCommandPages[0];
+  if (resumeRuntime.applied !== '1' || resumeRuntime.worldPolls < 130 ||
+      resumeRuntime.clockHundredth !== 1 || !resumedBattlePage ||
+      (resumedBattlePage.randomCursor & 1) !== 1) {
+    fail('last-slot continuation did not reach the FIG command page with ' +
+      `its loaded odd cursor: ${JSON.stringify({
+        encounterInputs, resumeRuntime
+      })}`);
   }
   if (resumeAudio.synthesisRate !== 44_100 ||
       resumeAudio.contextRate !== 48_000 ||
@@ -684,8 +717,11 @@ try {
       title_label: resumeChoice.titleLabel,
       hint: resumeChoice.hint,
       applied_slot: resumeRuntime.applied,
-      world_deliveries: resumeRuntime.deliveries.length,
-      presented_world_samples: resumeRuntime.worldSamples.length,
+      clock_hundredth_override: resumeRuntime.clockHundredth,
+      staged_random_cursor: 0x1000,
+      movement_inputs_before_battle: encounterInputs,
+      world_polls_before_battle: resumeRuntime.worldPolls,
+      battle_command_page: resumedBattlePage,
     },
     gesture: {
       touch_start_events: 1,
@@ -733,7 +769,8 @@ try {
     `one uninterrupted trusted touch hold; release stopped at once; ` +
     `44.1-kHz music synthesis stayed fixed on a 48-kHz Web Audio device; ` +
     `versioned assets came from persistent cache; slot-one quick resume ` +
-    `reached ${resumeRuntime.worldSamples.length} world polls; ` +
+    `reached a FIG command page after ${encounterInputs} loaded odd-cursor ` +
+    `encounter inputs; ` +
     `${options.idbfsCycles} IDBFS restart cycles passed)`);
 } catch (error) {
   if (browserOutput) console.error(browserOutput.slice(-4_000));

@@ -28,6 +28,10 @@
 #include <stdexcept>
 #include <vector>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace swd2 {
 
 namespace {
@@ -41,6 +45,28 @@ struct BattleRewards {
     std::uint16_t experience{};
     std::uint16_t money{};
 };
+
+void record_browser_battle_command_page(
+    const SharedState& state, std::uint16_t encounter_offset) {
+#ifdef __EMSCRIPTEN__
+    // Test-only proof that a loaded odd random cursor crossed the initial FIG
+    // enemy page and reached the interactive command compositor.
+    EM_ASM({
+        if (Module.swd2InputSelfTestEnabled &&
+                Module.swd2BattleCommandPages &&
+                Module.swd2BattleCommandPages.length < 16) {
+            Module.swd2BattleCommandPages.push({
+                randomCursor: $0,
+                encounterOffset: $1,
+                milliseconds: performance.now()
+            });
+        }
+    }, state.u16(0x49c), encounter_offset);
+#else
+    static_cast<void>(state);
+    static_cast<void>(encounter_offset);
+#endif
+}
 
 class ScopeExit {
 public:
@@ -5643,6 +5669,8 @@ Marker BattleModule::run(GameContext& context, Marker input) {
                         }
                         continue;
                     }
+                    record_browser_battle_command_page(
+                        context.shared_state, encounter_offset);
                     const auto frame = compose_command_frame(
                         surface, session, menu, encounter, abilities,
                         command_font, command_name_font, menu_sprites,

@@ -10,7 +10,15 @@ namespace swd2 {
 
 FigBattleRandom FigBattleRandom::load(
     const std::filesystem::path& fig_executable, std::uint16_t cursor) {
-    if (cursor < 0x1000 || cursor > 0x2000 || (cursor & 1U) != 0) {
+    // RPG:4cae adds DOS's one-byte hundredth counter to SAVE+49c after every
+    // load. That deliberately permits an odd cursor (a physical reference
+    // capture, for example, enters the world at 1077h). 8086 word reads do
+    // not require alignment, and FIG:2b41 likewise reads CS:[028a+cursor]
+    // byte-for-byte before advancing it by two. Rejecting odd values here
+    // therefore let RPG draw the first battle page and then abort before the
+    // command panel whenever a loaded game happened to receive an odd
+    // hundredth.
+    if (cursor < 0x1000 || cursor > 0x2000) {
         throw std::runtime_error("FIG random cursor is outside the exact 1000..2000 domain");
     }
     const auto executable = dos::MzExecutable::load(fig_executable);

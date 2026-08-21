@@ -3388,6 +3388,11 @@ void test_battle_random(const std::filesystem::path& game_root) {
     auto boundary = swd2::FigBattleRandom::load(game_root / "FIG.EXE", 0x2000);
     require(boundary.draw(7) == 6U && boundary.cursor() == 0x1000U,
             "FIG rejected RPG's boundary 2000h random cursor before its 228ah read");
+    auto unaligned = swd2::FigBattleRandom::load(
+        game_root / "FIG.EXE", 0x1077U);
+    require(unaligned.draw(7) == 6U && unaligned.cursor() == 0x1079U,
+            "FIG rejected the odd random cursor produced by RPG's load-time "
+            "hundredth perturbation");
     auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     wrapping.store(state);
     require(state.u16(0x49c) == 0x1002,
@@ -10988,6 +10993,53 @@ void test_rpg_random_encounter(const std::filesystem::path& game_root) {
                 context.shared_state.u16(0x49c) == 0x1018U &&
                 context.shared_state.u16(0x4a0) == 0U,
             "RPG 1fa8 code-window gate did not enter an in-process random FIG battle");
+
+    // A real title/quick load adds DOS's hundredth to SAVE+49c. An odd
+    // hundredth turns the released 1000h cursor into 1001h; after 130 legal
+    // steps RPG enters a random battle with the still-odd 101dh cursor. This
+    // is the exact loaded-game boundary that formerly presented the enemies
+    // and party cards, then threw before the first FIG command page.
+    ScriptedPlatform loaded_platform;
+    loaded_platform.actions.clear();
+    for (std::size_t step = 0; step < 130U; ++step) {
+        loaded_platform.actions.push_back((step & 1U) == 0U
+            ? swd2::InputAction::right : swd2::InputAction::left);
+    }
+    loaded_platform.clock_time_value.hundredth = 1U;
+    auto loaded_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    loaded_state.set_u16(0x10, 1U);
+    loaded_state.set_u16(0x102, 0U);
+    loaded_state.set_viewport_x(static_cast<std::uint16_t>(start_x - 20U));
+    loaded_state.set_viewport_y(static_cast<std::uint16_t>(start_y - 12U));
+    loaded_state.set_actor_screen_x(38U);
+    loaded_state.set_actor_screen_y(80U);
+    loaded_state.set_actor_direction(9U);
+    loaded_state.set_u16(0x40f, 8U);
+    loaded_state.set_u16(0x40d, static_cast<std::uint16_t>(
+        8U + ((start_y - 12U) * map.layout().width + start_x - 20U) * 2U));
+    loaded_state.set_u16(0x49c, 0x1000U);
+    loaded_state.set_u16(0x4a0, 0x1234U);
+    loaded_state.set_u16(0x51c, 0U);
+    swd2::GameContext loaded_context{
+        game_root, loaded_state, loaded_platform};
+    loaded_context.map_database = database;
+    require(swd2::RpgModule(true).run(
+                loaded_context, swd2::Marker::menu_ready) ==
+                swd2::Marker::open_figure &&
+                loaded_platform.cursor == 130U &&
+                loaded_context.shared_state.u16(0x49c) == 0x101dU &&
+                loaded_context.shared_state.u16(0x4a0) == 0U,
+            "loaded RPG did not reach random FIG with its odd shared cursor");
+    const auto before_battle_pages = loaded_platform.presented;
+    require(swd2::BattleModule().run(
+                loaded_context, swd2::Marker::open_figure) ==
+                swd2::Marker::none &&
+                loaded_platform.wait_calls == 1U &&
+                loaded_platform.presented == before_battle_pages + 2U &&
+                loaded_context.shared_state.u16(0x49c) == 0x101dU &&
+                loaded_context.shared_state.u16(0x4a0) == 0U,
+            "loaded odd-cursor encounter stopped on the initial FIG page "
+            "instead of reaching the command panel");
 
     ScriptedPlatform quit_platform;
     quit_platform.actions = platform.actions;

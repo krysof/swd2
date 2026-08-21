@@ -34,15 +34,15 @@
     }
   },
   "resource_cache": {
-    "version": "2026.08.21.6",
-    "name": "swd2-web-2026.08.21.6",
+    "version": "2026.08.21.7",
+    "name": "swd2-web-2026.08.21.7",
     "first_runtime_state": "active",
     "first_runtime_controlled": true,
     "cached_urls": [
-      "http://127.0.0.1:49412/index.data?v=2026.08.21.6",
-      "http://127.0.0.1:49412/index.html",
-      "http://127.0.0.1:49412/index.js?v=2026.08.21.6",
-      "http://127.0.0.1:49412/index.wasm?v=2026.08.21.6"
+      "http://127.0.0.1:63706/index.data?v=2026.08.21.7",
+      "http://127.0.0.1:63706/index.html",
+      "http://127.0.0.1:63706/index.js?v=2026.08.21.7",
+      "http://127.0.0.1:63706/index.wasm?v=2026.08.21.7"
     ],
     "second_launch_from_service_worker": {
       "index.js": true,
@@ -67,26 +67,33 @@
     "title_label": "从标题开始",
     "hint": "检测到浏览器存档，可直接继续。",
     "applied_slot": "1",
-    "world_deliveries": 11,
-    "presented_world_samples": 11
+    "clock_hundredth_override": 1,
+    "staged_random_cursor": 4096,
+    "movement_inputs_before_battle": 155,
+    "world_polls_before_battle": 166,
+    "battle_command_page": {
+      "randomCursor": 4125,
+      "encounterOffset": 182,
+      "milliseconds": 9325.754999995232
+    }
   },
   "gesture": {
     "touch_start_events": 1,
     "requested_world_frames": 69,
-    "hold_milliseconds": 2669.550000011921,
+    "hold_milliseconds": 2820.014999985695,
     "touch_end_events": 1,
     "direction": "right",
-    "wasm_world_deliveries": 69,
-    "first_to_last_delivery_milliseconds": 2623.939999997616,
+    "wasm_world_deliveries": 71,
+    "first_to_last_delivery_milliseconds": 2796.789999961853,
     "deliveries_before_release_fence": 0,
     "deliveries_after_release_fence": 0,
-    "presented_world_samples": 70,
+    "presented_world_samples": 71,
     "world_start": {
-      "x": 126,
+      "x": 127,
       "y": 13,
       "screen_x": 38,
       "screen_y": 80,
-      "viewport_x": 106,
+      "viewport_x": 107,
       "viewport_y": 1
     },
     "world_finish": {
@@ -108,10 +115,10 @@
     "result": "pass"
   },
   "assets": {
-    "index.html": "2d37bc762c4cf305e169f7424b6cfdcd019cca5eff001f6e88b7fa976851ec0f",
-    "index.js": "642ddb7d1861ac0bd62ab6bbd029be45c1426c2d931ae00748e57c513a1a04d8",
-    "index.wasm": "05caba2bf4b78334e022ea6ac025ba590f7526e69834652ea332da54e0b2424c",
+    "index.html": "d7f19d833ffa0c78ee0844fce8542ce2bea386908ba35c19786e3cb7eba2b2bc",
+    "index.js": "a950a92910d5f433ab8997ab0ca1b2f9f1a70a3328dce5377d2e9a3fe75297f2",
+    "index.wasm": "78422efd58a5020142a60d071f946d5be90aafbd6014d7cc51793ec68c23288a",
     "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a",
-    "service-worker.js": "3857b9ee1ea03e7b698f570da2ff03ac472f89e8c275d158ad124577aa694487"
+    "service-worker.js": "89380e346ead812c237845ce2e42b6dda266c3ee49ac7e2dea4d69e80d598728"
   }
 }

@@ -673,8 +673,21 @@ ClockTime SdlPlatform::clock_time() const {
     const auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
                                   point.time_since_epoch()) %
                               std::chrono::seconds(1);
+    auto hundredth = static_cast<unsigned>(milliseconds.count() / 10);
+#ifdef __EMSCRIPTEN__
+    // The real-browser regression can lock the otherwise wall-clock-dependent
+    // RPG load perturbation to an odd value. Production pages leave this at
+    // -1 and continue to use the actual DOS-style hundredth.
+    const auto clock_override = EM_ASM_INT({
+        return Number.isInteger(Module.swd2ClockHundredthSelfTest)
+            ? Module.swd2ClockHundredthSelfTest : -1;
+    });
+    if (clock_override >= 0 && clock_override <= 99) {
+        hundredth = static_cast<unsigned>(clock_override);
+    }
+#endif
     return {static_cast<unsigned>(local.tm_min), static_cast<unsigned>(local.tm_sec),
-            static_cast<unsigned>(milliseconds.count() / 10)};
+            hundredth};
 }
 
 void SdlPlatform::play_music(std::span<const std::uint8_t> rix_data, bool loop) {

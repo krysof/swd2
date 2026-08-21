@@ -170,6 +170,12 @@
       selfTestParameters.get('input-self-test') === '1';
     const audioRateSelfTest = inputSelfTestEnabled
       ? Number(selfTestParameters.get('audio-rate-self-test')) : 0;
+    const requestedClockHundredth = inputSelfTestEnabled &&
+      selfTestParameters.has('clock-hundredth-self-test')
+        ? Number(selfTestParameters.get('clock-hundredth-self-test')) : -1;
+    const clockHundredthSelfTest = Number.isInteger(requestedClockHundredth) &&
+      requestedClockHundredth >= 0 && requestedClockHundredth <= 99
+        ? requestedClockHundredth : -1;
     const idbfsSelfTestSessionKey = 'swd2-idbfs-self-test-token';
     const idbfsSelfTestPath = '/saves/.swd2-idbfs-restart-probe';
     let startRequested = Boolean(idbfsSelfTestToken);
@@ -444,6 +450,9 @@
       swd2InputSelfTestEnabled: inputSelfTestEnabled,
       swd2InputDeliveries: [],
       swd2WorldSamples: [],
+      swd2WorldPolls: 0,
+      swd2BattleCommandPages: [],
+      swd2ClockHundredthSelfTest: clockHundredthSelfTest,
       swd2ResumeSlot: 0,
       arguments: ['--game', '/game', '--save-dir', '/saves', '--play'],
       canvas,
