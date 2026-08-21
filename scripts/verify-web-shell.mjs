@@ -9,6 +9,9 @@ const html = fs.readFileSync(htmlPath, 'utf8');
 const marker = '<script>';
 if (!html.includes(marker)) throw new Error('Web shell has no inline script');
 const code = html.split(marker, 2)[1].split('</script>', 1)[0];
+const versionMatch = html.match(/id=(?:"build-version"|'build-version'|build-version)[^>]*>\s*版本\s*([^<\s]+)/);
+if (!versionMatch) throw new Error('Web shell has no visible release version');
+const releaseVersion = versionMatch[1];
 
 class Element {
   constructor(id = '') {
@@ -32,7 +35,10 @@ class Element {
 
 const ids = Object.fromEntries(
   ['canvas', 'status-wrap', 'status', 'progress', 'error',
-   'start-gate', 'start-button'].map(id => [id, new Element(id)]));
+   'start-gate', 'start-button', 'title-button', 'resume-hint',
+   'build-version'].map(id => [id, new Element(id)]));
+ids['build-version'].textContent = `版本 ${releaseVersion}`;
+ids['title-button'].hidden = true;
 const controlButtons = [
   'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'Escape', 'Enter'
 ].map(key => {
@@ -85,6 +91,11 @@ const navigator = {
     },
   },
 };
+const localValues = new Map();
+const localStorage = {
+  getItem(key) { return localValues.get(key) ?? null; },
+  setItem(key, value) { localValues.set(key, String(value)); },
+};
 const dependencies = new Set();
 let nextTimer = 1;
 const pendingTimeouts = new Map();
@@ -107,6 +118,7 @@ const context = {
   window,
   screen,
   navigator,
+  localStorage,
   location: { search: '?input-self-test=1' },
   URLSearchParams,
   FS: {
@@ -224,6 +236,117 @@ if (actionEvents.join('|') !== 'keydown:Escape|keyup:Escape' ||
   throw new Error('ESC must stay single-shot while directions repeat');
 }
 
+// Verify both last-slot choices and the asynchronous ordering boundary. A
+// user is allowed to click before IDBFS has finished restoring; the runtime
+// must remain blocked and append direct-resume arguments only after the exact
+// slot files are visible. Choosing the title must never append them.
+const resumeFiles = new Map([
+  ['/saves/.swd2-last-slot', Uint8Array.from([51, 10])],
+  ['/saves/SAVE.DA3', Uint8Array.from([1, 2, 3])],
+  ['/saves/MAPZ.DA3', Uint8Array.from([4, 5, 6])],
+]);
+function makeResumePage(deferRestore) {
+  const pageIds = Object.fromEntries(
+    ['canvas', 'status-wrap', 'status', 'progress', 'error',
+     'start-gate', 'start-button', 'title-button', 'resume-hint',
+     'build-version'].map(id => [id, new Element(id)]));
+  pageIds['build-version'].textContent = `版本 ${releaseVersion}`;
+  pageIds['title-button'].hidden = true;
+  const pageDocument = {
+    documentElement: new Element('html'),
+    visibilityState: 'visible',
+    getElementById: id => pageIds[id],
+    querySelectorAll: () => [],
+    addEventListener() {},
+  };
+  const pageDependencies = new Set();
+  let restoreCallback = null;
+  const pageContext = {
+    console,
+    document: pageDocument,
+    window: { AudioContext: AudioContextMock, addEventListener() {} },
+    screen: { orientation: { lock() { return Promise.resolve(); } } },
+    navigator: {},
+    localStorage,
+    location: { search: '' },
+    URLSearchParams,
+    FS: {
+      mkdir() {},
+      mount() {},
+      syncfs(load, callback) {
+        if (!load) throw new Error('unexpected save commit');
+        if (deferRestore) restoreCallback = callback;
+        else callback(null);
+      },
+      readFile(path) {
+        const value = resumeFiles.get(path);
+        if (!value) throw new Error(`missing file ${path}`);
+        return value;
+      },
+      analyzePath(path) { return { exists: resumeFiles.has(path) }; },
+      stat() { return { mtime: 1 }; },
+    },
+    IDBFS: {},
+    addRunDependency(name) { pageDependencies.add(name); },
+    removeRunDependency(name) {
+      if (!pageDependencies.delete(name)) {
+        throw new Error(`attempted to remove unknown dependency ${name}`);
+      }
+    },
+    setTimeout: fakeSetTimeout,
+    clearTimeout: fakeClearTimeout,
+    setInterval: fakeSetInterval,
+    clearInterval: fakeClearInterval,
+    KeyboardEvent: context.KeyboardEvent,
+  };
+  vm.createContext(pageContext);
+  vm.runInContext(code, pageContext);
+  return {
+    context: pageContext,
+    ids: pageIds,
+    dependencies: pageDependencies,
+    finishRestore() {
+      if (!restoreCallback) throw new Error('IDBFS restore was not deferred');
+      const callback = restoreCallback;
+      restoreCallback = null;
+      callback(null);
+    },
+  };
+}
+
+const titlePage = makeResumePage(false);
+titlePage.context.Module.preRun[0]();
+if (titlePage.context.Module.swd2ResumeSlot !== 3 ||
+    titlePage.ids['title-button'].hidden ||
+    titlePage.ids['start-button'].textContent !== '继续上次存档（槽 3）') {
+  throw new Error('restored last-slot files did not expose both start choices');
+}
+await titlePage.ids['title-button'].listeners.click[0]({ preventDefault() {} });
+await Promise.resolve();
+if (titlePage.context.Module.arguments.join('|') !==
+      '--game|/game|--save-dir|/saves|--play' ||
+    titlePage.context.document.documentElement.dataset.resumeApplied !== 'title' ||
+    titlePage.dependencies.size !== 0) {
+  throw new Error('title opt-out incorrectly applied direct-resume arguments');
+}
+
+const earlyResumePage = makeResumePage(true);
+earlyResumePage.context.Module.preRun[0]();
+await earlyResumePage.ids['start-button'].listeners.click[0]({ preventDefault() {} });
+await Promise.resolve();
+if (earlyResumePage.dependencies.size !== 1 ||
+    !earlyResumePage.dependencies.has('swd2-idbfs') ||
+    earlyResumePage.context.Module.arguments.length !== 5) {
+  throw new Error('early start did not remain blocked on IDBFS restoration');
+}
+earlyResumePage.finishRestore();
+if (earlyResumePage.dependencies.size !== 0 ||
+    earlyResumePage.context.Module.arguments.join('|') !==
+      '--game|/game|--save-dir|/saves|--play|--slot|3|--resume-marker|OC' ||
+    earlyResumePage.context.document.documentElement.dataset.resumeApplied !== '3') {
+  throw new Error('last-slot resume arguments were not applied after restoration');
+}
+
 // Execute the diagnostic in two fresh page contexts backed by one simulated
 // persistent store.  This is not a substitute for the real-browser matrix,
 // but it proves the shipped reload probe itself writes, commits, reloads,
@@ -233,7 +356,10 @@ const sessionValues = new Map();
 function makeIdbfsPage() {
   const pageIds = Object.fromEntries(
     ['canvas', 'status-wrap', 'status', 'progress', 'error',
-     'start-gate', 'start-button'].map(id => [id, new Element(id)]));
+     'start-gate', 'start-button', 'title-button', 'resume-hint',
+     'build-version'].map(id => [id, new Element(id)]));
+  pageIds['build-version'].textContent = `版本 ${releaseVersion}`;
+  pageIds['title-button'].hidden = true;
   const pageButtons = [
     'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'Escape', 'Enter'
   ].map(key => {
@@ -261,6 +387,7 @@ function makeIdbfsPage() {
     window: pageWindow,
     screen: { orientation: { lock() { return Promise.resolve(); } } },
     navigator: {},
+    localStorage,
     location: {
       search: '?idbfs-self-test=roundtrip-token',
       reload() { ++reloads; },
@@ -329,4 +456,4 @@ if (secondIdbfsPage.reloads() !== 0 || persistedFiles.size !== 0 ||
   throw new Error('IDBFS diagnostic did not restore, verify, and clean its probe');
 }
 
-console.log('Web shell start/held-direction and IDBFS reload smoke: OK');
+console.log('Web shell start/held-direction, quick-resume, and IDBFS reload smoke: OK');

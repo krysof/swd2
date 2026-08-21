@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
-// Real-browser boundary test for the touch-hold and IDBFS restart paths. It launches an
-// installed Chromium-family browser with mobile emulation, sends one trusted
-// CDP touchStart, holds it across at least 69 actual world polls, and sends one
-// touchEnd.  The WASM polling boundary records deliveries only when
-// ?input-self-test=1 is present,
+// Real-browser boundary test for touch hold, persistent release caching,
+// direct continuation of the last recorded slot, and IDBFS restart. The WASM
+// polling boundary records deliveries only when ?input-self-test=1 is present,
 // proving the input crossed DOM -> generated JS -> ASYNCIFY -> SDL C++.
 
 import childProcess from 'node:child_process';
@@ -114,6 +112,7 @@ class CdpConnection {
     this.socket = new WebSocket(url);
     this.nextId = 1;
     this.pending = new Map();
+    this.listeners = new Map();
   }
 
   async open() {
@@ -123,12 +122,23 @@ class CdpConnection {
     });
     this.socket.onmessage = event => {
       const message = JSON.parse(event.data);
-      if (!message.id || !this.pending.has(message.id)) return;
-      const { resolve, reject } = this.pending.get(message.id);
-      this.pending.delete(message.id);
-      if (message.error) reject(new Error(JSON.stringify(message.error)));
-      else resolve(message.result);
+      if (message.id && this.pending.has(message.id)) {
+        const { resolve, reject } = this.pending.get(message.id);
+        this.pending.delete(message.id);
+        if (message.error) reject(new Error(JSON.stringify(message.error)));
+        else resolve(message.result);
+        return;
+      }
+      for (const listener of this.listeners.get(message.method) || []) {
+        listener(message.params || {});
+      }
     };
+  }
+
+  on(method, listener) {
+    const listeners = this.listeners.get(method) || [];
+    listeners.push(listener);
+    this.listeners.set(method, listeners);
   }
 
   send(method, params = {}) {
@@ -190,7 +200,9 @@ function sha256(filename) {
 
 
 const options = parseArguments(process.argv.slice(2));
-for (const name of ['index.html', 'index.js', 'index.wasm', 'index.data']) {
+for (const name of [
+  'index.html', 'index.js', 'index.wasm', 'index.data', 'service-worker.js',
+]) {
   if (!fs.statSync(path.join(options.site, name), { throwIfNoEntry: false })?.isFile()) {
     fail(`site asset is absent: ${name}`);
   }
@@ -244,6 +256,16 @@ try {
   await cdp.send('Runtime.enable');
   await cdp.send('Page.enable');
   await cdp.send('Network.enable');
+  const networkResponses = [];
+  cdp.on('Network.responseReceived', event => {
+    const response = event.response || {};
+    networkResponses.push({
+      url: response.url || '',
+      status: response.status || 0,
+      fromServiceWorker: Boolean(response.fromServiceWorker),
+      fromDiskCache: Boolean(response.fromDiskCache),
+    });
+  });
   await cdp.send('Network.clearBrowserCache');
   await cdp.send('Emulation.setDeviceMetricsOverride', {
     width: 390,
@@ -412,6 +434,146 @@ try {
   }
   if (!released.rotated) fail('portrait mobile layout did not apply rotation');
 
+  // The first successful runtime fills a versioned Cache Storage release.
+  // The next document must be controlled by that worker and obtain the large
+  // JS/WASM/DATA assets from it instead of downloading the package again.
+  await waitUntil(
+    () => cdp.evaluate(
+      `Boolean(document.documentElement.dataset.resourceCache)`),
+    'versioned persistent release cache', 30_000);
+  const cacheProbe = await cdp.evaluate(`(async () => {
+    const names = await caches.keys();
+    const entries = {};
+    for (const name of names) {
+      entries[name] = (await (await caches.open(name)).keys()).map(
+        request => request.url);
+    }
+    return {
+      state: document.documentElement.dataset.resourceCache || '',
+      controller: Boolean(navigator.serviceWorker.controller),
+      registrations: (await navigator.serviceWorker.getRegistrations()).map(
+        registration => ({
+          scope: registration.scope,
+          installing: registration.installing && registration.installing.state,
+          waiting: registration.waiting && registration.waiting.state,
+          active: registration.active && registration.active.state
+        })),
+      caches: names, entries
+    };
+  })()`);
+  if (!cacheProbe.state) {
+    fail(`timed out waiting for versioned persistent release cache: ${
+      JSON.stringify(cacheProbe)}`);
+  }
+  const resourceCache = await cdp.evaluate(`(async () => {
+    const version = document.getElementById('build-version').textContent
+      .replace(/^\\s*版本\\s*/, '').trim();
+    const name = 'swd2-web-' + version;
+    const cache = await caches.open(name);
+    const entries = (await cache.keys()).map(request => request.url).sort();
+    return {
+      version, name, entries,
+      state: document.documentElement.dataset.resourceCache,
+      controller: Boolean(navigator.serviceWorker.controller),
+      localVersion: localStorage.getItem('swd2-cache-version')
+    };
+  })()`);
+  if (!['installed', 'active'].includes(resourceCache.state)) {
+    fail(`persistent release cache is ${resourceCache.state}: ${
+      JSON.stringify(resourceCache)}`);
+  }
+  for (const name of ['index.js', 'index.wasm', 'index.data']) {
+    if (!resourceCache.entries.some(entry =>
+      entry.endsWith(`${name}?v=${resourceCache.version}`))) {
+      fail(`persistent release cache omitted ${name}`);
+    }
+  }
+  if (resourceCache.localVersion !== resourceCache.version) {
+    fail('persistent release cache did not record its completed version');
+  }
+
+  // Create the same marker written after an explicit in-game Record. The
+  // persistent SAVE/MAPZ/NAME bytes already exist in slot one. On the next
+  // real load the page must offer continuation and pass --resume-marker OC
+  // into C++, reaching the world without replaying MEO/title.
+  await cdp.evaluate(`new Promise((resolve, reject) => {
+    FS.writeFile('/saves/.swd2-last-slot', '1\\n');
+    FS.syncfs(false, error => error ? reject(error) : resolve(true));
+  })`);
+  networkResponses.length = 0;
+  await cdp.send('Page.navigate', {
+    url: `http://127.0.0.1:${httpPort}/?input-self-test=1&quick-resume=1`,
+  });
+  await waitUntil(
+    () => cdp.evaluate(`Boolean(globalThis.Module &&
+      document.documentElement.dataset.resumeSlot === '1' &&
+      !document.getElementById('title-button').hidden)`),
+    'last-slot continuation choice', 30_000);
+  const resumeChoice = await cdp.evaluate(`({
+    slot: document.documentElement.dataset.resumeSlot,
+    label: document.getElementById('start-button').textContent,
+    titleLabel: document.getElementById('title-button').textContent,
+    hint: document.getElementById('resume-hint').textContent
+  })`);
+  const resumeStartRect = await cdp.evaluate(
+    `document.getElementById('start-button').getBoundingClientRect().toJSON()`);
+  const resumeStartX = resumeStartRect.x + resumeStartRect.width / 2;
+  const resumeStartY = resumeStartRect.y + resumeStartRect.height / 2;
+  await cdp.send('Input.dispatchMouseEvent', {
+    type: 'mousePressed', x: resumeStartX, y: resumeStartY,
+    button: 'left', clickCount: 1,
+  });
+  await cdp.send('Input.dispatchMouseEvent', {
+    type: 'mouseReleased', x: resumeStartX, y: resumeStartY,
+    button: 'left', clickCount: 1,
+  });
+  await waitUntil(
+    () => cdp.evaluate(`document.documentElement.dataset.resumeApplied === '1' &&
+      document.documentElement.dataset.started === 'true' &&
+      Array.isArray(Module.swd2InputDeliveries)`),
+    'C++ direct continuation of slot one', 30_000);
+  await cdp.evaluate(
+    `Module.swd2InputDeliveries.length = 0;
+     Module.swd2WorldSamples.length = 0;
+     Module.swd2DirectionQueue.length = 0;
+     Module.swd2HeldDirection = 0`);
+  const resumeDirectionRect = await cdp.evaluate(
+    `document.querySelector('[data-key="ArrowRight"]').getBoundingClientRect().toJSON()`);
+  const resumeX = resumeDirectionRect.x + resumeDirectionRect.width / 2;
+  const resumeY = resumeDirectionRect.y + resumeDirectionRect.height / 2;
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x: resumeX, y: resumeY, id: 8,
+      radiusX: 3, radiusY: 3, force: 1 }],
+  });
+  await waitUntil(
+    () => cdp.evaluate(
+      `Module.swd2InputDeliveries.length >= 10 &&
+       Module.swd2WorldSamples.length >= 10`),
+    'directly resumed RPG world loop', 8_000);
+  const resumeRuntime = await cdp.evaluate(`({
+    deliveries: Module.swd2InputDeliveries.slice(),
+    worldSamples: Module.swd2WorldSamples.slice(),
+    applied: document.documentElement.dataset.resumeApplied
+  })`);
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd', touchPoints: [],
+  });
+  if (resumeRuntime.applied !== '1' || resumeRuntime.deliveries.length < 10 ||
+      resumeRuntime.worldSamples.length < 10) {
+    fail('last-slot direct continuation did not reach the RPG world loop');
+  }
+  const cachedSecondLoad = Object.fromEntries(
+    ['index.js', 'index.wasm', 'index.data'].map(name => {
+      const suffix = `${name}?v=${resourceCache.version}`;
+      const responses = networkResponses.filter(entry => entry.url.endsWith(suffix));
+      return [name, responses.some(entry => entry.fromServiceWorker)];
+    }));
+  if (!Object.values(cachedSecondLoad).every(Boolean)) {
+    fail(`second launch did not use the persistent service-worker cache: ${
+      JSON.stringify({ cachedSecondLoad, networkResponses })}`);
+  }
+
   // Exercise the Web shell's actual two-load IDBFS probe in the same browser
   // profile. The first document writes and syncs a token before reloading;
   // only the second document may expose data-idbfs-self-test=pass after it
@@ -461,6 +623,24 @@ try {
         canvasGeometry.stageLong / canvasGeometry.stageShort,
       right_button_rect: directionRect,
     },
+    resource_cache: {
+      version: resourceCache.version,
+      name: resourceCache.name,
+      first_runtime_state: resourceCache.state,
+      first_runtime_controlled: resourceCache.controller,
+      cached_urls: resourceCache.entries,
+      second_launch_from_service_worker: cachedSecondLoad,
+    },
+    quick_resume: {
+      marker_slot: 1,
+      offered_slot: Number(resumeChoice.slot),
+      continue_label: resumeChoice.label,
+      title_label: resumeChoice.titleLabel,
+      hint: resumeChoice.hint,
+      applied_marker: resumeRuntime.applied,
+      world_deliveries: resumeRuntime.deliveries.length,
+      presented_world_samples: resumeRuntime.worldSamples.length,
+    },
     gesture: {
       touch_start_events: 1,
       requested_world_frames: requestedWorldFrames,
@@ -494,7 +674,7 @@ try {
       result: idbfs.result,
     },
     assets: Object.fromEntries(
-      ['index.html', 'index.js', 'index.wasm', 'index.data'].map(
+      ['index.html', 'index.js', 'index.wasm', 'index.data', 'service-worker.js'].map(
         name => [name, sha256(path.join(options.site, name))])),
   };
   if (options.output) {
@@ -505,6 +685,8 @@ try {
     `WASM browser input: OK (${held.deliveries.length} world-frame ` +
     `deliveries and ${held.worldSamples.length} presented world positions from ` +
     `one uninterrupted trusted touch hold; release stopped at once; ` +
+    `versioned assets came from persistent cache; slot-one quick resume ` +
+    `reached ${resumeRuntime.worldSamples.length} world polls; ` +
     `${options.idbfsCycles} IDBFS restart cycles passed)`);
 } catch (error) {
   if (browserOutput) console.error(browserOutput.slice(-4_000));

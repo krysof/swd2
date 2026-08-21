@@ -53,19 +53,29 @@
 
 namespace {
 
-void persist_browser_saves() {
+void persist_browser_saves(std::uint8_t slot) {
 #ifdef __EMSCRIPTEN__
     // Flush the IDBFS mount installed by web/shell.html. The callback keeps
     // persistence asynchronous and reports failures without stopping play.
     EM_ASM({
         if (typeof FS !== 'undefined' && FS.syncfs) {
+            try {
+                FS.writeFile('/saves/.swd2-last-slot', String($0) + '\n');
+            } catch (error) {
+                document.dispatchEvent(new CustomEvent('swd2-save-sync', {
+                    detail: String(error)
+                }));
+                return;
+            }
             FS.syncfs(false, function(error) {
                 document.dispatchEvent(new CustomEvent('swd2-save-sync', {
                     detail: error ? String(error) : String()
                 }));
             });
         }
-    });
+    }, slot);
+#else
+    static_cast<void>(slot);
 #endif
 }
 
@@ -1055,7 +1065,7 @@ void run_monolithic(const std::filesystem::path& game_root,
             // checkpoint must follow that chosen slot rather than silently
             // writing the command-line seed slot as well.
             slot = swd2::SaveSlot::open(game_root, save_root, selected);
-            persist_browser_saves();
+            persist_browser_saves(selected);
         },
         [&slot, &game_root, &save_root](std::uint8_t selected) {
             slot = swd2::SaveSlot::open(game_root, save_root, selected);
@@ -1179,7 +1189,8 @@ void run_monolithic(const std::filesystem::path& game_root,
 #ifdef SWD2_HAVE_SDL2
 void play_monolithic(const std::filesystem::path& game_root,
                      const std::filesystem::path& save_root,
-                     std::uint8_t slot_number, bool write_save) {
+                     std::uint8_t slot_number, bool write_save,
+                     std::optional<swd2::Marker> resume_marker) {
     swd2::SdlPlatform platform;
     auto slot = swd2::SaveSlot::open(game_root, save_root, slot_number);
     swd2::GameContext context{
@@ -1194,7 +1205,7 @@ void play_monolithic(const std::filesystem::path& game_root,
             // Native renames are durable on return. In a browser /saves is
             // IDBFS, so every explicit system-menu save must also flush the
             // in-memory filesystem instead of waiting for the game to exit.
-            persist_browser_saves();
+            persist_browser_saves(selected);
         },
         [&slot, &game_root, &save_root](std::uint8_t selected) {
             slot = swd2::SaveSlot::open(game_root, save_root, selected);
@@ -1208,7 +1219,12 @@ void play_monolithic(const std::filesystem::path& game_root,
     modules.add(std::make_unique<swd2::RpgModule>());
     modules.add(std::make_unique<swd2::BattleModule>());
     modules.add(std::make_unique<swd2::DemoModule>());
-    static_cast<void>(swd2::MonolithicRuntime(std::move(modules)).run(context));
+    auto runtime = swd2::MonolithicRuntime(std::move(modules));
+    if (resume_marker) {
+        static_cast<void>(runtime.resume(context, *resume_marker));
+    } else {
+        static_cast<void>(runtime.run(context));
+    }
     if (write_save) {
         if (!context.map_database) {
             throw std::runtime_error(
@@ -1216,7 +1232,7 @@ void play_monolithic(const std::filesystem::path& game_root,
         }
         slot.save(context.shared_state, *context.map_database,
                   context.name_font);
-        persist_browser_saves();
+        persist_browser_saves(slot.slot());
     }
 }
 #endif
@@ -2870,7 +2886,8 @@ int main(int argc, char** argv) {
                            start_marker, resume_marker);
         } else if (mode == Mode::play) {
 #ifdef SWD2_HAVE_SDL2
-            play_monolithic(game_root, save_root, slot_number, write_save);
+            play_monolithic(
+                game_root, save_root, slot_number, write_save, resume_marker);
 #else
             throw std::runtime_error("this build has no SDL2 frontend");
 #endif

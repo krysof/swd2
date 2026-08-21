@@ -4,14 +4,14 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 site="${1:-$root/build-wasm/site}"
 
-for name in index.html index.js index.wasm index.data .nojekyll; do
+for name in index.html index.js index.wasm index.data service-worker.js .nojekyll; do
   if [[ ! -f "$site/$name" ]]; then
     echo "error: missing WebAssembly site artifact: $site/$name" >&2
     exit 1
   fi
 done
 
-for name in index.html index.js index.wasm index.data; do
+for name in index.html index.js index.wasm index.data service-worker.js; do
   if [[ ! -s "$site/$name" ]]; then
     echo "error: empty WebAssembly site artifact: $site/$name" >&2
     exit 1
@@ -38,6 +38,10 @@ grep -Fq 'index.data' "$site/index.js" || {
 }
 grep -Fq 'swd2HeldDirection' "$site/index.js" || {
   echo "error: index.js does not poll held-touch direction state" >&2
+  exit 1
+}
+grep -Fq '/saves/.swd2-last-slot' "$site/index.js" || {
+  echo "error: compiled Web runtime does not persist the last recorded slot" >&2
   exit 1
 }
 
@@ -71,6 +75,10 @@ for pattern in \
   "Module.SDL2" \
   "navigator.wakeLock" \
   "visibilitychange" \
+  "serviceWorker.register" \
+  "swd2-cache-version" \
+  "swd2-last-slot" \
+  "resume-marker" \
   "screen.orientation.lock" \
   "orientation:portrait" \
   "rotate(90deg)" \
@@ -92,6 +100,10 @@ for pattern in \
 done
 if grep -Fq '__SWD2_RELEASE_VERSION__' "$site/index.html"; then
   echo "error: index.html still contains the unreplaced Web release version" >&2
+  exit 1
+fi
+if grep -Fq '__SWD2_RELEASE_VERSION__' "$site/service-worker.js"; then
+  echo "error: service-worker.js still contains the unreplaced Web release version" >&2
   exit 1
 fi
 if grep -Fq "aspect-ratio:4/3" "$site/index.html"; then
@@ -142,6 +154,31 @@ for label in ▲ ▼ ◀ ▶ ESC 回车; do
     exit 1
   }
 done
+grep -Fq '>从标题开始</button>' "$site/index.html" || {
+  echo "error: index.html has no opt-out from direct save continuation" >&2
+  exit 1
+}
+
+version="$(grep -oE '版本[[:space:]]+[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.(dev|[0-9]+)' \
+  "$site/index.html" | head -n 1 | sed -E 's/^版本[[:space:]]+//')"
+if [[ -z "$version" ]]; then
+  echo "error: cannot recover Web version for service-worker verification" >&2
+  exit 1
+fi
+for pattern in \
+  "const releaseVersion = '$version'" \
+  "const cachePrefix = 'swd2-web-'" \
+  '`./index.js?v=${releaseVersion}`' \
+  '`./index.wasm?v=${releaseVersion}`' \
+  '`./index.data?v=${releaseVersion}`' \
+  "cache.addAll" \
+  "self.clients.claim"; do
+  grep -Fq "$pattern" "$site/service-worker.js" || {
+    echo "error: service-worker.js is missing versioned cache behavior: $pattern" >&2
+    exit 1
+  }
+done
+node --check "$site/service-worker.js"
 if grep -Eq 'id=("fullscreen"|fullscreen)([[:space:]>])' "$site/index.html"; then
   echo "error: index.html unexpectedly exposes a fullscreen control" >&2
   exit 1

@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "kind": "wasm_browser_runtime_checks",
+  "status": "verified",
+  "limitation": "Headless desktop Edge with mobile emulation is not a physical iOS/Android device test.",
+  "browser": "Edg/151.0.4129.93",
+  "protocol_version": "1.3",
+  "host": {
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "device_scale_factor": 2
+  },
+  "layout": {
+    "portrait_rotation_applied": true,
+    "canvas_backing": {
+      "width": 960,
+      "height": 600,
+      "aspect": "8:5"
+    },
+    "stage_long_to_short_ratio": 1.6,
+    "right_button_rect": {
+      "x": 148.5,
+      "y": 111,
+      "width": 44,
+      "height": 48,
+      "top": 111,
+      "right": 192.5,
+      "bottom": 159,
+      "left": 148.5
+    }
+  },
+  "resource_cache": {
+    "version": "2026.08.21.5",
+    "name": "swd2-web-2026.08.21.5",
+    "first_runtime_state": "active",
+    "first_runtime_controlled": true,
+    "cached_urls": [
+      "http://127.0.0.1:63724/index.data?v=2026.08.21.5",
+      "http://127.0.0.1:63724/index.html",
+      "http://127.0.0.1:63724/index.js?v=2026.08.21.5",
+      "http://127.0.0.1:63724/index.wasm?v=2026.08.21.5"
+    ],
+    "second_launch_from_service_worker": {
+      "index.js": true,
+      "index.wasm": true,
+      "index.data": true
+    }
+  },
+  "quick_resume": {
+    "marker_slot": 1,
+    "offered_slot": 1,
+    "continue_label": "继续上次存档（槽 1）",
+    "title_label": "从标题开始",
+    "hint": "检测到浏览器存档，可直接继续。",
+    "applied_marker": "1",
+    "world_deliveries": 11,
+    "presented_world_samples": 11
+  },
+  "gesture": {
+    "touch_start_events": 1,
+    "requested_world_frames": 69,
+    "hold_milliseconds": 2558.324999988079,
+    "touch_end_events": 1,
+    "direction": "right",
+    "wasm_world_deliveries": 69,
+    "first_to_last_delivery_milliseconds": 2513.410000026226,
+    "deliveries_before_release_fence": 0,
+    "deliveries_after_release_fence": 0,
+    "presented_world_samples": 69,
+    "world_start": {
+      "x": 127,
+      "y": 13,
+      "screen_x": 38,
+      "screen_y": 80,
+      "viewport_x": 107,
+      "viewport_y": 1
+    },
+    "world_finish": {
+      "x": 138,
+      "y": 15,
+      "screen_x": 38,
+      "screen_y": 80,
+      "viewport_x": 118,
+      "viewport_y": 3
+    }
+  },
+  "idbfs": {
+    "cycles": 1,
+    "initial_sync": "completed",
+    "exact_probe_write": "completed",
+    "page_reloads": 1,
+    "restored_bytes": "exact",
+    "cleanup_sync": "completed",
+    "result": "pass"
+  },
+  "assets": {
+    "index.html": "8072675daf416260f4f084b2b8ad833b0cdda4fe2c64295de2bd246b153e19d0",
+    "index.js": "44c3c88e6899c4b36e95f6ce437983908f3c2180da01b767842339b4d032dc2e",
+    "index.wasm": "db409c1c96e93df2b076f339bb6987b7f3fdb9c675e8adf161a8818694b2fc71",
+    "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a",
+    "service-worker.js": "bb62ca3d1a885153965f6375de909c41fd800e63bc87103d3734ea76c9f9dca0"
+  }
+}

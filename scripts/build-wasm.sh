@@ -23,13 +23,16 @@ emcmake cmake -S "$root" -B "$build_dir" -G Ninja \
 cmake --build "$build_dir" --parallel
 
 web_version="${SWD2_WEB_VERSION:-$(TZ=Asia/Tokyo date +%Y.%m.%d).dev}"
-python3 - "$build_dir/site/index.html" "$web_version" <<'PY'
+cp "$root/src/web/service-worker.js" "$build_dir/site/service-worker.js"
+python3 - "$build_dir/site/index.html" "$build_dir/site/service-worker.js" \
+    "$web_version" <<'PY'
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
-version = sys.argv[2]
+worker_path = pathlib.Path(sys.argv[2])
+version = sys.argv[3]
 if not re.fullmatch(r"\d{4}\.\d{2}\.\d{2}\.(?:\d+|dev)", version):
     raise SystemExit(f"error: invalid Web release version: {version}")
 html = path.read_text(encoding="utf-8")
@@ -58,6 +61,14 @@ for asset in ("index.wasm", "index.data"):
     if asset_count == 0:
         raise SystemExit(f"error: index.js does not reference {asset}")
 javascript_path.write_text(javascript, encoding="utf-8")
+
+worker = worker_path.read_text(encoding="utf-8")
+worker, worker_count = re.subn(
+    r"__SWD2_RELEASE_VERSION__", version, worker)
+if worker_count != 1:
+    raise SystemExit(
+        f"error: expected one service-worker version token, replaced {worker_count}")
+worker_path.write_text(worker, encoding="utf-8")
 PY
 touch "$build_dir/site/.nojekyll"
 "$root/scripts/verify-wasm.sh" "$build_dir/site"

@@ -2449,6 +2449,22 @@ Web 触摸层重新暴露上、下、左、右与 ESC/回车六键；世界主�
 WASM 的阻塞输入循环还必须在每次 `emscripten_sleep(10)` 恢复后重新读取这份 JS 状态：
 触摸方向不会产生 SDL 事件，旧实现只在进入 `wait_for_input` 前采样一次，手指若在菜单已经
 等待后才按下便永远不可见。现在每次协作式恢复均先取快速点击/保持电平，再检查 SDL 队列。
+
+Web 启动边界现同时分开处理“网络发行资源”和“游戏存档状态”。发行资源由带完整版本号的
+Service Worker 缓存；安装必须先成功 `cache.addAll` 当前 `index.html`、JS、WASM 与 DATA，
+才写入本地完成标记。导航采用 network-first 发现新 HTML，而同版本的三个大资源采用
+cache-first；激活会清除其他 `swd2-web-*` 版本。因而第一次下载之后仍会看到 WASM 初始化和
+DATA 挂载进度，但同版本第二次页面生命周期不得再次从网络取得大包。
+
+存档仍以 IDBFS 中游戏明确执行“记录”后提交的 DOS 槽为权威。C++ 保存回调在同一次
+`syncfs(false)` 前写入 `.swd2-last-slot`；下次 `syncfs(true)` 完成后，页面才允许把
+`--slot N --resume-marker OC` 加入统一程序参数，避免用户点击和异步恢复之间的竞态。
+直接续玩调用 `MonolithicRuntime::resume`，所以是从已保存的安全 RPG/OC 边界进入同一个
+C++ 进程，不是另一个 EXE 或脚本跳转。用户可显式选“从标题开始”；任意战斗中间的内存栈
+不做不安全快照。没有标记的旧 IDBFS 槽只在其 SAVE 字节不同于发行初始槽时按最新 mtime
+迁移。真实 Edge runner 会枚举缓存键、确认第二次 JS/WASM/DATA 响应的
+`fromServiceWorker`，并用同样的最后槽标记证明续玩后至少 10 次 C++ 世界轮询。
+
 新增无第三方依赖的真实浏览器边界 runner 会启动已安装的 Chromium/Edge，模拟
 390×844 竖屏、用可信 CDP 鼠标手势越过声音启动页并走到 RPG 世界，然后只发送一次
 `touchStart`，保持到至少 69 次真实 WASM 世界轮询，再只发送一次 `touchEnd`。
