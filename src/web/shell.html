@@ -219,6 +219,19 @@
       }
     }
 
+    function recordCanvasBackingAspect() {
+      const valid = canvas.width > 0 && canvas.height > 0 &&
+        canvas.width * 5 === canvas.height * 8;
+      document.documentElement.dataset.canvasBacking =
+        `${canvas.width}x${canvas.height}`;
+      document.documentElement.dataset.canvasBackingAspect = valid ? '8:5' : 'invalid';
+      if (!valid) {
+        errorText.textContent =
+          `画面缓冲区比例异常：${canvas.width}×${canvas.height}，需要 8:5。`;
+      }
+      return valid;
+    }
+
     function beginGame(event) {
       event.preventDefault();
       startRequested = true;
@@ -362,6 +375,10 @@
       },
       onRuntimeInitialized() {
         statusWrap.classList.add('ready');
+        // Emscripten calls this hook immediately before main(). SDL creates
+        // and sizes its canvas inside main, so inspect it on the next task
+        // rather than recording the browser's default 300x150 too early.
+        setTimeout(recordCanvasBackingAspect, 0);
         unlockWebAudio();
         canvas.focus();
       },

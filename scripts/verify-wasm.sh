@@ -77,6 +77,7 @@ for pattern in \
   "width:100%!important" \
   "height:100%!important" \
   "aspect-ratio:8/5" \
+  "canvasBackingAspect" \
   "grid-template-columns:154px minmax(0,1fr) 206px" \
   "grid-column:1" \
   "grid-column:2" \
@@ -97,6 +98,11 @@ if grep -Fq "aspect-ratio:4/3" "$site/index.html"; then
   echo "error: index.html compresses the 320x200 framebuffer into 4:3" >&2
   exit 1
 fi
+grep -Fq "browser SDL canvas backing store is not fixed at 960x600" \
+  "$site/index.wasm" || {
+  echo "error: Web runtime does not enforce a fixed landscape SDL backing store" >&2
+  exit 1
+}
 python3 - "$site/index.html" <<'PY'
 import pathlib
 import re

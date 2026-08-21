@@ -279,6 +279,28 @@ try {
       `document.documentElement.dataset.started === 'true' &&
        Array.isArray(Module.swd2InputDeliveries)`),
     'trusted start gesture and WASM runtime');
+  await waitUntil(
+    () => cdp.evaluate(
+      `Boolean(document.documentElement.dataset.canvasBackingAspect)`),
+    'SDL canvas backing-store initialization', 60_000);
+
+  const canvasGeometry = await cdp.evaluate(`(() => {
+    const canvas = document.getElementById('canvas');
+    const stage = document.getElementById('stage').getBoundingClientRect();
+    return {
+      backingWidth: canvas.width,
+      backingHeight: canvas.height,
+      backingAspect: document.documentElement.dataset.canvasBackingAspect || '',
+      stageShort: Math.min(stage.width, stage.height),
+      stageLong: Math.max(stage.width, stage.height),
+    };
+  })()`);
+  if (canvasGeometry.backingWidth * 5 !== canvasGeometry.backingHeight * 8 ||
+      canvasGeometry.backingAspect !== '8:5' ||
+      Math.abs(canvasGeometry.stageLong / canvasGeometry.stageShort - 8 / 5) > 0.01) {
+    fail(`portrait mobile canvas does not preserve 320x200 geometry: ${
+      JSON.stringify(canvasGeometry)}`);
+  }
 
   const sleep = milliseconds => new Promise(
     resolve => setTimeout(resolve, milliseconds));
@@ -428,7 +450,17 @@ try {
     protocol_version: version.protocolVersion,
     host: { platform: process.platform, architecture: process.arch },
     viewport: { width: 390, height: 844, device_scale_factor: 2 },
-    layout: { portrait_rotation_applied: true, right_button_rect: directionRect },
+    layout: {
+      portrait_rotation_applied: true,
+      canvas_backing: {
+        width: canvasGeometry.backingWidth,
+        height: canvasGeometry.backingHeight,
+        aspect: canvasGeometry.backingAspect,
+      },
+      stage_long_to_short_ratio:
+        canvasGeometry.stageLong / canvasGeometry.stageShort,
+      right_button_rect: directionRect,
+    },
     gesture: {
       touch_start_events: 1,
       requested_world_frames: requestedWorldFrames,

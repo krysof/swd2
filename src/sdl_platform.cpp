@@ -486,9 +486,23 @@ SdlPlatform::SdlPlatform() : impl_(std::make_unique<Impl>()) {
                  SDL_INIT_GAMECONTROLLER) != 0) {
         fail_sdl("SDL_Init");
     }
+    // The browser shell rotates its landscape layout with CSS while iOS stays
+    // in a portrait viewport.  Emscripten treats a resizable, externally sized
+    // canvas as the transformed portrait bounding box and changes the backing
+    // store to (for example) 600x960. SDL then letterboxes 320x200 into that
+    // portrait buffer, after which CSS stretches the whole buffer back to a
+    // landscape box: the result is the thin, vertically crushed strip seen on
+    // iOS. Keep the Web backing store at a fixed 960x600; CSS alone scales and
+    // rotates it. Native windows remain freely resizable and HiDPI-aware.
+#ifdef __EMSCRIPTEN__
+    constexpr auto window_flags = std::uint32_t{0};
+#else
+    constexpr auto window_flags =
+        std::uint32_t{SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI};
+#endif
     impl_->window = SDL_CreateWindow("轩辕剑2 · SWD2", SDL_WINDOWPOS_CENTERED,
                                      SDL_WINDOWPOS_CENTERED, 960, 600,
-                                     SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+                                     window_flags);
     if (!impl_->window) fail_sdl("SDL_CreateWindow");
     impl_->renderer = SDL_CreateRenderer(
         impl_->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -496,6 +510,18 @@ SdlPlatform::SdlPlatform() : impl_(std::make_unique<Impl>()) {
         impl_->renderer = SDL_CreateRenderer(impl_->window, -1, SDL_RENDERER_SOFTWARE);
     }
     if (!impl_->renderer) fail_sdl("SDL_CreateRenderer");
+#ifdef __EMSCRIPTEN__
+    int backing_width = 0;
+    int backing_height = 0;
+    if (SDL_GetRendererOutputSize(impl_->renderer, &backing_width,
+                                  &backing_height) != 0) {
+        fail_sdl("SDL_GetRendererOutputSize");
+    }
+    if (backing_width != 960 || backing_height != 600) {
+        throw std::runtime_error(
+            "browser SDL canvas backing store is not fixed at 960x600");
+    }
+#endif
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
     SDL_RenderSetIntegerScale(impl_->renderer, SDL_TRUE);
     for (auto device = 0; device < SDL_NumJoysticks(); ++device) {
