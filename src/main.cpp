@@ -1190,7 +1190,8 @@ void run_monolithic(const std::filesystem::path& game_root,
 void play_monolithic(const std::filesystem::path& game_root,
                      const std::filesystem::path& save_root,
                      std::uint8_t slot_number, bool write_save,
-                     std::optional<swd2::Marker> resume_marker) {
+                     std::optional<swd2::Marker> resume_marker,
+                     bool resume_loaded_save) {
     swd2::SdlPlatform platform;
     auto slot = swd2::SaveSlot::open(game_root, save_root, slot_number);
     swd2::GameContext context{
@@ -1216,11 +1217,17 @@ void play_monolithic(const std::filesystem::path& game_root,
     };
     swd2::ModuleRegistry modules;
     modules.add(std::make_unique<swd2::MeoModule>());
-    modules.add(std::make_unique<swd2::RpgModule>());
+    modules.add(std::make_unique<swd2::RpgModule>(resume_loaded_save));
     modules.add(std::make_unique<swd2::BattleModule>());
     modules.add(std::make_unique<swd2::DemoModule>());
     auto runtime = swd2::MonolithicRuntime(std::move(modules));
-    if (resume_marker) {
+    if (resume_loaded_save) {
+        // MT normally opens RPG's title. The specially configured RPG module
+        // consumes it at the point immediately after Continue has already
+        // loaded this slot. OC is deliberately not used: OC means FIG has
+        // returned and would execute SAVE+51c as a battle callback.
+        static_cast<void>(runtime.resume(context, swd2::Marker::menu_ready));
+    } else if (resume_marker) {
         static_cast<void>(runtime.resume(context, *resume_marker));
     } else {
         static_cast<void>(runtime.run(context));
@@ -2724,7 +2731,8 @@ void usage(const char* program) {
                  " [--frame-output FILE.swd2frames] [--boundary-output DIR]\n";
 #ifdef SWD2_HAVE_SDL2
     std::cout << "  " << program
-              << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save] --play\n";
+              << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save]"
+                 " [--resume-save] --play\n";
 #endif
 }
 
@@ -2749,6 +2757,7 @@ int main(int argc, char** argv) {
         std::optional<std::filesystem::path> event_manifest;
         std::optional<swd2::Marker> start_marker;
         std::optional<swd2::Marker> resume_marker;
+        bool resume_loaded_save = false;
         bool strict_replay = false;
         std::size_t render_index = 0;
 
@@ -2824,6 +2833,8 @@ int main(int argc, char** argv) {
                 start_marker = parse_marker(argv[++i]);
             } else if (argument == "--resume-marker" && i + 1 < argc) {
                 resume_marker = parse_marker(argv[++i]);
+            } else if (argument == "--resume-save") {
+                resume_loaded_save = true;
             } else if (argument == "--play") {
                 mode = Mode::play;
             } else if (argument == "--help" || argument == "-h") {
@@ -2838,6 +2849,13 @@ int main(int argc, char** argv) {
         if (start_marker && resume_marker) {
             throw std::runtime_error(
                 "--start-marker and --resume-marker are mutually exclusive");
+        }
+        if (resume_loaded_save && (start_marker || resume_marker)) {
+            throw std::runtime_error(
+                "--resume-save cannot be combined with a launcher marker");
+        }
+        if (resume_loaded_save && mode != Mode::play) {
+            throw std::runtime_error("--resume-save requires --play");
         }
         if (replay_trace && mode != Mode::run) {
             throw std::runtime_error("--trace-output requires --run-script or --run-replay");
@@ -2887,7 +2905,8 @@ int main(int argc, char** argv) {
         } else if (mode == Mode::play) {
 #ifdef SWD2_HAVE_SDL2
             play_monolithic(
-                game_root, save_root, slot_number, write_save, resume_marker);
+                game_root, save_root, slot_number, write_save, resume_marker,
+                resume_loaded_save);
 #else
             throw std::runtime_error("this build has no SDL2 frontend");
 #endif

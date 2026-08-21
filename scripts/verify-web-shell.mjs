@@ -342,7 +342,7 @@ if (earlyResumePage.dependencies.size !== 1 ||
 earlyResumePage.finishRestore();
 if (earlyResumePage.dependencies.size !== 0 ||
     earlyResumePage.context.Module.arguments.join('|') !==
-      '--game|/game|--save-dir|/saves|--play|--slot|3|--resume-marker|OC' ||
+      '--game|/game|--save-dir|/saves|--play|--slot|3|--resume-save' ||
     earlyResumePage.context.document.documentElement.dataset.resumeApplied !== '3') {
   throw new Error('last-slot resume arguments were not applied after restoration');
 }

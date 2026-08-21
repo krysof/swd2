@@ -168,6 +168,8 @@
     const idbfsSelfTestReport = selfTestParameters.get('idbfs-report');
     const inputSelfTestEnabled =
       selfTestParameters.get('input-self-test') === '1';
+    const audioRateSelfTest = inputSelfTestEnabled
+      ? Number(selfTestParameters.get('audio-rate-self-test')) : 0;
     const idbfsSelfTestSessionKey = 'swd2-idbfs-self-test-token';
     const idbfsSelfTestPath = '/saves/.swd2-idbfs-restart-probe';
     let startRequested = Boolean(idbfsSelfTestToken);
@@ -265,8 +267,7 @@
         document.documentElement.dataset.resumeApplied = 'title';
         return;
       }
-      Module.arguments.push(
-        '--slot', String(slot), '--resume-marker', 'OC');
+      Module.arguments.push('--slot', String(slot), '--resume-save');
       document.documentElement.dataset.resumeApplied = String(slot);
     }
 
@@ -285,7 +286,9 @@
         if (!Module.SDL2.audioContext && AudioContextClass) {
           // Create the exact context later reused by Emscripten SDL while the
           // browser still considers this call part of the start-button gesture.
-          Module.SDL2.audioContext = new AudioContextClass();
+          Module.SDL2.audioContext = audioRateSelfTest
+            ? new AudioContextClass({ sampleRate: audioRateSelfTest })
+            : new AudioContextClass();
         }
         const context = Module.SDL2.audioContext;
         if (context && context.state !== 'running') {

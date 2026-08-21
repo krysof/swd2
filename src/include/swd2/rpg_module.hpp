@@ -10,6 +10,9 @@ namespace swd2 {
 
 class RpgModule final : public GameModule {
 public:
+    explicit RpgModule(bool start_from_loaded_save = false) noexcept
+        : start_from_loaded_save_(start_from_loaded_save) {}
+
     [[nodiscard]] Module module() const noexcept override { return Module::rpg; }
     Marker run(GameContext& context, Marker input) override;
 
@@ -19,6 +22,7 @@ private:
     bool pending_map_reload_{};
     bool music_enabled_{true};
     bool sound_enabled_{true};
+    bool start_from_loaded_save_{};
 };
 
 }  // namespace swd2

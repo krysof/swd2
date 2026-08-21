@@ -2458,12 +2458,18 @@ DATA 挂载进度，但同版本第二次页面生命周期不得再次从网络
 
 存档仍以 IDBFS 中游戏明确执行“记录”后提交的 DOS 槽为权威。C++ 保存回调在同一次
 `syncfs(false)` 前写入 `.swd2-last-slot`；下次 `syncfs(true)` 完成后，页面才允许把
-`--slot N --resume-marker OC` 加入统一程序参数，避免用户点击和异步恢复之间的竞态。
-直接续玩调用 `MonolithicRuntime::resume`，所以是从已保存的安全 RPG/OC 边界进入同一个
-C++ 进程，不是另一个 EXE 或脚本跳转。用户可显式选“从标题开始”；任意战斗中间的内存栈
+`--slot N --resume-save` 加入统一程序参数，避免用户点击和异步恢复之间的竞态。
+直接续玩以 MT 启动一个明确配置成“标题已经读完槽”的 RPG 模块，从 Continue 载入完成处
+进入同一个 C++ 进程。它不能使用 `OC`：OC 是 FIG 返回标记，会消费 SAVE+51c 的战后实体
+回调；把普通存档误标成 OC 会重入错误剧情/战斗。用户可显式选“从标题开始”；任意战斗中间的内存栈
 不做不安全快照。没有标记的旧 IDBFS 槽只在其 SAVE 字节不同于发行初始槽时按最新 mtime
 迁移。真实 Edge runner 会枚举缓存键、确认第二次 JS/WASM/DATA 响应的
 `fromServiceWorker`，并用同样的最后槽标记证明续玩后至少 10 次 C++ 世界轮询。
+
+浏览器音乐不再把 Web Audio 设备频率当成 RIX 合成频率。合成固定在已审计的 44.1 kHz，
+再由 SDL AudioStream 转换到设备上下文频率；真实 Edge runner 强制创建 48-kHz AudioContext，
+并要求 C++ 报告的合成率仍为 44.1 kHz、上下文保持 running，锁住移动/嵌入浏览器中音高不随
+设备采样率变化的边界。
 
 新增无第三方依赖的真实浏览器边界 runner 会启动已安装的 Chromium/Edge，模拟
 390×844 竖屏、用可信 CDP 鼠标手势越过声音启动页并走到 RPG 世界，然后只发送一次

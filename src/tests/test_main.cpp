@@ -11152,6 +11152,33 @@ void test_rpg_post_battle_entity_continuation(
             "RPG OC continuation lost event 338 dialogue/voice/world boundaries");
 }
 
+void test_rpg_loaded_save_entry_ignores_post_battle_callback(
+    const std::filesystem::path& game_root) {
+    auto database = std::make_shared<swd2::MapDatabase>(
+        swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    swd2::install_map_location(state, *database, 122U);
+
+    // A normal save can retain the field used only by OC after FIG returns.
+    // Browser quick continuation has already performed the title's slot load,
+    // so it must enter the ordinary world without consuming or clearing this
+    // value as a post-battle entity callback.
+    state.set_u16(0x51cU, 42U);
+    ScriptedPlatform platform;
+    platform.actions = {swd2::InputAction::quit};
+    swd2::GameContext context{game_root, state, platform};
+    context.map_database = database;
+
+    require(swd2::RpgModule(true).run(
+                context, swd2::Marker::menu_ready) == swd2::Marker::none,
+            "direct loaded-save entry did not return from the world loop");
+    require(context.shared_state.battle_auxiliary() == 42U &&
+                context.shared_state.map_location_directory_offset() == 122U &&
+                platform.cursor == 1U && platform.poll_calls == 1U &&
+                platform.wait_calls == 0U && platform.voice_calls == 0U,
+            "direct loaded-save entry was mistaken for the OC battle callback");
+}
+
 void test_rpg_compact_money_overlay(const std::filesystem::path& game_root) {
     auto database = std::make_shared<swd2::MapDatabase>(
         swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
@@ -12567,6 +12594,7 @@ int main(int argc, char** argv) {
         test_rpg_automatic_entity_event(argv[1]);
         test_rpg_event_voice(argv[1]);
         test_rpg_post_battle_entity_continuation(argv[1]);
+        test_rpg_loaded_save_entry_ignores_post_battle_callback(argv[1]);
         test_rpg_compact_money_overlay(argv[1]);
         test_rpg_dialogue_then_money_overlay(argv[1]);
         test_rpg_shop_confirmation(argv[1]);

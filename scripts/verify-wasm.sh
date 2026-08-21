@@ -44,6 +44,10 @@ grep -Fq '/saves/.swd2-last-slot' "$site/index.js" || {
   echo "error: compiled Web runtime does not persist the last recorded slot" >&2
   exit 1
 }
+grep -Fq 'swd2AudioSynthesisRate' "$site/index.js" || {
+  echo "error: compiled Web runtime does not expose its fixed music rate" >&2
+  exit 1
+}
 
 grep -Fq '轩辕剑2' "$site/index.html" || {
   echo "error: index.html does not identify the game as 轩辕剑2" >&2
@@ -78,7 +82,8 @@ for pattern in \
   "serviceWorker.register" \
   "swd2-cache-version" \
   "swd2-last-slot" \
-  "resume-marker" \
+  "resume-save" \
+  "audio-rate-self-test" \
   "screen.orientation.lock" \
   "orientation:portrait" \
   "rotate(90deg)" \
@@ -113,6 +118,11 @@ fi
 grep -Fq "browser SDL canvas backing store is not fixed at 960x600" \
   "$site/index.wasm" || {
   echo "error: Web runtime does not enforce a fixed landscape SDL backing store" >&2
+  exit 1
+}
+grep -Fq "browser audio synthesis rate is not fixed at 44100 Hz" \
+  "$site/index.wasm" || {
+  echo "error: Web runtime does not enforce fixed 44.1-kHz music synthesis" >&2
   exit 1
 }
 python3 - "$site/index.html" <<'PY'

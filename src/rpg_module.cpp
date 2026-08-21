@@ -4748,7 +4748,17 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
 
     std::optional<std::size_t> startup_event_entity;
     std::optional<std::size_t> post_battle_event_entity;
-    if (input_marker == Marker::menu_ready) {
+    if (input_marker == Marker::menu_ready && start_from_loaded_save_) {
+        // The Web quick-continue frontend has already selected and loaded a
+        // complete SAVE/MAPZ/NAME triple. This is the state immediately after
+        // RPG's title Continue selector, not the OC entry used when FIG has
+        // just returned. In particular, SAVE+51c may contain an old value in
+        // an ordinary save and must not be interpreted as a post-battle entity
+        // callback merely because the browser skipped the visible title.
+        start_from_loaded_save_ = false;
+        perturb_rpg_load_cursor(
+            context.shared_state, context.platform.clock_time().hundredth);
+    } else if (input_marker == Marker::menu_ready) {
         // RPG:0119 seeds the shared LOAD/code cursor from DOS DL before the
         // title loop.  A later Continue selection calls 4c16 and seeds the
         // freshly loaded slot once more at 4cae.

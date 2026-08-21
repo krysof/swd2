@@ -468,8 +468,18 @@ struct SdlPlatform::Impl {
         desired.callback = &Impl::audio_callback;
         desired.userdata = this;
         SDL_AudioSpec obtained{};
+#ifdef __EMSCRIPTEN__
+        // Always synthesize browser music at the audited 44.1-kHz rate and
+        // let SDL's AudioStream convert to the Web Audio device rate. Safari
+        // commonly exposes 48 kHz; accepting that as the callback frequency
+        // makes the synthesis boundary device-dependent and has produced
+        // perceptibly sharp playback in embedded browser contexts.
+        constexpr auto allowed_changes = 0;
+#else
+        constexpr auto allowed_changes = SDL_AUDIO_ALLOW_FREQUENCY_CHANGE;
+#endif
         audio_device = SDL_OpenAudioDevice(
-            nullptr, 0, &desired, &obtained, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
+            nullptr, 0, &desired, &obtained, allowed_changes);
         if (audio_device == 0) fail_sdl("SDL_OpenAudioDevice");
         if (obtained.format != AUDIO_S16SYS || obtained.channels != 1) {
             SDL_CloseAudioDevice(audio_device);
@@ -477,6 +487,22 @@ struct SdlPlatform::Impl {
             throw std::runtime_error("SDL audio backend cannot accept mono S16 audio");
         }
         audio_rate = obtained.freq;
+#ifdef __EMSCRIPTEN__
+        if (audio_rate != 44'100) {
+            SDL_CloseAudioDevice(audio_device);
+            audio_device = 0;
+            throw std::runtime_error(
+                "browser audio synthesis rate is not fixed at 44100 Hz");
+        }
+        EM_ASM({
+            Module.swd2AudioSynthesisRate = $0;
+            const context = Module.SDL2 && Module.SDL2.audioContext;
+            Module.swd2AudioContextRate = context ? context.sampleRate : 0;
+            document.documentElement.dataset.audioSynthesisRate = String($0);
+            document.documentElement.dataset.audioContextRate =
+                String(Module.swd2AudioContextRate || 0);
+        }, audio_rate);
+#endif
         SDL_PauseAudioDevice(audio_device, 0);
     }
 };

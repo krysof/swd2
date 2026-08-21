@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 // Real-browser boundary test for touch hold, persistent release caching,
-// direct continuation of the last recorded slot, and IDBFS restart. The WASM
+// direct continuation of the last recorded slot, fixed-rate browser music,
+// and IDBFS restart. The WASM
 // polling boundary records deliveries only when ?input-self-test=1 is present,
 // proving the input crossed DOM -> generated JS -> ASYNCIFY -> SDL C++.
 
@@ -279,7 +280,8 @@ try {
   await cdp.send('Emulation.setTouchEmulationEnabled', {
     enabled: true, maxTouchPoints: 1,
   });
-  const url = `http://127.0.0.1:${httpPort}/?input-self-test=1`;
+  const url = `http://127.0.0.1:${httpPort}/?input-self-test=1` +
+    `&audio-rate-self-test=48000`;
   await cdp.send('Page.navigate', { url });
   await waitUntil(
     () => cdp.evaluate(`Boolean(globalThis.Module &&
@@ -347,6 +349,23 @@ try {
   await key('ArrowDown', 'ArrowDown');
   for (let index = 0; index < 3; ++index) await key('Enter', 'Enter');
   await sleep(2_500);
+
+  await waitUntil(
+    () => cdp.evaluate(
+      `Number(Module.swd2AudioSynthesisRate) > 0 &&
+       Number(Module.swd2AudioContextRate) > 0`),
+    'fixed browser music synthesis rate', 30_000);
+  const audioRuntime = await cdp.evaluate(`({
+    synthesisRate: Number(Module.swd2AudioSynthesisRate),
+    contextRate: Number(Module.swd2AudioContextRate),
+    contextState: Module.SDL2.audioContext.state
+  })`);
+  if (audioRuntime.synthesisRate !== 44_100 ||
+      audioRuntime.contextRate !== 48_000 ||
+      audioRuntime.contextState !== 'running') {
+    fail(`browser audio did not keep 44.1-kHz synthesis across a 48-kHz ` +
+      `Web Audio device: ${JSON.stringify(audioRuntime)}`);
+  }
 
   await cdp.evaluate(
     `Module.swd2InputDeliveries.length = 0;
@@ -492,17 +511,23 @@ try {
     fail('persistent release cache did not record its completed version');
   }
 
-  // Create the same marker written after an explicit in-game Record. The
-  // persistent SAVE/MAPZ/NAME bytes already exist in slot one. On the next
-  // real load the page must offer continuation and pass --resume-marker OC
-  // into C++, reaching the world without replaying MEO/title.
+  // Create the same marker written after an explicit in-game Record. Leave a
+  // nonzero value in SAVE+51c as ordinary saves are allowed to do: direct
+  // loading must not mistake it for OC's post-battle entity callback. On the
+  // next real load the page must pass --resume-save into C++ and reach the
+  // world without replaying MEO/title.
   await cdp.evaluate(`new Promise((resolve, reject) => {
+    const save = FS.readFile('/saves/SAVE.DA1');
+    save[0x51c] = 42;
+    save[0x51d] = 0;
+    FS.writeFile('/saves/SAVE.DA1', save);
     FS.writeFile('/saves/.swd2-last-slot', '1\\n');
     FS.syncfs(false, error => error ? reject(error) : resolve(true));
   })`);
   networkResponses.length = 0;
   await cdp.send('Page.navigate', {
-    url: `http://127.0.0.1:${httpPort}/?input-self-test=1&quick-resume=1`,
+    url: `http://127.0.0.1:${httpPort}/?input-self-test=1` +
+      `&audio-rate-self-test=48000&quick-resume=1`,
   });
   await waitUntil(
     () => cdp.evaluate(`Boolean(globalThis.Module &&
@@ -556,12 +581,23 @@ try {
     worldSamples: Module.swd2WorldSamples.slice(),
     applied: document.documentElement.dataset.resumeApplied
   })`);
+  const resumeAudio = await cdp.evaluate(`({
+    synthesisRate: Number(Module.swd2AudioSynthesisRate),
+    contextRate: Number(Module.swd2AudioContextRate),
+    contextState: Module.SDL2.audioContext.state
+  })`);
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchEnd', touchPoints: [],
   });
   if (resumeRuntime.applied !== '1' || resumeRuntime.deliveries.length < 10 ||
       resumeRuntime.worldSamples.length < 10) {
     fail('last-slot direct continuation did not reach the RPG world loop');
+  }
+  if (resumeAudio.synthesisRate !== 44_100 ||
+      resumeAudio.contextRate !== 48_000 ||
+      resumeAudio.contextState !== 'running') {
+    fail(`directly resumed music lost its fixed synthesis rate: ${
+      JSON.stringify(resumeAudio)}`);
   }
   const cachedSecondLoad = Object.fromEntries(
     ['index.js', 'index.wasm', 'index.data'].map(name => {
@@ -631,13 +667,23 @@ try {
       cached_urls: resourceCache.entries,
       second_launch_from_service_worker: cachedSecondLoad,
     },
+    audio: {
+      synthesis_rate_hz: audioRuntime.synthesisRate,
+      forced_test_context_rate_hz: audioRuntime.contextRate,
+      context_state: audioRuntime.contextState,
+      resumed_synthesis_rate_hz: resumeAudio.synthesisRate,
+      resumed_context_rate_hz: resumeAudio.contextRate,
+      resumed_context_state: resumeAudio.contextState,
+      conversion: 'SDL AudioStream 44100 Hz -> Web Audio device rate',
+    },
     quick_resume: {
       marker_slot: 1,
+      retained_nonzero_battle_auxiliary: 42,
       offered_slot: Number(resumeChoice.slot),
       continue_label: resumeChoice.label,
       title_label: resumeChoice.titleLabel,
       hint: resumeChoice.hint,
-      applied_marker: resumeRuntime.applied,
+      applied_slot: resumeRuntime.applied,
       world_deliveries: resumeRuntime.deliveries.length,
       presented_world_samples: resumeRuntime.worldSamples.length,
     },
@@ -685,6 +731,7 @@ try {
     `WASM browser input: OK (${held.deliveries.length} world-frame ` +
     `deliveries and ${held.worldSamples.length} presented world positions from ` +
     `one uninterrupted trusted touch hold; release stopped at once; ` +
+    `44.1-kHz music synthesis stayed fixed on a 48-kHz Web Audio device; ` +
     `versioned assets came from persistent cache; slot-one quick resume ` +
     `reached ${resumeRuntime.worldSamples.length} world polls; ` +
     `${options.idbfsCycles} IDBFS restart cycles passed)`);

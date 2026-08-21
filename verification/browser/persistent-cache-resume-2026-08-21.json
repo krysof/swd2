@@ -34,15 +34,15 @@
     }
   },
   "resource_cache": {
-    "version": "2026.08.21.5",
-    "name": "swd2-web-2026.08.21.5",
+    "version": "2026.08.21.6",
+    "name": "swd2-web-2026.08.21.6",
     "first_runtime_state": "active",
     "first_runtime_controlled": true,
     "cached_urls": [
-      "http://127.0.0.1:63724/index.data?v=2026.08.21.5",
-      "http://127.0.0.1:63724/index.html",
-      "http://127.0.0.1:63724/index.js?v=2026.08.21.5",
-      "http://127.0.0.1:63724/index.wasm?v=2026.08.21.5"
+      "http://127.0.0.1:49412/index.data?v=2026.08.21.6",
+      "http://127.0.0.1:49412/index.html",
+      "http://127.0.0.1:49412/index.js?v=2026.08.21.6",
+      "http://127.0.0.1:49412/index.wasm?v=2026.08.21.6"
     ],
     "second_launch_from_service_worker": {
       "index.js": true,
@@ -50,33 +50,43 @@
       "index.data": true
     }
   },
+  "audio": {
+    "synthesis_rate_hz": 44100,
+    "forced_test_context_rate_hz": 48000,
+    "context_state": "running",
+    "resumed_synthesis_rate_hz": 44100,
+    "resumed_context_rate_hz": 48000,
+    "resumed_context_state": "running",
+    "conversion": "SDL AudioStream 44100 Hz -> Web Audio device rate"
+  },
   "quick_resume": {
     "marker_slot": 1,
+    "retained_nonzero_battle_auxiliary": 42,
     "offered_slot": 1,
     "continue_label": "继续上次存档（槽 1）",
     "title_label": "从标题开始",
     "hint": "检测到浏览器存档，可直接继续。",
-    "applied_marker": "1",
+    "applied_slot": "1",
     "world_deliveries": 11,
     "presented_world_samples": 11
   },
   "gesture": {
     "touch_start_events": 1,
     "requested_world_frames": 69,
-    "hold_milliseconds": 2558.324999988079,
+    "hold_milliseconds": 2669.550000011921,
     "touch_end_events": 1,
     "direction": "right",
     "wasm_world_deliveries": 69,
-    "first_to_last_delivery_milliseconds": 2513.410000026226,
+    "first_to_last_delivery_milliseconds": 2623.939999997616,
     "deliveries_before_release_fence": 0,
     "deliveries_after_release_fence": 0,
-    "presented_world_samples": 69,
+    "presented_world_samples": 70,
     "world_start": {
-      "x": 127,
+      "x": 126,
       "y": 13,
       "screen_x": 38,
       "screen_y": 80,
-      "viewport_x": 107,
+      "viewport_x": 106,
       "viewport_y": 1
     },
     "world_finish": {
@@ -98,10 +108,10 @@
     "result": "pass"
   },
   "assets": {
-    "index.html": "8072675daf416260f4f084b2b8ad833b0cdda4fe2c64295de2bd246b153e19d0",
-    "index.js": "44c3c88e6899c4b36e95f6ce437983908f3c2180da01b767842339b4d032dc2e",
-    "index.wasm": "db409c1c96e93df2b076f339bb6987b7f3fdb9c675e8adf161a8818694b2fc71",
+    "index.html": "2d37bc762c4cf305e169f7424b6cfdcd019cca5eff001f6e88b7fa976851ec0f",
+    "index.js": "642ddb7d1861ac0bd62ab6bbd029be45c1426c2d931ae00748e57c513a1a04d8",
+    "index.wasm": "05caba2bf4b78334e022ea6ac025ba590f7526e69834652ea332da54e0b2424c",
     "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a",
-    "service-worker.js": "bb62ca3d1a885153965f6375de909c41fd800e63bc87103d3734ea76c9f9dca0"
+    "service-worker.js": "3857b9ee1ea03e7b698f570da2ff03ac472f89e8c275d158ad124577aa694487"
   }
 }
