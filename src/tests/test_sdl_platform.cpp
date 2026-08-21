@@ -304,6 +304,23 @@ int main() {
         require(platform.poll_input() == swd2::InputAction::left,
                 "SDL frontend probe consumed a queued gameplay action");
 
+        // Repeated taps during a module's uninterruptible fade must not
+        // activate the next menu before it is visible. The handoff fence drops
+        // Confirm/Cancel but deliberately keeps a queued choice direction.
+        push(key(SDLK_RETURN));
+        push(key(SDLK_RETURN, SDL_KEYUP));
+        push(key(SDLK_ESCAPE));
+        push(key(SDLK_ESCAPE, SDL_KEYUP));
+        push(key(SDLK_DOWN));
+        push(key(SDLK_DOWN, SDL_KEYUP));
+        require(!platform.poll_frontend_quit(),
+                "SDL menu-fence setup mistook a key for window close");
+        platform.discard_pending_menu_activation();
+        require(platform.poll_input() == swd2::InputAction::down,
+                "SDL menu fence discarded the queued choice direction");
+        require(platform.poll_input() == swd2::InputAction::none,
+                "SDL menu fence retained a stale activation key");
+
         SDL_Event quit{};
         quit.type = SDL_QUIT;
         push(quit);

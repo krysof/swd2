@@ -341,11 +341,29 @@ try {
     await sleep(300);
   };
 
-  // MEO accepts three confirms. After its fade, RPG Continue uses Down,
-  // Confirm, slot-one Confirm and default-Yes Confirm.
+  // MEO accepts three confirms. Deliberately send one more Enter while its
+  // uninterruptible fade is still running: it must be fenced before RPG's
+  // title rather than immediately selecting the default New Game entry.
   await sleep(1_200);
   for (let index = 0; index < 3; ++index) await key('Enter', 'Enter');
-  await sleep(1_500);
+  await key('Enter', 'Enter');
+  await waitUntil(
+    () => cdp.evaluate(`Module.swd2OpeningMenuEntries >= 1`),
+    'RPG opening menu after repeated password confirmation', 30_000);
+  await sleep(250);
+  const titleInputFence = await cdp.evaluate(`({
+    entries: Module.swd2OpeningMenuEntries,
+    responses: Module.swd2OpeningMenuResponses,
+    waiting: Module.swd2OpeningMenuWaiting,
+    worldPolls: Module.swd2WorldPolls
+  })`);
+  if (titleInputFence.entries !== 1 || titleInputFence.responses !== 0 ||
+      !titleInputFence.waiting || titleInputFence.worldPolls !== 0) {
+    fail(`password confirmation leaked through the title input fence: ${
+      JSON.stringify(titleInputFence)}`);
+  }
+
+  // RPG Continue uses Down, Confirm, slot-one Confirm and default-Yes Confirm.
   await key('ArrowDown', 'ArrowDown');
   for (let index = 0; index < 3; ++index) await key('Enter', 'Enter');
   await sleep(2_500);
@@ -723,6 +741,12 @@ try {
       world_polls_before_battle: resumeRuntime.worldPolls,
       battle_command_page: resumedBattlePage,
     },
+    title_input_fence: {
+      repeated_confirm_during_password_fade: 'discarded',
+      opening_menu_entries_before_user_choice: titleInputFence.entries,
+      opening_menu_responses_before_user_choice: titleInputFence.responses,
+      opening_menu_waiting_for_user_choice: titleInputFence.waiting,
+    },
     gesture: {
       touch_start_events: 1,
       requested_world_frames: requestedWorldFrames,
@@ -770,7 +794,7 @@ try {
     `44.1-kHz music synthesis stayed fixed on a 48-kHz Web Audio device; ` +
     `versioned assets came from persistent cache; slot-one quick resume ` +
     `reached a FIG command page after ${encounterInputs} loaded odd-cursor ` +
-    `encounter inputs; ` +
+    `encounter inputs; repeated password confirmation stopped at the title; ` +
     `${options.idbfsCycles} IDBFS restart cycles passed)`);
 } catch (error) {
   if (browserOutput) console.error(browserOutput.slice(-4_000));

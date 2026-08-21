@@ -75,6 +75,25 @@ void record_browser_world_sample(const SharedState& state) {
 #endif
 }
 
+void record_browser_opening_menu_wait(bool waiting) {
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        if (Module.swd2InputSelfTestEnabled) {
+            Module.swd2OpeningMenuWaiting = Boolean($0);
+            if ($0) {
+                Module.swd2OpeningMenuEntries =
+                    (Module.swd2OpeningMenuEntries | 0) + 1;
+            } else {
+                Module.swd2OpeningMenuResponses =
+                    (Module.swd2OpeningMenuResponses | 0) + 1;
+            }
+        }
+    }, waiting ? 1 : 0);
+#else
+    static_cast<void>(waiting);
+#endif
+}
+
 Viewport advance_battle_wipe(Viewport source) {
     // RPG:20a8..2112 performs the same two-byte move in every Mode-X plane.
     // In packed frontend pixels that moves each 156-pixel half eight pixels
@@ -4849,6 +4868,13 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         std::size_t opening_choice = 0U;
         bool enter_world = false;
         bool opening_audio_stopped = false;
+        // The password screen and both title fades are intentionally
+        // uninterruptible. A repeated Confirm during either fade was retained
+        // by the lifecycle poll and immediately selected New Game here, making
+        // Continue appear to ignore the save. Fence those stale activation
+        // keys at the first actually interactive RPG page; queued Up/Down is
+        // still retained for players already selecting Continue.
+        context.platform.discard_pending_menu_activation();
         while (!enter_world) {
             auto opening_frame = opening_base;
             draw_rpg_compact_panel(opening_frame.pixels, 320, 200,
@@ -4866,7 +4892,9 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                 320, 200, opening_frame.pixels,
                 std::span<const std::uint8_t, 768>(opening_frame.palette)});
 
+            record_browser_opening_menu_wait(true);
             const auto action = context.platform.wait_for_input();
+            record_browser_opening_menu_wait(false);
             if (action == InputAction::quit || action == InputAction::cancel) {
                 context.platform.stop_audio();
                 return Marker::none;

@@ -651,6 +651,20 @@ bool SdlPlatform::poll_frontend_quit() {
     return impl_->frontend_quit;
 }
 
+void SdlPlatform::discard_pending_menu_activation() {
+    // Capture presses posted since the timed sequence's final lifecycle poll,
+    // then fence only activation keys. Directions remain queued so a player
+    // may already select Continue while the title palette is fading in.
+    SDL_Event event{};
+    while (SDL_PollEvent(&event) != 0) {
+        impl_->retain_event_action(event);
+    }
+    std::erase_if(impl_->pending_actions, [](InputAction action) {
+        return action == InputAction::confirm ||
+               action == InputAction::cancel;
+    });
+}
+
 void SdlPlatform::delay_for(std::chrono::milliseconds duration) {
     const auto milliseconds = static_cast<unsigned>(
         std::max<std::int64_t>(0, duration.count()));

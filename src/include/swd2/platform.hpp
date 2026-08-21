@@ -64,6 +64,11 @@ public:
     // Timed original sequences can probe it without consuming a direction or
     // confirmation which must remain queued for the next interactive screen.
     virtual bool poll_frontend_quit() { return false; }
+    // A module handoff may span several uninterruptible palette fades. Drop
+    // stale Confirm/Cancel presses collected during those fades before the
+    // next menu becomes interactive, while retaining an intentional queued
+    // direction which selects that menu's initial choice.
+    virtual void discard_pending_menu_activation() {}
     virtual void delay_for(std::chrono::milliseconds) {}
     virtual ClockTime clock_time() const = 0;
     virtual void play_music(std::span<const std::uint8_t> rix_data, bool loop) = 0;
