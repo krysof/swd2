@@ -50,7 +50,7 @@ def main() -> int:
                 "direct_updates": 5401,
                 "last_width": 320,
                 "last_height": 200,
-                "fnv1a64": "d5e99a6d1e5a1193",
+                "fnv1a64": "b290d1d61ea5b808",
             },
             "audio": {
                 "music_calls": 337,

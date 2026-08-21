@@ -81,10 +81,9 @@ PlanarSpriteSet PlanarSpriteSet::load(
         PlanarSpriteFrame frame{
             static_cast<std::uint16_t>(output_width),
             static_cast<std::uint16_t>(output_height),
-            std::vector<std::uint8_t>(output_width * output_height, 0xfe)};
+            std::vector<std::uint8_t>(output_width * output_height)};
         for (std::size_t index = 0; index < tile_cells; ++index) {
             const auto tile = static_cast<std::size_t>(u16(layout, record_offset + 4 + index * 2));
-            if (tile == 0) continue;  // transparent lookup used by the DOS compositor
             if (tile >= tile_count) {
                 throw std::runtime_error(
                     with_extension(layout_base_path, ".RAP").string() +
@@ -95,6 +94,13 @@ PlanarSpriteSet PlanarSpriteSet::load(
             }
             const auto tile_x = index % width;
             const auto tile_y = index / width;
+            // DE layouts are complete opaque pages, and tile zero is the
+            // first real dictionary tile.  It is commonly a flat sky/ground
+            // tile (DE001 tile zero is colour 4fh) and occurs in 130,834 of
+            // the released RAP cells.  Treating zero as a transparent
+            // sentinel exposes the unrelated world page below every one of
+            // those cells and produces the characteristic map-coloured
+            // "flower screen" in cutscenes.
             for (std::size_t y = 0; y < 8; ++y) {
                 for (std::size_t x = 0; x < 8; ++x) {
                     // Four Mode-X planes each store two bytes for one 8-pixel

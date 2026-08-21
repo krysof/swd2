@@ -50,7 +50,9 @@
 #include <array>
 #include <cstdlib>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 #include <fstream>
@@ -2672,19 +2674,79 @@ void test_planar_sprite_set(const std::filesystem::path& game_root) {
     require(frame.width == 320 && frame.height == 200 &&
                 frame.pixels.size() == 64'000,
             "DE001 planar frame dimensions were not decoded");
-    require(std::count(frame.pixels.begin(), frame.pixels.end(), 0xfe) == 202 * 64,
-            "DE001 transparent pixel lookup was not decoded");
+    require(frame.pixels.front() == 0x4fU &&
+                std::count(frame.pixels.begin(), frame.pixels.end(), 0x4fU) >=
+                    202 * 64,
+            "DE001 tile-zero sky cells were not decoded opaquely");
     std::uint64_t frame_hash = 1469598103934665603ULL;
     for (const auto pixel : frame.pixels) {
         frame_hash ^= pixel;
         frame_hash *= 1099511628211ULL;
     }
-    require(frame_hash == 12960686047150932659ULL,
+    require(frame_hash == 17821157382855059363ULL,
             "DE001 8x8 four-plane tile expansion differs from the DOS layout");
     const auto shared_dictionary = swd2::PlanarSpriteSet::load(
         game_root / "DE" / "DE001", game_root / "DE" / "DE002");
     require(shared_dictionary.frame_count() != 0,
             "RAP-only DE002 did not reuse the preceding DE001 dictionary");
+
+    // Audit every released DE layout, not only layouts which carry their own
+    // dictionary.  Numeric runs reuse the preceding RSK except that the
+    // shipped closing event deliberately selects DE063 for DE066/067 after
+    // using DE065.  All 1,764 pages are complete opaque 320x200 images.
+    std::size_t layout_count = 0U;
+    std::size_t frame_count = 0U;
+    std::uint16_t current_dictionary = 0U;
+    auto all_frame_hash = std::uint64_t{1469598103934665603ULL};
+    const auto mix = [&](std::uint8_t byte) {
+        all_frame_hash ^= byte;
+        all_frame_hash *= 1099511628211ULL;
+    };
+    const auto mix_u16 = [&](std::uint16_t value) {
+        mix(static_cast<std::uint8_t>(value));
+        mix(static_cast<std::uint8_t>(value >> 8U));
+    };
+    for (std::uint16_t number = 1U; number <= 69U; ++number) {
+        std::ostringstream stem;
+        stem << "DE" << std::setw(3) << std::setfill('0') << number;
+        const auto layout = game_root / "DE" / stem.str();
+        auto rap = layout;
+        rap.replace_extension(".RAP");
+        if (!std::filesystem::is_regular_file(rap)) continue;
+        auto rsk = layout;
+        rsk.replace_extension(".RSK");
+        if (std::filesystem::is_regular_file(rsk)) {
+            current_dictionary = number;
+        }
+        auto dictionary = current_dictionary;
+        if (number == 66U || number == 67U) dictionary = 63U;
+        require(dictionary != 0U,
+                "DE RAP appeared before its first graphics dictionary");
+        std::ostringstream dictionary_stem;
+        dictionary_stem << "DE" << std::setw(3) << std::setfill('0')
+                        << dictionary;
+        const auto pages = swd2::PlanarSpriteSet::load(
+            game_root / "DE" / dictionary_stem.str(), layout);
+        ++layout_count;
+        frame_count += pages.frame_count();
+        mix_u16(number);
+        mix_u16(dictionary);
+        mix_u16(static_cast<std::uint16_t>(pages.frame_count()));
+        for (const auto component : pages.palette()) mix(component);
+        for (std::size_t index = 0U; index < pages.frame_count(); ++index) {
+            const auto& page = pages.frame(index);
+            require(page.width == 320U && page.height == 200U &&
+                        page.pixels.size() == 64'000U,
+                    "released DE layout is not a complete VGA page");
+            mix_u16(page.width);
+            mix_u16(page.height);
+            for (const auto pixel : page.pixels) mix(pixel);
+        }
+    }
+    require(layout_count == 69U && frame_count == 1'764U,
+            "not every released DE layout/frame was decoded");
+    require(all_frame_hash == 13295294590320517200ULL,
+            "complete DE opaque-page corpus differs from released resources");
 }
 
 void test_battle_database(const std::filesystem::path& game_root) {

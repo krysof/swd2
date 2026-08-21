@@ -59,6 +59,10 @@ def main() -> int:
         if len(frame_hashes) <= 109 or \
                 frame_hashes[109] != "86d24d180442b751":
             raise ValueError("startup RPG name-editor frame differs")
+        if len(frame_hashes) <= 251 or \
+                frame_hashes[251] != "82bf74a2a3cee838":
+            raise ValueError(
+                "startup DE001 dialogue page is not the opaque original scene")
         checkpoints = data.get("input_checkpoints", [])
         expected_opening_tail = [
             (22, "POLL", "CONFIRM", "707218e265166949"),

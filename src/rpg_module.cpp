@@ -4318,7 +4318,11 @@ private:
             const auto& source = cutscene_->frame(frame_index);
             const auto left = (320 - static_cast<int>(source.width)) / 2;
             const auto top = (200 - static_cast<int>(source.height)) / 2;
-            blit(frame, source.pixels, source.width, source.height, left, top);
+            // DE RAP pages use all 256 palette indices as opaque image data.
+            // Unlike actor/menu sprites, colour feh is not a transparency
+            // key here, and every released DE frame is a full 320x200 page.
+            blit_opaque(frame, source.pixels, source.width, source.height,
+                        left, top);
         }
         return frame;
     }

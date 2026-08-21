@@ -36,11 +36,11 @@
   "gesture": {
     "touch_start_events": 1,
     "requested_world_frames": 69,
-    "hold_milliseconds": 2802.7900000214577,
+    "hold_milliseconds": 2631.2049999833107,
     "touch_end_events": 1,
     "direction": "right",
     "wasm_world_deliveries": 71,
-    "first_to_last_delivery_milliseconds": 2751.1549999713898,
+    "first_to_last_delivery_milliseconds": 2608.949999988079,
     "deliveries_before_release_fence": 0,
     "deliveries_after_release_fence": 0,
     "presented_world_samples": 71,
@@ -73,7 +73,7 @@
   "assets": {
     "index.html": "6ab30ceba5df0c79a1ac7fdbb8495e749426d52c78c1c002aaa75f8464640b2a",
     "index.js": "901612e77b60b7035267f2a98bff542cb726f4232444224e9cd582a6cea08a37",
-    "index.wasm": "88ee5ddf384445858fc887c40ad2f9703f7bfb982ebb07ecef36b83798c2921e",
+    "index.wasm": "97678097f7af5ddf8d0e81acb94acd561f3fa3bb16f8767e088851f51e313600",
     "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a"
   }
 }

@@ -101,7 +101,7 @@ def main() -> int:
             ("boundaries", "frontend"): 180745,
             ("video", "frames"): 115481,
             ("video", "direct_updates"): 21023,
-            ("video", "fnv1a64"): "02d3f3e6e2dcab8a",
+            ("video", "fnv1a64"): "72c2d4937dc1349f",
             ("audio", "music_calls"): 1376,
             ("audio", "voice_calls"): 973,
             ("audio", "stop_music_calls"): 34,
@@ -125,7 +125,7 @@ def main() -> int:
             if trace.get(key) != expected:
                 raise ValueError(f"mainline {key} differs")
         frames = trace.get("frame_fnv1a64", [])
-        if len(frames) != 115481 or frames[-1] != "1508f76e944a53db":
+        if len(frames) != 115481 or frames[-1] != "b68ad0410d18286a":
             raise ValueError("mainline completed-ending frame differs")
         expected_final_flags = [
             0, 1, 2, 4, 8, 18, 22, 30, 32, 33, 34, 35, 36, 37,
@@ -152,9 +152,9 @@ def main() -> int:
             "input_checkpoints": (57837,
                 "4b7a06ca6f8c0c1755d9cabacf01e64a0120f5875dad5d8e70714898df5616dd"),
             "frame_fnv1a64": (115481,
-                "eac993d9cf1fb1a33f30331c9494eb1cca694a53c7d1082ca198e0d1ddc664f9"),
+                "17f767911bd7e73ad68db8116d584e1a38941bc01df4698473c09200560ab487"),
             "timeline": (381286,
-                "d4dcde10fdcb27a30b49a617a585f10863d1210f8c0a3db01e8647ebdaa7dd32"),
+                "44cacfc11a0e26bb836571bd076727e528f3d39ea0b5f6c5025a45d0f7b8fbd7"),
             "transitions": (632,
                 "307bf3a471ee577b473116e643941f74b8cf1381fe55c97f74db04bc34902550"),
         }

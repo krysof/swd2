@@ -15,10 +15,11 @@ struct PlanarSpriteFrame {
     std::vector<std::uint8_t> pixels;
 };
 
-// DE### is a five-file VGA sprite bundle. RAP stores one u16 lookup per 8x8
-// output tile; RSK supplies the palette/tile count; RS1..RS4 contain the four
-// byte planes of that 8x8 tile dictionary. This is distinct from both ordinary
-// map RAP files and the compact MAN1/MEO sprite-archive format.
+// DE### is a five-file VGA full-page animation bundle. RAP stores one u16
+// lookup per opaque 8x8 output tile; zero selects dictionary tile zero rather
+// than transparency. RSK supplies the palette/tile count; RS1..RS4 contain
+// the four byte planes of that 8x8 tile dictionary. This is distinct from both
+// ordinary map RAP files and the compact MAN1/MEO sprite-archive format.
 class PlanarSpriteSet {
 public:
     static PlanarSpriteSet load(const std::filesystem::path& base_path);
