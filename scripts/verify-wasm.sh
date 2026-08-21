@@ -76,13 +76,13 @@ for pattern in \
   "rotate(90deg)" \
   "width:100%!important" \
   "height:100%!important" \
-  "aspect-ratio:4/3" \
+  "aspect-ratio:8/5" \
   "grid-template-columns:154px minmax(0,1fr) 206px" \
   "grid-column:1" \
   "grid-column:2" \
   "grid-column:3" \
   "flex-direction:row" \
-  'data-mobile-layout=rotated-v4-crt' \
+  'data-mobile-layout=rotated-v5-square-pixel' \
   "user-select:none"; do
   grep -Fq "$pattern" "$site/index.html" || {
     echo "error: index.html is missing mobile start/orientation/wake behavior: $pattern" >&2
@@ -93,8 +93,8 @@ if grep -Fq '__SWD2_RELEASE_VERSION__' "$site/index.html"; then
   echo "error: index.html still contains the unreplaced Web release version" >&2
   exit 1
 fi
-if grep -Fq "aspect-ratio:8/5" "$site/index.html"; then
-  echo "error: index.html displays the 320x200 framebuffer at the flattened 8:5 byte ratio" >&2
+if grep -Fq "aspect-ratio:4/3" "$site/index.html"; then
+  echo "error: index.html compresses the 320x200 framebuffer into 4:3" >&2
   exit 1
 fi
 python3 - "$site/index.html" <<'PY'

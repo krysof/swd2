@@ -21,15 +21,15 @@
     }
     h1 { margin: 0 0 10px; font: 700 clamp(22px, 5vw, 38px)/1.1 Georgia, serif; letter-spacing: .12em; }
     .stage {
-      /* The framebuffer is 320x200, but VGA Mode 13h was viewed on a 4:3 CRT.
-         Displaying its square-byte ratio (8:5) makes the artwork look flat. */
-      position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden;
+      /* Keep the 320x200 framebuffer's 8:5 pixel geometry. Forcing it into
+         4:3 compresses the horizontal axis and visibly narrows the glyphs. */
+      position: relative; width: 100%; aspect-ratio: 8 / 5; overflow: hidden;
       border: 2px solid #9a7140; border-radius: 8px; background: #000;
       box-shadow: 0 16px 55px #000b, inset 0 0 0 1px #e9c68355;
     }
     canvas {
       display: block; width: 100% !important; height: 100% !important;
-      aspect-ratio: 4 / 3; outline: 0; image-rendering: pixelated;
+      aspect-ratio: 8 / 5; outline: 0; image-rendering: pixelated;
     }
     #status-wrap {
       position: absolute; inset: 0; display: grid; place-content: center; gap: 12px;
@@ -87,7 +87,7 @@
       }
       h1, .toolbar, #error { display: none; }
       .stage {
-        width: min(100%, calc((100svh - 10px) * 4 / 3));
+        width: min(100%, calc((100svh - 10px) * 8 / 5));
         grid-column: 2; grid-row: 1; justify-self: center;
       }
       .touch { display: contents; }
@@ -107,7 +107,7 @@
         transform-origin: center;
       }
       .stage {
-        width: min(100%, calc((100svw - 10px) * 4 / 3));
+        width: min(100%, calc((100svw - 10px) * 8 / 5));
       }
     }
   </style>
@@ -121,7 +121,7 @@
       <button id="start-button" type="button">点击开始并开启声音</button>
     </div>
   </div>
-  <main data-mobile-layout="rotated-v4-crt">
+  <main data-mobile-layout="rotated-v5-square-pixel">
     <h1>轩辕剑2</h1>
     <section class="stage" id="stage">
       <canvas id="canvas" tabindex="0" aria-label="SWD2 游戏画面" oncontextmenu="event.preventDefault()"></canvas>
