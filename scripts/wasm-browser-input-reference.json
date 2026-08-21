@@ -3,7 +3,7 @@
   "kind": "wasm_browser_runtime_checks",
   "status": "verified",
   "limitation": "Headless desktop Edge with mobile emulation is not a physical iOS/Android device test.",
-  "browser": "Edg/151.0.4129.78",
+  "browser": "Edg/151.0.4129.93",
   "protocol_version": "1.3",
   "host": {
     "platform": "darwin",
@@ -30,14 +30,14 @@
   "gesture": {
     "touch_start_events": 1,
     "requested_world_frames": 69,
-    "hold_milliseconds": 2560.0400000065565,
+    "hold_milliseconds": 2562.014999985695,
     "touch_end_events": 1,
     "direction": "right",
-    "wasm_world_deliveries": 71,
-    "first_to_last_delivery_milliseconds": 2537.324999988079,
+    "wasm_world_deliveries": 69,
+    "first_to_last_delivery_milliseconds": 2532.8050000071526,
     "deliveries_before_release_fence": 0,
     "deliveries_after_release_fence": 0,
-    "presented_world_samples": 70,
+    "presented_world_samples": 69,
     "world_start": {
       "x": 127,
       "y": 13,
@@ -56,19 +56,18 @@
     }
   },
   "idbfs": {
-    "cycles": 1,
+    "cycles": 3,
     "initial_sync": "completed",
     "exact_probe_write": "completed",
-    "page_reloads": 1,
+    "page_reloads": 3,
     "restored_bytes": "exact",
     "cleanup_sync": "completed",
     "result": "pass"
   },
   "assets": {
-    "index.html": "3646b130c7b1955f71a49359491483a456e1fa0ff3a51393c3252290f4b38194",
-    "index.js": "8995977e50ac783ae63b7512ee4d0ecb9aee8a0463f7389b1d896376ae953278",
-    "index.wasm": "760f846c371dde6aee759d834ae2f35ae0f521802a39312122d5182a1878dfd9",
-    "index.data": "cc57db3e8963aaabed56cd2cf9a774da1575175c4182046bebfe828687760321"
-  },
-  "captured_at": "2026-08-12T17:07:30+09:00"
+    "index.html": "44a717d666a0f440812ad250ba3d2be81430bb04eed9ec47b279c9efad19a30a",
+    "index.js": "310945cb67466775f5e950f71a0621141652b15818b985422dd80d3eb71d2a6a",
+    "index.wasm": "345e4fb883d31b447f4ad9993f7944584a7edb8cb364239412a412820e1b5e1c",
+    "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a"
+  }
 }

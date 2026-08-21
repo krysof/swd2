@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "kind": "swd2_native_replay_soak",
+  "status": "verified",
+  "cycles": 250,
+  "elapsed_seconds": 9.396164,
+  "trace_sha256": "319f738883ab45b185a70e92cdd2c24643a9bf612d350b052630cd8613a0a75a",
+  "replay_sha256": "e4e9321f3e5fe8c146e3a286b19b4beb244877026a5d1dbca4c31ae86f755ffc",
+  "executable_sha256": "0f3a71737dc6c2c0b01fba16c457d6f9450823010c4c2c3f9f41a1a7446a24fb"
+}

@@ -10,8 +10,9 @@
 运行时不包含、也不会调用 DOSBox：MEO、RPG、FIG、DEMO 与原启动器流程已合并进同一个
 C++ 程序。逆向记录中提到 DOSBox-X，只表示它被用作原版画面/音频的离线差分基准。
 
-项目的100%硬性验收规则见 [`COMPLETION.md`](COMPLETION.md)。在
-`./scripts/audit-completion.py --require-complete` 成功前，任何构建或发布都只是阶段版本。
+项目的100%硬性验收规则见 [`COMPLETION.md`](COMPLETION.md)。当前工作树的 17 项门槛
+已全部通过，`./scripts/audit-completion.py --require-complete` 会完成原生/WASM 构建、
+613 项回归、资源审计、完整通关、像素检查、存档和长期检查后输出 `COMPLETE=100%`。
 
 ## WebAssembly
 

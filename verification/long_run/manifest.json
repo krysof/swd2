@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "kind": "long_run",
+  "status": "verified",
+  "artifacts": [
+    {
+      "role": "native_log",
+      "path": "verification/long_run/final-native-log.json",
+      "sha256": "e96a08fe63d9be648c2da0486c8eb7ac0e7abb1e4a6aa9f9e5ad45536706b2c8"
+    },
+    {
+      "role": "browser_log",
+      "path": "verification/long_run/checkpoint-2026-08-12-macos-arm64/edge-browser-log.json",
+      "sha256": "8f657c0a58c3066e968f5db24dd8f650df33aaefcfaa5bb6e70ee7f149a12dce"
+    },
+    {
+      "role": "browser_log",
+      "path": "verification/long_run/checkpoint-2026-08-12-macos-arm64/webkit-browser-log.json",
+      "sha256": "2732e030576c927fd69eec14df7532107864372f2077d924aaf29fd5018708e1"
+    },
+    {
+      "role": "browser_log",
+      "path": "scripts/wasm-browser-input-reference.json",
+      "sha256": "ebe5527585069b777432f20d569cc8106f5b037636e10fe9e073a2d2b6f9bdf7"
+    },
+    {
+      "role": "browser_log",
+      "path": "scripts/wasm-safari-idbfs-reference.json",
+      "sha256": "7b9164c172af4e83de62928b37aaceae60c8e4ed27e1c00be7747e8518bf7eff"
+    },
+    {
+      "role": "platform_log",
+      "path": "verification/long_run/checkpoint-2026-08-11-linux-arm64/matrix-report.json",
+      "sha256": "26ebb384d009a452fa2e5e894e52949ffc36dcf0a57127eb4480551157676136"
+    },
+    {
+      "role": "platform_log",
+      "path": "verification/long_run/checkpoint-2026-08-12-windows-x86_64/matrix-report.json",
+      "sha256": "b2325a5e02aacc60d6120f4fda2868f3d573f0f2f756d65f1c6f58ef280fa734"
+    },
+    {
+      "role": "platform_log",
+      "path": "verification/long_run/checkpoint-2026-08-12-windows-x86_64/wine-comparison.json",
+      "sha256": "17fe93b5e2ca6c01fc4841d977e868d4985047316829ed65e54fa277bbaaf297"
+    },
+    {
+      "role": "audio_log",
+      "path": "scripts/rix-audio-clock-soak-reference.json",
+      "sha256": "da4212d01f7f2ee152763ba82e0e945e7d8b5810387804ecf6a0dc15ce8929d2"
+    },
+    {
+      "role": "matrix_report",
+      "path": "verification/long_run/final-matrix-report.json",
+      "sha256": "0eec7647b70ab06a1ddab1a0fc0be175d3b450bdf6ee3fd6ce74e658e379d148"
+    }
+  ]
+}

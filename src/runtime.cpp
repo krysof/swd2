@@ -39,26 +39,43 @@ GameModule* ModuleRegistry::find(Module module) const noexcept {
 
 MonolithicRuntime::MonolithicRuntime(ModuleRegistry registry) : registry_(std::move(registry)) {}
 
-LaunchResult MonolithicRuntime::run(GameContext& context) const {
+LaunchResult MonolithicRuntime::run(
+    GameContext& context,
+    const ModuleBoundaryObserver& observer) const {
     Launcher launcher;
     return launcher.run([&](Module module, Marker input) {
         auto* implementation = registry_.find(module);
         if (!implementation) {
             return ModuleResult{false, Marker::none};
         }
-        return ModuleResult{true, implementation->run(context, input)};
+        if (observer) {
+            observer({ModuleBoundaryPhase::enter, module, input}, context);
+        }
+        const auto output = implementation->run(context, input);
+        if (observer) {
+            observer({ModuleBoundaryPhase::leave, module, output}, context);
+        }
+        return ModuleResult{true, output};
     });
 }
 
 LaunchResult MonolithicRuntime::resume(GameContext& context,
-                                       Marker marker) const {
+                                       Marker marker,
+                                       const ModuleBoundaryObserver& observer) const {
     Launcher launcher;
     return launcher.resume(marker, [&](Module module, Marker input) {
         auto* implementation = registry_.find(module);
         if (!implementation) {
             return ModuleResult{false, Marker::none};
         }
-        return ModuleResult{true, implementation->run(context, input)};
+        if (observer) {
+            observer({ModuleBoundaryPhase::enter, module, input}, context);
+        }
+        const auto output = implementation->run(context, input);
+        if (observer) {
+            observer({ModuleBoundaryPhase::leave, module, output}, context);
+        }
+        return ModuleResult{true, output};
     });
 }
 

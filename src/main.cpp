@@ -42,6 +42,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <vector>
 #include <set>
@@ -328,6 +329,9 @@ public:
     [[nodiscard]] std::size_t remaining_inputs() const noexcept {
         return steps_.size() - cursor_;
     }
+    [[nodiscard]] std::span<const swd2::ReplayInputStep> input_steps() const noexcept {
+        return steps_;
+    }
 
     void finish_frame_capture() {
         if (!frame_capture_.is_open()) return;
@@ -516,6 +520,320 @@ std::string hex_digest(std::uint64_t digest) {
     output << std::hex << std::setw(16) << std::setfill('0') << digest;
     return output.str();
 }
+
+// A strict replay can expose every former DOS executable hand-off as exact
+// binary fixtures.  Artifacts are written as boundaries occur so a failed
+// long replay retains its last proven prefix, but only finish() creates the
+// complete manifest.  Existing non-empty directories are rejected to prevent
+// stale files from a previous run being mistaken for current evidence.
+class ModuleBoundaryCapture {
+public:
+    ModuleBoundaryCapture(std::filesystem::path root,
+                          const ReplayPlatform& platform)
+        : root_(std::move(root)), platform_(platform) {
+        if (std::filesystem::exists(root_)) {
+            if (!std::filesystem::is_directory(root_)) {
+                throw std::runtime_error(
+                    "module boundary output is not a directory: " +
+                    root_.string());
+            }
+            if (std::filesystem::directory_iterator(root_) !=
+                std::filesystem::directory_iterator{}) {
+                throw std::runtime_error(
+                    "module boundary output directory is not empty: " +
+                    root_.string());
+            }
+        }
+        std::filesystem::create_directories(root_ / "artifacts");
+        std::filesystem::create_directories(root_ / "transfers");
+    }
+
+    [[nodiscard]] swd2::ModuleBoundaryObserver observer() {
+        return [this](const swd2::ModuleBoundaryEvent& event,
+                      const swd2::GameContext& context) {
+            capture(event, context);
+        };
+    }
+
+    void write_incomplete() {
+        write_manifest(root_ / "manifest.partial.json", "incomplete", nullptr);
+    }
+
+    void finish(const swd2::LaunchResult& result) {
+        if (!invocations_.empty() && !invocations_.back().exit) {
+            throw std::runtime_error(
+                "cannot finish module boundary capture inside a module");
+        }
+        if (invocations_.size() != result.transitions.size()) {
+            throw std::runtime_error(
+                "module boundary count differs from launcher transitions");
+        }
+        for (std::size_t index = 0; index < invocations_.size(); ++index) {
+            const auto& invocation = invocations_[index];
+            const auto& transition = result.transitions[index];
+            if (!invocation.exit || invocation.module != transition.module ||
+                invocation.input_marker != transition.input ||
+                invocation.exit->marker != transition.output ||
+                !transition.launched) {
+                throw std::runtime_error(
+                    "module boundary capture differs from launcher transition " +
+                    std::to_string(index));
+            }
+        }
+        write_manifest(root_ / "manifest.json", "complete", &result);
+        std::error_code ignored;
+        std::filesystem::remove(root_ / "manifest.partial.json", ignored);
+    }
+
+private:
+    struct Artifact {
+        std::string path;
+        std::size_t bytes{};
+        std::uint64_t digest{};
+    };
+
+    struct Snapshot {
+        swd2::Marker marker{swd2::Marker::none};
+        std::size_t consumed_inputs{};
+        std::size_t frames{};
+        std::size_t timeline_events{};
+        std::uint64_t at_milliseconds{};
+        Artifact transfer;
+        Artifact state;
+        std::optional<Artifact> mapz;
+        Artifact name;
+    };
+
+    struct Invocation {
+        swd2::Module module{swd2::Module::menu};
+        swd2::Marker input_marker{swd2::Marker::none};
+        Snapshot entry;
+        std::optional<Snapshot> exit;
+    };
+
+    [[nodiscard]] std::vector<std::uint8_t> read_bytes(
+        const std::filesystem::path& path) const {
+        std::ifstream input(path, std::ios::binary);
+        if (!input) {
+            throw std::runtime_error(
+                "cannot read module boundary artifact: " + path.string());
+        }
+        return {std::istreambuf_iterator<char>(input),
+                std::istreambuf_iterator<char>()};
+    }
+
+    void write_new_file(const std::filesystem::path& path,
+                        std::span<const std::uint8_t> bytes) const {
+        if (std::filesystem::exists(path)) {
+            throw std::runtime_error(
+                "module boundary artifact already exists: " + path.string());
+        }
+        std::ofstream output(path, std::ios::binary | std::ios::trunc);
+        if (!output) {
+            throw std::runtime_error(
+                "cannot create module boundary artifact: " + path.string());
+        }
+        output.write(reinterpret_cast<const char*>(bytes.data()),
+                     static_cast<std::streamsize>(bytes.size()));
+        if (!output) {
+            throw std::runtime_error(
+                "cannot write module boundary artifact: " + path.string());
+        }
+    }
+
+    [[nodiscard]] Artifact write_content_artifact(
+        std::string_view kind, std::string_view suffix,
+        std::span<const std::uint8_t> bytes) {
+        const auto digest = fnv1a(bytes);
+        const auto relative = std::filesystem::path("artifacts") /
+            (std::string(kind) + "-" + std::to_string(bytes.size()) + "-" +
+             hex_digest(digest) + std::string(suffix));
+        const auto absolute = root_ / relative;
+        if (std::filesystem::exists(absolute)) {
+            const auto existing = read_bytes(absolute);
+            if (!std::equal(existing.begin(), existing.end(),
+                            bytes.begin(), bytes.end())) {
+                throw std::runtime_error(
+                    "FNV collision in module boundary artifacts: " +
+                    absolute.string());
+            }
+        } else {
+            write_new_file(absolute, bytes);
+        }
+        return {relative.generic_string(), bytes.size(), digest};
+    }
+
+    [[nodiscard]] Artifact write_transfer(
+        std::size_t index, bool leaving,
+        const std::array<std::uint8_t, swd2::SharedTransfer::byte_size>& bytes) {
+        std::ostringstream name;
+        name << std::setw(4) << std::setfill('0') << index
+             << (leaving ? "-output.bin" : "-input.bin");
+        const auto relative = std::filesystem::path("transfers") / name.str();
+        write_new_file(root_ / relative, bytes);
+        return {relative.generic_string(), bytes.size(), fnv1a(bytes)};
+    }
+
+    [[nodiscard]] Snapshot snapshot(std::size_t index, bool leaving,
+                                    swd2::Marker marker,
+                                    const swd2::GameContext& context) {
+        const auto transfer_bytes =
+            swd2::SharedTransfer{marker, context.shared_state}.bytes();
+        Snapshot result{
+            marker,
+            platform_.consumed_inputs(),
+            platform_.frames,
+            platform_.timeline.size(),
+            platform_.delay_milliseconds,
+            write_transfer(index, leaving, transfer_bytes),
+            write_content_artifact("state", ".bin",
+                                   context.shared_state.bytes()),
+            std::nullopt,
+            write_content_artifact("name", ".dsk", context.name_font),
+        };
+        if (context.map_database) {
+            result.mapz = write_content_artifact(
+                "mapz", ".daq", context.map_database->serialized_bytes());
+        }
+        return result;
+    }
+
+    void capture(const swd2::ModuleBoundaryEvent& event,
+                 const swd2::GameContext& context) {
+        if (event.phase == swd2::ModuleBoundaryPhase::enter) {
+            if (!invocations_.empty() && !invocations_.back().exit) {
+                throw std::runtime_error(
+                    "nested module boundary entry is not supported");
+            }
+            const auto index = invocations_.size();
+            auto entry = snapshot(index, false, event.marker, context);
+            invocations_.push_back(
+                {event.module, event.marker, std::move(entry), std::nullopt});
+            return;
+        }
+        if (invocations_.empty() || invocations_.back().exit ||
+            invocations_.back().module != event.module) {
+            throw std::runtime_error(
+                "module boundary exit has no matching entry");
+        }
+        invocations_.back().exit = snapshot(
+            invocations_.size() - 1U, true, event.marker, context);
+    }
+
+    static void write_artifact_json(std::ostream& output,
+                                    const Artifact& artifact) {
+        output << "{\"path\": \"" << artifact.path
+               << "\", \"bytes\": " << artifact.bytes
+               << ", \"fnv1a64\": \"" << hex_digest(artifact.digest)
+               << "\"}";
+    }
+
+    static void write_snapshot_json(std::ostream& output,
+                                    const Snapshot& snapshot) {
+        output << "{\"marker\": \"" << swd2::marker_name(snapshot.marker)
+               << "\", \"consumed_inputs\": " << snapshot.consumed_inputs
+               << ", \"frames\": " << snapshot.frames
+               << ", \"timeline_events\": " << snapshot.timeline_events
+               << ", \"at_milliseconds\": " << snapshot.at_milliseconds
+               << ", \"transfer\": ";
+        write_artifact_json(output, snapshot.transfer);
+        output << ", \"state\": ";
+        write_artifact_json(output, snapshot.state);
+        output << ", \"mapz\": ";
+        if (snapshot.mapz) write_artifact_json(output, *snapshot.mapz);
+        else output << "null";
+        output << ", \"name\": ";
+        write_artifact_json(output, snapshot.name);
+        output << '}';
+    }
+
+    void write_manifest(const std::filesystem::path& path,
+                        std::string_view status,
+                        const swd2::LaunchResult* result) const {
+        auto temporary = path;
+        temporary += ".tmp";
+        std::error_code ignored;
+        std::filesystem::remove(temporary, ignored);
+        std::ofstream output(temporary, std::ios::trunc);
+        if (!output) {
+            throw std::runtime_error(
+                "cannot create module boundary manifest: " + path.string());
+        }
+        output << "{\n"
+               << "  \"schema_version\": 1,\n"
+               << "  \"status\": \"" << status << "\",\n"
+               << "  \"input\": {\"total\": " << platform_.input_count()
+               << ", \"consumed\": " << platform_.consumed_inputs()
+               << ", \"remaining\": " << platform_.remaining_inputs()
+               << "},\n"
+               << "  \"input_steps\": [\n";
+        const auto steps = platform_.input_steps();
+        for (std::size_t index = 0; index < steps.size(); ++index) {
+            output << "    \"" << swd2::replay_boundary_name(steps[index].boundary)
+                   << ':' << swd2::input_action_name(steps[index].action)
+                   << '"';
+            if (index + 1U != steps.size()) output << ',';
+            output << '\n';
+        }
+        output << "  ],\n"
+               << "  \"invocation_count\": " << invocations_.size() << ",\n"
+               << "  \"transition_count\": ";
+        if (result) output << result->transitions.size();
+        else output << "null";
+        output << ",\n  \"invocations\": [\n";
+        for (std::size_t index = 0; index < invocations_.size(); ++index) {
+            const auto& invocation = invocations_[index];
+            output << "    {\"index\": " << index
+                   << ", \"module\": \""
+                   << swd2::module_name(invocation.module)
+                   << "\", \"input_marker\": \""
+                   << swd2::marker_name(invocation.input_marker)
+                   << "\", \"output_marker\": ";
+            if (invocation.exit) {
+                output << '"' << swd2::marker_name(invocation.exit->marker)
+                       << '"';
+            } else {
+                output << "null";
+            }
+            output << ", \"input_range\": {\"begin\": "
+                   << invocation.entry.consumed_inputs << ", \"end\": ";
+            if (invocation.exit) output << invocation.exit->consumed_inputs;
+            else output << "null";
+            output << "}, \"frame_range\": {\"begin\": "
+                   << invocation.entry.frames << ", \"end\": ";
+            if (invocation.exit) output << invocation.exit->frames;
+            else output << "null";
+            output << "}, \"timeline_range\": {\"begin\": "
+                   << invocation.entry.timeline_events << ", \"end\": ";
+            if (invocation.exit) output << invocation.exit->timeline_events;
+            else output << "null";
+            output << "}, \"millisecond_range\": {\"begin\": "
+                   << invocation.entry.at_milliseconds << ", \"end\": ";
+            if (invocation.exit) output << invocation.exit->at_milliseconds;
+            else output << "null";
+            output << "}, \"entry\": ";
+            write_snapshot_json(output, invocation.entry);
+            output << ", \"exit\": ";
+            if (invocation.exit) write_snapshot_json(output, *invocation.exit);
+            else output << "null";
+            output << '}';
+            if (index + 1U != invocations_.size()) output << ',';
+            output << '\n';
+        }
+        output << "  ]\n}\n";
+        output.close();
+        if (!output) {
+            throw std::runtime_error(
+                "cannot write module boundary manifest: " + path.string());
+        }
+        std::filesystem::remove(path, ignored);
+        std::filesystem::rename(temporary, path);
+    }
+
+    std::filesystem::path root_;
+    const ReplayPlatform& platform_;
+    std::vector<Invocation> invocations_;
+};
 
 void write_replay_trace(const std::filesystem::path& path,
                         const ReplayPlatform& platform,
@@ -711,10 +1029,19 @@ void run_monolithic(const std::filesystem::path& game_root,
                     bool write_save,
                     const std::optional<std::filesystem::path>& trace_output,
                     const std::optional<std::filesystem::path>& frame_output,
+                    const std::optional<std::filesystem::path>& boundary_output,
                     bool require_all_inputs,
                     std::optional<swd2::Marker> start_marker,
                     std::optional<swd2::Marker> resume_marker) {
     ReplayPlatform platform(std::move(inputs), frame_output);
+    std::unique_ptr<ModuleBoundaryCapture> boundary_capture;
+    if (boundary_output) {
+        boundary_capture = std::make_unique<ModuleBoundaryCapture>(
+            *boundary_output, platform);
+    }
+    const auto boundary_observer = boundary_capture
+        ? boundary_capture->observer()
+        : swd2::ModuleBoundaryObserver{};
     auto slot = swd2::SaveSlot::open(game_root, save_root, slot_number);
     swd2::GameContext context{
         game_root, slot.state(), platform, slot.map_database(),
@@ -747,7 +1074,7 @@ void run_monolithic(const std::filesystem::path& game_root,
     try {
         if (resume_marker) {
             result = swd2::MonolithicRuntime(std::move(modules)).resume(
-                context, *resume_marker);
+                context, *resume_marker, boundary_observer);
         } else if (start_marker) {
             const auto module = [&]() {
                 switch (*start_marker) {
@@ -770,12 +1097,23 @@ void run_monolithic(const std::filesystem::path& game_root,
             if (!implementation) {
                 throw std::runtime_error("direct-start module is not registered");
             }
+            if (boundary_observer) {
+                boundary_observer(
+                    {swd2::ModuleBoundaryPhase::enter, module, *start_marker},
+                    context);
+            }
             const auto output = implementation->run(context, *start_marker);
+            if (boundary_observer) {
+                boundary_observer(
+                    {swd2::ModuleBoundaryPhase::leave, module, output},
+                    context);
+            }
             result.transitions.push_back({module, *start_marker, output, true});
             result.final_marker = output;
             result.reason = swd2::StopReason::module_requested_exit;
         } else {
-            result = swd2::MonolithicRuntime(std::move(modules)).run(context);
+            result = swd2::MonolithicRuntime(std::move(modules)).run(
+                context, boundary_observer);
         }
     } catch (...) {
         // A boundary mismatch is exactly where a long reverse-engineering
@@ -783,12 +1121,14 @@ void run_monolithic(const std::filesystem::path& game_root,
         // before rethrowing instead of losing every checkpoint accumulated by
         // the strict frontend. The incomplete frame stream deliberately keeps
         // no DONE trailer and therefore cannot masquerade as pixel evidence.
+        if (boundary_capture) boundary_capture->write_incomplete();
         if (trace_output) {
             write_replay_trace(*trace_output, platform, context, result);
         }
         throw;
     }
     if (require_all_inputs && platform.remaining_inputs() != 0U) {
+        if (boundary_capture) boundary_capture->write_incomplete();
         if (trace_output) {
             write_replay_trace(*trace_output, platform, context, result);
         }
@@ -799,26 +1139,33 @@ void run_monolithic(const std::filesystem::path& game_root,
             " boundary-locked inputs");
     }
     if (require_all_inputs && platform.implicit_quit_calls != 0U) {
+        if (boundary_capture) boundary_capture->write_incomplete();
         if (trace_output) {
             write_replay_trace(*trace_output, platform, context, result);
         }
         throw std::runtime_error(
             "replay exhausted its input and relied on an implicit quit");
     }
-    if (write_save) {
-        if (!context.map_database) {
-            throw std::runtime_error(
-                "cannot checkpoint current SAVE state without live MAPZ state");
+    try {
+        if (write_save) {
+            if (!context.map_database) {
+                throw std::runtime_error(
+                    "cannot checkpoint current SAVE state without live MAPZ state");
+            }
+            slot.save(context.shared_state, *context.map_database,
+                      context.name_font);
         }
-        slot.save(context.shared_state, *context.map_database,
-                  context.name_font);
-    }
-    // A capture without its DONE trailer is intentionally invalid. Finalize
-    // only after strict replay invariants pass so an interrupted/partial run
-    // cannot be mistaken for pixel-diff evidence.
-    platform.finish_frame_capture();
-    if (trace_output) {
-        write_replay_trace(*trace_output, platform, context, result);
+        // A capture without its DONE trailer is intentionally invalid. Finalize
+        // only after strict replay invariants pass so an interrupted/partial run
+        // cannot be mistaken for pixel-diff evidence.
+        platform.finish_frame_capture();
+        if (trace_output) {
+            write_replay_trace(*trace_output, platform, context, result);
+        }
+        if (boundary_capture) boundary_capture->finish(result);
+    } catch (...) {
+        if (boundary_capture) boundary_capture->write_incomplete();
+        throw;
     }
     for (const auto& transition : result.transitions) {
         std::cout << swd2::module_name(transition.module) << " -> "
@@ -1546,10 +1893,15 @@ void verify_battles(const std::filesystem::path& game_root) {
             throw std::runtime_error("empty FIG weapon archive: " + filename);
         }
     }
-    if (weapon_items.size() != 50U || !weapon_items.contains(0) ||
-        !weapon_items.contains(117) || !weapon_items.contains(164) ||
-        !weapon_items.contains(324)) {
+    if (weapon_items.size() != 51U || !weapon_items.contains(0) ||
+        !weapon_items.contains(62) || !weapon_items.contains(117) ||
+        !weapon_items.contains(164) || !weapon_items.contains(324)) {
         throw std::runtime_error("released FIG weapon archive set changed");
+    }
+    if (read_binary_file(game_root / "SW" / "SW062.RSK") !=
+        read_binary_file(game_root / "SW" / "SW124.RSK")) {
+        throw std::runtime_error(
+            "Tianhuo fan SW062 repair is not the iron-fan SW124 archive");
     }
     std::cout << "verified ORC battle data: " << battles.directory_entry_count()
               << " directory entries, " << battles.encounter_count() << " unique encounters, "
@@ -2227,11 +2579,17 @@ void verify_reachable_events(
         dynamic_entity_contexts.size() != 80U ||
         context_commands != std::array<std::size_t, 2>{30811U, 31321U} ||
         context_state_digests != std::array<std::uint64_t, 2>{
-            0xf24db76385bbe8ceULL, 0xf5a352b9d6818d9aULL} ||
+            0x333941bd92ceacedULL, 0x51c2bf304f288abfULL} ||
         context_map_digests != std::array<std::uint64_t, 2>{
             0xa6442adb4ff266bfULL, 0x42c8b3a7963f403eULL}) {
         throw std::runtime_error(
-            "deterministic RPG entity-context execution differs from the audit");
+            "deterministic RPG entity-context execution differs from the audit: "
+            "states=" + hex_digest(context_state_digests[0]) + "/" +
+            hex_digest(context_state_digests[1]) + ", MAPZ=" +
+            hex_digest(context_map_digests[0]) + "/" +
+            hex_digest(context_map_digests[1]) + ", commands=" +
+            std::to_string(context_commands[0]) + "/" +
+            std::to_string(context_commands[1]));
     }
     if (manifest_path) {
         if (!manifest_path->parent_path().empty()) {
@@ -2347,7 +2705,7 @@ void usage(const char* program) {
                  " [--start-marker MT|IF|ED|OC|OM]"
                  " [--resume-marker MT|IF|ED|OC|OM]"
                  " --run-replay INPUT.txt --trace-output FILE.json"
-                 " [--frame-output FILE.swd2frames]\n";
+                 " [--frame-output FILE.swd2frames] [--boundary-output DIR]\n";
 #ifdef SWD2_HAVE_SDL2
     std::cout << "  " << program
               << " [--game DIR] [--save-dir DIR] [--slot 1..5] [--no-save] --play\n";
@@ -2371,6 +2729,7 @@ int main(int argc, char** argv) {
         std::filesystem::path replay_input;
         std::optional<std::filesystem::path> replay_trace;
         std::optional<std::filesystem::path> replay_frames;
+        std::optional<std::filesystem::path> replay_boundaries;
         std::optional<std::filesystem::path> event_manifest;
         std::optional<swd2::Marker> start_marker;
         std::optional<swd2::Marker> resume_marker;
@@ -2443,6 +2802,8 @@ int main(int argc, char** argv) {
                 replay_trace = std::filesystem::path(argv[++i]);
             } else if (argument == "--frame-output" && i + 1 < argc) {
                 replay_frames = std::filesystem::path(argv[++i]);
+            } else if (argument == "--boundary-output" && i + 1 < argc) {
+                replay_boundaries = std::filesystem::path(argv[++i]);
             } else if (argument == "--start-marker" && i + 1 < argc) {
                 start_marker = parse_marker(argv[++i]);
             } else if (argument == "--resume-marker" && i + 1 < argc) {
@@ -2470,6 +2831,10 @@ int main(int argc, char** argv) {
         }
         if (replay_frames && !strict_replay) {
             throw std::runtime_error("--frame-output requires strict --run-replay input");
+        }
+        if (replay_boundaries && !strict_replay) {
+            throw std::runtime_error(
+                "--boundary-output requires strict --run-replay input");
         }
 
         if (mode == Mode::trace) {
@@ -2500,7 +2865,8 @@ int main(int argc, char** argv) {
                 : trace;
             run_monolithic(game_root, swd2::parse_replay_input(input_text),
                            save_root, slot_number, write_save,
-                           replay_trace, replay_frames, strict_replay,
+                           replay_trace, replay_frames, replay_boundaries,
+                           strict_replay,
                            start_marker, resume_marker);
         } else if (mode == Mode::play) {
 #ifdef SWD2_HAVE_SDL2

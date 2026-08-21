@@ -1,0 +1,413 @@
+{
+  "schema_version": 1,
+  "kind": "original_rpg_title_loaded_boundary_probe",
+  "status": "partial_probe_with_declared_differences",
+  "limitation": "This records one successful untouched RPG title-load MT-to-IF probe after staging the modern invocation-5 entry in released save slot 1. It is not a byte-exact checkpoint or an uninterrupted original mainline chain: physical input and roaming-entity timing leave declared state/world differences. It does not verify the full-playthrough gate.",
+  "modern_invocation_index": 5,
+  "modern_module": "RPG.EXE",
+  "input_marker": "OC",
+  "output_marker": "IF",
+  "input_range": {
+    "begin": 506,
+    "end": 515
+  },
+  "input_steps": [
+    "POLL:UP",
+    "POLL:UP",
+    "POLL:LEFT",
+    "POLL:LEFT",
+    "POLL:LEFT",
+    "POLL:LEFT",
+    "POLL:LEFT",
+    "POLL:LEFT",
+    "POLL:CONFIRM"
+  ],
+  "entry_state_fnv1a64": "885c277722e78fd5",
+  "entry_state_sha256": "ec0d4cf783d7d51ba6388de8d24968385807b08a04c8c062c835772344037203",
+  "entry_transfer_sha256": "985dc4b757ddaac6b96b444e66215ec517d4201f2f7bda77357e35689b399891",
+  "modern": {
+    "output_state_fnv1a64": "be8425443e0d6d88",
+    "output_state_sha256": "d2fd55ab03b25f64392495e7cd0d86c72f5496e7a4d4b43a26a09a17d62c2854",
+    "output_transfer_sha256": "8f280650c76b1d69cf9b668364b2b19033c4febef04e6e19a0c9c5e92c4efbac",
+    "mapz_fnv1a64": "004e684bc1b4f164",
+    "mapz_sha256": "c2f9f9d981b91d0cec817657ffbd3fcad8f5ae0bf361d81e1cbec13c1387ac7c",
+    "name_fnv1a64": "e3d2853e2676513b",
+    "name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+    "world": {
+      "x": 66,
+      "y": 108
+    },
+    "battle_encounter_offset": 116,
+    "map_location_directory_offset": 12,
+    "rpg_load_cursor": 4128,
+    "persisted_map_entity_base": 17553
+  },
+  "original": {
+    "output_state_fnv1a64": "fd792250ab5cb1ba",
+    "output_state_sha256": "692741933eb56ca841d06b28a5acddc702cea20f9535f70205e58d32b01a7060",
+    "output_transfer_sha256": "25244ecbf36e90b3f2a542d19026aa92b4578ca5efe946e38a99bbdf475597cf",
+    "mapz_fnv1a64": "004e684bc1b4f164",
+    "mapz_sha256": "c2f9f9d981b91d0cec817657ffbd3fcad8f5ae0bf361d81e1cbec13c1387ac7c",
+    "name_fnv1a64": "e3d2853e2676513b",
+    "name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+    "world": {
+      "x": 67,
+      "y": 110
+    },
+    "battle_encounter_offset": 116,
+    "map_location_directory_offset": 12,
+    "rpg_load_cursor": 4215,
+    "persisted_map_entity_base": 17553
+  },
+  "exact_shared_invariants": {
+    "transfer_marker": "IF",
+    "state_bytes": 1350,
+    "mapz_bytes": 38147,
+    "name_bytes": 514,
+    "battle_encounter_offset": 116,
+    "map_location_directory_offset": 12,
+    "persisted_map_entity_base": 17553,
+    "persisted_path_drive": "E:",
+    "mapz_exact": true,
+    "name_exact": true
+  },
+  "explained_differences": {
+    "rpg_load_cursor": {
+      "state_offset": "0x049c",
+      "released_code_offsets": [
+        "0x0119",
+        "0x4cae"
+      ],
+      "entry_value": 4128,
+      "original_output_value": 4215,
+      "original_observed_delta": 87,
+      "modern_replay_hundredth": 0,
+      "modern_output_value": 4128,
+      "explanation": "Released RPG uses DOS int 21h/2ch and adds the hundredth field to SAVE+49c. The physical title-loaded capture observed delta 57h; deterministic modern replay supplies zero."
+    },
+    "persisted_map_entity_base": {
+      "state_offset": "0x0429",
+      "released_install_code_offset": "0x119f",
+      "released_install_instruction": "89 36 29 04",
+      "location_directory_offset": 12,
+      "area_image_offset": "0x448b",
+      "expected_value": "0x4491",
+      "entry_value": "0x4491",
+      "modern_output_value": "0x4491",
+      "original_output_value": "0x4491",
+      "former_stale_modern_value": "0x42e5",
+      "released_event_context": {
+        "entity_count": 10,
+        "entity_index": 7,
+        "event_directory_offset": 224,
+        "field": 3,
+        "before": 0,
+        "after": 3,
+        "mapz_file_offset": "0x46db",
+        "event_archive": "CHNA1.EXE",
+        "event_archive_sha256": "9f66b07852176c493c07b2fa5d2a8617904757f4785a3561fa8ff8ebb4198948",
+        "event_stream_sha256": "1807fda9acb4625d7c892f64a0ac863748ab642120373b0fe418c87e5b25e11c"
+      },
+      "released_opcode3_code_offset": "0x53f7",
+      "explanation": "RPG:10fd persists area image offset+6 at SAVE+429; opcode 3 later uses that base for entity-field writes. The old modern boundary left 42e5h stale and wrote the wrong MAPZ word. install_map_location now stores 4491h for SBOUT, so untouched title-loaded RPG and modern invocation 5 both change MAPZ:46dbh from 0 to 3 and their complete MAPZ files match exactly."
+    }
+  },
+  "declared_state_byte_differences": [
+    {
+      "offset": "0x001c",
+      "original": 46,
+      "modern": 48
+    },
+    {
+      "offset": "0x001e",
+      "original": 46,
+      "modern": 48
+    },
+    {
+      "offset": "0x0020",
+      "original": 46,
+      "modern": 48
+    },
+    {
+      "offset": "0x0022",
+      "original": 46,
+      "modern": 48
+    },
+    {
+      "offset": "0x0024",
+      "original": 46,
+      "modern": 48
+    },
+    {
+      "offset": "0x0026",
+      "original": 46,
+      "modern": 48
+    },
+    {
+      "offset": "0x0028",
+      "original": 46,
+      "modern": 48
+    },
+    {
+      "offset": "0x0034",
+      "original": 88,
+      "modern": 80
+    },
+    {
+      "offset": "0x0036",
+      "original": 96,
+      "modern": 88
+    },
+    {
+      "offset": "0x0038",
+      "original": 104,
+      "modern": 96
+    },
+    {
+      "offset": "0x003a",
+      "original": 112,
+      "modern": 104
+    },
+    {
+      "offset": "0x003c",
+      "original": 120,
+      "modern": 112
+    },
+    {
+      "offset": "0x003e",
+      "original": 128,
+      "modern": 120
+    },
+    {
+      "offset": "0x0040",
+      "original": 136,
+      "modern": 128
+    },
+    {
+      "offset": "0x00aa",
+      "original": 3,
+      "modern": 6
+    },
+    {
+      "offset": "0x00c4",
+      "original": 3,
+      "modern": 6
+    },
+    {
+      "offset": "0x00d2",
+      "original": 62,
+      "modern": 180
+    },
+    {
+      "offset": "0x00d3",
+      "original": 155,
+      "modern": 34
+    },
+    {
+      "offset": "0x00d4",
+      "original": 64,
+      "modern": 28
+    },
+    {
+      "offset": "0x00d5",
+      "original": 155,
+      "modern": 36
+    },
+    {
+      "offset": "0x00d6",
+      "original": 66,
+      "modern": 132
+    },
+    {
+      "offset": "0x00d7",
+      "original": 155,
+      "modern": 37
+    },
+    {
+      "offset": "0x00d8",
+      "original": 68,
+      "modern": 236
+    },
+    {
+      "offset": "0x00d9",
+      "original": 155,
+      "modern": 38
+    },
+    {
+      "offset": "0x00da",
+      "original": 70,
+      "modern": 84
+    },
+    {
+      "offset": "0x00db",
+      "original": 155,
+      "modern": 40
+    },
+    {
+      "offset": "0x00dc",
+      "original": 174,
+      "modern": 188
+    },
+    {
+      "offset": "0x00dd",
+      "original": 156,
+      "modern": 41
+    },
+    {
+      "offset": "0x00de",
+      "original": 22,
+      "modern": 36
+    },
+    {
+      "offset": "0x00df",
+      "original": 158,
+      "modern": 43
+    },
+    {
+      "offset": "0x00e0",
+      "original": 126,
+      "modern": 140
+    },
+    {
+      "offset": "0x00e1",
+      "original": 159,
+      "modern": 44
+    },
+    {
+      "offset": "0x00e2",
+      "original": 230,
+      "modern": 244
+    },
+    {
+      "offset": "0x00e3",
+      "original": 160,
+      "modern": 45
+    },
+    {
+      "offset": "0x00ea",
+      "original": 106,
+      "modern": 211
+    },
+    {
+      "offset": "0x00ec",
+      "original": 68,
+      "modern": 196
+    },
+    {
+      "offset": "0x00ee",
+      "original": 3,
+      "modern": 205
+    },
+    {
+      "offset": "0x00f0",
+      "original": 4,
+      "modern": 211
+    },
+    {
+      "offset": "0x00f2",
+      "original": 5,
+      "modern": 210
+    },
+    {
+      "offset": "0x00f4",
+      "original": 20,
+      "modern": 72
+    },
+    {
+      "offset": "0x00f5",
+      "original": 2,
+      "modern": 3
+    },
+    {
+      "offset": "0x00f6",
+      "original": 35,
+      "modern": 79
+    },
+    {
+      "offset": "0x00f7",
+      "original": 2,
+      "modern": 3
+    },
+    {
+      "offset": "0x00f8",
+      "original": 51,
+      "modern": 196
+    },
+    {
+      "offset": "0x00fa",
+      "original": 48,
+      "modern": 211
+    },
+    {
+      "offset": "0x040d",
+      "original": 54,
+      "modern": 100
+    },
+    {
+      "offset": "0x040e",
+      "original": 138,
+      "modern": 135
+    },
+    {
+      "offset": "0x041b",
+      "original": 47,
+      "modern": 46
+    },
+    {
+      "offset": "0x041d",
+      "original": 98,
+      "modern": 96
+    },
+    {
+      "offset": "0x049c",
+      "original": 119,
+      "modern": 32
+    }
+  ],
+  "declared_mapz_byte_differences": [],
+  "capture": {
+    "dosbox": "DOSBox-X version 2026.07.02 SDL2, copyright 2011-2026 The DOSBox-X Team.",
+    "game_path_layout": "E:\\SWD2",
+    "program": "RPGMT.COM",
+    "capture_harness_sha256": "626132a2380464aad548b300384004f51d91ba963cf16689e0638d3709cfb6c7",
+    "reference_program": "RPG.EXE",
+    "reference_program_sha256": "f742990149c72872066d7c95adfdfa53b6366f8a8bee2724ee1494a6af6d558f",
+    "entry_method": "untouched title Continue from released save slot 1",
+    "save_slot": 1,
+    "staged_save_sha256": "ec0d4cf783d7d51ba6388de8d24968385807b08a04c8c062c835772344037203",
+    "staged_mapz_sha256": "ea0e56c6a3ee50d644cd8f0fb6da8db47f09355f00f24f53a3f353028393ee4e",
+    "staged_name_sha256": "98bed0fc2855bdd752f914a9dffcf5b799a66e2501ac7a5b19cd7989dd69b0ba",
+    "autotype": "original-mainline-boundary-0005-title-autotype.txt",
+    "autotype_sha256": "9045a4663c73c8f3d07bcb679bf88685b830f08a8de38d75eebbdc1f832d4c8f",
+    "wait_seconds": 7.5,
+    "pace_seconds": 0.05,
+    "time_limit_seconds": 95,
+    "capture_manifest_sha256": "99e63d42aa4eeb7f7d7cee0222a5f6c7db2372e78b05917f80d23681b3244628",
+    "video_segments": [
+      {
+        "path": "original-000.avi",
+        "bytes": 44836,
+        "sha256": "3dd16d6f996d92c65b2bea422853ddceb7bf14068ed37f312fa0ac9e8f892ec9",
+        "codec_name": "zmbv",
+        "width": 720,
+        "height": 400,
+        "r_frame_rate": "1095103/15625",
+        "avg_frame_rate": "1095103/15625",
+        "duration": "0.014268",
+        "nb_frames": "1"
+      },
+      {
+        "path": "original-001.avi",
+        "bytes": 16893684,
+        "sha256": "e70bc99ad329a09d3d04a0d190e45dc122a601383f432ba38c56a15f92b9bce1",
+        "codec_name": "zmbv",
+        "width": 640,
+        "height": 400,
+        "r_frame_rate": "2190197/31250",
+        "avg_frame_rate": "2190197/31250",
+        "duration": "67.060178",
+        "nb_frames": "4700"
+      }
+    ]
+  }
+}

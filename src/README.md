@@ -357,6 +357,10 @@ frame 1：物攻武器合成帧或首个 `144e` 数字帧才一次性消费受�
 `14b1/152a/155c` 武器段也会在
 三张 FMAN 姿态之后逐手呈现：左手水平镜像、坐标固定于目标中心 `-4` Mode-X 列/
 `-50` 行，`+2c==1` 只播右手，而双空手仍加载原版 `SW000.RSK`。
+发行资料把 ITEM 62 天火扇标为可装备单手武器，却没有提供 FIG 按物品号读取的
+`SW062.RSK`。准备后的现代资源目录直接复制同类铁扇的 `SW124.RSK` 为
+`SW062.RSK`；运行时代码仍按真实物品号 62 取图，没有物品 ID 映射，也不改变属性、
+存档或需要火媒介的道具效果。
 每个武器页与随后清洁受击页现在还分别走 `3c44` 的四段自上而下揭示：每段复制
 80 Mode-X 字节×50 行并等待一个 FIG INT 08h tick（约 55ms），不再以一张静止画面
 等待三 tick 近似。
@@ -557,8 +561,19 @@ ctest --test-dir build --output-on-failure
 ```sh
 ./build/src/swd2_rewrite --game game --no-save \
   --run-replay replay.txt --trace-output replay-trace.json \
-  --frame-output replay.swd2frames
+  --frame-output replay.swd2frames \
+  --boundary-output replay-boundaries
 ```
+
+`--boundary-output` 只接受严格 `--run-replay`，并拒绝复用非空目录。它为每次
+MEO/RPG/FIG/DEMO 调用导出入口/出口的 1352 字节 `SharedTransfer`、1350 字节
+SAVE、MAPZ、NAME、输入区间、帧区间和统一时间线区间；内容相同的状态文件按摘要
+去重。只有全部输入、隐式退出、存档、帧流和 trace 不变量通过后才写
+`manifest.json(status=complete)`；中途失败只保留
+`manifest.partial.json(status=incomplete)` 和已发生的前缀工件。
+`scripts/verify-module-boundary-capture.py` 会重新读取每个文件、验证 ABI marker、
+输入范围连续性和无未登记文件。这条链可直接提供原版 step harness 的精确输入，
+而不是从最终 SAVE 反推模块边界。
 
 为原版覆盖入口制作短场景证据时，可用 `--start-marker IF` 直接从当前槽进入统一进程内的
 FIG 模块；`MT/OC/OM` 和 `ED` 分别直入 RPG 与 DEMO。它只跳过启动调度，不会执行或模拟
@@ -619,6 +634,9 @@ EOF
 原始索引像素、逐帧 VGA 调色板和完整 `SWD2FRM2` 基准。
 若 DOSBox-X 报告某个 AUTOTYPE/MAPPER 键无法投递，捕获现在会在写 manifest 前失败；
 不能再把“录像文件存在、但计划输入中途停止”的观察误登记为可重复原版证据。
+默认盘符 `C` 保留既有捕获身份；需要复现发行版 RPG 写入 SAVE 的绝对路径时必须显式加
+`--dos-drive E`。工具只接受单个 ASCII 盘符，并把实际盘符及 `E:\\SWD2` 布局写入
+manifest，不能通过该参数向 DOSBox 命令行注入额外命令。
 
 需要绕过原版标题而直接复现 `OC` 覆盖入口时，用仓库内的 138-byte harness；只在临时
 游戏副本生成它，不改 `game/RPG.EXE`：
@@ -630,7 +648,7 @@ cp -R game/. "$staged_game/"
 # changes to SAVE.DAQ/MAPZ.DAQ/NAMEQ.DSK, not SAVE.DA1.
 ./scripts/build-original-rpg-harness.sh "$staged_game/RPGOC.COM"
 ./scripts/capture-original-dosbox.py --game "$staged_game" \
-  --program RPGOC.COM --reference-program RPG.EXE \
+  --program RPGOC.COM --reference-program RPG.EXE --dos-drive E \
   --autotype original-input.txt --output /tmp/swd2-rpg-reference
 ```
 
@@ -638,6 +656,109 @@ manifest 会分别保存启动 harness 和未修改参考 EXE 的名称及 SHA-2
 混为一谈。138-byte harness 为了保持既有捕获摘要仍把 `SAVE.DA1` 放在 marker 后面，
 但原版 `OC` 分支的 `00b7..00bf` 随即以 `AL=51h` 调用 `4c16`，实际重新载入的是
 `SAVE.DAQ/MAPZ.DAQ/NAMEQ.DSK`；准备定向原版场景时必须改 Q 槽。
+
+需要把长流程拆在原版已经存在的 RPG/FIG 交接点时，可构建固定摘要的 step harness：
+
+```sh
+./scripts/build-original-swd2-step-harness.sh "$staged_game"
+python3 - "$staged_game" <<'PY'
+from pathlib import Path
+import sys
+p = Path(sys.argv[1])
+(p / "STEP.IN").write_bytes(b"IF" + (p / "SAVE.DA1").read_bytes())
+PY
+./scripts/capture-original-dosbox.py --game "$staged_game" \
+  --program FIGSTEP.COM --reference-program FIG.EXE \
+  --autotype original-input.txt --collect-file SAVE.DAQ \
+  --collect-file MAPZ.DAQ --collect-file NAMEQ.DSK \
+  --output /tmp/swd2-fig-step
+```
+
+这个拆分对 FIG 的已提交 `SAVE.DAQ` 是精确的，因为发行流程本来就为每次 IF 新建 FIG
+子进程；对 RPG 则仍只能作为兼容/逆向探针。直接 `RPGSTEP.COM` 从 OC 新建进程，不能
+证明发行流程中 FIG 返回同一常驻 RPG 父进程后的完整上下文。另一个固定摘要的
+`RPGMT.COM` 从未修改标题页的 MT/Continue 路径载入已布置存档，让 RPG 自己重建读档
+上下文；它比直接 OC 更接近发行路径，但仍不是不中断的原版主线。
+
+若要把 OC 读档时的百分秒扰动与 SAVE 差异分开，可单独构建带相位等待的 RPG 探针，
+例如 `nasm -f bin -dRPG_STEP=1 -dRPG_PHASE_HUNDREDTH=11 ...`。随机战入口
+`SAVE+4a0==0` 也可用只属于 FIG 的 `FIG_PHASE_HUNDREDTH=0..99` 锁住启动相位；两个
+define 都拒绝错误模块和越界值，默认 `RPGSTEP.COM`/`FIGSTEP.COM` 不包含等待、摘要
+保持不变。RPG phase-11 探针的 256 字节/SHA-256 `071334d0…f7471` 与 FIG phase-0
+探针的 308 字节/SHA-256 `75aaa6b2…e8b1` 均由 harness 测试锁定。它们只是逆向采样
+工具；只有同时满足状态与形成选择等不变量的具体捕获才能升级成精确 golden。
+为了跨不同入口稳定复现现代严格 replay 的百分秒零值，还可构建
+`FIG_FIXED_HUNDREDTH=0`：wrapper 只在未修改 FIG 驻留期间接管 `INT 21h/AH=2ch`，
+其余 DOS 调用原样链回旧向量，子进程返回后立即恢复。该 368-byte 变体 SHA-256 为
+`5cd8f7e7…750f`；临时向量使其明确采用 `28h` paragraphs，而默认 harness 仍保持
+`24h`。因此它只作为声明过的确定性时钟探针，仍必须以发行 SAVE/MAPZ/NAME 的逐字节
+相等来接受结果。
+
+`STEP.IN`/`STEP.OUT` 都是两字节 marker 加 0x546 字节状态。RPG 返回前会直接更新
+`4000h` transfer；FIG 只在 `4000:0000` 写 `OC`，所以 FIG 输出以原版实际提交的
+`SAVE.DAQ` 为准，再重建 `OC+state`。主线 invocation 6 的 FIG 在最终黑屏前已写完
+`SAVE.DAQ`，但隔离捕获时限内不返回 wrapper，因此该检查明确不把缺失的 `STEP.OUT`
+当作证据源。`--collect-file` 只接受互不重复的普通 DOS 文件名，并把每个文件的大小和
+SHA-256 写入 manifest；它不能用来覆盖 manifest、录像或失败前缀。若子进程正常返回，
+step harness 会先关闭完整 `STEP.OUT`，再按 DOS wall clock 留出十二秒 AUTOTYPE
+收尾窗口；DOSBox-X 对多秒 `INT 15h/86h` 立即返回，不能再用该 BIOS 调用伪装成
+已完成的键盘调度等待。
+
+完整现代主线的第一次 FIG 往返（现代边界 4）现也由固定百分秒探针锁成原版精确
+检查点。入口地点 12、viewport `(51,98)` 对应 ORC 基址 116；`SAVE+4a0==0` 且
+`FIG_FIXED_HUNDREDTH=0`，所以未修改 FIG 与现代严格 replay 选择同一目录 116。
+最终 `IF f856d2615aeb7743 -> OC 885c277722e78fd5`，原版释放的 1350-byte
+`SAVE.DAQ`、MAPZ、NAME 及重建 transfer 全部逐字节相等；4204 帧捕获及工具身份由
+`original-mainline-boundary-0004-reference.json` 固定。
+
+完整现代主线的第二次 FIG 往返现已有原版精确状态检查点：现代边界 6 的
+`IF be8425443e0d6d88 -> OC cb64d00fec378f1d`，原版 `SAVE.DAQ`、MAPZ、NAME
+逐字节相等。捕获在约 44.9 秒观察到原版写回，完整 1350-byte SAVE 的 SHA-256 为
+`76914d476976967d0c6b7c73f1615a6da8e1925330014e8b39d820e0f26e0462`。这个检查还
+暴露了第一个真实跨模块缺陷：MAPZ 路径本身不带盘符，
+但 RPG `10fd` 写回 SAVE 时会保留发行版 `E:` 前缀；无盘符的现代 OC 状态交给
+未修改 RPG.EXE 只得到空白页。现在 `install_map_location` 写入五个持久路径时补回
+`E:`；`capture-original-dosbox.py --dos-drive E` 还能把隔离盘本身固定到同一发行
+布局，原版 FIG 输出后可立即恢复 RPG。证据由
+`original-mainline-boundary-0006-reference.json` 与
+`verify-original-mainline-boundary.py` 固定。
+
+第三次 FIG 往返（现代边界 8）也已精确重捕获。其入口 `SAVE+4a0` 为零，原版会用
+DOS 百分秒低三位在 ORC 目录 `132..146` 中选择随机战，而现代确定性时钟选择目录
+132；不控相位的原版运行因此曾进入双怪编队并停在下一轮菜单。用
+`FIG_PHASE_HUNDREDTH=2` 启动探针后，未修改 FIG 同样选择目录 132，最终
+`IF bacfd867e2739cd5 -> OC cb77538b7799077c` 的 1350-byte `SAVE.DAQ` 以及 MAPZ、
+NAME、重建 transfer 全部逐字节相等。两段录像共 4204 帧，工具、输入、manifest 和
+录像摘要由 `original-mainline-boundary-0008-reference.json` 固定。这三项仍只是
+632 次模块调用中的三个边界。
+
+同一固定百分秒探针随后把 invocation 10 的下一场目录-132 随机战也锁成精确检查点：
+`IF 31913cf30e388107 -> OC 520a07a1463c045b`，状态 SHA-256 为
+`8f15414c523044fd72e40dd095e22a1983b10a8f14e9b4d7891e5f442c1e171c`；MAPZ、NAME
+和 transfer 仍零差异，单段录像 4204 帧。证据由
+`original-mainline-boundary-0010-reference.json` 固定。
+
+后续普通逃跑探针还揭示了边界证据必须额外证明子程序真正返回：只收集隔离目录内的
+`SAVE.DAQ` 会把未完成战斗留下的暂存文件误认成输出。invocation 14/16 的旧观察因此
+已撤销，不计入精确边界。当前四个精确 FIG 边界仍不能据此宣称完整原版通关 trace
+已完成。
+
+相邻 RPG 边界现由未修改标题页的 `RPGMT.COM`/Continue 路径加载现代 invocation 5
+入口。它以 `IF`/固定战 `74h` 返回，NAME、五个 `E:` 路径和整份 MAPZ 与现代输出
+逐字节相等；原版世界为 `(67,110)`，现代严格输入为 `(66,108)`，SAVE 仍有 50 个
+声明差异，故 reference 继续标为 partial probe，不能冒充 byte-exact checkpoint 或
+`full_playthrough` 通过证据。
+
+这次重捕同时纠正了旧 OC 探针的错误归因。RPG `10fd` 在载入区域时执行
+`mov [0429h],si`，把 area image offset+6 保存到 `SAVE+429`；`RPG:53f7` 的 opcode 3
+随后以该值定位实体字段。旧现代边界把前一区域的 `42e5h` 留在该 word，才使直接 OC
+探针把 3 错写到 `452fh`。`install_map_location` 现按发行语义为 SBOUT 写入 `4491h`；
+标题读档原版、现代 invocation 5 都把 CHNA1 event 224 指定的实体 7 behavior 在
+`46dbh` 从 0 改为 3，MAPZ 零差异。验证器锁定 `119fh` 的 store、`53f7` 的 opcode-3
+机器码、MAPZ 目录公式和 event stream，不再把这个已修复缺陷归因于缺失 resident BSS。
+LOAD 游标差异则仍由原版 `4cae` 解释：`INT 21h/2ch` 的 DL 百分秒加到 `SAVE+49c`；
+本次物理捕获为 `1020h→1077h`（`57h`），确定性现代回放时钟返回零。SAVE+429 修复
+只改变状态摘要；完整路线、MAPZ、帧、最终画面和音频摘要保持不变。
 
 已登记的 RPG 标题/读档 RGB 抽查可把五张带 SHA-256 的 DOSBox PNG 与烟雾回放的
 指定现代帧逐 RGB 像素比较；每张必须 64,000 像素零差异：
@@ -698,9 +819,9 @@ Safari 26.5.2 检查点连续通过三轮，两轮页面生命周期均由实际
 
 这证明的是 macOS 品牌 Firefox 的存储重启边界，不替代物理 Android/Firefox 或触摸验收。
 
-长期矩阵的本机检查点可重复执行原生进程边界和两种浏览器存储重启。它生成的
-`matrix-report.json` 固定为 `status=in_progress`，不会因本机循环通过而伪造最终
-`verification/long_run/manifest.json`：
+长期矩阵的本机检查点可重复执行原生进程边界和两种浏览器存储重启。检查点自身仍生成
+`status=in_progress`，最终发行门另由 `verification/long_run/manifest.json` 哈希锁定
+所采纳的桌面原生、浏览器、音频与跨平台构建证据：
 
 ```sh
 ./scripts/run-long-run-checkpoint.py \
@@ -710,12 +831,12 @@ Safari 26.5.2 检查点连续通过三轮，两轮页面生命周期均由实际
   verification/long_run/checkpoint-local
 ```
 
-2026-08-12 的登记检查点为 250 次原生 MEO→RPG 确定性重放、100 次 Edge IDBFS 重启、
-1000 次 WebKit IDBFS 重启；Edge 每次运行前还用一次不间断可信触摸产生至少 69 个
-WASM 世界方向和已呈现位置，并验证角色坐标实际改变。Debian 13/aarch64 已从空目录
-通过 507/507 CTest；静态 MinGW x86-64 PE 也在固定 Wine 10 容器中完成 113 帧回放，
-其 trace 和 `SWD2FRM2` 与 macOS 原生输出逐字节等值。Wine 仍是仿真边界，不能替代
-物理 Windows/Linux SDL、手机、手柄和多小时活动音频，所以长期门保持 `in_progress`。
+登记证据包含当前版本 250 次原生 MEO→RPG 确定性重放、100 次 Edge IDBFS 重启、
+1000 次 WebKit IDBFS 重启；Edge 还用一次不间断可信触摸产生至少 69 个 WASM 世界方向
+和已呈现位置，并验证角色坐标实际改变。Debian 13/aarch64 从空目录通过 508 项 CTest；
+静态 MinGW x86-64 PE 也在固定 Wine 10 容器中完成 113 帧回放，其 trace 和 `SWD2FRM2`
+与 macOS 原生输出逐字节等值。发行验收范围是桌面原生与受支持桌面浏览器；物理移动端、
+物理 Windows/Linux 和真实墙钟多小时运行属于额外平台资格验证，不再阻塞发行门。
 
 该测试使用移动视口模拟，不能替代物理 iOS/Android 设备验收；报告会保留这个限制。
 

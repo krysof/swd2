@@ -3,8 +3,8 @@
   "kind": "wasm_branded_safari_idbfs_restart",
   "status": "verified",
   "limitation": "Installed macOS Safari is not physical iOS/iPadOS and this self-reporting same-origin probe does not test touch input.",
-  "captured_at": "2026-08-12T17:23:49+09:00",
-  "source_commit": "658b32d289dd6194622e9d162fbc5b4c244715eb",
+  "captured_at": "2026-08-21T11:30:04+09:00",
+  "source_commit": "7e1b2e3941ea7c920b3cb885c9dc5b684522f401",
   "browser": {
     "bundle_id": "com.apple.Safari",
     "version": "26.5.2",
@@ -40,9 +40,9 @@
     }
   ],
   "assets": {
-    "index.html": "8b21620a7073c9a25140c462c8f435385d553629c526b199d71c4c3eb534d2df",
-    "index.js": "8995977e50ac783ae63b7512ee4d0ecb9aee8a0463f7389b1d896376ae953278",
-    "index.wasm": "760f846c371dde6aee759d834ae2f35ae0f521802a39312122d5182a1878dfd9",
-    "index.data": "cc57db3e8963aaabed56cd2cf9a774da1575175c4182046bebfe828687760321"
+    "index.html": "44a717d666a0f440812ad250ba3d2be81430bb04eed9ec47b279c9efad19a30a",
+    "index.js": "310945cb67466775f5e950f71a0621141652b15818b985422dd80d3eb71d2a6a",
+    "index.wasm": "345e4fb883d31b447f4ad9993f7944584a7edb8cb364239412a412820e1b5e1c",
+    "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a"
   }
 }

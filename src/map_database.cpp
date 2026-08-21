@@ -43,6 +43,16 @@ std::string c_string(std::span<const std::uint8_t> image, std::uint16_t offset) 
     return {begin, end};
 }
 
+// MAPA/MAPZ stores resource names without a drive ("\\SWD2\\..." and
+// "CHNA?.EXE"), while RPG:10fd commits drive-qualified names to SAVE.DA.
+// The released saves use E:, and downstream DOS file helpers expect that
+// two-byte prefix before normalizing the path.  Keeping the prefix is also
+// required for a boundary state to resume in the untouched RPG.EXE.
+std::string persisted_resource_path(const std::string& path) {
+    if (path.empty() || (path.size() >= 2U && path[1] == ':')) return path;
+    return "E:" + path;
+}
+
 MapAreaRecord parse_area(std::span<const std::uint8_t> image, std::uint16_t offset) {
     MapAreaRecord result;
     result.flags = u16(image, offset);
@@ -331,15 +341,27 @@ void install_map_location(SharedState& state, MapDatabase& database,
     }
     if (relative_position) return;
 
+    // RPG:10fd stores SI immediately after reading flags/auxiliary/count.
+    // SAVE+429 therefore contains the selected MAPZ area's first entity-field
+    // word (area image offset + 6).  Opcode 3 later reopens MAPZ and adds this
+    // persisted base to field*count*2+current-entity-offset before rewriting
+    // the file.  Omitting this otherwise opaque SAVE word made a resumed
+    // original RPG write an event mutation into the previous area's payload.
+    state.set_u16(0x429, static_cast<std::uint16_t>(location.area_offset + 6U));
     for (std::size_t i = 0; i < location.big5_name.size(); ++i) {
         state.set_u8(0x3f6 + i, location.big5_name[i]);
     }
     state.set_u16(0x408, location.area.flags);
-    state.set_dos_string(0x42d, 22, location.area.graphics_path);
-    state.set_dos_string(0x443, 22, location.area.layout_path);
-    state.set_dos_string(0x459, 22, location.area.music_path);
-    state.set_dos_string(0x46f, 22, location.area.event_archive_path);
-    state.set_dos_string(0x485, 24, location.area.event_font_path);
+    state.set_dos_string(
+        0x42d, 22, persisted_resource_path(location.area.graphics_path));
+    state.set_dos_string(
+        0x443, 22, persisted_resource_path(location.area.layout_path));
+    state.set_dos_string(
+        0x459, 22, persisted_resource_path(location.area.music_path));
+    state.set_dos_string(
+        0x46f, 22, persisted_resource_path(location.area.event_archive_path));
+    state.set_dos_string(
+        0x485, 24, persisted_resource_path(location.area.event_font_path));
 }
 
 }  // namespace swd2

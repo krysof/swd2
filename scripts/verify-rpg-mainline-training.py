@@ -66,7 +66,7 @@ def main() -> int:
         if trace.get("delay_milliseconds") != 1639853:
             raise ValueError("training fixed-tick total changed")
         digests = {
-            "state_fnv1a64": "00b0307a508fc40c",
+            "state_fnv1a64": "2b09e8817c924e53",
             "mapz_fnv1a64": "8853834e394c715a",
             "name_fnv1a64": "e3d2853e2676513b",
         }

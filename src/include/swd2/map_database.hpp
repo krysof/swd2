@@ -115,7 +115,8 @@ private:
 
 // Installs one MAPA/MAPZ location with RPG.EXE:10fd semantics.  Bit 8000h
 // selects the relative-placement early return used by event opcode 37; the
-// ordinary form also installs the area's name, flags and five resource paths.
+// ordinary form also installs SAVE+429's persisted entity-array image base,
+// the area's name, flags and five resource paths.
 void install_map_location(SharedState& state, MapDatabase& database,
                           std::uint16_t encoded_directory_offset);
 

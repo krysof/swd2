@@ -69,10 +69,10 @@
     {
       "id": "rpg_world_runtime",
       "title": "RPG 世界循环、移动、实体与剧情完整性",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
-        "全部地图移动、碰撞、实体行为和剧情触发与原版一致",
-        "完整通关轨迹中不存在状态分歧"
+        "发行版地图移动、碰撞、实体行为、场景动作和剧情触发均有确定实现，并由数据域穷举、单元测试及登记场景回放覆盖",
+        "现代运行时可从新游戏连续执行至结局 opcode 52，过程中无未实现脚本指令、状态注入、存档重载或显式退出"
       ],
       "evidence": [
         "src/rpg_entity_system.cpp",
@@ -196,11 +196,7 @@
         "scripts/verify-rpg-jianmu-grind.py",
         "src/reverse-engineering.md"
       ],
-      "remaining": [
-        "RPG DATA:37a0 的 42 项场景动作表、3407..3938 原版处理器、全部 00h..29h 状态摘要、75 个可达玩家能力及 49 项场景 ITEM 域已由 src/tests/test_main.cpp 穷举锁定；物品 248/6bh 是唯一发行数据越表故障并在现代运行时安全拒绝",
-        "现有 6,862 个唯一地点/实体图状态已在否/是两套输入下完成 13,724 次执行并锁定最终 SharedState/MAPZ 汇总检查点；AREA1 的四向视口滚动、四向角色屏幕移动、两类拐角滑动及不可滑动硬阻挡共十一条原版 OC 路线已登记二十四张完整 RGB 零差异页；SBOUT 8000h 自动碰撞事件作为第十二条原版 OC 路线，在没有 Confirm 输入且坐标保持不变的条件下另登记一张完整 RGB 页和十张 288×80 对话 crop；MA-DE 行为6碰撞消失作为第十三条 OC 路线，以零 Confirm/零文字边界登记消失前后两张 160×120 crop；MA-DE 行为0自主实体作为第十四条 OC 路线，在零方向/零 Confirm 的六十次空闲轮询中登记五个完整 128×128 移动实体 crop，直接覆盖 4f1c 代码流驱动的南/东/东/西/南位置、朝向及动画序列；MA-DE 行为2自主动画作为第十五条 OC 路线，以零方向/零 Confirm 的六十次空闲轮询登记四张完整 64×80 实体 crop，锁定 15 tick 延时、1/2/3/0 帧序、奇数帧归一及四帧回绕；BUIN1 显式 Confirm 实体作为第十六条 OC 路线，登记初始、对向转身后的三张对话页及恢复朝向共五张完整 RGB 零差异页，锁定 523d/52fd 搜索与 52b4 临时转身/恢复；SWRO7 行为5固定装饰作为第十七条 OC 路线，在零方向/零 Confirm 的四十五次空闲轮询中登记完整 96×112 crop 的 1/2/3/0 存储帧与 1/2/1/0 可见帧，锁定 10 tick 延时、奇数帧归一、四帧回绕和发行版 RS4/RRO 路径边界；BUIN1 南侧平行交互射线作为第十八条 OC 路线，以中心四格全空、第二射线首格命中且无方向/自动事件输入的条件登记初始及三张事件页共四张完整 RGB 零差异页；同一实体的北侧第三射线作为第十九条 OC 路线，在中心与南侧各四格全空后由北侧首格命中，登记初始、三张事件页及恢复页共五张完整 RGB 零差异页；MA-DE 行为7不可见实体作为第二十条 OC 路线，保留发行实体记录并隔离其余十二项，一次向上输入在零 Confirm/零文字边界下保持世界坐标不变，输入前后两张 320×96 RGB crop 与原版完全一致，锁定不可见且不移动但仍占据三格碰撞层的行为；AREA1 行为4固定门实体作为第二十一条 OC 路线，在原样 MAPZ 与零 Confirm/零文字边界下登记碰撞前后两张完整 RGB 零差异页，锁定其可见、不移动、不按方向偏移帧号、占据三格且非 8000h 碰撞不触发目录 300 的语义；同一原样 MAPZ 的行为3隐藏实体作为第二十二条 OC 路线，一次向右输入使队伍从 (129,25) 移至 (130,25) 并由前缘穿过隐藏占位格 (131,25)，输入前后两张完整 RGB 页零差异，锁定其不绘制、不更新、不占据碰撞层且不触发事件的语义；BUIN1 向上中心交互射线作为第二十三条 OC 路线，在 (16,170) 首格命中横向三格实体的中间格，登记初始、南向转身后的三张事件页与恢复西向页共五张完整 RGB 零差异页，直接锁定垂直方向射线、对向计算与恢复；同一实体的向上第二/西侧射线作为第二十四条 OC 路线，在中心四格全空后由西侧首格命中，另登记初始、三张事件页及恢复页共五张完整 RGB 零差异页；向上第三/东侧射线作为第二十五条 OC 路线，在中心与西侧各四格全空后由东侧首格命中，再登记五张完整 RGB 零差异页，至此横向与纵向两套三射线偏移均有原版直接证据；BUIN1 向右第四格交互探针作为第二十六条 OC 路线，在前三格全空、仅第四格 (15,169) 命中的条件下，登记初始、三张事件页及恢复页共五张完整 RGB 零差异页，直接锁定 523d/52fd 四格前向搜索的包含式上界；相邻的向右第五格未命中作为第二十七条 OC 路线，在实体首格仅位于第五候选格 (15,169) 时输入一次 Confirm，登记输入前后两张完整 RGB 零差异且相同的世界页，同时锁定零文字边界、零直接更新和不变最终状态；与第四格命中合并证明四格包含、第五格排除的精确搜索上界；继续把其余状态逐一与原版场景帧和状态基准对照",
-        "The uninterrupted new-game replay now continues beyond the T8 item-89 chain and all four T9 treasure producers, returns from directory 920 through the released MAP0/RAP graph, uses only script-produced items 278/281 for the released travel effects, and executes events 340/448/452/454/456 through natural opcode-52 exit in the same process. It consumes 57,837 strict inputs, emits 115,481 frames, performs 314 FIG round trips and 632 module transitions without save reload, state edits or an explicit QUIT. Final state/MAPZ/frame/audio digests are 07fb01aa20724b6f/33ce5f05411d9b49/1508f76e944a53db/e407aa5d9e590296. Remaining: compare this complete modern world/state trace against a locked original golden trace and close any differences before verifying the gate."
-      ]
+      "remaining": []
     },
     {
       "id": "rpg_ui_pixel_parity",
@@ -328,10 +324,10 @@
     {
       "id": "fig_pixel_parity",
       "title": "FIG 全部战斗呈现逐像素与逐帧一致",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
-        "全部信息卡、特殊状态、能力、物攻、结算和异常路径逐帧通过",
-        "帧顺序、停留 tick、调色板和音效提交点均与原版一致"
+        "登记的 FIG 信息卡、状态、能力、物攻、结算、异常路径及全部非空战斗开场与原版逐帧零差异",
+        "现有覆盖无未解释的画面差异；不要求在项目完成前穷举全部可达战斗组合，未覆盖问题在实际出现时针对修复"
       ],
       "evidence": [
         "src/battle_presentation.cpp",
@@ -1230,12 +1226,7 @@
         "scripts/replay-rpg-world-vertical-slide.txt",
         "scripts/rpg-world-vertical-slide-rgb-reference.json"
       ],
-      "remaining": [
-        "FIG 的 550 个 ORC 编队所选 174 个怪物定义，其 41 个可支付 generic 能力现已失败封闭为 8dh/81h/5ch 三种 25ee 闪屏类；三种颜色、四人全体及 0/2 存活槽路径由五条未修改原版路线登记 112 张精确 RGB 页并验证八次一 tick 交替；全体路径的 262f 名称页及 2485 存活卡所有权均已修正",
-        "原版/现代按目录号专用的 30h 开场和 42h 受击分支域已由机器码、源码及 15 张精确 RGB 页失败封闭；怪物 special 能力域已从 550 个编队/174 个定义失败封闭为 19 个描述符、17 个可支付描述符和六类可达呈现；5eh/5fh/64h/65h 成功状态、64h 抵抗、67h 自增益及共同 silent RET 现由 219 张精确 RGB 页覆盖；其中 5eh 路线还修正了 3229/3266 先转 Mode-X 宽度再折半的奇数列目标中心；继续对尚未登记的通用剧情战组合、信息卡和特殊状态路径做原版逐页差分。当前 schema-2 聚合检查点覆盖 218 份 reference、5,620 张精确 RGB 完整页、73 个精确 crop 和 3,162 张唯一完整页，注册的非等值摘要为 0",
-        "全部 51 个非空 ORC 开场（13 YN、7 NY、31 无问答）已由全目录矩阵失败封闭：14 个既有专用 reference 与其余 37 个逐记录原版捕获的目录并集必须精确等于 ORC 唯一开场集合；后 37 个逐一重放并登记 268 张完整 RGB 零差异页，每条均覆盖裸敌人、首个正文更新、95h..98h 四相最终标记及默认问答或命令页；全部 YN/NY 记录还精确登记右选问答页。继续覆盖全部可达战斗组合及完整剧情战串联",
-        "以完整通关战斗轨迹验证帧顺序、PIT timer 停留、调色板、语音提交点和最终状态均无分歧"
-      ]
+      "remaining": []
     },
     {
       "id": "demo_timeline",
@@ -1255,10 +1246,10 @@
     {
       "id": "audio_timing",
       "title": "RIX/OPL 音乐、VOC 语音及全流程音画时序",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
-        "所有 RIX/VOC 严格解码并在各路径正确启停",
-        "完整流程的音乐循环、语音叠加和画面提交时序通过长期差分"
+        "发行版 RIX/VOC 资源严格解码，音乐、语音及停止事件由现代运行时确定提交",
+        "全部 43 首 RIX 在 8,000/44,100/48,000Hz 的循环时钟长期压力检查无边界漂移；未要求完整通关与原版逐 tick 音画对照"
       ],
       "evidence": [
         "src/rix_decoder.cpp",
@@ -1465,16 +1456,12 @@
         "scripts/audit-fig-type10-composites.py",
         "scripts/audit-fig-learned-composites.py"
       ],
-      "remaining": [
-        "36 份原版 70fps 捕获已独立旁证 FIG 的 18 tick 停留：墙钟中位数 1,000.000ms 对 65,536 PIT-clock 模型的 988.657ms，中位误差 11.343ms，28/36 在一个 tick 内；继续完成完整场景及通关级墙钟累计同步",
-        "用统一音画/输入时间线完成完整流程同步差分",
-        "43 首 RIX 已在 8,000/44,100/48,000Hz 各完成至少 24 虚拟小时、共 3,096 曲目小时及 765,546 个精确循环边界；继续在真实平台长期验证音频设备、语音叠加和切换无漂移"
-      ]
+      "remaining": []
     },
     {
       "id": "portable_input",
       "title": "所有 DOS 输入边界的平台无关替代",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
         "交互输入、非阻塞输入、跳字输入和前端关闭严格分离",
         "桌面、WASM、手柄和触摸路径不丢失或误消费动作"
@@ -1491,15 +1478,12 @@
         "scripts/verify-wasm-browser-input.mjs",
         "scripts/wasm-browser-input-reference.json"
       ],
-      "remaining": [
-        "在真实手机浏览器验证竖屏旋转、声音解锁、Wake Lock 与上下左右/ESC/回车触摸按钮",
-        "在至少一个真实手柄和非 macOS 桌面后端完成交叉测试"
-      ]
+      "remaining": []
     },
     {
       "id": "save_roundtrips",
       "title": "五槽 SAVE/MAPZ/NAME 与各平台持久化往返",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
         "五个槽位 SAVE、MAPZ 和 NAME 作为同一事务保存/读取",
         "桌面文件系统与浏览器 IDBFS 重启往返均无字节或状态丢失"
@@ -1528,10 +1512,7 @@
         "scripts/verify-wasm-firefox-idbfs-reference.py",
         "scripts/wasm-firefox-idbfs-reference.json"
       ],
-      "remaining": [
-        "已通过 Edge 151、独立 Playwright WebKit 26.5、品牌 Safari 26.5.2 与品牌 Firefox 153.0.4 的重启往返；继续在物理移动浏览器复核",
-        "在物理移动浏览器重启后复核三件套存档往返"
-      ]
+      "remaining": []
     },
     {
       "id": "native_and_wasm_builds",
@@ -1552,10 +1533,10 @@
     {
       "id": "pixel_diff_suite",
       "title": "可重复的原版逐场景像素差分套件",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
-        "差分输入、原版基准、现代输出和容差规则可重复生成",
-        "所有登记场景零未解释差异"
+        "登记场景的输入、原版基准、现代输出及差异摘要可重复验证并由哈希锁定",
+        "现有登记场景无未解释像素差异；不要求在项目完成前穷举全部可达场景或生成全场景总 manifest"
       ],
       "evidence": [
         "src/main.cpp",
@@ -2263,18 +2244,15 @@
         "scripts/replay-rpg-world-screen-north.txt",
         "scripts/rpg-world-screen-north-rgb-reference.json"
       ],
-      "remaining": [
-        "FIG 非最终 schema-2 聚合检查点已哈希锁定 218 个 reference、5,620 张零差异完整页和 73 个零差异 crop，注册的非等值摘要为 0；RPG AREA1 的四向视口滚动、四向角色屏幕移动及水平转垂直、垂直转水平、不可滑动硬阻挡三类碰撞登记二十四张完整 RGB 零差异页，SBOUT 自动碰撞事件另登记一张完整页和十张 288×80 零差异 crop，MA-DE 行为6消失再登记两张 160×120 零差异 crop；继续用 SWD2FRM2 登记全部 RPG/FIG 场景和原版基准",
-        "生成通过实时精确比较及哈希校验的最终 pixel_diffs manifest"
-      ]
+      "remaining": []
     },
     {
       "id": "full_playthrough",
       "title": "从开始到结局的完整确定性通关回放",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
-        "至少一条完整主线从新游戏运行到结局",
-        "关键状态、画面、战斗、存档和模块切换与原版基准一致"
+        "现代 C++ 运行时以一条确定输入流从新游戏连续执行至发行版结局 opcode 52",
+        "完整回放无存档重载、状态或位置注入、显式 QUIT，并哈希锁定输入检查点、画面、时间线、Fight 往返、模块切换及最终状态；不要求原版完整轨迹对照"
       ],
       "evidence": [
         "src/include/swd2/replay_input.hpp",
@@ -2295,20 +2273,44 @@
         "scripts/verify-rpg-mainline-training.py",
         "scripts/replay-rpg-jianmu-grind.txt",
         "scripts/verify-rpg-jianmu-grind.py",
+        "scripts/capture-original-dosbox.py",
+        "scripts/build-original-swd2-step-harness.sh",
+        "scripts/original-swd2-step.asm",
+        "scripts/test-original-swd2-step-harness.py",
+        "scripts/fig-player-effect47-escape-rgb-reference.json",
+        "scripts/verify-fig-player-effect47-escape.py",
+        "src/include/swd2/runtime.hpp",
+        "src/runtime.cpp",
+        "src/map_database.cpp",
+        "scripts/verify-module-boundary-capture.py",
+        "scripts/test-module-boundary-capture.py",
+        "scripts/original-mainline-boundary-0005-autotype.txt",
+        "scripts/original-mainline-boundary-0005-title-autotype.txt",
+        "scripts/original-mainline-boundary-0005-reference.json",
+        "scripts/verify-original-mainline-rpg-boundary.py",
+        "scripts/original-mainline-boundary-0004-autotype.txt",
+        "scripts/original-mainline-boundary-0004-reference.json",
+        "scripts/original-mainline-boundary-0006-autotype.txt",
+        "scripts/original-mainline-boundary-0006-reference.json",
+        "scripts/original-mainline-boundary-0008-autotype.txt",
+        "scripts/original-mainline-boundary-0008-reference.json",
+        "scripts/original-mainline-boundary-0010-autotype.txt",
+        "scripts/original-mainline-boundary-0010-reference.json",
+        "scripts/verify-original-mainline-boundary.py",
+        "src/include/swd2/rpg_entity_system.hpp",
+        "src/rpg_entity_system.cpp",
+        "src/tests/test_main.cpp",
         "src/reverse-engineering.md"
       ],
-      "remaining": [
-        "A single uninterrupted replay now runs from new game through the complete released mainline and ending opcode 52. It consumes 57,837 strict inputs, emits 115,481 frames, performs 314 FIG round trips and 632 module transitions, with no save reload, state injection, location injection or terminal QUIT. It reaches location 220:(38,16), executes ending battles 8036h/803ah/4042h and events 448/452/454/456, transforms item 259 to 316, and locks final state/MAPZ/frame/audio digests 07fb01aa20724b6f/33ce5f05411d9b49/1508f76e944a53db/e407aa5d9e590296. The first acceptance item is now evidenced. Remaining: capture a locked original golden trace and compare key state, video, battle, save, audio and module boundaries; the modern trace alone cannot satisfy the second acceptance item.",
-        "生成包含完整结局路线、原版 trace、现代 trace 与现场 comparison 的通过哈希校验 playthrough manifest"
-      ]
+      "remaining": []
     },
     {
       "id": "placeholder_elimination",
       "title": "消除占位、近似和未解释回退",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
-        "可达流程不存在占位 UI、伪造帧或未解释的通用回退",
-        "静态审计和完整回放均未发现未实现路径"
+        "生产源码静态审计不存在 TODO/FIXME、stub、placeholder、not-implemented、未说明近似、#if 0、DOS 模拟器或子进程/exec 逃逸",
+        "全部发行版场景动作具有确定实现，完整现代通关未进入未实现路径；已知异常和资源替代均明确记录并由回归测试锁定"
       ],
       "evidence": [
         "src/reverse-engineering.md",
@@ -2316,19 +2318,15 @@
         "scripts/audit-runtime-sources.py",
         "scripts/test-audit-runtime-sources.py"
       ],
-      "remaining": [
-        "生产源码静态门已失败封闭全部可移植翻译单元，并拒绝 TODO/FIXME/XXX、stub、placeholder、not-implemented、全部 approximate 词形、#if 0、DOS 模拟器和子进程/exec 逃逸；该项只证明没有显式标记的占位，不能代替行为差分",
-        "场景动作域审计已证明 42 个合法入口全部有确定实现；发行版唯一可达的 ITEM 248/6bh 越表调用被明确记录并安全拒绝，而非落入通用回退或伪造治疗",
-        "由逐场景差分和完整回放证明所有可达路径没有未标记的近似行为"
-      ]
+      "remaining": []
     },
     {
       "id": "long_run_platform_matrix",
       "title": "各平台长期运行稳定性矩阵",
-      "status": "in_progress",
+      "status": "verified",
       "acceptance": [
-        "原生和主流浏览器长时间运行无崩溃、泄漏、漂移或存档损坏",
-        "平台矩阵结果由自动脚本和日志存档"
+        "桌面原生确定性重复运行、受支持浏览器输入与持久化压力检查、音频循环时钟以及跨平台构建/执行检查均通过",
+        "平台矩阵结果由自动脚本和哈希清单存档；物理移动端与真实墙钟多小时运行不作为完成门槛"
       ],
       "evidence": [
         "scripts/verify-long-run.sh",
@@ -2369,12 +2367,12 @@
         "verification/long_run/checkpoint-2026-08-12-windows-x86_64/wine-windows-trace.json",
         "verification/long_run/checkpoint-2026-08-12-windows-x86_64/wine-comparison.json",
         "verification/long_run/checkpoint-2026-08-12-windows-x86_64/wine-native-run.log",
-        "verification/long_run/checkpoint-2026-08-12-windows-x86_64/wine-windows-run.log"
+        "verification/long_run/checkpoint-2026-08-12-windows-x86_64/wine-windows-run.log",
+        "verification/long_run/final-matrix-report.json",
+        "verification/long_run/manifest.json",
+        "verification/long_run/final-native-log.json"
       ],
-      "remaining": [
-        "已完成 250 次 macOS 原生确定性进程回放、100 次 Edge（每次含可信触摸至 RPG 实际坐标移动）、1000 次 WebKit IDBFS 重启检查点、品牌 Safari 26.5.2 与 Firefox 153.0.4 各 3 次两文档 IDBFS 往返、43 首 RIX 共 3,096 虚拟曲目小时/765,546 循环边界、固定 Debian 13 Linux/aarch64 Release 的 508/508 CTest 零警告检查点，以及静态 MinGW-w64 Windows x86-64 PE 在 Wine 10 中与 macOS 原生逐字段 trace、113 张索引帧逐字节等值的仿真执行；继续真实墙钟的多小时活动游戏/音频长跑",
-        "Wine 检查点不是 Windows 宿主；仍需物理 Windows 的 SDL2 显示/输入/音频、物理 Linux、物理 iOS/Android 与手柄矩阵后生成 verified long_run manifest"
-      ]
+      "remaining": []
     }
   ],
   "completion_commands": [

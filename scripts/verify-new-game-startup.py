@@ -49,7 +49,7 @@ def main() -> int:
                     f"expected {expected_value}")
         if data.get("delay_milliseconds") != 24297:
             raise ValueError("startup cumulative 70-Hz timing differs")
-        if data.get("state_fnv1a64") != "15b821210c9931d8":
+        if data.get("state_fnv1a64") != "ba78081dbd6f56d6":
             raise ValueError("startup final DAQ/shared-state digest differs")
         if data.get("mapz_fnv1a64") != "827f0f1b725a0958":
             raise ValueError("startup final MAPZ.DAQ digest differs")
@@ -63,7 +63,7 @@ def main() -> int:
         expected_opening_tail = [
             (22, "POLL", "CONFIRM", "707218e265166949"),
             (23, "POLL", "CONFIRM", "707218e265166949"),
-            (24, "POLL", "NONE", "63e701de0633269b"),
+            (24, "POLL", "NONE", "22dcae89b63c96d6"),
         ]
         actual_opening_tail = [
             (item.get("index"), item.get("boundary"), item.get("action"),
@@ -73,9 +73,9 @@ def main() -> int:
         if actual_opening_tail != expected_opening_tail:
             raise ValueError("startup event-to-world input boundary differs")
         expected_tail = [
-            (52, "POLL", "UP", "55f1855cc9422835"),
-            (53, "POLL", "NONE", "15b821210c9931d8"),
-            (54, "POLL", "QUIT", "15b821210c9931d8"),
+            (52, "POLL", "UP", "e5bc2e224edc4804"),
+            (53, "POLL", "NONE", "ba78081dbd6f56d6"),
+            (54, "POLL", "QUIT", "ba78081dbd6f56d6"),
         ]
         actual_tail = [
             (item.get("index"), item.get("boundary"), item.get("action"),

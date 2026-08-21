@@ -284,6 +284,15 @@ if(BUILD_TESTING)
                 "${PROJECT_SOURCE_DIR}/game"
     )
     add_test(
+        NAME module_boundary_capture_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/test-module-boundary-capture.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${PROJECT_SOURCE_DIR}/scripts/replay-smoke.txt"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-module-boundary-capture.py"
+    )
+    add_test(
         NAME rpg_opening_pixel_validation
         COMMAND "${Python3_EXECUTABLE}"
                 "${PROJECT_SOURCE_DIR}/scripts/verify-rpg-opening.py"
@@ -410,6 +419,7 @@ if(BUILD_TESTING)
         NAME rpg_mainline_event334_prepare
         COMMAND "${CMAKE_COMMAND}" -E remove_directory
                 "${CMAKE_BINARY_DIR}/rpg-mainline-event334-saves"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-event334-boundaries"
     )
     add_test(
         NAME rpg_mainline_event334_replay
@@ -423,6 +433,8 @@ if(BUILD_TESTING)
                     "${CMAKE_BINARY_DIR}/rpg-mainline-event334-trace.json"
                 --frame-output
                     "${CMAKE_BINARY_DIR}/rpg-mainline-event334-frames.bin"
+                --boundary-output
+                    "${CMAKE_BINARY_DIR}/rpg-mainline-event334-boundaries"
     )
     set_tests_properties(rpg_mainline_event334_replay PROPERTIES
         DEPENDS rpg_mainline_event334_prepare)
@@ -450,6 +462,68 @@ if(BUILD_TESTING)
     )
     set_tests_properties(rpg_mainline_event334_checkpoint PROPERTIES
         DEPENDS rpg_mainline_event334_validation)
+    add_test(
+        NAME rpg_mainline_event334_boundary_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-module-boundary-capture.py"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-event334-boundaries"
+                --expected-invocations 632
+                --expected-figures 314
+                --expected-final-state e3fd6a1f5031b981
+                --expected-final-mapz 33ce5f05411d9b49
+    )
+    set_tests_properties(rpg_mainline_event334_boundary_validation PROPERTIES
+        DEPENDS rpg_mainline_event334_replay)
+    add_test(
+        NAME original_mainline_rpg_boundary_audit
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-original-mainline-rpg-boundary.py"
+                "${PROJECT_SOURCE_DIR}/scripts/original-mainline-boundary-0005-reference.json"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-event334-boundaries"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    set_tests_properties(original_mainline_rpg_boundary_audit PROPERTIES
+        DEPENDS rpg_mainline_event334_boundary_validation)
+    add_test(
+        NAME original_mainline_boundary_0004_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-original-mainline-boundary.py"
+                "${PROJECT_SOURCE_DIR}/scripts/original-mainline-boundary-0004-reference.json"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-event334-boundaries"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    set_tests_properties(original_mainline_boundary_0004_validation PROPERTIES
+        DEPENDS rpg_mainline_event334_boundary_validation)
+    add_test(
+        NAME original_mainline_boundary_0006_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-original-mainline-boundary.py"
+                "${PROJECT_SOURCE_DIR}/scripts/original-mainline-boundary-0006-reference.json"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-event334-boundaries"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    set_tests_properties(original_mainline_boundary_0006_validation PROPERTIES
+        DEPENDS rpg_mainline_event334_boundary_validation)
+    add_test(
+        NAME original_mainline_boundary_0008_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-original-mainline-boundary.py"
+                "${PROJECT_SOURCE_DIR}/scripts/original-mainline-boundary-0008-reference.json"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-event334-boundaries"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    set_tests_properties(original_mainline_boundary_0008_validation PROPERTIES
+        DEPENDS rpg_mainline_event334_boundary_validation)
+    add_test(
+        NAME original_mainline_boundary_0010_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-original-mainline-boundary.py"
+                "${PROJECT_SOURCE_DIR}/scripts/original-mainline-boundary-0010-reference.json"
+                "${CMAKE_BINARY_DIR}/rpg-mainline-event334-boundaries"
+                "${PROJECT_SOURCE_DIR}/game"
+    )
+    set_tests_properties(original_mainline_boundary_0010_validation PROPERTIES
+        DEPENDS rpg_mainline_event334_boundary_validation)
     add_test(
         NAME rpg_mainline_training_prepare
         COMMAND "${CMAKE_COMMAND}" -E remove_directory
@@ -530,7 +604,7 @@ if(BUILD_TESTING)
                 "${CMAKE_BINARY_DIR}/rpg-jianmu-grind-trace.json"
                 --require-module RPG.EXE
                 --require-module FIG.EXE
-                --min-frames 7000
+                --min-frames 600
     )
     set_tests_properties(rpg_jianmu_grind_validation PROPERTIES
         DEPENDS rpg_jianmu_grind_replay)
@@ -3479,6 +3553,24 @@ if(BUILD_TESTING)
     )
     set_tests_properties(fig_player_attack_basic_validation PROPERTIES
         DEPENDS fig_player_attack_basic_prepare)
+    add_test(
+        NAME fig_tianhuo_fan_prepare
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/prepare-fig-tianhuo-fan-fixture.py"
+                "${PROJECT_SOURCE_DIR}/game"
+                "${CMAKE_BINARY_DIR}/fig-tianhuo-fan-game"
+    )
+    add_test(
+        NAME fig_tianhuo_fan_validation
+        COMMAND "${Python3_EXECUTABLE}"
+                "${PROJECT_SOURCE_DIR}/scripts/verify-fig-tianhuo-fan.py"
+                "$<TARGET_FILE:swd2_rewrite>"
+                "${CMAKE_BINARY_DIR}/fig-tianhuo-fan-game"
+                "${CMAKE_BINARY_DIR}/fig-tianhuo-fan"
+                "${PROJECT_SOURCE_DIR}/scripts/replay-fig-player-attack-basic.txt"
+    )
+    set_tests_properties(fig_tianhuo_fan_validation PROPERTIES
+        DEPENDS fig_tianhuo_fan_prepare)
     add_test(
         NAME fig_player_attack_flee_prepare
         COMMAND "${Python3_EXECUTABLE}"

@@ -87,6 +87,11 @@ void ensure_size(RpgEntityRuntime& runtime, std::size_t size) {
 
 }  // namespace
 
+void perturb_rpg_load_cursor(SharedState& state, unsigned hundredth) {
+    state.set_u16(0x49c, static_cast<std::uint16_t>(
+        state.u16(0x49c) + static_cast<std::uint8_t>(hundredth)));
+}
+
 void advance_rpg_entities(MapAreaRecord& area, const MapResource& map,
                           const SharedState& state, RpgEntityRuntime& runtime,
                           std::span<const std::uint8_t> rpg_load_image) {

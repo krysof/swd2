@@ -47,6 +47,26 @@ struct GameContext {
     std::vector<std::uint8_t> name_font;
 };
 
+// Optional platform-neutral instrumentation around the former executable
+// boundary.  The callback sees the exact shared state immediately before a
+// module receives its marker and immediately after it returns its marker.
+// Production frontends leave it empty; strict replay tools use it to build
+// byte-exact inputs for the original DOS RPG/FIG step harness.
+enum class ModuleBoundaryPhase {
+    enter,
+    leave,
+};
+
+struct ModuleBoundaryEvent {
+    ModuleBoundaryPhase phase{ModuleBoundaryPhase::enter};
+    Module module{Module::menu};
+    // Input marker for enter, returned marker for leave.
+    Marker marker{Marker::none};
+};
+
+using ModuleBoundaryObserver =
+    std::function<void(const ModuleBoundaryEvent&, const GameContext&)>;
+
 class GameModule {
 public:
     virtual ~GameModule() = default;
@@ -68,9 +88,12 @@ private:
 class MonolithicRuntime {
 public:
     explicit MonolithicRuntime(ModuleRegistry registry);
-    [[nodiscard]] LaunchResult run(GameContext& context) const;
+    [[nodiscard]] LaunchResult run(
+        GameContext& context,
+        const ModuleBoundaryObserver& observer = {}) const;
     [[nodiscard]] LaunchResult resume(GameContext& context,
-                                      Marker marker) const;
+                                      Marker marker,
+                                      const ModuleBoundaryObserver& observer = {}) const;
 
 private:
     ModuleRegistry registry_;

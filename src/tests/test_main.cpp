@@ -398,6 +398,12 @@ void test_rpg_save_slot_selector(const std::filesystem::path& game_root) {
                 std::equal(oc_q_slot.begin(), oc_q_slot.end(),
                            image.begin() + 0x00b7U),
             "RPG OC entry no longer reloads the Q checkpoint through 4c16");
+    const std::array<std::uint8_t, 10> load_cursor_clock{
+        0xb4, 0x2c, 0xcd, 0x21, 0xb6, 0x00, 0x01, 0x16, 0x9c, 0x04};
+    require(image.size() >= 0x4caeU + load_cursor_clock.size() &&
+                std::equal(load_cursor_clock.begin(), load_cursor_clock.end(),
+                           image.begin() + 0x4caeU),
+            "RPG 4c16 no longer adds DOS hundredths to SAVE+49c");
     const std::array<std::uint8_t, 23> oc_entity_continuation{
         0x83, 0x3e, 0x1c, 0x05, 0x00, 0x74, 0x16,
         0x8b, 0x1e, 0x1c, 0x05, 0x83, 0xeb, 0x02,
@@ -1484,6 +1490,21 @@ void test_item_inventory(const std::filesystem::path& game_root) {
                 item61.stat_words[2] == static_cast<std::uint16_t>(-30),
             "ITEM common prefix fields were decoded at the wrong offsets");
 
+    const auto& tianhuo_fan = items.at(62);
+    require(tianhuo_fan.type == 0x1b && tianhuo_fan.id == 62 &&
+                tianhuo_fan.preview_sprite == 62 &&
+                tianhuo_fan.character_restrictions == 0x0e &&
+                tianhuo_fan.use_flags == 0x082a &&
+                !tianhuo_fan.field_usable() && tianhuo_fan.battle_usable() &&
+                !tianhuo_fan.consumed_on_use() && tianhuo_fan.sellable() &&
+                tianhuo_fan.discardable() &&
+                tianhuo_fan.equipment_category() == 8 &&
+                tianhuo_fan.effect_code == 0x43 &&
+                tianhuo_fan.price == 1900 &&
+                tianhuo_fan.stat_words[0] == 33 &&
+                tianhuo_fan.stat_words[1] == 2,
+            "ITEM 62 Tianhuo-fan equipment/effect record differs");
+
     auto shop_state = swd2::SharedState::load(game_root / "SAVE.DA1");
     for (std::size_t slot = 0; slot < 50; ++slot) shop_state.set_u16(0x382 + slot * 2, 0);
     for (std::size_t i = 0; i < 5; ++i) shop_state.set_u16(0x3e6 + i * 2, 0);
@@ -1569,6 +1590,27 @@ void test_item_inventory(const std::filesystem::path& game_root) {
                 equip_state.u16(0x382) == 117 && equip_state.u16(actor0 + 0x14) == 117 &&
                 equip_state.u16(actor0 + 0x16) == 118,
             "RPG two-handed conflict mutated occupied hand slots");
+
+    auto fan_state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    fan_state.set_u16(0x10, 4);
+    fan_state.set_u16(0x382, 62);
+    const auto actor3 = std::size_t{0x106 + 3 * 0x9f};
+    fan_state.set_u16(actor3, 36);
+    fan_state.set_u16(actor3 + 0x14, 0);
+    fan_state.set_u16(actor3 + 0x16, 0);
+    fan_state.set_u8(actor3 + 0x2c, 0);
+    const auto old_attack = fan_state.u16(actor3 + 0x0c);
+    const auto old_fan_defense = fan_state.u16(actor3 + 0x0e);
+    swd2::InventorySystem fan_equipment(fan_state, items);
+    require(fan_equipment.exchange_equipment(0, 0, 2).status ==
+                swd2::EquipmentExchangeStatus::character_restricted &&
+                fan_equipment.exchange_equipment(0, 3, 2).status ==
+                    swd2::EquipmentExchangeStatus::exchanged &&
+                fan_state.u16(actor3 + 0x14) == 62 &&
+                fan_state.u16(actor3 + 0x16) == 0 &&
+                fan_state.u16(actor3 + 0x0c) == old_attack + 33 &&
+                fan_state.u16(actor3 + 0x0e) == old_fan_defense + 2,
+            "RPG Tianhuo fan was not restricted/equipped as ITEM 62");
 
     const auto& item51 = items.at(51);
     require(item51.use_flags == 0x102f && item51.field_usable() &&
@@ -2003,7 +2045,7 @@ void test_map_resource(const std::filesystem::path& game_root) {
 
 void test_map_database(const std::filesystem::path& game_root) {
     const auto immutable = swd2::MapDatabase::load(game_root / "MAPA.EXE");
-    const auto mutable_save = swd2::MapDatabase::load(game_root / "MAPZ.DA1");
+    auto mutable_save = swd2::MapDatabase::load(game_root / "MAPZ.DA1");
     require(immutable.has_trailing_sentinel() && !mutable_save.has_trailing_sentinel(),
             "MAPA and MAPZ end-marker variants were not distinguished");
     const auto mapz_bytes = read_file(game_root / "MAPZ.DA1");
@@ -2014,7 +2056,7 @@ void test_map_database(const std::filesystem::path& game_root) {
     require(immutable.locations().size() == 466 && immutable.unique_area_count() == 152,
             "unexpected MAPA world database dimensions");
 
-    const auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
     const auto& location = mutable_save.location_at_directory_offset(
         state.map_location_directory_offset());
     require(location.directory_offset == 8 && location.map_position == state.u16(0x40d),
@@ -2038,6 +2080,16 @@ void test_map_database(const std::filesystem::path& game_root) {
                 location.area.event_archive_path == "CHNA1.EXE" &&
                 location.area.event_font_path == "CHNA1.DSK",
             "MAPZ AREA1 resource pointers were not decoded");
+
+    state.set_u16(0x429, 0xffffU);
+    const auto& sbout = mutable_save.location_at_directory_offset(12U);
+    swd2::install_map_location(state, mutable_save, 12U);
+    require(state.u16(0x429) == sbout.area_offset + 6U,
+            "RPG 10fd did not persist the MAPZ entity-array base at SAVE+429");
+    const auto entity_base = state.u16(0x429);
+    swd2::install_map_location(state, mutable_save, 0x8008U);
+    require(state.u16(0x429) == entity_base,
+            "RPG relative 10fd placement unexpectedly replaced SAVE+429");
 }
 
 void test_map_transition_database(const std::filesystem::path& game_root) {
@@ -2123,6 +2175,10 @@ void test_rpg_entity_system(const std::filesystem::path& game_root) {
 
     swd2::SharedState::Storage empty{};
     auto state = swd2::SharedState::from_bytes(empty);
+    state.set_u16(0x49c, 0xfff0U);
+    swd2::perturb_rpg_load_cursor(state, 0x53U);
+    require(state.u16(0x49c) == 0x0043U,
+            "RPG load-time DOS hundredth did not wrap SAVE+49c as a word");
     state.set_u16(0x40f, 8);
     state.set_u16(0x417, map.layout().width);
     state.set_u16(0x419, map.layout().height);
@@ -3308,12 +3364,14 @@ void test_battle_party(const std::filesystem::path& game_root) {
             "FIG 137a FMAN pose offset tables/Mode-X conversion differ");
     require(swd2::fig_weapon_animations(member) ==
                     std::vector<swd2::FigWeaponAnimation>{{122, false}} &&
+                read_file(game_root / "SW" / "SW062.RSK") ==
+                    read_file(game_root / "SW" / "SW124.RSK") &&
                 swd2::fig_weapon_placement(160, 80) ==
                     swd2::FigWeaponPlacement{144, 30} &&
                 swd2::fig_monster_center_x(33, 64) == 164 &&
                 swd2::fig_monster_center_x(23, 116) == 148 &&
                 swd2::fig_monster_center_x(35, 32) == 156,
-            "FIG +2c single-weapon 14b1 path/anchor differs");
+            "FIG weapon resource repair/path/anchor differs");
     require(swd2::fig_page_wipe_scanline_ends() ==
                 std::array<int, 4>{50, 100, 150, 200},
             "FIG 3c44 weapon wipe no longer copies four 50-line chunks");
@@ -8256,11 +8314,15 @@ void test_event_vm(const std::filesystem::path& game_root) {
                 state.viewport_y() == destination.viewport_y &&
                 state.actor_screen_x() == destination.actor_screen_x &&
                 state.actor_screen_y() == destination.actor_screen_y &&
-                state.area_graphics_path() == destination.area.graphics_path &&
-                state.area_collision_path() == destination.area.layout_path &&
-                state.music_path() == destination.area.music_path &&
-                state.event_executable_path() == destination.area.event_archive_path &&
-                state.event_data_path() == destination.area.event_font_path,
+                state.area_graphics_path() ==
+                    "E:" + destination.area.graphics_path &&
+                state.area_collision_path() ==
+                    "E:" + destination.area.layout_path &&
+                state.music_path() == "E:" + destination.area.music_path &&
+                state.event_executable_path() ==
+                    "E:" + destination.area.event_archive_path &&
+                state.event_data_path() ==
+                    "E:" + destination.area.event_font_path,
             "event opcode 37 did not continue/persist opcode 3 on the destination area");
     for (std::size_t i = 0; i < 12; ++i) {
         require(state.u16(0x12 + i * 2) == destination.actor_screen_x &&
@@ -8412,7 +8474,7 @@ public:
         }
         return false;
     }
-    swd2::ClockTime clock_time() const override { return {0, 0}; }
+    swd2::ClockTime clock_time() const override { return clock_time_value; }
     void play_music(std::span<const std::uint8_t>, bool) override { ++music_calls; }
     void play_voice(std::span<const std::uint8_t> data) override {
         ++voice_calls;
@@ -8431,6 +8493,7 @@ public:
         delayed_milliseconds += static_cast<std::uint64_t>(duration.count());
     }
     std::size_t presented{};
+    swd2::ClockTime clock_time_value{};
     std::size_t music_calls{};
     std::size_t voice_calls{};
     std::size_t voice_bytes{};
@@ -8515,7 +8578,21 @@ void test_monolithic_runtime(const std::filesystem::path& game_root) {
     modules.add(std::make_unique<swd2::RpgModule>());
     modules.add(std::make_unique<swd2::BattleModule>());
     modules.add(std::make_unique<swd2::DemoModule>());
-    const auto result = swd2::MonolithicRuntime(std::move(modules)).run(context);
+    struct ObservedBoundary {
+        swd2::ModuleBoundaryEvent event;
+        std::uint64_t state_digest{};
+    };
+    std::vector<ObservedBoundary> boundaries;
+    const auto result = swd2::MonolithicRuntime(std::move(modules)).run(
+        context, [&](const swd2::ModuleBoundaryEvent& event,
+                     const swd2::GameContext& observed) {
+            std::uint64_t digest = 14695981039346656037ULL;
+            for (const auto byte : observed.shared_state.bytes()) {
+                digest ^= byte;
+                digest *= 1099511628211ULL;
+            }
+            boundaries.push_back({event, digest});
+        });
     require(result.transitions.size() == 2, "monolithic runtime did not call MEO then RPG");
     require(result.transitions[0].module == swd2::Module::menu,
             "monolithic runtime did not begin with MEO");
@@ -8524,6 +8601,22 @@ void test_monolithic_runtime(const std::filesystem::path& game_root) {
     require(platform.presented == 113 && platform.music_calls == 2 &&
                 platform.stop_calls == 2,
             "MEO, RPG title/load and world did not remain in one process");
+    require(
+        boundaries.size() == 4U &&
+            boundaries[0].event.phase == swd2::ModuleBoundaryPhase::enter &&
+            boundaries[0].event.module == swd2::Module::menu &&
+            boundaries[0].event.marker == swd2::Marker::none &&
+            boundaries[1].event.phase == swd2::ModuleBoundaryPhase::leave &&
+            boundaries[1].event.module == swd2::Module::menu &&
+            boundaries[1].event.marker == swd2::Marker::menu_ready &&
+            boundaries[2].event.phase == swd2::ModuleBoundaryPhase::enter &&
+            boundaries[2].event.module == swd2::Module::rpg &&
+            boundaries[2].event.marker == swd2::Marker::menu_ready &&
+            boundaries[3].event.phase == swd2::ModuleBoundaryPhase::leave &&
+            boundaries[3].event.module == swd2::Module::rpg &&
+            boundaries[3].event.marker == swd2::Marker::none &&
+            boundaries[1].state_digest == boundaries[2].state_digest,
+        "module boundary observer did not bracket the in-process calls");
 }
 
 void test_rpg_opening_menu(const std::filesystem::path& game_root) {
@@ -8859,14 +8952,17 @@ void test_rpg_idle_world_ticks(const std::filesystem::path& game_root) {
         swd2::MapDatabase::load(game_root / "MAPZ.DA1"));
     ScriptedPlatform platform;
     platform.actions = {swd2::InputAction::none, swd2::InputAction::quit};
-    swd2::GameContext context{
-        game_root, swd2::SharedState::load(game_root / "SAVE.DA1"), platform};
+    platform.clock_time_value.hundredth = 0x53U;
+    auto state = swd2::SharedState::load(game_root / "SAVE.DA1");
+    state.set_u16(0x49c, 0x1000U);
+    swd2::GameContext context{game_root, state, platform};
     context.map_database = database;
     require(swd2::RpgModule().run(context, swd2::Marker::continue_rpg) ==
                 swd2::Marker::none,
             "RPG idle world tick did not terminate normally");
     require(platform.poll_calls == 2U && platform.wait_calls == 0U &&
                 platform.presented == 2U &&
+                context.shared_state.u16(0x49c) == 0x1053U &&
                 platform.palette_hashes.size() == 2U &&
                 platform.palette_hashes[0] != platform.palette_hashes[1],
             "RPG world loop blocked for input or froze its RSK palette cycle");
@@ -8906,8 +9002,8 @@ void test_rpg_map_portal(const std::filesystem::path& game_root) {
                 context.shared_state.u16(0x40a) == 1U &&
                 context.shared_state.u8(0x51f) == 1U &&
                 context.shared_state.area_graphics_path() ==
-                    database->location_at_directory_offset(12)
-                        .area.graphics_path,
+                    "E:" + database->location_at_directory_offset(12)
+                                .area.graphics_path,
             "RPG e94 did not enter the initial MAP0 portal before input");
     for (std::size_t actor = 0; actor < 12U; ++actor) {
         require(context.shared_state.u16(0x42U + actor * 2U) == 0U,

@@ -6,8 +6,8 @@ repository="${1:-krysof/swd2}"
 site="$root/build-wasm/site"
 deploy="$root/build/pages-deploy"
 
-"$root/scripts/audit-completion.py" --validate
-echo "Publishing a progress checkpoint; this is not a 100% completion claim."
+"$root/scripts/audit-completion.py" --require-complete
+echo "Publishing the 17/17 verified release."
 
 release_day="$(TZ=Asia/Tokyo date +%Y.%m.%d)"
 release_count=1

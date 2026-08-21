@@ -4745,6 +4745,11 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
     std::optional<std::size_t> startup_event_entity;
     std::optional<std::size_t> post_battle_event_entity;
     if (input_marker == Marker::menu_ready) {
+        // RPG:0119 seeds the shared LOAD/code cursor from DOS DL before the
+        // title loop.  A later Continue selection calls 4c16 and seeds the
+        // freshly loaded slot once more at 4cae.
+        perturb_rpg_load_cursor(
+            context.shared_state, context.platform.clock_time().hundredth);
         auto opening_data = decode_rsk_block(
             read_file(context.game_root / "OP01.RSK")).data;
         const auto opening_art = SpriteArchive::parse(std::move(opening_data));
@@ -4966,6 +4971,9 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
                     context.map_database = std::move(loaded_map);
                     context.name_font = std::move(loaded_name);
                 }
+                perturb_rpg_load_cursor(
+                    context.shared_state,
+                    context.platform.clock_time().hundredth);
                 context.platform.stop_audio();
                 opening_audio_stopped = true;
                 if (!fade_opening_to_black(slot_frame)) {
@@ -4987,6 +4995,11 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
             MapDatabase::load(context.game_root / "MAPZ.DAQ"));
         startup_event_entity = 2U;
     } else if (input_marker == Marker::continue_rpg) {
+        // OC executes 4c16 before reaching 0129.  Its 4cae tail adds the DOS
+        // hundredth to SAVE+49c after loading the Q checkpoint; this is why
+        // untouched RPG captures need not retain an even code cursor.
+        perturb_rpg_load_cursor(
+            context.shared_state, context.platform.clock_time().hundredth);
         // RPG 1000:0129 is the OC-only continuation that the DOS launcher
         // reaches after FIG.  Opcodes 48/59/60 leave an entity byte offset
         // plus two in SAVE+51c; RPG subtracts two, clears the word before

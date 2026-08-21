@@ -35,6 +35,11 @@ struct RpgWorldStepResult {
     bool random_encounter{};
 };
 
+// RPG:0119 and RPG:4cae ask DOS int 21h/2ch for the current hundredth,
+// clear DH, and add DX to SAVE+49c.  The latter path runs after every 4c16
+// save load, including OC restoration after FIG.
+void perturb_rpg_load_cursor(SharedState& state, unsigned hundredth);
+
 // Advances every autonomous map entity by one original main-loop iteration.
 // RPG.EXE used words from its own code bytes at load-image offset 4f1ch as a
 // deterministic movement stream, so the caller supplies that load image as

@@ -46,5 +46,5 @@ fi
 
 printf '%s\n' \
   'SAVE/MAPZ/NAME verification: native five-slot, live new-game slot, explicit Record routing, --no-save isolation, and simulated IDBFS reload passed.' \
-  'Run verify-wasm-browser-input.mjs for Chromium/Edge and verify-wasm-webkit-idbfs.mjs for an independent WebKit IDBFS restart boundary.' \
-  'Physical iOS/Android restart checks remain required before the completion gate can close.'
+  'Run verify-wasm-browser-input.mjs for Chromium/Edge and the branded Safari/Firefox IDBFS verifiers for independent browser restart boundaries.' \
+  'The project acceptance boundary is desktop plus browser persistence; physical mobile-device testing is optional platform qualification.'

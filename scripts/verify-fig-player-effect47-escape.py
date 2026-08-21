@@ -78,6 +78,33 @@ def main() -> int:
         for name in ("capture_video_sha256", "capture_manifest_sha256"):
             digest(reference.get(name), name)
 
+        state_checkpoint = reference.get("original_state_checkpoint")
+        fixture_save = (args.game / "SAVE.DA1").read_bytes()
+        if not isinstance(state_checkpoint, dict) or \
+                state_checkpoint.get("kind") != \
+                    "original_fig_q_state_checkpoint" or \
+                state_checkpoint.get("status") != "exact_state_checkpoint" or \
+                state_checkpoint.get("capture_harness_sha256") != \
+                    "e6b33ede43fb53939e46dbcc7d08df878c3d1f655583c044f5e8513668a0aa0f" or \
+                state_checkpoint.get("step_input_sha256") != \
+                    sha256(b"IF" + fixture_save) or \
+                state_checkpoint.get("capture_wait_seconds") != 5 or \
+                state_checkpoint.get("capture_pace_seconds") != 1 or \
+                state_checkpoint.get("capture_time_limit_seconds") != 15 or \
+                state_checkpoint.get("save_daq_fnv1a64") != \
+                    reference["rewrite_state_fnv1a64"] or \
+                state_checkpoint.get("mapz_daq_sha256") != \
+                    sha256((args.game / "MAPZ.DA1").read_bytes()) or \
+                state_checkpoint.get("nameq_dsk_sha256") != \
+                    sha256((args.game / "NAME1.DSK").read_bytes()):
+            raise ValueError("FIG player-effect-47 original state boundary differs")
+        for name in (
+                "capture_manifest_sha256", "capture_video_sha256",
+                "save_daq_sha256", "mapz_daq_sha256", "nameq_dsk_sha256"):
+            digest(state_checkpoint.get(name), "original_state_checkpoint/" + name)
+        if len(state_checkpoint.get("save_daq_fnv1a64", "")) != 16:
+            raise ValueError("malformed FIG effect-47 original state FNV")
+
         args.output.mkdir(parents=True, exist_ok=True)
         trace_path = args.output / "trace.json"
         frame_path = args.output / "frames.bin"
@@ -101,7 +128,7 @@ def main() -> int:
             raise ValueError("FIG player-effect-47 timeline differs")
         if (trace.get("state_fnv1a64"), trace.get("mapz_fnv1a64"),
                 trace.get("name_fnv1a64")) != (
-                    reference["rewrite_state_fnv1a64"],
+                    state_checkpoint["save_daq_fnv1a64"],
                     "827f0f1b725a0958", "e3d2853e2676513b"):
             raise ValueError("FIG player-effect-47 final save triple differs")
         if trace.get("transitions") != [{
@@ -147,8 +174,8 @@ def main() -> int:
 
         print(
             "FIG player effect 47 checkpoint: ability page, two poses, SP071, "
-            "five-tick unwind and immediate OC return match original without "
-            "resource debit, SV3 or an extra page"
+            "five-tick unwind, OC return and released Q-state match original "
+            "without resource debit, SV3 or an extra page"
         )
         return 0
     except (OSError, ValueError, KeyError, IndexError, TypeError,
