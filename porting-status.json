@@ -38,7 +38,8 @@
       "status": "verified",
       "acceptance": [
         "画面、输入、三次校验和返回标记均由 C++ 实现",
-        "原始 75 04 与发行补丁 90 90 分支可区分并测试"
+        "原始 75 04 与发行补丁 90 90 分支可区分并测试",
+        "地图提示箭头按原版 DH 秒和 DL 百分秒在每次确认后重新定位"
       ],
       "evidence": [
         "src/meo.cpp",
@@ -1486,7 +1487,8 @@
       "status": "verified",
       "acceptance": [
         "五个槽位 SAVE、MAPZ 和 NAME 作为同一事务保存/读取",
-        "桌面文件系统与浏览器 IDBFS 重启往返均无字节或状态丢失"
+        "桌面文件系统与浏览器 IDBFS 重启往返均无字节或状态丢失",
+        "Web 重启后经原版 MEO、OP01 标题和五槽读取页恢复存档"
       ],
       "evidence": [
         "src/save_slot.cpp",

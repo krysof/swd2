@@ -35,10 +35,10 @@ class Element {
 
 const ids = Object.fromEntries(
   ['canvas', 'status-wrap', 'status', 'progress', 'error',
-   'start-gate', 'start-button', 'title-button', 'resume-hint',
+   'start-gate', 'start-button',
    'build-version'].map(id => [id, new Element(id)]));
 ids['build-version'].textContent = `版本 ${releaseVersion}`;
-ids['title-button'].hidden = true;
+ids['start-button'].textContent = '点击进入并开启声音';
 const controlButtons = [
   'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', 'Escape', 'Enter'
 ].map(key => {
@@ -236,22 +236,17 @@ if (actionEvents.join('|') !== 'keydown:Escape|keyup:Escape' ||
   throw new Error('ESC must stay single-shot while directions repeat');
 }
 
-// Verify both last-slot choices and the asynchronous ordering boundary. A
-// user is allowed to click before IDBFS has finished restoring; the runtime
-// must remain blocked and append direct-resume arguments only after the exact
-// slot files are visible. Choosing the title must never append them.
-const resumeFiles = new Map([
-  ['/saves/.swd2-last-slot', Uint8Array.from([51, 10])],
-  ['/saves/SAVE.DA3', Uint8Array.from([1, 2, 3])],
-  ['/saves/MAPZ.DA3', Uint8Array.from([4, 5, 6])],
-]);
+// Verify the original-only startup route and its asynchronous ordering
+// boundary. A user may click before IDBFS finishes restoring, but main must
+// remain blocked until the save files are visible. The Web shell must never
+// replace MEO + RPG's original title/Continue selector with resume arguments.
 function makeResumePage(deferRestore) {
   const pageIds = Object.fromEntries(
     ['canvas', 'status-wrap', 'status', 'progress', 'error',
-     'start-gate', 'start-button', 'title-button', 'resume-hint',
+     'start-gate', 'start-button',
      'build-version'].map(id => [id, new Element(id)]));
   pageIds['build-version'].textContent = `版本 ${releaseVersion}`;
-  pageIds['title-button'].hidden = true;
+  pageIds['start-button'].textContent = '点击进入并开启声音';
   const pageDocument = {
     documentElement: new Element('html'),
     visibilityState: 'visible',
@@ -278,13 +273,6 @@ function makeResumePage(deferRestore) {
         if (deferRestore) restoreCallback = callback;
         else callback(null);
       },
-      readFile(path) {
-        const value = resumeFiles.get(path);
-        if (!value) throw new Error(`missing file ${path}`);
-        return value;
-      },
-      analyzePath(path) { return { exists: resumeFiles.has(path) }; },
-      stat() { return { mtime: 1 }; },
     },
     IDBFS: {},
     addRunDependency(name) { pageDependencies.add(name); },
@@ -314,20 +302,15 @@ function makeResumePage(deferRestore) {
   };
 }
 
-const titlePage = makeResumePage(false);
-titlePage.context.Module.preRun[0]();
-if (titlePage.context.Module.swd2ResumeSlot !== 3 ||
-    titlePage.ids['title-button'].hidden ||
-    titlePage.ids['start-button'].textContent !== '继续上次存档（槽 3）') {
-  throw new Error('restored last-slot files did not expose both start choices');
-}
-await titlePage.ids['title-button'].listeners.click[0]({ preventDefault() {} });
+const originalPage = makeResumePage(false);
+originalPage.context.Module.preRun[0]();
+await originalPage.ids['start-button'].listeners.click[0]({ preventDefault() {} });
 await Promise.resolve();
-if (titlePage.context.Module.arguments.join('|') !==
+if (originalPage.context.Module.arguments.join('|') !==
       '--game|/game|--save-dir|/saves|--play' ||
-    titlePage.context.document.documentElement.dataset.resumeApplied !== 'title' ||
-    titlePage.dependencies.size !== 0) {
-  throw new Error('title opt-out incorrectly applied direct-resume arguments');
+    originalPage.context.document.documentElement.dataset.startRoute !==
+      'original-title' || originalPage.dependencies.size !== 0) {
+  throw new Error('browser entry did not preserve the original title/load route');
 }
 
 const earlyResumePage = makeResumePage(true);
@@ -342,9 +325,10 @@ if (earlyResumePage.dependencies.size !== 1 ||
 earlyResumePage.finishRestore();
 if (earlyResumePage.dependencies.size !== 0 ||
     earlyResumePage.context.Module.arguments.join('|') !==
-      '--game|/game|--save-dir|/saves|--play|--slot|3|--resume-save' ||
-    earlyResumePage.context.document.documentElement.dataset.resumeApplied !== '3') {
-  throw new Error('last-slot resume arguments were not applied after restoration');
+      '--game|/game|--save-dir|/saves|--play' ||
+    earlyResumePage.context.document.documentElement.dataset.startRoute !==
+      'original-title') {
+  throw new Error('IDBFS restoration replaced the original title/load route');
 }
 
 // Execute the diagnostic in two fresh page contexts backed by one simulated
@@ -456,4 +440,4 @@ if (secondIdbfsPage.reloads() !== 0 || persistedFiles.size !== 0 ||
   throw new Error('IDBFS diagnostic did not restore, verify, and clean its probe');
 }
 
-console.log('Web shell start/held-direction, quick-resume, and IDBFS reload smoke: OK');
+console.log('Web shell original-title entry, held-direction, and IDBFS reload smoke: OK');

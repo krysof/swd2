@@ -12,6 +12,10 @@
 #include <stdexcept>
 #include <vector>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace swd2 {
 
 namespace {
@@ -22,6 +26,25 @@ std::vector<std::uint8_t> read_file(const std::filesystem::path& path) {
         throw std::runtime_error("MEO module cannot open " + path.string());
     }
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+void record_browser_meo_challenge(const ClockTime& time) {
+#ifdef __EMSCRIPTEN__
+    const auto position = meo_challenge_position(time.second, time.hundredth);
+    EM_ASM({
+        if (Module.swd2InputSelfTestEnabled &&
+                Module.swd2MeoChallengePositions) {
+            Module.swd2MeoChallengePositions.push({
+                second: $0,
+                hundredth: $1,
+                x: $2,
+                y: $3
+            });
+        }
+    }, time.second, time.hundredth, position.x, position.y);
+#else
+    static_cast<void>(time);
+#endif
 }
 
 }  // namespace
@@ -67,7 +90,9 @@ Marker MeoModule::run(GameContext& context, Marker) {
 
     while (true) {
         const auto time = context.platform.clock_time();
-        const auto frame = render_meo_frame(archive, protection.choice(), time.minute, time.second);
+        record_browser_meo_challenge(time);
+        const auto frame = render_meo_frame(
+            archive, protection.choice(), time.second, time.hundredth);
         context.platform.present({IndexedFrame::width, IndexedFrame::height, frame.pixels,
                                   std::span<const std::uint8_t, 768>(frame.palette)});
         const auto action = context.platform.wait_for_input();
@@ -86,15 +111,17 @@ Marker MeoModule::run(GameContext& context, Marker) {
             continue;
         }
 
-        const auto expected = meo_expected_color(frame, time.minute, time.second);
+        const auto expected = meo_expected_color(
+            frame, time.second, time.hundredth);
         const auto status = protection.input(meo_input, expected);
         if (status == MeoStatus::accepted) {
             if (!fade_to_black(frame)) return Marker::none;
             return Marker::menu_ready;
         }
         if (status == MeoStatus::rejected) {
-            const auto rejected = render_meo_frame(archive, protection.choice(), time.minute,
-                                                   time.second, true);
+            const auto rejected = render_meo_frame(
+                archive, protection.choice(), time.second, time.hundredth,
+                true);
             context.platform.present({IndexedFrame::width, IndexedFrame::height, rejected.pixels,
                                       std::span<const std::uint8_t, 768>(rejected.palette)});
             if (!fade_to_black(rejected)) return Marker::none;

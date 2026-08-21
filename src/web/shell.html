@@ -76,8 +76,6 @@
     .start-version { margin: 0 0 9px; color: #cab995; font-size: 14px; }
     .start-site { display: block; margin: 0 0 22px; color: #e8bd76; }
     #start-button { min-width: 230px; min-height: 52px; font-weight: 800; }
-    #title-button { min-width: 230px; margin-top: 10px; }
-    #resume-hint { min-height: 1.4em; margin: 0 0 9px; color: #cab995; font-size: 13px; }
     @media (hover: none), (pointer: coarse) { .hint { font-size: 12px; } }
     @media (max-width: 520px) { main { align-self: start; } h1 { margin-top: 2px; } }
     @media (pointer: coarse) {
@@ -120,9 +118,7 @@
       <p class="start-credit" id="start-credit">白河愁 破解移植</p>
       <p class="start-version" id="build-version">版本 __SWD2_RELEASE_VERSION__</p>
       <a class="start-site" href="http://www.ff18.com" target="_blank" rel="noopener noreferrer">http://www.ff18.com</a>
-      <p id="resume-hint"></p>
-      <button id="start-button" type="button">点击开始并开启声音</button>
-      <button id="title-button" type="button" hidden>从标题开始</button>
+      <button id="start-button" type="button">点击进入并开启声音</button>
     </div>
   </div>
   <main data-mobile-layout="rotated-v5-square-pixel">
@@ -159,8 +155,6 @@
     const errorText = document.getElementById('error');
     const startGate = document.getElementById('start-gate');
     const startButton = document.getElementById('start-button');
-    const titleButton = document.getElementById('title-button');
-    const resumeHint = document.getElementById('resume-hint');
     const releaseVersion = document.getElementById('build-version')
       .textContent.replace(/^\s*版本\s*/, '').trim();
     const selfTestParameters = new URLSearchParams(location.search);
@@ -179,9 +173,6 @@
     const idbfsSelfTestSessionKey = 'swd2-idbfs-self-test-token';
     const idbfsSelfTestPath = '/saves/.swd2-idbfs-restart-probe';
     let startRequested = Boolean(idbfsSelfTestToken);
-    let startMode = 'resume';
-    let savesRestored = false;
-    let startArgumentsConfigured = false;
     let startDependencyInstalled = false;
     let wakeLock = null;
 
@@ -220,61 +211,6 @@
       } catch (_) {
         document.documentElement.dataset.resourceCache = 'unavailable';
       }
-    }
-
-    function byteArraysDiffer(left, right) {
-      if (left.length !== right.length) return true;
-      for (let index = 0; index < left.length; ++index) {
-        if (left[index] !== right[index]) return true;
-      }
-      return false;
-    }
-
-    function resumeSlotFromBrowserSaves() {
-      try {
-        const marker = FS.readFile('/saves/.swd2-last-slot');
-        const slot = Number(String.fromCharCode(...marker).trim());
-        if (Number.isInteger(slot) && slot >= 1 && slot <= 5 &&
-            FS.analyzePath(`/saves/SAVE.DA${slot}`).exists &&
-            FS.analyzePath(`/saves/MAPZ.DA${slot}`).exists) return slot;
-      } catch (_) {}
-
-      // Releases before the quick-resume marker already persisted exact DOS
-      // slots. Recover the newest slot whose SAVE bytes differ from the
-      // packaged original so an existing player is not sent back to New Game.
-      let newest = null;
-      for (let slot = 1; slot <= 5; ++slot) {
-        try {
-          const savedPath = `/saves/SAVE.DA${slot}`;
-          const saved = FS.readFile(savedPath);
-          const released = FS.readFile(`/game/SAVE.DA${slot}`);
-          if (!byteArraysDiffer(saved, released)) continue;
-          const modified = Number(FS.stat(savedPath).mtime) || 0;
-          if (!newest || modified >= newest.modified) newest = { slot, modified };
-        } catch (_) {}
-      }
-      return newest ? newest.slot : 0;
-    }
-
-    function exposeResumeChoice(slot) {
-      Module.swd2ResumeSlot = slot;
-      document.documentElement.dataset.resumeSlot = slot ? String(slot) : 'none';
-      if (!slot || idbfsSelfTestToken) return;
-      startButton.textContent = `继续上次存档（槽 ${slot}）`;
-      titleButton.hidden = false;
-      resumeHint.textContent = '检测到浏览器存档，可直接继续。';
-    }
-
-    function configureStartArguments() {
-      if (!startRequested || !savesRestored || startArgumentsConfigured) return;
-      startArgumentsConfigured = true;
-      const slot = Number(Module.swd2ResumeSlot) || 0;
-      if (startMode !== 'resume' || slot < 1 || slot > 5) {
-        document.documentElement.dataset.resumeApplied = 'title';
-        return;
-      }
-      Module.arguments.push('--slot', String(slot), '--resume-save');
-      document.documentElement.dataset.resumeApplied = String(slot);
     }
 
     if (idbfsSelfTestToken) startGate.hidden = true;
@@ -345,22 +281,20 @@
       return valid;
     }
 
-    function beginGame(event, mode = 'resume') {
+    function beginGame(event) {
       event.preventDefault();
-      startMode = mode;
       startRequested = true;
       document.documentElement.dataset.started = 'true';
+      document.documentElement.dataset.startRoute = 'original-title';
       unlockWebAudio();
       void acquireWakeLock();
       requestLandscapeOrientation();
-      configureStartArguments();
       startGate.hidden = true;
       releaseStartDependency();
       canvas.focus();
     }
 
-    startButton.addEventListener('click', event => beginGame(event, 'resume'));
-    titleButton.addEventListener('click', event => beginGame(event, 'title'));
+    startButton.addEventListener('click', beginGame);
     document.addEventListener('pointerdown', unlockWebAudio, { capture: true });
     document.addEventListener('keydown', unlockWebAudio, { capture: true });
     document.addEventListener('visibilitychange', () => {
@@ -455,8 +389,8 @@
       swd2OpeningMenuEntries: 0,
       swd2OpeningMenuResponses: 0,
       swd2OpeningMenuWaiting: false,
+      swd2MeoChallengePositions: [],
       swd2ClockHundredthSelfTest: clockHundredthSelfTest,
-      swd2ResumeSlot: 0,
       arguments: ['--game', '/game', '--save-dir', '/saves', '--play'],
       canvas,
       preRun: [function() {
@@ -479,9 +413,6 @@
             // mutate the probe or replace the authoritative result message.
             return;
           }
-          exposeResumeChoice(resumeSlotFromBrowserSaves());
-          savesRestored = true;
-          configureStartArguments();
           if (error) errorText.textContent = '读取浏览器存档失败，本次仍可继续游戏。';
           removeRunDependency('swd2-idbfs');
         });

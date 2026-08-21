@@ -950,11 +950,44 @@ void test_resource_decoder(const std::filesystem::path& game_root) {
     const auto frame = swd2::render_meo_frame(sprites, 0, 0, 0);
     require(frame.pixels[3 * 320 + 3] == sprites.pixels(0)[0],
             "MEO background was not placed at 3,3");
+    require(swd2::meo_challenge_position(17, 83) ==
+                swd2::MeoChallengePosition{181, 56} &&
+                swd2::meo_challenge_position(59, 99) ==
+                swd2::MeoChallengePosition{213, 170},
+            "MEO challenge arrow does not use DOS DH/DL second/hundredth");
+    const auto challenge = swd2::render_meo_frame(sprites, 0, 17, 83);
+    const auto challenge_pixels = sprites.pixels(4);
+    const auto challenge_info = sprites.sprites()[4];
+    const auto visible = std::find_if(
+        challenge_pixels.begin(), challenge_pixels.end(),
+        [](std::uint8_t color) { return color != 0x13U; });
+    require(visible != challenge_pixels.end(),
+            "MEO challenge arrow has no visible pixels");
+    const auto visible_offset = static_cast<std::size_t>(
+        std::distance(challenge_pixels.begin(), visible));
+    const auto visible_x = visible_offset % challenge_info.width;
+    const auto visible_y = visible_offset / challenge_info.width;
+    require(challenge.pixels[(57U + visible_y) * 320U +
+                             182U + visible_x] == *visible,
+            "MEO challenge arrow was not drawn at the original hundredth-based position");
 
     const auto meo_mz = swd2::dos::MzExecutable::load(game_root / "MEO.EXE");
     const auto meo_file = read_file(game_root / "MEO.EXE");
     auto meo_image = std::span<const std::uint8_t>(meo_file).subspan(
         meo_mz.header_size(), meo_mz.load_image_size());
+    constexpr std::array<std::uint8_t, 37> meo_clock_coordinate_code{
+        0xb4, 0x2c, 0xcd, 0x21,             // DOS get time
+        0x8a, 0xc2, 0xb4, 0x00, 0xd1, 0xe0, // AL=DL hundredth, *2
+        0x05, 0x0f, 0x00, 0xa3, 0x26, 0x00, // x=hundredth*2+15
+        0x80, 0xfe, 0x37, 0x72, 0x02, 0xb6, 0x37, // clamp DH second to 55
+        0x8a, 0xc6, 0xb4, 0x00, 0xb1, 0x03, 0xf6, 0xe1, // second*3
+        0x05, 0x05, 0x00, 0xa3, 0x28, 0x00, // y=second*3+5
+    };
+    require(meo_image.size() >= 0x8cU + meo_clock_coordinate_code.size() &&
+                std::equal(meo_clock_coordinate_code.begin(),
+                           meo_clock_coordinate_code.end(),
+                           meo_image.begin() + 0x8c),
+            "MEO original DH/DL challenge-coordinate code changed");
     require(swd2::meo_copy_protection_is_patched(meo_image),
             "shipped MEO NOP copy-protection patch was not detected");
     auto unpatched_meo = std::vector<std::uint8_t>(

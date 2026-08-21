@@ -71,16 +71,20 @@ void blit(IndexedFrame& frame, const SpriteArchive& archive, std::size_t sprite_
     }
 }
 
-std::pair<unsigned, unsigned> challenge_coordinates(unsigned minute, unsigned second) {
-    second = std::min(second, 59U);
-    minute = std::min(minute, 55U);
-    return {second * 2U + 15U, minute * 3U + 5U};
-}
-
 }  // namespace
 
+MeoChallengePosition meo_challenge_position(
+    unsigned second, unsigned hundredth) noexcept {
+    // DOS AH=2Ch returns hundredths in DL (00..99) and seconds in DH
+    // (00..59). MEO clamps only DH to 55 before multiplying it by three.
+    hundredth = std::min(hundredth, 99U);
+    second = std::min(second, 55U);
+    return {hundredth * 2U + 15U, second * 3U + 5U};
+}
+
 IndexedFrame render_meo_frame(const SpriteArchive& archive, std::size_t choice,
-                              unsigned minute, unsigned second, bool rejected) {
+                              unsigned second, unsigned hundredth,
+                              bool rejected) {
     if (archive.sprites().size() < 5) {
         throw std::runtime_error("MEO archive does not contain its five expected sprites");
     }
@@ -93,13 +97,14 @@ IndexedFrame render_meo_frame(const SpriteArchive& archive, std::size_t choice,
     blit(frame, archive, 0, 3, 3, std::nullopt);
     blit(frame, archive, rejected ? 2 : 1, 11, 180, std::nullopt);
     blit(frame, archive, 3, 249, static_cast<int>((choice % 5) * 32 + 14), 0x13);
-    const auto [x, y] = challenge_coordinates(minute, second);
+    const auto [x, y] = meo_challenge_position(second, hundredth);
     blit(frame, archive, 4, static_cast<int>(x + 1), static_cast<int>(y + 1), 0x13);
     return frame;
 }
 
-std::uint8_t meo_expected_color(const IndexedFrame& frame, unsigned minute, unsigned second) {
-    const auto [x, y] = challenge_coordinates(minute, second);
+std::uint8_t meo_expected_color(const IndexedFrame& frame, unsigned second,
+                                unsigned hundredth) {
+    const auto [x, y] = meo_challenge_position(second, hundredth);
     if (x + 1 >= IndexedFrame::width || y + 1 >= IndexedFrame::height) {
         return 0;
     }

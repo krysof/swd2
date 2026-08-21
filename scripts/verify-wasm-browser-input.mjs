@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Real-browser boundary test for touch hold, persistent release caching,
-// direct continuation of the last recorded slot, fixed-rate browser music,
+// original title/Continue loading after a browser restart, fixed-rate music,
 // and IDBFS restart. The WASM
 // polling boundary records deliveries only when ?input-self-test=1 is present,
 // proving the input crossed DOM -> generated JS -> ASYNCIFY -> SDL C++.
@@ -362,6 +362,17 @@ try {
     fail(`password confirmation leaked through the title input fence: ${
       JSON.stringify(titleInputFence)}`);
   }
+  const meoChallengePositions = await cdp.evaluate(
+    `Module.swd2MeoChallengePositions.slice()`);
+  const meoXs = meoChallengePositions.map(entry => entry.x);
+  if (meoChallengePositions.length !== 3 ||
+      meoChallengePositions.some(entry =>
+        entry.x !== Math.min(entry.hundredth, 99) * 2 + 15 ||
+        entry.y !== Math.min(entry.second, 55) * 3 + 5) ||
+      new Set(meoXs).size !== 3 || Math.max(...meoXs) - Math.min(...meoXs) < 40) {
+    fail(`MEO challenge arrow did not use the original second/hundredth ` +
+      `positions: ${JSON.stringify(meoChallengePositions)}`);
+  }
 
   // RPG Continue uses Down, Confirm, slot-one Confirm and default-Yes Confirm.
   await key('ArrowDown', 'ArrowDown');
@@ -561,18 +572,18 @@ try {
   await cdp.send('Page.navigate', {
     url: `http://127.0.0.1:${httpPort}/?input-self-test=1` +
       `&audio-rate-self-test=48000&clock-hundredth-self-test=1` +
-      `&quick-resume=1`,
+      `&original-title=1`,
   });
   await waitUntil(
     () => cdp.evaluate(`Boolean(globalThis.Module &&
-      document.documentElement.dataset.resumeSlot === '1' &&
-      !document.getElementById('title-button').hidden)`),
-    'last-slot continuation choice', 30_000);
-  const resumeChoice = await cdp.evaluate(`({
-    slot: document.documentElement.dataset.resumeSlot,
+      document.getElementById('start-button') &&
+      document.getElementById('start-button').textContent ===
+        '点击进入并开启声音')`),
+    'original-only browser entry gate', 30_000);
+  const originalEntry = await cdp.evaluate(`({
     label: document.getElementById('start-button').textContent,
-    titleLabel: document.getElementById('title-button').textContent,
-    hint: document.getElementById('resume-hint').textContent
+    externalResumeButton: Boolean(document.getElementById('title-button')),
+    arguments: Module.arguments.slice()
   })`);
   const resumeStartRect = await cdp.evaluate(
     `document.getElementById('start-button').getBoundingClientRect().toJSON()`);
@@ -587,10 +598,24 @@ try {
     button: 'left', clickCount: 1,
   });
   await waitUntil(
-    () => cdp.evaluate(`document.documentElement.dataset.resumeApplied === '1' &&
+    () => cdp.evaluate(`document.documentElement.dataset.startRoute ===
+        'original-title' &&
       document.documentElement.dataset.started === 'true' &&
       Array.isArray(Module.swd2InputDeliveries)`),
-    'C++ direct continuation of slot one', 30_000);
+    'browser entry routed to original password/title flow', 30_000);
+  await waitUntil(
+    () => cdp.evaluate(
+      `Boolean(document.documentElement.dataset.canvasBackingAspect)`),
+    'restarted SDL canvas initialization', 60_000);
+  await sleep(1_200);
+  for (let index = 0; index < 3; ++index) await key('Enter', 'Enter');
+  await waitUntil(
+    () => cdp.evaluate(`Module.swd2OpeningMenuWaiting === true &&
+      Module.swd2OpeningMenuEntries >= 1`),
+    'original RPG title after password on restart', 30_000);
+  await key('ArrowDown', 'ArrowDown');
+  for (let index = 0; index < 3; ++index) await key('Enter', 'Enter');
+  await sleep(2_500);
   await cdp.evaluate(
     `Module.swd2InputDeliveries.length = 0;
      Module.swd2WorldSamples.length = 0;
@@ -600,7 +625,7 @@ try {
      Module.swd2HeldDirection = 0`);
   await waitUntil(
     () => cdp.evaluate(`Module.swd2WorldPolls >= 1`),
-    'directly resumed RPG world loop', 8_000);
+    'original Continue loaded RPG world loop', 8_000);
 
   let encounterInputs = 0;
   for (; encounterInputs < 170; ++encounterInputs) {
@@ -628,7 +653,8 @@ try {
     worldPolls: Module.swd2WorldPolls,
     battleCommandPages: Module.swd2BattleCommandPages.slice(),
     clockHundredth: Module.swd2ClockHundredthSelfTest,
-    applied: document.documentElement.dataset.resumeApplied
+    route: document.documentElement.dataset.startRoute,
+    openingMenuEntries: Module.swd2OpeningMenuEntries
   })`);
   const resumeAudio = await cdp.evaluate(`({
     synthesisRate: Number(Module.swd2AudioSynthesisRate),
@@ -636,10 +662,13 @@ try {
     contextState: Module.SDL2.audioContext.state
   })`);
   const resumedBattlePage = resumeRuntime.battleCommandPages[0];
-  if (resumeRuntime.applied !== '1' || resumeRuntime.worldPolls < 130 ||
+  if (resumeRuntime.route !== 'original-title' ||
+      originalEntry.externalResumeButton ||
+      originalEntry.arguments.includes('--resume-save') ||
+      resumeRuntime.openingMenuEntries < 2 || resumeRuntime.worldPolls < 130 ||
       resumeRuntime.clockHundredth !== 1 || !resumedBattlePage ||
       (resumedBattlePage.randomCursor & 1) !== 1) {
-    fail('last-slot continuation did not reach the FIG command page with ' +
+    fail('original slot-one Continue did not reach the FIG command page with ' +
       `its loaded odd cursor: ${JSON.stringify({
         encounterInputs, resumeRuntime
       })}`);
@@ -647,7 +676,7 @@ try {
   if (resumeAudio.synthesisRate !== 44_100 ||
       resumeAudio.contextRate !== 48_000 ||
       resumeAudio.contextState !== 'running') {
-    fail(`directly resumed music lost its fixed synthesis rate: ${
+    fail(`music loaded through original Continue lost its fixed synthesis rate: ${
       JSON.stringify(resumeAudio)}`);
   }
   const cachedSecondLoad = Object.fromEntries(
@@ -727,14 +756,16 @@ try {
       resumed_context_state: resumeAudio.contextState,
       conversion: 'SDL AudioStream 44100 Hz -> Web Audio device rate',
     },
-    quick_resume: {
+    original_continue_after_restart: {
       marker_slot: 1,
       retained_nonzero_battle_auxiliary: 42,
-      offered_slot: Number(resumeChoice.slot),
-      continue_label: resumeChoice.label,
-      title_label: resumeChoice.titleLabel,
-      hint: resumeChoice.hint,
-      applied_slot: resumeRuntime.applied,
+      browser_gate_label: originalEntry.label,
+      external_resume_button: originalEntry.externalResumeButton,
+      command_line_resume_argument: originalEntry.arguments.includes('--resume-save'),
+      route: resumeRuntime.route,
+      password_then_original_title: true,
+      original_title_menu_entries: resumeRuntime.openingMenuEntries,
+      selected_original_slot: 1,
       clock_hundredth_override: resumeRuntime.clockHundredth,
       staged_random_cursor: 0x1000,
       movement_inputs_before_battle: encounterInputs,
@@ -746,6 +777,11 @@ try {
       opening_menu_entries_before_user_choice: titleInputFence.entries,
       opening_menu_responses_before_user_choice: titleInputFence.responses,
       opening_menu_waiting_for_user_choice: titleInputFence.waiting,
+    },
+    meo_challenge: {
+      clock_fields: 'DOS DH second / DL hundredth',
+      positions: meoChallengePositions,
+      horizontal_span_pixels: Math.max(...meoXs) - Math.min(...meoXs),
     },
     gesture: {
       touch_start_events: 1,
@@ -792,8 +828,9 @@ try {
     `deliveries and ${held.worldSamples.length} presented world positions from ` +
     `one uninterrupted trusted touch hold; release stopped at once; ` +
     `44.1-kHz music synthesis stayed fixed on a 48-kHz Web Audio device; ` +
-    `versioned assets came from persistent cache; slot-one quick resume ` +
-    `reached a FIG command page after ${encounterInputs} loaded odd-cursor ` +
+    `versioned assets came from persistent cache; original password/title/` +
+    `slot-one Continue reached a FIG command page after ${encounterInputs} ` +
+    `loaded odd-cursor ` +
     `encounter inputs; repeated password confirmation stopped at the title; ` +
     `${options.idbfsCycles} IDBFS restart cycles passed)`);
 } catch (error) {

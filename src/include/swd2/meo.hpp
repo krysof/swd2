@@ -52,12 +52,27 @@ struct IndexedFrame {
     std::array<std::uint8_t, 768> palette{};
 };
 
+struct MeoChallengePosition {
+    unsigned x{};
+    unsigned y{};
+    friend bool operator==(const MeoChallengePosition&,
+                           const MeoChallengePosition&) = default;
+};
+
+// MEO:008c reads DOS int 21h/AH=2Ch. DL (hundredth) selects the horizontal
+// map coordinate and DH (second, clamped at 55) selects the vertical one.
+// The names and order matter: using minute/second makes the arrow barely move.
+[[nodiscard]] MeoChallengePosition meo_challenge_position(
+    unsigned second, unsigned hundredth) noexcept;
+
 // Reproduces MEO.EXE's 320x200 copy-protection frame.
 IndexedFrame render_meo_frame(const SpriteArchive& archive, std::size_t choice,
-                              unsigned minute, unsigned second, bool rejected = false);
+                              unsigned second, unsigned hundredth,
+                              bool rejected = false);
 
 // Returns the 1..5 color sampled by the original time-based challenge, or zero
-// if the current minute/second points outside a uniform 2x2 colored region.
-std::uint8_t meo_expected_color(const IndexedFrame& frame, unsigned minute, unsigned second);
+// if the current second/hundredth points outside a uniform 2x2 colored region.
+std::uint8_t meo_expected_color(const IndexedFrame& frame, unsigned second,
+                                unsigned hundredth);
 
 }  // namespace swd2

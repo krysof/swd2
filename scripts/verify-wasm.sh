@@ -74,15 +74,14 @@ for pattern in \
   "白河愁 破解移植" \
   "id=build-version" \
   "http://www.ff18.com" \
-  "点击开始并开启声音" \
+  "点击进入并开启声音" \
   "swd2-user-start" \
   "Module.SDL2" \
   "navigator.wakeLock" \
   "visibilitychange" \
   "serviceWorker.register" \
   "swd2-cache-version" \
-  "swd2-last-slot" \
-  "resume-save" \
+  'dataset.startRoute="original-title"' \
   "audio-rate-self-test" \
   "screen.orientation.lock" \
   "orientation:portrait" \
@@ -164,10 +163,11 @@ for label in ▲ ▼ ◀ ▶ ESC 回车; do
     exit 1
   }
 done
-grep -Fq '>从标题开始</button>' "$site/index.html" || {
-  echo "error: index.html has no opt-out from direct save continuation" >&2
+if grep -Eq '继续上次存档|从标题开始|--resume-save|id="title-button"' \
+    "$site/index.html"; then
+  echo "error: Web shell replaces the original RPG title/load menu" >&2
   exit 1
-}
+fi
 
 version="$(grep -oE '版本[[:space:]]+[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.(dev|[0-9]+)' \
   "$site/index.html" | head -n 1 | sed -E 's/^版本[[:space:]]+//')"
