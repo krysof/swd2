@@ -2474,10 +2474,11 @@ DATA 挂载进度，但同版本第二次页面生命周期不得再次从网络
 游标域。Edge runner 固定百分秒为一，在 AREA1 开放两格上以奇数游标自然走满遇敌门，
 并要求 C++ 报告已到 FIG 指令页且游标仍为奇数。
 
-浏览器音乐不再把 Web Audio 设备频率当成 RIX 合成频率。合成固定在已审计的 44.1 kHz，
-再由 SDL AudioStream 转换到设备上下文频率；真实 Edge runner 强制创建 48-kHz AudioContext，
-并要求 C++ 报告的合成率仍为 44.1 kHz、上下文保持 running，锁住移动/嵌入浏览器中音高不随
-设备采样率变化的边界。
+浏览器音乐必须直接使用 Web Audio 上下文的设备频率作为 RIX/VOC 输出频率。Emscripten
+SDL2 的 ScriptProcessorNode 由该上下文时钟驱动；曾经强制 44.1 kHz 再交给
+SDL AudioStream 转换，在移动 Safari 的 48-kHz 上下文中产生了明显偏高的播放音调。
+真实 Edge runner 强制创建 48-kHz AudioContext，并要求 C++ 报告的合成率同为 48 kHz、
+上下文保持 running，锁住 callback 与 Web Audio 使用同一个时钟的边界。
 
 新增无第三方依赖的真实浏览器边界 runner 会启动已安装的 Chromium/Edge，模拟
 390×844 竖屏、用可信 CDP 鼠标手势越过声音启动页并走到 RPG 世界，然后只发送一次

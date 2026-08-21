@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Real-browser boundary test for touch hold, persistent release caching,
-// original title/Continue loading after a browser restart, fixed-rate music,
+// original title/Continue loading after a browser restart, device-rate music,
 // and IDBFS restart. The WASM
 // polling boundary records deliveries only when ?input-self-test=1 is present,
 // proving the input crossed DOM -> generated JS -> ASYNCIFY -> SDL C++.
@@ -383,17 +383,17 @@ try {
     () => cdp.evaluate(
       `Number(Module.swd2AudioSynthesisRate) > 0 &&
        Number(Module.swd2AudioContextRate) > 0`),
-    'fixed browser music synthesis rate', 30_000);
+    'browser music synthesis rate', 30_000);
   const audioRuntime = await cdp.evaluate(`({
     synthesisRate: Number(Module.swd2AudioSynthesisRate),
     contextRate: Number(Module.swd2AudioContextRate),
     contextState: Module.SDL2.audioContext.state
   })`);
-  if (audioRuntime.synthesisRate !== 44_100 ||
+  if (audioRuntime.synthesisRate !== 48_000 ||
       audioRuntime.contextRate !== 48_000 ||
       audioRuntime.contextState !== 'running') {
-    fail(`browser audio did not keep 44.1-kHz synthesis across a 48-kHz ` +
-      `Web Audio device: ${JSON.stringify(audioRuntime)}`);
+    fail(`browser audio synthesis did not follow the 48-kHz Web Audio ` +
+      `device clock: ${JSON.stringify(audioRuntime)}`);
   }
 
   await cdp.evaluate(
@@ -673,10 +673,10 @@ try {
         encounterInputs, resumeRuntime
       })}`);
   }
-  if (resumeAudio.synthesisRate !== 44_100 ||
+  if (resumeAudio.synthesisRate !== 48_000 ||
       resumeAudio.contextRate !== 48_000 ||
       resumeAudio.contextState !== 'running') {
-    fail(`music loaded through original Continue lost its fixed synthesis rate: ${
+    fail(`music loaded through original Continue lost the Web Audio device rate: ${
       JSON.stringify(resumeAudio)}`);
   }
   const cachedSecondLoad = Object.fromEntries(
@@ -754,7 +754,7 @@ try {
       resumed_synthesis_rate_hz: resumeAudio.synthesisRate,
       resumed_context_rate_hz: resumeAudio.contextRate,
       resumed_context_state: resumeAudio.contextState,
-      conversion: 'SDL AudioStream 44100 Hz -> Web Audio device rate',
+      conversion: 'RIX/VOC generation at the Web Audio device rate',
     },
     original_continue_after_restart: {
       marker_slot: 1,
@@ -827,7 +827,7 @@ try {
     `WASM browser input: OK (${held.deliveries.length} world-frame ` +
     `deliveries and ${held.worldSamples.length} presented world positions from ` +
     `one uninterrupted trusted touch hold; release stopped at once; ` +
-    `44.1-kHz music synthesis stayed fixed on a 48-kHz Web Audio device; ` +
+    `music synthesis matched the 48-kHz Web Audio device clock; ` +
     `versioned assets came from persistent cache; original password/title/` +
     `slot-one Continue reached a FIG command page after ${encounterInputs} ` +
     `loaded odd-cursor ` +

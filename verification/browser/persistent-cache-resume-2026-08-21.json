@@ -34,15 +34,15 @@
     }
   },
   "resource_cache": {
-    "version": "2026.08.21.7",
-    "name": "swd2-web-2026.08.21.7",
+    "version": "2026.08.21.10",
+    "name": "swd2-web-2026.08.21.10",
     "first_runtime_state": "active",
     "first_runtime_controlled": true,
     "cached_urls": [
-      "http://127.0.0.1:63706/index.data?v=2026.08.21.7",
-      "http://127.0.0.1:63706/index.html",
-      "http://127.0.0.1:63706/index.js?v=2026.08.21.7",
-      "http://127.0.0.1:63706/index.wasm?v=2026.08.21.7"
+      "http://127.0.0.1:51651/index.data?v=2026.08.21.10",
+      "http://127.0.0.1:51651/index.html",
+      "http://127.0.0.1:51651/index.js?v=2026.08.21.10",
+      "http://127.0.0.1:51651/index.wasm?v=2026.08.21.10"
     ],
     "second_launch_from_service_worker": {
       "index.js": true,
@@ -51,43 +51,75 @@
     }
   },
   "audio": {
-    "synthesis_rate_hz": 44100,
+    "synthesis_rate_hz": 48000,
     "forced_test_context_rate_hz": 48000,
     "context_state": "running",
-    "resumed_synthesis_rate_hz": 44100,
+    "resumed_synthesis_rate_hz": 48000,
     "resumed_context_rate_hz": 48000,
     "resumed_context_state": "running",
-    "conversion": "SDL AudioStream 44100 Hz -> Web Audio device rate"
+    "conversion": "RIX/VOC generation at the Web Audio device rate"
   },
-  "quick_resume": {
+  "original_continue_after_restart": {
     "marker_slot": 1,
     "retained_nonzero_battle_auxiliary": 42,
-    "offered_slot": 1,
-    "continue_label": "继续上次存档（槽 1）",
-    "title_label": "从标题开始",
-    "hint": "检测到浏览器存档，可直接继续。",
-    "applied_slot": "1",
+    "browser_gate_label": "点击进入并开启声音",
+    "external_resume_button": false,
+    "command_line_resume_argument": false,
+    "route": "original-title",
+    "password_then_original_title": true,
+    "original_title_menu_entries": 2,
+    "selected_original_slot": 1,
     "clock_hundredth_override": 1,
     "staged_random_cursor": 4096,
-    "movement_inputs_before_battle": 155,
-    "world_polls_before_battle": 166,
+    "movement_inputs_before_battle": 154,
+    "world_polls_before_battle": 173,
     "battle_command_page": {
       "randomCursor": 4125,
       "encounterOffset": 182,
-      "milliseconds": 9325.754999995232
+      "milliseconds": 17432.509999990463
     }
+  },
+  "title_input_fence": {
+    "repeated_confirm_during_password_fade": "discarded",
+    "opening_menu_entries_before_user_choice": 1,
+    "opening_menu_responses_before_user_choice": 0,
+    "opening_menu_waiting_for_user_choice": true
+  },
+  "meo_challenge": {
+    "clock_fields": "DOS DH second / DL hundredth",
+    "positions": [
+      {
+        "second": 17,
+        "hundredth": 42,
+        "x": 99,
+        "y": 56
+      },
+      {
+        "second": 18,
+        "hundredth": 66,
+        "x": 147,
+        "y": 59
+      },
+      {
+        "second": 18,
+        "hundredth": 96,
+        "x": 207,
+        "y": 59
+      }
+    ],
+    "horizontal_span_pixels": 108
   },
   "gesture": {
     "touch_start_events": 1,
     "requested_world_frames": 69,
-    "hold_milliseconds": 2820.014999985695,
+    "hold_milliseconds": 2563.4699999690056,
     "touch_end_events": 1,
     "direction": "right",
-    "wasm_world_deliveries": 71,
-    "first_to_last_delivery_milliseconds": 2796.789999961853,
+    "wasm_world_deliveries": 69,
+    "first_to_last_delivery_milliseconds": 2531.764999985695,
     "deliveries_before_release_fence": 0,
     "deliveries_after_release_fence": 0,
-    "presented_world_samples": 71,
+    "presented_world_samples": 69,
     "world_start": {
       "x": 127,
       "y": 13,
@@ -115,10 +147,10 @@
     "result": "pass"
   },
   "assets": {
-    "index.html": "d7f19d833ffa0c78ee0844fce8542ce2bea386908ba35c19786e3cb7eba2b2bc",
-    "index.js": "a950a92910d5f433ab8997ab0ca1b2f9f1a70a3328dce5377d2e9a3fe75297f2",
-    "index.wasm": "78422efd58a5020142a60d071f946d5be90aafbd6014d7cc51793ec68c23288a",
+    "index.html": "1f7a84010d493623b245b2f14c05ec93f57c21aed26eb5681cf4f2b7ecfd86a4",
+    "index.js": "52e3a0333715826bdeb5c19bb0afb747daa3205e0b9cebd3b2a56804d5adf0d0",
+    "index.wasm": "e3a772fce0511171774632e3cbe0ad93da4deb868dd455f37df7ce693812095f",
     "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a",
-    "service-worker.js": "89380e346ead812c237845ce2e42b6dda266c3ee49ac7e2dea4d69e80d598728"
+    "service-worker.js": "cab5edd753e051c2851ee21c3627ba8e22ab2b61fc6f4ea679a7d5758159bcf7"
   }
 }

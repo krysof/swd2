@@ -460,6 +460,23 @@ struct SdlPlatform::Impl {
 
     void ensure_audio() {
         if (audio_device != 0) return;
+#ifdef __EMSCRIPTEN__
+        // Emscripten's SDL2 output callback is clocked by the Web Audio
+        // context.  Use that exact rate for RIX/VOC generation instead of
+        // asking SDL_AudioStream to bridge a fixed 44.1-kHz callback to the
+        // browser's usually-48-kHz ScriptProcessorNode.  Keeping the callback
+        // and Web Audio clocks identical avoids a device-dependent playback
+        // ratio (the audible high-key failure on mobile Safari).
+        const auto context_rate = EM_ASM_INT({
+            const context = Module.SDL2 && Module.SDL2.audioContext;
+            return context ? context.sampleRate : 0;
+        });
+        if (context_rate < 8'000 || context_rate > 192'000) {
+            throw std::runtime_error(
+                "browser audio context returned an unsupported sample rate");
+        }
+        audio_rate = context_rate;
+#endif
         SDL_AudioSpec desired{};
         desired.freq = audio_rate;
         desired.format = AUDIO_S16SYS;
@@ -468,16 +485,7 @@ struct SdlPlatform::Impl {
         desired.callback = &Impl::audio_callback;
         desired.userdata = this;
         SDL_AudioSpec obtained{};
-#ifdef __EMSCRIPTEN__
-        // Always synthesize browser music at the audited 44.1-kHz rate and
-        // let SDL's AudioStream convert to the Web Audio device rate. Safari
-        // commonly exposes 48 kHz; accepting that as the callback frequency
-        // makes the synthesis boundary device-dependent and has produced
-        // perceptibly sharp playback in embedded browser contexts.
-        constexpr auto allowed_changes = 0;
-#else
         constexpr auto allowed_changes = SDL_AUDIO_ALLOW_FREQUENCY_CHANGE;
-#endif
         audio_device = SDL_OpenAudioDevice(
             nullptr, 0, &desired, &obtained, allowed_changes);
         if (audio_device == 0) fail_sdl("SDL_OpenAudioDevice");
@@ -488,11 +496,11 @@ struct SdlPlatform::Impl {
         }
         audio_rate = obtained.freq;
 #ifdef __EMSCRIPTEN__
-        if (audio_rate != 44'100) {
+        if (audio_rate != context_rate) {
             SDL_CloseAudioDevice(audio_device);
             audio_device = 0;
             throw std::runtime_error(
-                "browser audio synthesis rate is not fixed at 44100 Hz");
+                "browser audio synthesis and context rates disagree");
         }
         EM_ASM({
             Module.swd2AudioSynthesisRate = $0;

@@ -45,7 +45,7 @@ grep -Fq '/saves/.swd2-last-slot' "$site/index.js" || {
   exit 1
 }
 grep -Fq 'swd2AudioSynthesisRate' "$site/index.js" || {
-  echo "error: compiled Web runtime does not expose its fixed music rate" >&2
+  echo "error: compiled Web runtime does not expose its music synthesis rate" >&2
   exit 1
 }
 
@@ -119,9 +119,9 @@ grep -Fq "browser SDL canvas backing store is not fixed at 960x600" \
   echo "error: Web runtime does not enforce a fixed landscape SDL backing store" >&2
   exit 1
 }
-grep -Fq "browser audio synthesis rate is not fixed at 44100 Hz" \
+grep -Fq "browser audio synthesis and context rates disagree" \
   "$site/index.wasm" || {
-  echo "error: Web runtime does not enforce fixed 44.1-kHz music synthesis" >&2
+  echo "error: Web runtime does not enforce matching synthesis/device rates" >&2
   exit 1
 }
 python3 - "$site/index.html" <<'PY'
