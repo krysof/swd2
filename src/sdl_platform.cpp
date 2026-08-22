@@ -435,7 +435,7 @@ struct SdlPlatform::Impl {
                 if (self.music_cursor >= self.music_samples.size()) {
                     if (self.loop_music) {
                         self.music_cursor = 0;
-                        // A RIX loop has timer_ticks * rate / 70 samples,
+                        // A RIX loop has milliseconds * rate / 1000 samples,
                         // which is usually fractional. Repeating only the
                         // floored PCM body loses that fraction on every loop.
                         // Carry it across boundaries and hold the final sample
@@ -841,7 +841,7 @@ void SdlPlatform::play_music(std::span<const std::uint8_t> rix_data, bool loop) 
     const auto sequence = decode_rix(rix_data);
     const auto rate = static_cast<std::uint32_t>(impl_->audio_rate);
     auto music = synthesize_rix(sequence, rate);
-    AudioLoopClock loop_clock(sequence.total_timer_ticks, rate);
+    AudioLoopClock loop_clock(sequence.total_milliseconds, rate);
     if (loop_clock.samples_per_loop() != music.mono_samples.size()) {
         throw std::runtime_error("RIX PCM and loop clock duration disagree");
     }

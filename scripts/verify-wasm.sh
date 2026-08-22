@@ -128,6 +128,10 @@ grep -Fq "audio-buffer-source" "$site/index.js" || {
   echo "error: Web runtime does not use render-thread AudioBuffer playback" >&2
   exit 1
 }
+grep -Fq "swd2MapPrefetches" "$site/index.js" || {
+  echo "error: Web runtime does not predecode destination maps in idle frames" >&2
+  exit 1
+}
 python3 - "$site/index.html" <<'PY'
 import pathlib
 import re

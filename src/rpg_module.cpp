@@ -22,12 +22,14 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <deque>
 #include <fstream>
 #include <functional>
 #include <iterator>
 #include <iomanip>
 #include <map>
 #include <optional>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -5109,6 +5111,10 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         event_font_cache;
     std::map<std::filesystem::path, std::shared_ptr<const SpriteArchive>>
         actor_archive_cache;
+#ifdef __EMSCRIPTEN__
+    std::deque<std::pair<std::filesystem::path, std::filesystem::path>>
+        pending_map_prefetch;
+#endif
     const auto load_event_archive = [&](const std::filesystem::path& path)
         -> const ScriptArchive& {
         if (const auto found = event_archive_cache.find(path);
@@ -5185,6 +5191,34 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
         relocated_transient_area.reset();
     }
     prepare_runtime_map_area(location.area);
+    // MAP0 already names every ordinary doorway destination in this area.
+    // Decode those maps during later field-frame wait budgets instead of at
+    // the instant the actor steps through the door. This preserves the DOS
+    // transition semantics while preventing first-visit WebAssembly stalls;
+    // repeated visits are served by map_resource_cache_ immediately.
+#ifdef __EMSCRIPTEN__
+    pending_map_prefetch.clear();
+    std::set<std::pair<std::filesystem::path, std::filesystem::path>>
+        queued_map_prefetch;
+    for (const auto& transition : map_transitions.records(location.area.flags)) {
+        if (transition.is_special()) continue;
+        const auto& destination = map_database.location_at_directory_offset(
+            transition.destination_directory_offset());
+        auto destination_graphics = normalize_dos_asset_path(
+            destination.area.graphics_path);
+        auto destination_layout = normalize_dos_asset_path(
+            destination.area.layout_path);
+        destination_graphics.replace_extension();
+        destination_layout.replace_extension();
+        auto key = std::pair{
+            (context.game_root / destination_graphics).lexically_normal(),
+            (context.game_root / destination_layout).lexically_normal()};
+        if (!map_resource_cache_.contains(key) &&
+            queued_map_prefetch.insert(key).second) {
+            pending_map_prefetch.push_back(std::move(key));
+        }
+    }
+#endif
     context.shared_state.set_u16(0x417, map.layout().width);
     context.shared_state.set_u16(0x419, map.layout().height);
     if (pending_map_reload_ && !preserve_relocated_map_origin) {
@@ -5498,8 +5532,34 @@ Marker RpgModule::run(GameContext& context, Marker input_marker) {
 
         const auto frame_ticks = context.shared_state.u16(0x406);
         if (frame_ticks != 0) {
-            context.platform.delay_for(std::chrono::milliseconds(
-                (static_cast<std::uint64_t>(frame_ticks) * 1000U + 69U) / 70U));
+            const auto frame_wait = std::chrono::milliseconds(
+                (static_cast<std::uint64_t>(frame_ticks) * 1000U + 69U) / 70U);
+            auto remaining_wait = frame_wait;
+#ifdef __EMSCRIPTEN__
+            if (!pending_map_prefetch.empty()) {
+                const auto key = std::move(pending_map_prefetch.front());
+                pending_map_prefetch.pop_front();
+                const auto started = std::chrono::steady_clock::now();
+                static_cast<void>(load_map_resource(key.first, key.second));
+                const auto elapsed = std::chrono::duration_cast<
+                    std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - started);
+                remaining_wait = elapsed >= frame_wait
+                    ? std::chrono::milliseconds(0) : frame_wait - elapsed;
+                EM_ASM({
+                    const milliseconds = Number($0);
+                    Module.swd2MapPrefetches =
+                        (Module.swd2MapPrefetches | 0) + 1;
+                    Module.swd2LastMapPrefetchMilliseconds = milliseconds;
+                    Module.swd2MaxMapPrefetchMilliseconds = Math.max(
+                        Module.swd2MaxMapPrefetchMilliseconds || 0,
+                        milliseconds);
+                }, elapsed.count());
+            }
+#endif
+            if (remaining_wait.count() != 0) {
+                context.platform.delay_for(remaining_wait);
+            }
         }
 
         // RPG:1a26 probes the actor's centre RAP word after the world frame.

@@ -101,7 +101,7 @@ public:
     explicit RixOplTranslator(const RixSequence& source)
         : source_(source), frequencies_(make_frequency_tables()) {
         output_.rhythm_mode = source.rhythm_mode;
-        output_.total_timer_ticks = source.total_timer_ticks;
+        output_.total_milliseconds = source.total_milliseconds;
         operator_volumes_.fill(127);
         channel_volumes_.fill(127);
     }
@@ -112,12 +112,13 @@ public:
         for (const auto& frame : source_.frames) {
             tick_ = tick;
             for (const auto& command : frame.commands) dispatch(command);
-            if (tick > std::numeric_limits<std::size_t>::max() - frame.timer_ticks) {
+            if (tick > std::numeric_limits<std::size_t>::max() -
+                           frame.duration_milliseconds) {
                 throw std::runtime_error("RIX OPL timeline overflows size_t");
             }
-            tick += frame.timer_ticks;
+            tick += frame.duration_milliseconds;
         }
-        if (tick != source_.total_timer_ticks) {
+        if (tick != source_.total_milliseconds) {
             throw std::runtime_error("RIX total timer tick count is inconsistent");
         }
         return std::move(output_);
@@ -459,14 +460,14 @@ RixSequence decode_rix(std::span<const std::uint8_t> bytes) {
             const auto delay = static_cast<std::uint16_t>(value) |
                                (static_cast<std::uint16_t>(control) << 8U);
             if (delay == 0) break;
-            const auto ticks = static_cast<std::size_t>(delay / 14U) + 1U;
-            result.frames.push_back({ticks, std::move(pending)});
+            const auto milliseconds = static_cast<std::size_t>(delay);
+            result.frames.push_back({milliseconds, std::move(pending)});
             pending.clear();
-            if (result.total_timer_ticks >
-                std::numeric_limits<std::size_t>::max() - ticks) {
+            if (result.total_milliseconds >
+                std::numeric_limits<std::size_t>::max() - milliseconds) {
                 throw std::runtime_error("RIX duration overflows size_t");
             }
-            result.total_timer_ticks += ticks;
+            result.total_milliseconds += milliseconds;
             break;
         }
         }
@@ -474,9 +475,9 @@ RixSequence decode_rix(std::span<const std::uint8_t> bytes) {
     if (!terminated) throw std::runtime_error("RIX stream has no 80 terminator");
     if (!pending.empty()) {
         result.frames.push_back({1, std::move(pending)});
-        ++result.total_timer_ticks;
+        ++result.total_milliseconds;
     }
-    if (result.frames.empty() || result.total_timer_ticks == 0) {
+    if (result.frames.empty() || result.total_milliseconds == 0) {
         throw std::runtime_error("RIX stream has no timed command groups");
     }
     return result;

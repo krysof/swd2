@@ -380,6 +380,20 @@ try {
   await sleep(2_500);
 
   await waitUntil(
+    () => cdp.evaluate(`(Module.swd2MapPrefetches | 0) >= 1`),
+    'idle-frame destination map predecode', 8_000);
+  const mapPrefetch = await cdp.evaluate(`({
+    count: Module.swd2MapPrefetches | 0,
+    last_milliseconds: Number(Module.swd2LastMapPrefetchMilliseconds) || 0,
+    max_milliseconds: Number(Module.swd2MaxMapPrefetchMilliseconds) || 0
+  })`);
+  if (mapPrefetch.count < 1 || mapPrefetch.last_milliseconds < 0 ||
+      mapPrefetch.max_milliseconds < mapPrefetch.last_milliseconds) {
+    fail(`browser map predecode diagnostics are invalid: ${
+      JSON.stringify(mapPrefetch)}`);
+  }
+
+  await waitUntil(
     () => cdp.evaluate(
       `Number(Module.swd2AudioSynthesisRate) > 0 &&
        Number(Module.swd2AudioContextRate) > 0`),
@@ -810,6 +824,7 @@ try {
       conversion: 'RIX/VOC generation at the Web Audio device rate; ' +
         'AudioBufferSource render-thread playback',
     },
+    map_prefetch: mapPrefetch,
     original_continue_after_restart: {
       marker_slot: 1,
       retained_nonzero_battle_auxiliary: 42,

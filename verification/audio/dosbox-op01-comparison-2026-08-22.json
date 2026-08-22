@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "dosbox_original_music_differential",
+  "status": "verified",
+  "captured_at": "2026-08-22",
+  "dosbox": "DOSBox-X 2026.07.02 (Commit 16a214b, macOS ARM SDL2 64-bit)",
+  "original_program": "SWD2.EXE -> MEO.EXE -> RPG.EXE",
+  "track": "RX/OP01.RIX",
+  "track_sha256": "73c63fa7f1762fcaf7bf3a6591c9091f739f1d2940f51d4b89361916f2e52890",
+  "capture": {
+    "raw_opl_path": "original-op01-dosbox-x-2026-08-22.dro",
+    "raw_opl_sha256": "8dce9a2036d798ecda42ae0dfebec9b2173a5242ee6a334d3b26e6911dbd3e60",
+    "wav_sha256": "6e4bce20b00158b4b1749ea570eafa63c955824195c4cface6ba41d0f42b56a4",
+    "sample_rate_hz": 48000,
+    "channels": 2,
+    "autotype": "wait 2 seconds; Enter; Enter; Enter",
+    "raw_opl_first_loop_restart_milliseconds": 51053
+  },
+  "register_differential": {
+    "alignment": "first post-initialization OP01 note group",
+    "changed_pairs_compared": 4646,
+    "fnv1a64": "bd15b96777343632",
+    "result": "all register/value pairs identical through the first loop"
+  },
+  "timing": {
+    "rix_delay_sum_milliseconds": 51096,
+    "previous_70hz_conversion_milliseconds": 60142.857143,
+    "previous_vs_original_percent": 17.804,
+    "fixed_vs_original_percent": 0.084
+  },
+  "aligned_audio_first_22_264_seconds": {
+    "pitch_original_over_fixed_ratio": 0.99925,
+    "pitch_delta_cents": -1.299,
+    "tempo_delta_percent": 0.24,
+    "original_spectral_centroid_hz": 1283.24,
+    "previous_spectral_centroid_hz": 3140.68,
+    "fixed_spectral_centroid_hz": 1421.18,
+    "original_energy_above_4khz_fraction": 0.085399,
+    "previous_energy_above_4khz_fraction": 0.140478,
+    "fixed_energy_above_4khz_fraction": 0.084113,
+    "note": "Pitch registers were already exact. The defects were the 70 Hz delay conversion and aliasing caused by downsampling ymfm's oversampled DAC stream without an anti-alias filter."
+  }
+}

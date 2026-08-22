@@ -1245,34 +1245,35 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
     std::size_t files = 0;
     std::size_t frames = 0;
     std::size_t commands = 0;
-    std::size_t timer_ticks = 0;
+    std::size_t total_milliseconds = 0;
     std::size_t opl_writes = 0;
-    std::vector<std::size_t> track_timer_ticks;
+    std::vector<std::size_t> track_milliseconds;
     for (const auto& entry :
          std::filesystem::recursive_directory_iterator(game_root)) {
         if (!entry.is_regular_file() || entry.path().extension() != ".RIX") continue;
         const auto sequence = swd2::decode_rix(read_file(entry.path()));
         require(!sequence.instruments.empty() && !sequence.frames.empty() &&
-                    sequence.total_timer_ticks != 0,
+                    sequence.total_milliseconds != 0,
                 "original RIX asset decoded to an empty timeline");
         const auto opl = swd2::translate_rix_to_opl(sequence);
         require(opl.rhythm_mode == sequence.rhythm_mode &&
-                    opl.total_timer_ticks == sequence.total_timer_ticks &&
+                    opl.total_milliseconds == sequence.total_milliseconds &&
                     !opl.writes.empty() &&
                     std::all_of(opl.writes.begin(), opl.writes.end(),
                                 [&](const swd2::OplRegisterWrite& write) {
-                                    return write.timer_tick < sequence.total_timer_ticks;
+                                    return write.millisecond <
+                                           sequence.total_milliseconds;
                                 }),
                 "original RIX asset produced an invalid OPL register timeline");
         ++files;
         frames += sequence.frames.size();
-        timer_ticks += sequence.total_timer_ticks;
-        track_timer_ticks.push_back(sequence.total_timer_ticks);
+        total_milliseconds += sequence.total_milliseconds;
+        track_milliseconds.push_back(sequence.total_milliseconds);
         opl_writes += opl.writes.size();
         for (const auto& frame : sequence.frames) commands += frame.commands.size();
     }
     require(files == 43 && frames == 9'942 && commands == 41'848 &&
-                timer_ticks == 101'716 && opl_writes == 166'187,
+                total_milliseconds == 1'363'671 && opl_writes == 166'187,
             "not every original RIX command stream passed strict decoding");
 
     const auto short_music = swd2::decode_rix(read_file(game_root / "RX" / "FI02.RIX"));
@@ -1286,9 +1287,9 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
         pcm_hash *= 1'099'511'628'211ULL;
     }
     require(short_music.instruments.size() == 7 && short_music.frames.size() == 21 &&
-                short_music.total_timer_ticks == 147 &&
-                pcm.sample_rate == 8'000 && pcm.mono_samples.size() == 16'800 &&
-                pcm_hash == 0x17083cd9e61a091cULL &&
+                short_music.total_milliseconds == 1'875 &&
+                pcm.sample_rate == 8'000 && pcm.mono_samples.size() == 15'000 &&
+                pcm_hash == 0xb7da071ef7f68c46ULL &&
                 std::any_of(pcm.mono_samples.begin(), pcm.mono_samples.end(),
                             [](std::int16_t sample) { return sample != 0; }),
             "portable YM3812 core produced non-deterministic RIX PCM");
@@ -1304,12 +1305,12 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
          {{swd2::RixCommandKind::pitch, 0, 128U << 6U},
           {swd2::RixCommandKind::note, 0, 60}}},
     };
-    exact.total_timer_ticks = 2;
+    exact.total_milliseconds = 2;
     const auto exact_opl = swd2::translate_rix_to_opl(exact);
     std::vector<swd2::OplRegisterWrite> command_writes;
     std::copy_if(exact_opl.writes.begin(), exact_opl.writes.end(),
                  std::back_inserter(command_writes),
-                 [](const auto& write) { return write.timer_tick == 1; });
+                 [](const auto& write) { return write.millisecond == 1; });
     require(command_writes.size() == 6 &&
                 command_writes[0].register_index == 0xa0 &&
                 command_writes[0].value == 0x57 &&
@@ -1331,7 +1332,7 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
         swd2::decode_rix(read_file(game_root / "SWORD.RIX")));
     const auto capture_start = std::find_if(
         sword.writes.begin(), sword.writes.end(), [](const auto& write) {
-            return write.timer_tick == 0 && write.register_index == 0xb0 &&
+            return write.millisecond == 0 && write.register_index == 0xb0 &&
                    write.value == 0x2d;
         });
     require(capture_start != sword.writes.end(),
@@ -1359,21 +1360,59 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
     require(captured_pairs == 175 && capture_hash == 0x2ec64712362b42bbULL,
             "RIX OPL writes differ from original DEMO.EXE DRO capture");
 
-    // A fixed, floored PCM body loses (ticks*rate)%70 sample units each time
+    // Fresh DOSBox-X 2026.07.02 differential capture of the original opening
+    // menu supplies a longer oracle for RX/OP01.RIX. Starting at the first
+    // post-initialization note group, all 4,646 changed register/value pairs
+    // through the end of the first loop are identical. Its raw delay sum is
+    // 51,096 ms; the original DRO loop restarts at 51,053 ms (0.084% apart).
+    const auto opening = swd2::translate_rix_to_opl(
+        swd2::decode_rix(read_file(game_root / "RX" / "OP01.RIX")));
+    const auto opening_capture_start = std::find_if(
+        opening.writes.begin(), opening.writes.end(), [](const auto& write) {
+            return write.millisecond == 84 && write.register_index == 0xa1 &&
+                   write.value == 0x80;
+        });
+    require(opening.total_milliseconds == 51'096 &&
+                opening_capture_start != opening.writes.end(),
+            "OP01 RIX has no original-capture alignment group");
+    std::array<std::uint8_t, 256> opening_register_cache{};
+    for (auto write = opening.writes.begin(); write != opening_capture_start;
+         ++write) {
+        opening_register_cache[write->register_index] = write->value;
+    }
+    captured_pairs = 0;
+    capture_hash = 1'469'598'103'934'665'603ULL;
+    for (auto write = opening_capture_start;
+         write != opening.writes.end() && captured_pairs < 4'646; ++write) {
+        auto& cached = opening_register_cache[write->register_index];
+        if (cached != write->value) {
+            capture_hash ^= write->register_index;
+            capture_hash *= 1'099'511'628'211ULL;
+            capture_hash ^= write->value;
+            capture_hash *= 1'099'511'628'211ULL;
+            ++captured_pairs;
+        }
+        cached = write->value;
+    }
+    require(captured_pairs == 4'646 && capture_hash == 0xbd15b96777343632ULL,
+            "OP01 OPL writes differ from the original DOSBox-X capture");
+
+    // A fixed, floored PCM body loses (milliseconds*rate)%1000 sample units
+    // each time
     // it loops. Verify that the portable rational clock carries those units
     // indefinitely and never differs from the 70 Hz duration by one sample.
     for (const auto rate : {8'000U, 44'100U, 48'000U}) {
-        swd2::AudioLoopClock loop(short_music.total_timer_ticks, rate);
+        swd2::AudioLoopClock loop(short_music.total_milliseconds, rate);
         const auto numerator =
-            static_cast<std::uint64_t>(short_music.total_timer_ticks) * rate;
-        require(loop.samples_per_loop() == numerator / 70U &&
-                    loop.sample_remainder() == numerator % 70U,
+            static_cast<std::uint64_t>(short_music.total_milliseconds) * rate;
+        require(loop.samples_per_loop() == numerator / 1'000U &&
+                    loop.sample_remainder() == numerator % 1'000U,
                 "RIX loop clock did not split its integer and fractional samples");
         std::uint64_t emitted = 0;
         for (std::uint64_t completed = 1; completed <= 100'000U; ++completed) {
             emitted += loop.samples_per_loop();
             if (loop.advance_loop_boundary()) ++emitted;
-            require(emitted == completed * numerator / 70U,
+            require(emitted == completed * numerator / 1'000U,
                     "RIX loop clock accumulated long-run sample drift");
         }
     }
@@ -1383,22 +1422,23 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
     // callback boundary millions of times without making the regression suite
     // sleep for wall-clock days, and proves that no track-specific duration
     // loses a fractional sample on any loop partition.
-    constexpr auto soak_timer_ticks = std::uint64_t{24U * 60U * 60U * 70U};
+    constexpr auto soak_milliseconds =
+        std::uint64_t{24U * 60U * 60U * 1'000U};
     std::uint64_t soak_boundaries = 0;
     std::uint64_t soak_samples = 0;
     std::uint64_t soak_hash = 1'469'598'103'934'665'603ULL;
     for (const auto rate : {8'000U, 44'100U, 48'000U}) {
-        for (const auto ticks : track_timer_ticks) {
-            swd2::AudioLoopClock loop(ticks, rate);
+        for (const auto milliseconds : track_milliseconds) {
+            swd2::AudioLoopClock loop(milliseconds, rate);
             const auto boundaries =
-                (soak_timer_ticks + ticks - 1U) / ticks;
+                (soak_milliseconds + milliseconds - 1U) / milliseconds;
             std::uint64_t emitted = 0;
             for (std::uint64_t completed = 0; completed < boundaries;
                  ++completed) {
                 emitted += loop.samples_per_loop();
                 if (loop.advance_loop_boundary()) ++emitted;
             }
-            require(emitted == boundaries * ticks * rate / 70U,
+            require(emitted == boundaries * milliseconds * rate / 1'000U,
                     "shipped RIX loop accumulated 24-hour sample drift");
             soak_boundaries += boundaries;
             soak_samples += emitted;
@@ -1408,9 +1448,9 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
             soak_hash *= 1'099'511'628'211ULL;
         }
     }
-    require(soak_boundaries == 765'546U &&
-                soak_samples == 371'932'516'654U &&
-                soak_hash == 0xae6ff348967c0217ULL,
+    require(soak_boundaries == 820'614U &&
+                soak_samples == 371'936'046'374U &&
+                soak_hash == 0x91f70af60d265715ULL,
             "shipped RIX 3,096-track-hour soak checkpoint differs");
 }
 

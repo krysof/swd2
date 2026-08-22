@@ -3,6 +3,7 @@
 #include "ymfm_opl.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -17,8 +18,9 @@ constexpr std::uint32_t ym3812_clock = 14'318'180;
 
 class Ym3812Interface final : public ymfm::ymfm_interface {};
 
-std::size_t sample_count(std::size_t timer_ticks, std::uint32_t rate) {
-    const auto count = static_cast<unsigned long long>(timer_ticks) * rate / 70U;
+std::size_t sample_count(std::size_t milliseconds, std::uint32_t rate) {
+    const auto count =
+        static_cast<unsigned long long>(milliseconds) * rate / 1'000U;
     if (count > std::numeric_limits<std::size_t>::max()) {
         throw std::runtime_error("YM3812 PCM size overflows size_t");
     }
@@ -37,18 +39,18 @@ DecodedMusic synthesize_opl(const OplRegisterSequence& sequence,
     if (sample_rate < 8'000 || sample_rate > 192'000) {
         throw std::invalid_argument("RIX synthesis sample rate is unsupported");
     }
-    if (sequence.total_timer_ticks == 0) {
+    if (sequence.total_milliseconds == 0) {
         throw std::invalid_argument("OPL register sequence has no duration");
     }
 
     std::size_t previous_tick = 0;
     bool first = true;
     for (const auto& write : sequence.writes) {
-        if (write.timer_tick >= sequence.total_timer_ticks ||
-            (!first && write.timer_tick < previous_tick)) {
+        if (write.millisecond >= sequence.total_milliseconds ||
+            (!first && write.millisecond < previous_tick)) {
             throw std::invalid_argument("OPL register writes are outside timeline order");
         }
-        previous_tick = write.timer_tick;
+        previous_tick = write.millisecond;
         first = false;
     }
 
@@ -59,12 +61,12 @@ DecodedMusic synthesize_opl(const OplRegisterSequence& sequence,
     if (native_rate == 0) throw std::runtime_error("YM3812 core returned no sample rate");
 
     std::vector<std::int16_t> native;
-    native.reserve(sample_count(sequence.total_timer_ticks, native_rate));
+    native.reserve(sample_count(sequence.total_milliseconds, native_rate));
     std::size_t write_index = 0;
     unsigned long long native_remainder = 0;
-    for (std::size_t tick = 0; tick < sequence.total_timer_ticks; ++tick) {
+    for (std::size_t tick = 0; tick < sequence.total_milliseconds; ++tick) {
         while (write_index < sequence.writes.size() &&
-               sequence.writes[write_index].timer_tick == tick) {
+               sequence.writes[write_index].millisecond == tick) {
             const auto& write = sequence.writes[write_index++];
             chip.write_address(write.register_index);
             chip.write_data(write.value);
@@ -72,11 +74,18 @@ DecodedMusic synthesize_opl(const OplRegisterSequence& sequence,
 
         native_remainder += native_rate;
         const auto tick_samples =
-            static_cast<std::size_t>(native_remainder / 70U);
-        native_remainder %= 70U;
-        std::vector<ymfm::ym3812::output_data> generated(tick_samples);
-        chip.generate(generated.data(), static_cast<std::uint32_t>(generated.size()));
-        for (const auto& sample : generated) {
+            static_cast<std::size_t>(native_remainder / 1'000U);
+        native_remainder %= 1'000U;
+        // ymfm evaluates OPL operators at the chip's internal output rate
+        // (well above the final 48 kHz device rate), so one millisecond can
+        // contain several hundred core samples.
+        std::array<ymfm::ym3812::output_data, 1'024> generated{};
+        if (tick_samples > generated.size()) {
+            throw std::runtime_error("YM3812 millisecond buffer is too small");
+        }
+        chip.generate(generated.data(), static_cast<std::uint32_t>(tick_samples));
+        for (std::size_t index = 0; index < tick_samples; ++index) {
+            const auto& sample = generated[index];
             native.push_back(clamp_sample(sample.data[0]));
         }
     }
@@ -84,9 +93,31 @@ DecodedMusic synthesize_opl(const OplRegisterSequence& sequence,
         throw std::invalid_argument("OPL register timeline has unconsumed writes");
     }
 
+    if (sample_rate < native_rate) {
+        // ymfm exposes the YM3812 engine's 4x-oversampled DAC stream. Picking
+        // linearly interpolated points from it aliases ultrasonic operator
+        // energy back into the audible band and makes the result much
+        // brighter than the reference output. A four-stage, four-sample CIC
+        // provides the missing anti-alias filter without another large PCM
+        // allocation; the rolling input ring makes every stage safe in-place.
+        for (unsigned stage = 0; stage < 4; ++stage) {
+            std::array<std::int32_t, 4> history{};
+            std::int64_t sum = 0;
+            for (std::size_t index = 0; index < native.size(); ++index) {
+                const auto slot = index & 3U;
+                const auto input = static_cast<std::int32_t>(native[index]);
+                sum += input - history[slot];
+                history[slot] = input;
+                native[index] = clamp_sample(
+                    (sum >= 0 ? sum + 2 : sum - 2) / 4);
+            }
+        }
+    }
+
     DecodedMusic result;
     result.sample_rate = sample_rate;
-    const auto output_count = sample_count(sequence.total_timer_ticks, sample_rate);
+    const auto output_count =
+        sample_count(sequence.total_milliseconds, sample_rate);
     result.mono_samples.resize(output_count);
     if (sample_rate == native_rate) {
         result.mono_samples = std::move(native);

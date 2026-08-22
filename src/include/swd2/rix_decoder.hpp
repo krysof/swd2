@@ -17,9 +17,10 @@ struct RixCommand {
 };
 
 struct RixFrame {
-    // The original timer callback runs at 70 Hz. A delay word is aged by 14
-    // units per callback, including one final callback before the next group.
-    std::size_t timer_ticks{};
+    // RIX delay words are milliseconds. Raw-OPL/audio observations of the
+    // original player confirm that a complete OP01 loop's 51,096 delay
+    // units take 51.05 seconds; they are not 70 Hz game-loop ticks.
+    std::size_t duration_milliseconds{};
     std::vector<RixCommand> commands;
 };
 
@@ -27,13 +28,13 @@ struct RixSequence {
     bool rhythm_mode{};
     std::vector<std::array<std::uint16_t, 28>> instruments;
     std::vector<RixFrame> frames;
-    std::size_t total_timer_ticks{};
+    std::size_t total_milliseconds{};
 };
 
 struct OplRegisterWrite {
     // Commands in a RIX group are issued before that group's delay starts.
-    // Several writes can consequently have the same 70 Hz timer tick.
-    std::size_t timer_tick{};
+    // Several writes can consequently have the same timeline millisecond.
+    std::size_t millisecond{};
     std::uint8_t register_index{};
     std::uint8_t value{};
 };
@@ -41,7 +42,7 @@ struct OplRegisterWrite {
 struct OplRegisterSequence {
     bool rhythm_mode{};
     std::vector<OplRegisterWrite> writes;
-    std::size_t total_timer_ticks{};
+    std::size_t total_milliseconds{};
 };
 
 struct DecodedMusic {
@@ -50,7 +51,7 @@ struct DecodedMusic {
 };
 
 // Strictly parses Softstar's 55 AA RIX command stream and 64-byte instrument
-// records into a platform-independent 70 Hz timeline.
+// records into its platform-independent millisecond timeline.
 RixSequence decode_rix(std::span<const std::uint8_t> bytes);
 
 // Recreates the register programming performed by the embedded Softstar RIX

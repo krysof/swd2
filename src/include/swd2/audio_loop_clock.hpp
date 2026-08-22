@@ -5,19 +5,19 @@
 
 namespace swd2 {
 
-// Bridges a 70 Hz DOS music duration to an integer-rate PCM device without
+// Bridges a millisecond RIX duration to an integer-rate PCM device without
 // losing the fractional sample at every loop boundary. The decoded PCM keeps
-// floor(timer_ticks * sample_rate / 70) samples; advance_loop_boundary()
+// floor(milliseconds * sample_rate / 1000) samples; advance_loop_boundary()
 // schedules one duplicate boundary sample whenever the accumulated remainder
 // crosses a whole device sample.
 class AudioLoopClock {
 public:
     AudioLoopClock() = default;
-    AudioLoopClock(std::size_t timer_ticks, std::uint32_t sample_rate) {
-        reset(timer_ticks, sample_rate);
+    AudioLoopClock(std::size_t milliseconds, std::uint32_t sample_rate) {
+        reset(milliseconds, sample_rate);
     }
 
-    void reset(std::size_t timer_ticks, std::uint32_t sample_rate);
+    void reset(std::size_t milliseconds, std::uint32_t sample_rate);
 
     [[nodiscard]] std::size_t samples_per_loop() const noexcept {
         return samples_per_loop_;
