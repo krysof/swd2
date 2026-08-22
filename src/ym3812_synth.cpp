@@ -1,6 +1,6 @@
 #include "swd2/rix_decoder.hpp"
 
-#include "ymfm_opl.h"
+#include "dbopl.h"
 
 #include <algorithm>
 #include <array>
@@ -13,10 +13,9 @@ namespace swd2 {
 
 namespace {
 
-// The AdLib/YM3812 reference crystal used by the DOS hardware and emulators.
-constexpr std::uint32_t ym3812_clock = 14'318'180;
-
-class Ym3812Interface final : public ymfm::ymfm_interface {};
+// The independently captured reference environment selects its DBOPL provider
+// and uses the YM3812 master clock divided by 288 for high-quality output.
+constexpr std::uint32_t dbopl_rate = 49'716;
 
 std::size_t sample_count(std::size_t milliseconds, std::uint32_t rate) {
     const auto count =
@@ -54,64 +53,44 @@ DecodedMusic synthesize_opl(const OplRegisterSequence& sequence,
         first = false;
     }
 
-    Ym3812Interface interface;
-    ymfm::ym3812 chip(interface);
-    chip.reset();
-    const auto native_rate = chip.sample_rate(ym3812_clock);
-    if (native_rate == 0) throw std::runtime_error("YM3812 core returned no sample rate");
+    // The reference SB16 configuration constructs an OPL3-capable DBOPL chip.
+    // The game only writes the OPL2 register bank, so the chip remains in its
+    // mono OPL2 mode just as it does in the independent capture.
+    DBOPL::InitTables();
+    DBOPL::Chip chip(true);
+    chip.Setup(dbopl_rate);
 
     std::vector<std::int16_t> native;
-    native.reserve(sample_count(sequence.total_milliseconds, native_rate));
+    native.reserve(sample_count(sequence.total_milliseconds, dbopl_rate));
     std::size_t write_index = 0;
     unsigned long long native_remainder = 0;
     for (std::size_t tick = 0; tick < sequence.total_milliseconds; ++tick) {
         while (write_index < sequence.writes.size() &&
                sequence.writes[write_index].millisecond == tick) {
             const auto& write = sequence.writes[write_index++];
-            chip.write_address(write.register_index);
-            chip.write_data(write.value);
+            chip.WriteReg(write.register_index, write.value);
         }
 
-        native_remainder += native_rate;
+        native_remainder += dbopl_rate;
         const auto tick_samples =
             static_cast<std::size_t>(native_remainder / 1'000U);
         native_remainder %= 1'000U;
-        // ymfm evaluates OPL operators at the chip's internal output rate
-        // (well above the final 48 kHz device rate), so one millisecond can
-        // contain several hundred core samples.
-        std::array<ymfm::ym3812::output_data, 1'024> generated{};
+        std::array<std::int32_t, 64> generated{};
         if (tick_samples > generated.size()) {
             throw std::runtime_error("YM3812 millisecond buffer is too small");
         }
-        chip.generate(generated.data(), static_cast<std::uint32_t>(tick_samples));
+        chip.GenerateBlock2(static_cast<DBOPL::Bitu>(tick_samples),
+                            generated.data());
         for (std::size_t index = 0; index < tick_samples; ++index) {
-            const auto& sample = generated[index];
-            native.push_back(clamp_sample(sample.data[0]));
+            // The reference FM mixer applies its documented 1.5 scale before
+            // writing device output. Keep that provider-wide scale here; this
+            // is not a per-track adjustment.
+            native.push_back(clamp_sample(
+                static_cast<std::int64_t>(generated[index]) * 3 / 2));
         }
     }
     if (write_index != sequence.writes.size()) {
         throw std::invalid_argument("OPL register timeline has unconsumed writes");
-    }
-
-    if (sample_rate < native_rate) {
-        // ymfm exposes the YM3812 engine's 4x-oversampled DAC stream. Picking
-        // linearly interpolated points from it aliases ultrasonic operator
-        // energy back into the audible band and makes the result much
-        // brighter than the reference output. A four-stage, four-sample CIC
-        // provides the missing anti-alias filter without another large PCM
-        // allocation; the rolling input ring makes every stage safe in-place.
-        for (unsigned stage = 0; stage < 4; ++stage) {
-            std::array<std::int32_t, 4> history{};
-            std::int64_t sum = 0;
-            for (std::size_t index = 0; index < native.size(); ++index) {
-                const auto slot = index & 3U;
-                const auto input = static_cast<std::int32_t>(native[index]);
-                sum += input - history[slot];
-                history[slot] = input;
-                native[index] = clamp_sample(
-                    (sum >= 0 ? sum + 2 : sum - 2) / 4);
-            }
-        }
     }
 
     DecodedMusic result;
@@ -119,7 +98,7 @@ DecodedMusic synthesize_opl(const OplRegisterSequence& sequence,
     const auto output_count =
         sample_count(sequence.total_milliseconds, sample_rate);
     result.mono_samples.resize(output_count);
-    if (sample_rate == native_rate) {
+    if (sample_rate == dbopl_rate) {
         result.mono_samples = std::move(native);
         return result;
     }
@@ -128,7 +107,7 @@ DecodedMusic synthesize_opl(const OplRegisterSequence& sequence,
     // evaluated at the YM3812's native rate; only its final DAC stream is
     // converted to the host device rate.
     for (std::size_t output = 0; output < output_count; ++output) {
-        const auto position = static_cast<unsigned long long>(output) * native_rate;
+        const auto position = static_cast<unsigned long long>(output) * dbopl_rate;
         const auto first_index = static_cast<std::size_t>(position / sample_rate);
         const auto fraction = static_cast<std::uint32_t>(position % sample_rate);
         const auto clamped_first = std::min(first_index, native.size() - 1U);

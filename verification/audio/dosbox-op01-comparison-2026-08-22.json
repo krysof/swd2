@@ -22,6 +22,23 @@
     "fnv1a64": "bd15b96777343632",
     "result": "all register/value pairs identical through the first loop"
   },
+  "opl_backend_differential": {
+    "capture_configuration": "oplemu=default, oplrate=49716, mixer rate=48000",
+    "capture_backend": "DBOPL (the DOSBox-X default/fast fallback)",
+    "previous_rewrite_backend": "ymfm YM3812",
+    "fixed_rewrite_backend": "the same portable DBOPL synthesis implementation",
+    "hardcoded_track_or_recording_data": false,
+    "normalized_log_spectrum_similarity_previous": 0.334737,
+    "normalized_log_spectrum_similarity_fixed": 0.826436,
+    "result": "The register stream was right but the emulator model was wrong. Different waveform, envelope and feedback implementations made the rewrite sound like different instruments."
+  },
+  "all_release_tracks_fixed_backend": {
+    "track_count": 43,
+    "sample_rate_hz": 48000,
+    "total_samples": 65456208,
+    "silent_tracks": 0,
+    "name_and_pcm_sha256": "ee3fb44c0fabf9146e734f8ed9841d11361941d2526882257c63535dbd357e46"
+  },
   "timing": {
     "rix_delay_sum_milliseconds": 51096,
     "previous_70hz_conversion_milliseconds": 60142.857143,
@@ -29,15 +46,18 @@
     "fixed_vs_original_percent": 0.084
   },
   "aligned_audio_first_22_264_seconds": {
-    "pitch_original_over_fixed_ratio": 0.99925,
-    "pitch_delta_cents": -1.299,
-    "tempo_delta_percent": 0.24,
+    "pitch_original_over_fixed_ratio": 0.9995,
+    "pitch_delta_cents": -0.866,
+    "tempo_delta_percent": 0.125,
     "original_spectral_centroid_hz": 1283.24,
     "previous_spectral_centroid_hz": 3140.68,
-    "fixed_spectral_centroid_hz": 1421.18,
+    "filtered_ymfm_spectral_centroid_hz": 1421.18,
+    "fixed_dbopl_spectral_centroid_hz": 1204.08,
     "original_energy_above_4khz_fraction": 0.085399,
     "previous_energy_above_4khz_fraction": 0.140478,
-    "fixed_energy_above_4khz_fraction": 0.084113,
-    "note": "Pitch registers were already exact. The defects were the 70 Hz delay conversion and aliasing caused by downsampling ymfm's oversampled DAC stream without an anti-alias filter."
+    "filtered_ymfm_energy_above_4khz_fraction": 0.084113,
+    "fixed_dbopl_energy_above_4khz_fraction": 0.06708,
+    "fixed_dbopl_level_vs_original_db": 0.646,
+    "note": "Pitch registers were already exact. Millisecond timing fixed the tempo, but filtering ymfm did not reproduce the audible instrument model. Selecting the same general DBOPL backend as the capture fixes the model for every RIX track without using captured audio or per-track constants."
   }
 }

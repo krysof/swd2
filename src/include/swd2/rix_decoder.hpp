@@ -61,8 +61,8 @@ RixSequence decode_rix(std::span<const std::uint8_t> bytes);
 // same ready-to-play state as the original driver's load/start path.
 OplRegisterSequence translate_rix_to_opl(const RixSequence& sequence);
 
-// Renders a register sequence with a portable YM3812 core and resamples the
-// chip's native clock to the requested host rate.
+// Renders a register sequence with the portable DBOPL OPL2 core and resamples
+// the chip's native clock to the requested host rate.
 DecodedMusic synthesize_opl(const OplRegisterSequence& sequence,
                             std::uint32_t sample_rate = 44'100);
 

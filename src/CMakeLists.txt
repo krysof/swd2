@@ -1,15 +1,13 @@
-add_library(ymfm_core STATIC
-    third_party/ymfm/ymfm_adpcm.cpp
-    third_party/ymfm/ymfm_opl.cpp
-    third_party/ymfm/ymfm_pcm.cpp
+add_library(dbopl_core STATIC
+    third_party/dbopl/dbopl.cpp
 )
-target_include_directories(ymfm_core SYSTEM PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ymfm")
-target_compile_features(ymfm_core PUBLIC cxx_std_14)
+target_include_directories(dbopl_core SYSTEM PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/dbopl")
+target_compile_features(dbopl_core PUBLIC cxx_std_14)
 if(MSVC)
-    target_compile_options(ymfm_core PRIVATE /W0)
+    target_compile_options(dbopl_core PRIVATE /W0)
 else()
-    target_compile_options(ymfm_core PRIVATE -w)
+    target_compile_options(dbopl_core PRIVATE -w)
 endif()
 
 add_library(swd2_core
@@ -64,7 +62,7 @@ add_library(swd2_core
 
 target_include_directories(swd2_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(swd2_core PUBLIC cxx_std_20)
-target_link_libraries(swd2_core PRIVATE ymfm_core)
+target_link_libraries(swd2_core PRIVATE dbopl_core)
 
 if(MSVC)
     target_compile_options(swd2_core PRIVATE /W4 /permissive-)

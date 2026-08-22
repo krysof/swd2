@@ -60,8 +60,8 @@ Windows、Linux、macOS、iOS、Android、WebAssembly 或主机平台可分别�
 - `DEMO.EXE` 的 SWORD 资源、960 帧主状态机、完整尾声和平台音频调用；
 - RSK/LZ-Huffman 解码、紧凑精灵、平面精灵、地图 tile/RAP/RRO 解析；
 - 67 个 Creative Voice type-1/8 位单声道资源的严格解析和 16 位 PCM 转换，SDL 实际排队播放；
-- 43 个 Softstar `55 AA` RIX 的乐器区/70 Hz 指令流、精确 OPL 寄存器翻译及 `ymfm`
-  YM3812 PCM 合成；
+- 43 个 Softstar `55 AA` RIX 的乐器区/毫秒指令流、精确 OPL 寄存器翻译及与参考运行环境
+  一致的 `DBOPL` YM3812 PCM 合成；
 - 原版 1350 字节共享状态的无损读写。
 - `SaveSlot` 对 `SAVE.DA1..5`/`MAPZ.DA1..5` 成对选槽、首次复制和临时文件提交；
   MAPZ 只原位回写 opcode 3/34 已证明的 word，未知 MZ/目录数据保持逐字节不变。

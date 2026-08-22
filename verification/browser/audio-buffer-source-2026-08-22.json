@@ -34,15 +34,15 @@
     }
   },
   "resource_cache": {
-    "version": "2026.08.22.2",
-    "name": "swd2-web-2026.08.22.2",
+    "version": "2026.08.22.3",
+    "name": "swd2-web-2026.08.22.3",
     "first_runtime_state": "active",
     "first_runtime_controlled": true,
     "cached_urls": [
-      "http://127.0.0.1:63361/index.data?v=2026.08.22.2",
-      "http://127.0.0.1:63361/index.html",
-      "http://127.0.0.1:63361/index.js?v=2026.08.22.2",
-      "http://127.0.0.1:63361/index.wasm?v=2026.08.22.2"
+      "http://127.0.0.1:64634/index.data?v=2026.08.22.3",
+      "http://127.0.0.1:64634/index.html",
+      "http://127.0.0.1:64634/index.js?v=2026.08.22.3",
+      "http://127.0.0.1:64634/index.wasm?v=2026.08.22.3"
     ],
     "second_launch_from_service_worker": {
       "index.js": true,
@@ -93,12 +93,12 @@
     "selected_original_slot": 1,
     "clock_hundredth_override": 1,
     "staged_random_cursor": 4096,
-    "movement_inputs_before_battle": 153,
-    "world_polls_before_battle": 169,
+    "movement_inputs_before_battle": 152,
+    "world_polls_before_battle": 163,
     "battle_command_page": {
       "randomCursor": 4125,
       "encounterOffset": 182,
-      "milliseconds": 17359.34500002861
+      "milliseconds": 15996.225000023842
     }
   },
   "title_input_fence": {
@@ -111,34 +111,34 @@
     "clock_fields": "DOS DH second / DL hundredth",
     "positions": [
       {
+        "second": 23,
+        "hundredth": 51,
+        "x": 117,
+        "y": 74
+      },
+      {
+        "second": 24,
+        "hundredth": 78,
+        "x": 171,
+        "y": 77
+      },
+      {
         "second": 25,
-        "hundredth": 85,
-        "x": 185,
+        "hundredth": 9,
+        "x": 33,
         "y": 80
-      },
-      {
-        "second": 27,
-        "hundredth": 12,
-        "x": 39,
-        "y": 86
-      },
-      {
-        "second": 27,
-        "hundredth": 42,
-        "x": 99,
-        "y": 86
       }
     ],
-    "horizontal_span_pixels": 146
+    "horizontal_span_pixels": 138
   },
   "gesture": {
     "touch_start_events": 1,
     "requested_world_frames": 69,
-    "hold_milliseconds": 2669.189999997616,
+    "hold_milliseconds": 2667.2800000309944,
     "touch_end_events": 1,
     "direction": "right",
     "wasm_world_deliveries": 71,
-    "first_to_last_delivery_milliseconds": 2626.699999988079,
+    "first_to_last_delivery_milliseconds": 2636.939999997616,
     "deliveries_before_release_fence": 0,
     "deliveries_after_release_fence": 0,
     "presented_world_samples": 71,
@@ -169,10 +169,10 @@
     "result": "pass"
   },
   "assets": {
-    "index.html": "2f21fae980224c5edc61cadf78d5dba8f4d4183abec89f0a6a1d9007308dc270",
-    "index.js": "1a98d1c7e21c073f51d305a34f40d8c75c73107852fa9ee0a9990a9aeb2202bc",
-    "index.wasm": "9303dc3ac153373a86cfd667ea84e764adbf418a820b2bbd2c7f82099764680d",
+    "index.html": "7d6ab55ce6ee4968857a92f5ba0e05b7da397abe7b45fa64e6fb16167edb3d05",
+    "index.js": "236360fdb557a799ed86ee0dff4640dbfd9fd7e4db5c3978016bb1cf0227ab1e",
+    "index.wasm": "6c47278ae2e721ace258c55c8adb65db61371880cf3edb28a39111f6a3a625cb",
     "index.data": "bd96d157f821ee1687638ea8dc356c112fed2da61aeba636fee6a1c4fbd2fc3a",
-    "service-worker.js": "fdad329fcc89dc9a5a1e3294930f7b51c8c38b3e37772c8107ff35447c2ba9fa"
+    "service-worker.js": "ed8767fd16596bbf312cecea8f1f84f5b4b0a0b02a1a9b8d224623a1b83cdb38"
   }
 }

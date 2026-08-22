@@ -1289,10 +1289,10 @@ void test_rix_decoder(const std::filesystem::path& game_root) {
     require(short_music.instruments.size() == 7 && short_music.frames.size() == 21 &&
                 short_music.total_milliseconds == 1'875 &&
                 pcm.sample_rate == 8'000 && pcm.mono_samples.size() == 15'000 &&
-                pcm_hash == 0xb7da071ef7f68c46ULL &&
+                pcm_hash == 0xca882c1b74c4ecb8ULL &&
                 std::any_of(pcm.mono_samples.begin(), pcm.mono_samples.end(),
                             [](std::int16_t sample) { return sample != 0; }),
-            "portable YM3812 core produced non-deterministic RIX PCM");
+            "portable DBOPL core produced non-deterministic RIX PCM");
 
     // A centered pitch command must select the driver's first generated
     // micro-tuning table: C uses F-number 343 (0x157), and raw note 60 is
